@@ -1,9 +1,9 @@
 {
-  "name": "copilot-studio-skills-gallery",
+  "name": "cat-agent-skills",
   "type": "module",
   "version": "0.1.0",
   "private": true,
-  "description": "A gallery of skills for Copilot Studio AI agents.",
+  "description": "A gallery of skills for Cowork, Copilot Studio, and Scout AI agents.",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",

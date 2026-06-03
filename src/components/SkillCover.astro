@@ -1,9 +1,10 @@
 ---
-import { coverGradient, initials } from "../lib/skills";
+import { coverGradient, initials, PLATFORM_COLORS, type Platform } from "../lib/skills";
 
 interface Props {
   slug: string;
   name: string;
+  platforms?: Platform[];
   tags?: string[];
   coverColor?: string;
   hasBundle?: boolean;
@@ -15,6 +16,7 @@ interface Props {
 const {
   slug,
   name,
+  platforms = [],
   tags = [],
   coverColor,
   hasBundle = false,
@@ -25,6 +27,8 @@ const {
 const gradient = coverGradient(slug, coverColor);
 const mark = initials(name);
 const isHero = variant === "hero";
+const shownPlatforms = isHero ? platforms : platforms.slice(0, 2);
+const extraPlatforms = platforms.length - shownPlatforms.length;
 ---
 
 <div
@@ -52,12 +56,29 @@ const isHero = variant === "hero";
     class="relative flex h-full flex-col justify-between p-4"
     class:list={[isHero && "p-6 sm:p-8"]}
   >
-    <div class="flex items-center justify-between">
-      <span
-        class="rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur-sm"
-      >
-        Copilot Skill
-      </span>
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-1.5">
+        {
+          shownPlatforms.map((platform) => (
+            <span
+              class="flex items-center gap-1.5 rounded-md bg-black/30 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm"
+            >
+              <span
+                class="h-1.5 w-1.5 rounded-full"
+                style={`background:${PLATFORM_COLORS[platform]}`}
+              />
+              {platform}
+            </span>
+          ))
+        }
+        {
+          extraPlatforms > 0 && (
+            <span class="rounded-md bg-black/30 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+              +{extraPlatforms}
+            </span>
+          )
+        }
+      </div>
       {
         hasBundle && (
           <span

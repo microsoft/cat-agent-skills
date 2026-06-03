@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import SkillCover from "../../components/SkillCover.astro";
 import { getCollection, render } from "astro:content";
-import { formatDate } from "../../lib/skills";
+import { formatDate, PLATFORM_COLORS } from "../../lib/skills";
 import { withBase } from "../../lib/url";
 
 export async function getStaticPaths() {
@@ -51,6 +51,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
       <SkillCover
         slug={skill.id}
         name={d.name}
+        platforms={d.platforms}
         tags={d.tags}
         coverColor={d.coverColor}
         hasBundle={Boolean(d.bundle)}
@@ -93,9 +94,30 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
       <!-- Sidebar -->
       <aside class="lg:sticky lg:top-20 lg:self-start">
         <div class="rounded-2xl border border-white/5 bg-ink-900 p-5">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Works with
+          </h3>
+          <div class="mt-2 flex flex-wrap gap-2">
+            {
+              d.platforms.map((platform) => (
+                <span class="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-200">
+                  <span
+                    class="h-2 w-2 rounded-full"
+                    style={`background:${PLATFORM_COLORS[platform]}`}
+                  />
+                  {platform}
+                </span>
+              ))
+            }
+          </div>
+
+          <hr class="my-5 border-white/5" />
+
           <h3 class="text-sm font-semibold text-white">Add this skill</h3>
           <p class="mt-1 text-xs text-slate-400">
-            Download the instructions and add them to your Copilot Studio agent.
+            Download the instructions and add them to your {
+              d.platforms.length === 1 ? d.platforms[0] : "agent"
+            } agent.
           </p>
 
           <div class="mt-4 flex flex-col gap-2">

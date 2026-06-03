@@ -17,6 +17,9 @@ export const GET: APIRoute = ({ props }) => {
   const lines: string[] = ["---"];
   lines.push(`name: ${quote(String(d.name))}`);
   lines.push(`description: ${quote(String(d.description))}`);
+  if (Array.isArray(d.platforms) && d.platforms.length) {
+    lines.push(`platforms: [${(d.platforms as string[]).map(quote).join(", ")}]`);
+  }
   if (Array.isArray(d.tags) && d.tags.length) {
     lines.push(`tags: [${(d.tags as string[]).map(quote).join(", ")}]`);
   }

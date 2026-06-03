@@ -1,6 +1,7 @@
 ---
 name: Release Notes Writer
 description: Convert merged pull requests and commits into clean, customer-facing release notes.
+platforms: [Scout]
 tags: [developer, writing, automation]
 author: DevRel Collective
 version: 1.1.0

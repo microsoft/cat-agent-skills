@@ -1,6 +1,7 @@
 ---
 name: Meeting Summarizer
 description: Turn raw meeting transcripts into crisp summaries with decisions, action items, and owners.
+platforms: [Cowork, Copilot Studio]
 tags: [productivity, summarization, meetings]
 author: Copilot Studio Team
 version: 1.2.0

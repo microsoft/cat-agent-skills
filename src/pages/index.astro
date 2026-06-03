@@ -2,11 +2,19 @@
 import Layout from "../layouts/Layout.astro";
 import SkillCard from "../components/SkillCard.astro";
 import { getCollection } from "astro:content";
+import { PLATFORMS, PLATFORM_COLORS } from "../lib/skills";
 
 const skills = (await getCollection("skills")).sort((a, b) => {
   if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
   return a.data.name.localeCompare(b.data.name);
 });
+
+const platformCounts = new Map<string, number>();
+for (const skill of skills) {
+  for (const platform of skill.data.platforms) {
+    platformCounts.set(platform, (platformCounts.get(platform) ?? 0) + 1);
+  }
+}
 
 const tagCounts = new Map<string, number>();
 for (const skill of skills) {
@@ -40,8 +48,10 @@ const allTags = [...tagCounts.entries()].sort(
       </h1>
       <p class="mt-4 max-w-2xl text-lg text-slate-300">
         Browse community-built skills — drop-in instructions and script bundles
-        that teach your Copilot Studio agents new tricks. Find one, download the
-        markdown (and scripts), and add it to your agent.
+        that teach your agents new tricks. Find one, download the markdown (and
+        scripts), and add it to <span class="text-white">Cowork</span>, <span
+          class="text-white">Copilot Studio</span
+        >, or <span class="text-white">Scout</span>.
       </p>
 
       <!-- Search -->
@@ -67,6 +77,44 @@ const allTags = [...tagCounts.entries()].sort(
             class="w-full rounded-xl border border-white/10 bg-ink-900/80 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
           />
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platform filters -->
+  <section class="border-b border-white/5 bg-ink-950/80">
+    <div
+      class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6"
+    >
+      <span class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+        >Platform</span
+      >
+      <div id="platform-filters" class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          data-platform=""
+          class="platform-chip rounded-full border border-brand-500 bg-brand-500/20 px-3.5 py-1.5 text-sm font-semibold text-white transition"
+          aria-pressed="true">All platforms</button
+        >
+        {
+          PLATFORMS.map((platform) => (
+            <button
+              type="button"
+              data-platform={platform}
+              class="platform-chip flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm font-semibold text-slate-300 transition hover:border-white/30 hover:text-white"
+              aria-pressed="false"
+            >
+              <span
+                class="h-2 w-2 rounded-full"
+                style={`background:${PLATFORM_COLORS[platform]}`}
+              />
+              {platform}
+              <span class="text-xs text-slate-500">
+                {platformCounts.get(platform) ?? 0}
+              </span>
+            </button>
+          ))
+        }
       </div>
     </div>
   </section>
@@ -119,11 +167,13 @@ const allTags = [...tagCounts.entries()].sort(
             data-name={skill.data.name.toLowerCase()}
             data-desc={skill.data.description.toLowerCase()}
             data-tags={skill.data.tags.join(",").toLowerCase()}
+            data-platforms={skill.data.platforms.join(",")}
           >
             <SkillCard
               slug={skill.id}
               name={skill.data.name}
               description={skill.data.description}
+              platforms={skill.data.platforms}
               tags={skill.data.tags}
               author={skill.data.author}
               coverColor={skill.data.coverColor}
@@ -150,8 +200,11 @@ const allTags = [...tagCounts.entries()].sort(
     gallery.querySelectorAll<HTMLElement>(".skill-item")
   );
   const search = document.getElementById("skill-search") as HTMLInputElement;
-  const chips = Array.from(
+  const tagChips = Array.from(
     document.querySelectorAll<HTMLButtonElement>(".tag-chip")
+  );
+  const platformChips = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(".platform-chip")
   );
   const countEl = document.getElementById("result-count")!;
   const emptyEl = document.getElementById("empty-state")!;
@@ -159,16 +212,19 @@ const allTags = [...tagCounts.entries()].sort(
 
   let query = "";
   let activeTag = "";
+  let activePlatform = "";
   let shown = BATCH;
   let matched: HTMLElement[] = items;
 
   function computeMatched(): HTMLElement[] {
     return items.filter((el) => {
       const tags = (el.dataset.tags ?? "").split(",");
+      const platforms = (el.dataset.platforms ?? "").split(",");
       const tagOk = !activeTag || tags.includes(activeTag);
+      const platformOk = !activePlatform || platforms.includes(activePlatform);
       const text = `${el.dataset.name} ${el.dataset.desc} ${el.dataset.tags}`;
       const queryOk = !query || text.includes(query);
-      return tagOk && queryOk;
+      return tagOk && platformOk && queryOk;
     });
   }
 
@@ -196,20 +252,38 @@ const allTags = [...tagCounts.entries()].sort(
     }, 120);
   });
 
+  function paintChips(
+    chips: HTMLButtonElement[],
+    key: "tag" | "platform",
+    active: string
+  ) {
+    chips.forEach((c) => {
+      const on = (c.dataset[key] ?? "") === active;
+      c.setAttribute("aria-pressed", String(on));
+      c.classList.toggle("border-brand-500", on);
+      c.classList.toggle("bg-brand-500/20", on);
+      c.classList.toggle("text-white", on);
+      c.classList.toggle("border-white/10", !on);
+      c.classList.toggle("bg-white/5", !on);
+      c.classList.toggle("text-slate-300", !on);
+    });
+  }
+
   // Tag chips
-  chips.forEach((chip) => {
+  tagChips.forEach((chip) => {
     chip.addEventListener("click", () => {
       activeTag = chip.dataset.tag ?? "";
-      chips.forEach((c) => {
-        const on = c.dataset.tag === activeTag;
-        c.setAttribute("aria-pressed", String(on));
-        c.classList.toggle("border-brand-500", on);
-        c.classList.toggle("bg-brand-500/20", on);
-        c.classList.toggle("text-white", on);
-        c.classList.toggle("border-white/10", !on);
-        c.classList.toggle("bg-white/5", !on);
-        c.classList.toggle("text-slate-300", !on);
-      });
+      paintChips(tagChips, "tag", activeTag);
+      syncUrl();
+      refilter();
+    });
+  });
+
+  // Platform chips
+  platformChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      activePlatform = chip.dataset.platform ?? "";
+      paintChips(platformChips, "platform", activePlatform);
       syncUrl();
       refilter();
     });
@@ -227,11 +301,12 @@ const allTags = [...tagCounts.entries()].sort(
   );
   io.observe(sentinel);
 
-  // URL state (?q=&tag=) for shareable filters.
+  // URL state (?q=&tag=&platform=) for shareable filters.
   function syncUrl() {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (activeTag) params.set("tag", activeTag);
+    if (activePlatform) params.set("platform", activePlatform);
     const qs = params.toString();
     history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
   }
@@ -240,13 +315,11 @@ const allTags = [...tagCounts.entries()].sort(
     const params = new URLSearchParams(location.search);
     query = (params.get("q") ?? "").toLowerCase();
     activeTag = params.get("tag") ?? "";
+    activePlatform = params.get("platform") ?? "";
     if (query) search.value = query;
-    if (activeTag) {
-      const chip = chips.find((c) => c.dataset.tag === activeTag);
-      chip?.click();
-    } else {
-      refilter();
-    }
+    paintChips(tagChips, "tag", activeTag);
+    paintChips(platformChips, "platform", activePlatform);
+    refilter();
   }
 
   initFromUrl();

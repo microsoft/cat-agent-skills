@@ -1,6 +1,7 @@
 ---
 name: Translation Helper
 description: Translate text while preserving tone, formatting, and domain terminology with a glossary.
+platforms: [Cowork, Copilot Studio, Scout]
 tags: [language, writing, localization]
 author: Localization Team
 version: 1.0.1

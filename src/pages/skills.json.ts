@@ -12,6 +12,7 @@ export const GET: APIRoute = async () => {
         slug: skill.id,
         name: d.name,
         description: d.description,
+        platforms: d.platforms,
         tags: d.tags,
         author: d.author,
         version: d.version,

@@ -1,8 +1,8 @@
 # Authoring a skill
 
-A **skill** is a reusable instruction set for a Copilot Studio AI agent,
-published in this gallery as a single Markdown file (optionally accompanied by a
-`.zip` of helper scripts).
+A **skill** is a reusable instruction set for an AI agent — targeting one or more
+of **Cowork**, **Copilot Studio**, and **Scout** — published in this gallery as a
+single Markdown file (optionally accompanied by a `.zip` of helper scripts).
 
 ## 1. Create the Markdown file
 
@@ -16,6 +16,7 @@ becomes the skill's URL slug, e.g. `meeting-summarizer.md` →
 | ------------- | -------- | ---------- | ---------------------------------------------------------------------- |
 | `name`        | ✅       | string     | Display name shown on the card and detail page.                        |
 | `description` | ✅       | string     | One-line summary used on the card and as the page meta description.    |
+| `platforms`   | ✅       | string[]   | One or more of `Cowork`, `Copilot Studio`, `Scout` — the agent platforms the skill targets. |
 | `tags`        | ✅       | string[]   | Lowercase tags for filtering/search. Reuse existing tags where you can.|
 | `author`      |          | string     | Person or team credited for the skill.                                 |
 | `version`     |          | string     | Semantic version, e.g. `1.0.0`.                                        |

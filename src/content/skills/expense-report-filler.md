@@ -1,6 +1,7 @@
 ---
 name: Expense Report Filler
 description: Extract line items from receipts and assemble a submission-ready expense report with policy checks.
+platforms: [Copilot Studio]
 tags: [finance, automation, forms, scripts]
 author: Contoso Finance Ops
 version: 2.0.1

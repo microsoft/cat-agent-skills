@@ -1,6 +1,7 @@
 ---
 name: PDF Form Extractor
 description: Pull structured fields from filled PDF forms and validate them against an expected schema.
+platforms: [Copilot Studio]
 tags: [documents, extraction, automation, scripts]
 author: Document AI Lab
 version: 0.9.0

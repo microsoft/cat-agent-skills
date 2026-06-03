@@ -1,11 +1,14 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
+import { PLATFORMS } from "./lib/skills";
 
 const skills = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/skills" }),
   schema: z.object({
     name: z.string(),
     description: z.string(),
+    // Agent platform(s) the skill targets: Cowork, Copilot Studio, and/or Scout.
+    platforms: z.array(z.enum(PLATFORMS)).nonempty(),
     tags: z.array(z.string()).default([]),
     author: z.string().optional(),
     version: z.string().optional(),

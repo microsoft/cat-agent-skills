@@ -8,14 +8,12 @@ interface Props {
 }
 
 const {
-  title = "Copilot Studio Skills Gallery",
-  description = "Discover, browse, and download reusable skills for your Copilot Studio AI agents.",
+  title = "CAT Agent Skills",
+  description = "Discover, browse, and download reusable skills for Cowork, Copilot Studio, and Scout AI agents.",
 } = Astro.props;
 
 const fullTitle =
-  title === "Copilot Studio Skills Gallery"
-    ? title
-    : `${title} · Copilot Studio Skills Gallery`;
+  title === "CAT Agent Skills" ? title : `${title} · CAT Agent Skills`;
 ---
 
 <!doctype html>
@@ -45,9 +43,9 @@ const fullTitle =
           <span
             class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white shadow-lg shadow-brand-700/30"
           >
-            CS
+            AS
           </span>
-          <span class="text-white">Skills Gallery</span>
+          <span class="text-white">Agent Skills</span>
         </a>
         <nav class="flex items-center gap-5 text-sm text-slate-300">
           <a
@@ -55,14 +53,14 @@ const fullTitle =
             class="hover:text-white transition-colors">Browse</a
           >
           <a
-            href="https://learn.microsoft.com/microsoft-copilot-studio/"
+            href="https://github.com/microsoft/cat-agent-skills/blob/main/docs/authoring-skills.md"
             target="_blank"
             rel="noopener"
             class="hidden sm:inline hover:text-white transition-colors"
-            >Copilot Studio</a
+            >Docs</a
           >
           <a
-            href="https://github.com/microsoft/copilot-studio-skills-gallery"
+            href="https://github.com/microsoft/cat-agent-skills"
             target="_blank"
             rel="noopener"
             class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10 hover:text-white transition-colors"
@@ -82,12 +80,14 @@ const fullTitle =
       >
         <p>
           Community gallery of skills for <span class="text-slate-200"
-            >Copilot Studio</span
+            >Cowork</span
+          >, <span class="text-slate-200">Copilot Studio</span>, and <span
+            class="text-slate-200">Scout</span
           > agents.
         </p>
         <p>
           <a
-            href="https://github.com/microsoft/copilot-studio-skills-gallery"
+            href="https://github.com/microsoft/cat-agent-skills"
             target="_blank"
             rel="noopener"
             class="hover:text-white transition-colors">View on GitHub</a

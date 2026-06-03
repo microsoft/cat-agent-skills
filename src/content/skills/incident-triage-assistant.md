@@ -1,6 +1,7 @@
 ---
 name: Incident Triage Assistant
 description: Assess incoming alerts, assign severity, and draft a clear first status update for responders.
+platforms: [Scout, Copilot Studio]
 tags: [devops, support, classification]
 author: SRE Guild
 version: 1.4.0

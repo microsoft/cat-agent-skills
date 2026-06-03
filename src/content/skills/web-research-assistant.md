@@ -1,6 +1,7 @@
 ---
 name: Web Research Assistant
 description: Run focused web research and return a sourced briefing with citations and a confidence note.
+platforms: [Scout, Cowork]
 tags: [research, summarization, productivity]
 author: Knowledge Tools Team
 version: 1.0.2

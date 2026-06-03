@@ -3,6 +3,17 @@
  * small utilities reused across pages, endpoints, and the client island.
  */
 
+/** The agent platforms a skill can target. */
+export const PLATFORMS = ["Cowork", "Copilot Studio", "Scout"] as const;
+export type Platform = (typeof PLATFORMS)[number];
+
+/** Brand accent color used for each platform's badge. */
+export const PLATFORM_COLORS: Record<Platform, string> = {
+  Cowork: "#7c3aed",
+  "Copilot Studio": "#2563eb",
+  Scout: "#0d9488",
+};
+
 const COVER_PALETTE: Array<[string, string]> = [
   ["#3461ff", "#7a3cff"],
   ["#ff5f6d", "#ffc371"],
@@ -59,6 +70,7 @@ export type SkillSummary = {
   slug: string;
   name: string;
   description: string;
+  platforms: Platform[];
   tags: string[];
   author?: string;
   version?: string;

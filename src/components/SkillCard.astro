@@ -1,11 +1,13 @@
 ---
 import SkillCover from "./SkillCover.astro";
 import { withBase } from "../lib/url";
+import type { Platform } from "../lib/skills";
 
 interface Props {
   slug: string;
   name: string;
   description: string;
+  platforms?: Platform[];
   tags?: string[];
   author?: string;
   coverColor?: string;
@@ -16,6 +18,7 @@ const {
   slug,
   name,
   description,
+  platforms = [],
   tags = [],
   author,
   coverColor,
@@ -32,6 +35,7 @@ const {
       <SkillCover
         slug={slug}
         name={name}
+        platforms={platforms}
         tags={tags}
         coverColor={coverColor}
         hasBundle={hasBundle}
