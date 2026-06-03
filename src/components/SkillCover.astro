@@ -1,0 +1,101 @@
+---
+import { coverGradient, initials } from "../lib/skills";
+
+interface Props {
+  slug: string;
+  name: string;
+  tags?: string[];
+  coverColor?: string;
+  hasBundle?: boolean;
+  /** "card" for grid thumbnails, "hero" for the detail header. */
+  variant?: "card" | "hero";
+  class?: string;
+}
+
+const {
+  slug,
+  name,
+  tags = [],
+  coverColor,
+  hasBundle = false,
+  variant = "card",
+  class: className = "",
+} = Astro.props;
+
+const gradient = coverGradient(slug, coverColor);
+const mark = initials(name);
+const isHero = variant === "hero";
+---
+
+<div
+  class:list={[
+    "relative overflow-hidden",
+    isHero ? "h-56 sm:h-64" : "aspect-[16/10]",
+    className,
+  ]}
+  style={`background-image:${gradient}`}
+>
+  <!-- decorative texture -->
+  <div
+    class="absolute inset-0 opacity-25"
+    style="background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,.5) 0, transparent 40%), radial-gradient(circle at 80% 0%, rgba(255,255,255,.35) 0, transparent 35%);"
+  >
+  </div>
+  <div
+    class="absolute -right-6 -top-8 select-none font-black text-white/15 leading-none"
+    class:list={[isHero ? "text-[12rem]" : "text-[7rem]"]}
+  >
+    {mark}
+  </div>
+
+  <div
+    class="relative flex h-full flex-col justify-between p-4"
+    class:list={[isHero && "p-6 sm:p-8"]}
+  >
+    <div class="flex items-center justify-between">
+      <span
+        class="rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur-sm"
+      >
+        Copilot Skill
+      </span>
+      {
+        hasBundle && (
+          <span
+            class="flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-sm"
+            title="Includes a downloadable script bundle"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="h-3 w-3"
+            >
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+            </svg>
+            .zip
+          </span>
+        )
+      }
+    </div>
+
+    <div>
+      <h3
+        class="font-bold leading-tight text-white drop-shadow-sm"
+        class:list={[isHero ? "text-3xl sm:text-4xl" : "text-lg line-clamp-2"]}
+      >
+        {name}
+      </h3>
+      {
+        tags.length > 0 && (
+          <div class="mt-2 flex flex-wrap gap-1.5">
+            {tags.slice(0, isHero ? 8 : 3).map((t) => (
+              <span class="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                {t}
+              </span>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </div>
+</div>

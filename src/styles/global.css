@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #bcd2ff;
+  --color-brand-300: #8eb4ff;
+  --color-brand-400: #598bff;
+  --color-brand-500: #3461ff;
+  --color-brand-600: #1f3df5;
+  --color-brand-700: #182dd8;
+  --color-brand-800: #1a28ae;
+  --color-brand-900: #1b2989;
+  --color-ink-950: #0b0d17;
+  --color-ink-900: #11142a;
+  --color-ink-800: #181c38;
+  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ink-950);
+  color: #e7e9f3;
+}
+
+/* Custom scrollbar to match the dark gallery aesthetic */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-ink-900);
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2f55;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a4178;
+}

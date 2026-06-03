@@ -427,3 +427,15 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Astro
+dist/
+.astro/
+.output/
+
+# Env
+.env
+.env.production
+
+# OS
+.DS_Store

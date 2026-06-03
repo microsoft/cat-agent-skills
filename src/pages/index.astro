@@ -1,0 +1,253 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SkillCard from "../components/SkillCard.astro";
+import { getCollection } from "astro:content";
+
+const skills = (await getCollection("skills")).sort((a, b) => {
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
+  return a.data.name.localeCompare(b.data.name);
+});
+
+const tagCounts = new Map<string, number>();
+for (const skill of skills) {
+  for (const tag of skill.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+const allTags = [...tagCounts.entries()].sort(
+  (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
+);
+---
+
+<Layout>
+  <!-- Hero -->
+  <section class="relative overflow-hidden border-b border-white/5">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-40"
+      style="background-image: radial-gradient(60% 60% at 50% 0%, rgba(52,97,255,.35) 0%, transparent 70%);"
+    >
+    </div>
+    <div class="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
+      <p
+        class="mb-3 text-sm font-semibold uppercase tracking-widest text-brand-300"
+      >
+        Copilot Studio
+      </p>
+      <h1
+        class="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl"
+      >
+        The gallery of skills for your AI agents
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-slate-300">
+        Browse community-built skills — drop-in instructions and script bundles
+        that teach your Copilot Studio agents new tricks. Find one, download the
+        markdown (and scripts), and add it to your agent.
+      </p>
+
+      <!-- Search -->
+      <div class="mt-8 max-w-xl">
+        <label for="skill-search" class="sr-only">Search skills</label>
+        <div class="relative">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          >
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m21 21-4.3-4.3" stroke-linecap="round"></path>
+          </svg>
+          <input
+            id="skill-search"
+            type="search"
+            placeholder="Search skills by name, description, or tag…"
+            autocomplete="off"
+            class="w-full rounded-xl border border-white/10 bg-ink-900/80 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tag filters -->
+  <section class="border-b border-white/5 bg-ink-950/60">
+    <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+      <div id="tag-filters" class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          data-tag=""
+          class="tag-chip rounded-full border border-brand-500 bg-brand-500/20 px-3 py-1 text-sm font-medium text-white transition"
+          aria-pressed="true">All</button
+        >
+        {
+          allTags.map(([tag, count]) => (
+            <button
+              type="button"
+              data-tag={tag}
+              class="tag-chip rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:text-white"
+              aria-pressed="false"
+            >
+              {tag}
+              <span class="ml-1 text-xs text-slate-500">{count}</span>
+            </button>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mb-5 flex items-baseline justify-between">
+      <h2 class="text-lg font-semibold text-white">
+        Skills <span id="result-count" class="text-slate-400"
+          >({skills.length})</span
+        >
+      </h2>
+    </div>
+
+    <div
+      id="gallery"
+      class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
+      {
+        skills.map((skill) => (
+          <div
+            class="skill-item"
+            data-name={skill.data.name.toLowerCase()}
+            data-desc={skill.data.description.toLowerCase()}
+            data-tags={skill.data.tags.join(",").toLowerCase()}
+          >
+            <SkillCard
+              slug={skill.id}
+              name={skill.data.name}
+              description={skill.data.description}
+              tags={skill.data.tags}
+              author={skill.data.author}
+              coverColor={skill.data.coverColor}
+              hasBundle={Boolean(skill.data.bundle)}
+            />
+          </div>
+        ))
+      }
+    </div>
+
+    <p id="empty-state" class="hidden py-16 text-center text-slate-400">
+      No skills match your search. Try a different term or clear the filters.
+    </p>
+
+    <div id="scroll-sentinel" class="h-10"></div>
+  </section>
+</Layout>
+
+<script>
+  const BATCH = 8;
+
+  const gallery = document.getElementById("gallery")!;
+  const items = Array.from(
+    gallery.querySelectorAll<HTMLElement>(".skill-item")
+  );
+  const search = document.getElementById("skill-search") as HTMLInputElement;
+  const chips = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(".tag-chip")
+  );
+  const countEl = document.getElementById("result-count")!;
+  const emptyEl = document.getElementById("empty-state")!;
+  const sentinel = document.getElementById("scroll-sentinel")!;
+
+  let query = "";
+  let activeTag = "";
+  let shown = BATCH;
+  let matched: HTMLElement[] = items;
+
+  function computeMatched(): HTMLElement[] {
+    return items.filter((el) => {
+      const tags = (el.dataset.tags ?? "").split(",");
+      const tagOk = !activeTag || tags.includes(activeTag);
+      const text = `${el.dataset.name} ${el.dataset.desc} ${el.dataset.tags}`;
+      const queryOk = !query || text.includes(query);
+      return tagOk && queryOk;
+    });
+  }
+
+  function render() {
+    items.forEach((el) => (el.style.display = "none"));
+    matched.slice(0, shown).forEach((el) => (el.style.display = ""));
+    countEl.textContent = `(${matched.length})`;
+    emptyEl.classList.toggle("hidden", matched.length > 0);
+  }
+
+  function refilter() {
+    matched = computeMatched();
+    shown = BATCH;
+    render();
+  }
+
+  // Search (debounced)
+  let t: number | undefined;
+  search.addEventListener("input", () => {
+    window.clearTimeout(t);
+    t = window.setTimeout(() => {
+      query = search.value.trim().toLowerCase();
+      syncUrl();
+      refilter();
+    }, 120);
+  });
+
+  // Tag chips
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      activeTag = chip.dataset.tag ?? "";
+      chips.forEach((c) => {
+        const on = c.dataset.tag === activeTag;
+        c.setAttribute("aria-pressed", String(on));
+        c.classList.toggle("border-brand-500", on);
+        c.classList.toggle("bg-brand-500/20", on);
+        c.classList.toggle("text-white", on);
+        c.classList.toggle("border-white/10", !on);
+        c.classList.toggle("bg-white/5", !on);
+        c.classList.toggle("text-slate-300", !on);
+      });
+      syncUrl();
+      refilter();
+    });
+  });
+
+  // Infinite scroll: reveal more as the sentinel comes into view.
+  const io = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && shown < matched.length) {
+        shown = Math.min(shown + BATCH, matched.length);
+        render();
+      }
+    },
+    { rootMargin: "400px" }
+  );
+  io.observe(sentinel);
+
+  // URL state (?q=&tag=) for shareable filters.
+  function syncUrl() {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (activeTag) params.set("tag", activeTag);
+    const qs = params.toString();
+    history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
+  }
+
+  function initFromUrl() {
+    const params = new URLSearchParams(location.search);
+    query = (params.get("q") ?? "").toLowerCase();
+    activeTag = params.get("tag") ?? "";
+    if (query) search.value = query;
+    if (activeTag) {
+      const chip = chips.find((c) => c.dataset.tag === activeTag);
+      chip?.click();
+    } else {
+      refilter();
+    }
+  }
+
+  initFromUrl();
+</script>

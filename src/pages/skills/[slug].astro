@@ -1,0 +1,159 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SkillCover from "../../components/SkillCover.astro";
+import { getCollection, render } from "astro:content";
+import { formatDate } from "../../lib/skills";
+import { withBase } from "../../lib/url";
+
+export async function getStaticPaths() {
+  const skills = await getCollection("skills");
+  return skills.map((skill) => ({
+    params: { slug: skill.id },
+    props: { skill },
+  }));
+}
+
+const { skill } = Astro.props;
+const d = skill.data;
+const { Content } = await render(skill);
+
+const updated = formatDate(d.updatedAt ?? d.createdAt);
+const created = formatDate(d.createdAt);
+
+const meta: Array<[string, string]> = [];
+if (d.author) meta.push(["Author", d.author]);
+if (d.version) meta.push(["Version", d.version]);
+if (created) meta.push(["Added", created]);
+if (updated && updated !== created) meta.push(["Updated", updated]);
+---
+
+<Layout title={d.name} description={d.description}>
+  <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+    <a
+      href={withBase("/")}
+      class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        class="h-4 w-4"
+      >
+        <path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"
+        ></path>
+      </svg>
+      Back to gallery
+    </a>
+
+    <div class="mt-5 overflow-hidden rounded-2xl border border-white/5">
+      <SkillCover
+        slug={skill.id}
+        name={d.name}
+        tags={d.tags}
+        coverColor={d.coverColor}
+        hasBundle={Boolean(d.bundle)}
+        variant="hero"
+      />
+    </div>
+
+    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
+      <!-- Main content -->
+      <div>
+        <p class="text-lg text-slate-300">{d.description}</p>
+
+        {
+          d.tags.length > 0 && (
+            <div class="mt-4 flex flex-wrap gap-2">
+              {d.tags.map((tag) => (
+                <a
+                  href={withBase(`/tags/${encodeURIComponent(tag)}`)}
+                  class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300 hover:border-brand-500/50 hover:text-white transition-colors"
+                >
+                  {tag}
+                </a>
+              ))}
+            </div>
+          )
+        }
+
+        <hr class="my-7 border-white/5" />
+
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-300">
+          Instructions
+        </h2>
+        <article
+          class="prose prose-invert max-w-none prose-headings:text-white prose-a:text-brand-300 prose-strong:text-white prose-code:text-brand-200 prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-slate-300 prose-th:text-white"
+        >
+          <Content />
+        </article>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="lg:sticky lg:top-20 lg:self-start">
+        <div class="rounded-2xl border border-white/5 bg-ink-900 p-5">
+          <h3 class="text-sm font-semibold text-white">Add this skill</h3>
+          <p class="mt-1 text-xs text-slate-400">
+            Download the instructions and add them to your Copilot Studio agent.
+          </p>
+
+          <div class="mt-4 flex flex-col gap-2">
+            <a
+              href={withBase(`/skills/${skill.id}.md`)}
+              download={`${skill.id}.md`}
+              class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                class="h-4 w-4"
+              >
+                <path
+                  d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"></path>
+              </svg>
+              Download .md
+            </a>
+            {
+              d.bundle && (
+                <a
+                  href={withBase(`/${d.bundle}`)}
+                  download
+                  class="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    class="h-4 w-4"
+                  >
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                  </svg>
+                  Download scripts (.zip)
+                </a>
+              )
+            }
+          </div>
+
+          {
+            meta.length > 0 && (
+              <dl class="mt-5 space-y-2 border-t border-white/5 pt-4 text-sm">
+                {meta.map(([k, v]) => (
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-slate-400">{k}</dt>
+                    <dd class="text-right font-medium text-slate-200">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            )
+          }
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

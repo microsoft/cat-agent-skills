@@ -1,0 +1,99 @@
+---
+import "../styles/global.css";
+import { withBase } from "../lib/url";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Copilot Studio Skills Gallery",
+  description = "Discover, browse, and download reusable skills for your Copilot Studio AI agents.",
+} = Astro.props;
+
+const fullTitle =
+  title === "Copilot Studio Skills Gallery"
+    ? title
+    : `${title} · Copilot Studio Skills Gallery`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
+  </head>
+  <body class="min-h-screen flex flex-col antialiased">
+    <header
+      class="sticky top-0 z-30 border-b border-white/5 bg-ink-950/80 backdrop-blur-md"
+    >
+      <div
+        class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6"
+      >
+        <a
+          href={withBase("/")}
+          class="flex items-center gap-2.5 font-semibold tracking-tight"
+        >
+          <span
+            class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white shadow-lg shadow-brand-700/30"
+          >
+            CS
+          </span>
+          <span class="text-white">Skills Gallery</span>
+        </a>
+        <nav class="flex items-center gap-5 text-sm text-slate-300">
+          <a
+            href={withBase("/")}
+            class="hover:text-white transition-colors">Browse</a
+          >
+          <a
+            href="https://learn.microsoft.com/microsoft-copilot-studio/"
+            target="_blank"
+            rel="noopener"
+            class="hidden sm:inline hover:text-white transition-colors"
+            >Copilot Studio</a
+          >
+          <a
+            href="https://github.com/microsoft/copilot-studio-skills-gallery"
+            target="_blank"
+            rel="noopener"
+            class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10 hover:text-white transition-colors"
+            >Contribute a skill</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="border-t border-white/5 bg-ink-950">
+      <div
+        class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-8 text-sm text-slate-400 sm:flex-row sm:px-6"
+      >
+        <p>
+          Community gallery of skills for <span class="text-slate-200"
+            >Copilot Studio</span
+          > agents.
+        </p>
+        <p>
+          <a
+            href="https://github.com/microsoft/copilot-studio-skills-gallery"
+            target="_blank"
+            rel="noopener"
+            class="hover:text-white transition-colors">View on GitHub</a
+          >
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

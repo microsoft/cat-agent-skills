@@ -1,0 +1,22 @@
+{
+  "name": "copilot-studio-skills-gallery",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A gallery of skills for Copilot Studio AI agents.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^5.6.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/vite": "^4.1.4",
+    "tailwindcss": "^4.1.4"
+  }
+}
