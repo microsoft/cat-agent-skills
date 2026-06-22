@@ -1,5 +1,5 @@
 ---
-name: Knowledge Source Router
+name: knowledge-source-router
 description: >-
   Determines which region-specific knowledge source(s) to search based on the
   user's location. You MUST invoke this skill BEFORE calling the KnowledgeSearch

@@ -1,4 +1,5 @@
 {
+  "name": "My Great Skill",
   "description": "The CATALOG summary shown to people browsing the gallery — one human-friendly line on the card and at the top of the detail page. (The agent-facing description lives in skill.md.)",
   "platforms": ["Cowork", "Copilot Studio", "Scout"],
   "tags": ["productivity", "automation"],

@@ -205,23 +205,39 @@ function processSubmission(sub: Submission): ImportProblem | null {
   }
 
   const problems: string[] = [];
-  const name = (skillFm.name ?? catalog.name) as string | undefined;
-  if (!name) problems.push("`name` is required in skill.md frontmatter");
+  const slugName = skillFm.name as string | undefined;
+  if (!slugName) {
+    problems.push("`name` is required in skill.md frontmatter (must be a slug)");
+  } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slugName)) {
+    problems.push(
+      `\`name\` in skill.md must be a slug (lowercase letters, numbers, and ` +
+        `hyphens) \u2014 got "${slugName}"`,
+    );
+  } else if (slugName !== slug) {
+    problems.push(
+      `\`name\` in skill.md ("${slugName}") must match the submission ` +
+        `folder/zip name ("${slug}")`,
+    );
+  }
   const agentDescription = skillFm.description as string | undefined;
   if (!agentDescription) {
     problems.push("`description` (agent-facing) is required in skill.md frontmatter");
+  }
+  if (!catalog.name) {
+    problems.push("`name` (display name) is required in the metadata file");
   }
   if (!catalog.description) {
     problems.push("`description` (catalog) is required in the metadata file");
   }
   if (problems.length) return { source: label, problems };
 
-  // Merge into the canonical frontmatter: catalog fields win, plus name from the
-  // skill file and the agent description mapped to its own key.
-  const { name: _n, description: _d, ...catalogRest } = catalog;
+  // Merge into the canonical frontmatter. The gallery `name` is the human display
+  // name from metadata; the slug (skill.md `name`) is the file id used for the
+  // route and the downloadable skill.md. The agent description gets its own key.
+  const { name: displayName, description: catalogDescription, ...catalogRest } = catalog;
   const meta: Record<string, unknown> = {
-    name,
-    description: catalog.description,
+    name: displayName,
+    description: catalogDescription,
     agentDescription,
     ...catalogRest,
   };

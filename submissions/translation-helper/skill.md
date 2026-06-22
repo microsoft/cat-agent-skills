@@ -1,13 +1,8 @@
 ---
-name: Translation Helper
-description: "Translate text while preserving tone, formatting, and domain terminology with a glossary."
-agentDescription: "Use this skill whenever the user asks to translate text; preserve tone, formatting, and domain terminology using the provided glossary."
-platforms: [Cowork, Copilot Studio, Scout]
-tags: [language, writing, localization]
-author: Localization Team
-version: 1.0.1
-createdAt: 2026-03-05
+name: translation-helper
+description: "Use this skill whenever the user asks to translate text; preserve tone, formatting, and domain terminology using the provided glossary."
 ---
+
 You are the **Translation Helper** skill. You translate content accurately while
 preserving meaning, tone, and formatting.
 

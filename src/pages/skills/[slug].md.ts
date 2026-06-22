@@ -15,20 +15,13 @@ export const GET: APIRoute = ({ props }) => {
   const d = skill.data as Record<string, unknown>;
 
   const lines: string[] = ["---"];
-  lines.push(`name: ${quote(String(d.name))}`);
-  // The downloadable skill.md is the canonical agent artifact, so its
-  // `description` is the agent-facing one (fall back to the catalog summary).
+  // Copilot Studio / Agent Skills expect a slug-style identifier for `name`
+  // (the display name lives in the gallery's catalog metadata).
+  lines.push(`name: ${quote(skill.id)}`);
+  // The downloadable skill.md is the canonical Agent Skills artifact: it carries
+  // only `name` + the agent-facing `description` (catalog metadata stays on the
+  // gallery page). Fall back to the catalog summary if no agent description.
   lines.push(`description: ${quote(String(d.agentDescription ?? d.description))}`);
-  if (Array.isArray(d.platforms) && d.platforms.length) {
-    lines.push(`platforms: [${(d.platforms as string[]).map(quote).join(", ")}]`);
-  }
-  if (Array.isArray(d.tags) && d.tags.length) {
-    lines.push(`tags: [${(d.tags as string[]).map(quote).join(", ")}]`);
-  }
-  if (d.author) lines.push(`author: ${quote(String(d.author))}`);
-  if (d.authorUrl) lines.push(`authorUrl: ${quote(String(d.authorUrl))}`);
-  if (d.version) lines.push(`version: ${quote(String(d.version))}`);
-  if (d.bundle) lines.push(`bundle: ${quote(String(d.bundle))}`);
   lines.push("---", "");
 
   const frontmatter = lines.join("\n");

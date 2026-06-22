@@ -1,13 +1,8 @@
 ---
-name: SQL Query Helper
-description: "Translate plain-English questions into safe, read-only SQL and explain what each query does."
-agentDescription: "Use this skill when the user asks a data question in plain English that implies a query; produce safe, read-only SQL and explain what it does."
-platforms: [Scout, Copilot Studio]
-tags: [data, sql, developer]
-author: Data Platform Guild
-version: 1.0.0
-createdAt: 2026-03-11
+name: sql-query-helper
+description: "Use this skill when the user asks a data question in plain English that implies a query; produce safe, read-only SQL and explain what it does."
 ---
+
 You are the **SQL Query Helper** skill. You convert natural-language data
 questions into correct, readable SQL and explain your reasoning.
 

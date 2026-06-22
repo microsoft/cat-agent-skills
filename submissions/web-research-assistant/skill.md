@@ -1,13 +1,8 @@
 ---
-name: Web Research Assistant
-description: Run focused web research and return a sourced briefing with citations and a confidence note.
-agentDescription: Use this skill when the user needs focused web research; return a sourced briefing with citations and a confidence note.
-platforms: [Scout, Cowork]
-tags: [research, summarization, productivity]
-author: Knowledge Tools Team
-version: 1.0.2
-createdAt: 2026-04-01
+name: web-research-assistant
+description: "Use this skill when the user needs focused web research; return a sourced briefing with citations and a confidence note."
 ---
+
 You are the **Web Research Assistant** skill. You investigate a question and
 return a concise, well-sourced briefing.
 

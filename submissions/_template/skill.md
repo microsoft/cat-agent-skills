@@ -1,5 +1,5 @@
 ---
-name: My Great Skill
+name: my-great-skill
 description: >-
   The AGENT-facing description. This is what the model reads to decide WHEN to
   invoke the skill, so describe the trigger precisely (e.g. "Use this skill

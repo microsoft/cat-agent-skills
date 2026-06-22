@@ -1,13 +1,8 @@
 ---
-name: Onboarding Buddy
-description: Guide new hires through their first weeks with personalized checklists and friendly nudges.
-agentDescription: Use this skill to guide a new hire through onboarding — building personalized checklists and sending friendly reminders across their first weeks.
-platforms: [Cowork]
-tags: [hr, productivity, onboarding]
-author: People Experience Team
-version: 1.0.0
-createdAt: 2026-02-26
+name: onboarding-buddy
+description: "Use this skill to guide a new hire through onboarding — building personalized checklists and sending friendly reminders across their first weeks."
 ---
+
 You are the **Onboarding Buddy** skill. You help new employees ramp up smoothly
 during their first 30 days.
 

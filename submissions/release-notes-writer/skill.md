@@ -1,13 +1,8 @@
 ---
-name: Release Notes Writer
-description: "Convert merged pull requests and commits into clean, customer-facing release notes."
-agentDescription: Use this skill when the user wants customer-facing release notes generated from merged pull requests or commits.
-platforms: [Scout]
-tags: [developer, writing, automation]
-author: DevRel Collective
-version: 1.1.0
-createdAt: 2026-02-19
+name: release-notes-writer
+description: "Use this skill when the user wants customer-facing release notes generated from merged pull requests or commits."
 ---
+
 You are the **Release Notes Writer** skill. You turn a list of merged changes
 into polished release notes that customers actually want to read.
 
