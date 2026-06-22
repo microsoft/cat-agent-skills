@@ -23,6 +23,30 @@ export type ValidationResult = {
 };
 
 /**
+ * Validate an already-parsed metadata object against the shared schema.
+ * Returns ok=true or an itemized problem list on failure.
+ */
+export function validateSkillData(
+  data: unknown,
+  label: string,
+): ValidationResult {
+  if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
+    return {
+      label,
+      ok: false,
+      problems: ["no metadata found (expected name, description, platforms, tags)"],
+    };
+  }
+  const result = skillSchema.safeParse(data);
+  if (result.success) return { label, ok: true, problems: [] };
+  const problems = result.error.issues.map((issue) => {
+    const field = issue.path.length ? issue.path.join(".") : "(root)";
+    return `${field}: ${issue.message}`;
+  });
+  return { label, ok: false, problems };
+}
+
+/**
  * Validate a raw markdown string (frontmatter + body) for one skill.
  * Returns ok=true or an itemized problem list on failure.
  */
@@ -49,14 +73,7 @@ export function validateSkillSource(
     };
   }
 
-  const result = skillSchema.safeParse(data);
-  if (result.success) return { label, ok: true, problems: [] };
-
-  const problems = result.error.issues.map((issue) => {
-    const field = issue.path.length ? issue.path.join(".") : "(root)";
-    return `${field}: ${issue.message}`;
-  });
-  return { label, ok: false, problems };
+  return validateSkillData(data, label);
 }
 
 /** Validate a markdown file on disk. */

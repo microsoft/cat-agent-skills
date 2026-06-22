@@ -34,18 +34,18 @@ npm run preview  # preview the production build locally
 
 ## 🧩 Adding a skill
 
-There are two ways to contribute — see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
-the full guide.
+Drop **one file in the [`submissions/`](submissions/) folder** and open a PR —
+you never edit `src/content/skills/` by hand. CI validates the metadata and
+generates the published page (and any download bundle) for you. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide.
 
-- **Submit a zip** (recommended for skills with scripts): drop
-  `submissions/<slug>.zip` containing a front-page `SKILL.md`. CI extracts it
-  into the site, bundles any scripts, and validates the metadata.
-- **Add a Markdown file**: open a PR adding
-  `src/content/skills/<your-skill>.md`. See
-  [`docs/authoring-skills.md`](docs/authoring-skills.md) for the full frontmatter
-  spec and how to bundle scripts in a `.zip`.
+- **`submissions/<slug>.md`** — a single Markdown file with metadata in its
+  frontmatter. Best for instruction-only skills.
+- **`submissions/<slug>.zip`** — `skill.md` (instructions) + `metadata.json` or
+  `metadata.yaml` (metadata, kept out of the instructions file) + optional
+  scripts that become a downloadable bundle.
 
-Minimal example:
+Minimal single-file example (`submissions/my-great-skill.md`):
 
 ```markdown
 ---
@@ -54,6 +54,7 @@ description: One-line summary shown on the card and detail page.
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [productivity, automation]
 author: Your Name
+authorUrl: https://example.com
 version: 1.0.0
 ---
 
@@ -69,7 +70,7 @@ Markdown — this body becomes the "Instructions" section on the detail page.
 ```
 src/
   components/      SkillCard, SkillCover (the branded "screenshot")
-  content/skills/  one Markdown file per skill (the content)
+  content/skills/  generated skill pages (produced from submissions/ — do not edit by hand)
   layouts/         base page layout
   lib/             cover theming + small helpers
   pages/
