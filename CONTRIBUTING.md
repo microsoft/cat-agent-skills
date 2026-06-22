@@ -53,8 +53,8 @@ Every skill **must** include these frontmatter fields, or the build fails:
 | `platforms`   | string[] | One or more of `Cowork`, `Copilot Studio`, `Scout`. |
 | `tags`        | string[] | Lowercase tags for search/filtering.                |
 
-Optional: `author`, `version`, `createdAt`, `updatedAt`, `coverColor`,
-`featured`. (`bundle` is set automatically by the zip pipeline.)
+Optional: `author`, `authorUrl`, `version`, `createdAt`, `updatedAt`,
+`coverColor`, `featured`. (`bundle` is set automatically by the zip pipeline.)
 
 ## Preview locally
 

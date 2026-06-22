@@ -38,6 +38,7 @@ meeting-summarizer.zip
 | `platforms`   | ✅       | One or more of `Cowork`, `Copilot Studio`, `Scout`.          |
 | `tags`        | ✅       | Lowercase tags for search/filtering.                         |
 | `author`      |          | Person or team.                                              |
+| `authorUrl`   |          | Link to the author's website/profile.                        |
 | `version`     |          | Semantic version, e.g. `1.0.0`.                              |
 | `createdAt`   |          | `YYYY-MM-DD`.                                                |
 | `updatedAt`   |          | `YYYY-MM-DD`.                                                |

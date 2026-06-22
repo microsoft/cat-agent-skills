@@ -16,6 +16,9 @@ export const skillSchema = z.object({
   platforms: z.array(z.enum(PLATFORMS)).nonempty(),
   tags: z.array(z.string()).nonempty(),
   author: z.string().optional(),
+  // Optional URL to the author's website / profile, shown as a link on the
+  // skill page when an `author` is also present.
+  authorUrl: z.string().url().optional(),
   version: z.string().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),

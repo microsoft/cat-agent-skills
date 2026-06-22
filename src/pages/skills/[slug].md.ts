@@ -24,6 +24,7 @@ export const GET: APIRoute = ({ props }) => {
     lines.push(`tags: [${(d.tags as string[]).map(quote).join(", ")}]`);
   }
   if (d.author) lines.push(`author: ${quote(String(d.author))}`);
+  if (d.authorUrl) lines.push(`authorUrl: ${quote(String(d.authorUrl))}`);
   if (d.version) lines.push(`version: ${quote(String(d.version))}`);
   if (d.bundle) lines.push(`bundle: ${quote(String(d.bundle))}`);
   lines.push("---", "");

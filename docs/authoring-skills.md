@@ -51,6 +51,7 @@ becomes the skill's URL slug, e.g. `meeting-summarizer.md` →
 | `platforms`   | ✅       | string[]   | One or more of `Cowork`, `Copilot Studio`, `Scout` — the agent platforms the skill targets. |
 | `tags`        | ✅       | string[]   | Lowercase tags for filtering/search. Reuse existing tags where you can.|
 | `author`      |          | string     | Person or team credited for the skill.                                 |
+| `authorUrl`   |          | string     | URL to the author's website/profile; renders the author name as a link.|
 | `version`     |          | string     | Semantic version, e.g. `1.0.0`.                                        |
 | `createdAt`   |          | date       | `YYYY-MM-DD` when the skill was first published.                       |
 | `updatedAt`   |          | date       | `YYYY-MM-DD` of the latest update.                                     |
