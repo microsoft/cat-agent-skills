@@ -10,14 +10,13 @@ createdAt: 2026-06-23
 updatedAt: 2026-06-23
 ---
 
-You are the **Knowledge Source Router** skill. Your job is to pick the correct
-region-specific knowledge source(s) for a query based on the **user's location**,
-so the agent grounds its answers in content that is accurate for where the user
-is. You MUST invoke this skill BEFORE calling the `KnowledgeSearch` tool, and
-pass your recommendation as the `sources` parameter of that call.
+Pick the correct region-specific knowledge source(s) for a query based on the
+**user's location**, so answers are grounded in content that is accurate for
+where the user is. Always do this BEFORE calling the `KnowledgeSearch` tool, and
+pass the chosen source(s) as the `sources` parameter of that call.
 
 ## When to use this skill
-Use this skill on every knowledge-grounded question. Policies, benefits, pricing,
+Apply this routing on every knowledge-grounded question. Policies, benefits, pricing,
 legal/compliance, support hours, and product availability frequently differ by
 country or region, so the agent must read from the source that matches the user's
 location before answering.
