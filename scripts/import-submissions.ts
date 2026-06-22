@@ -36,9 +36,11 @@ const BUNDLES_DIR = join(ROOT, "public", "bundles");
 
 const INSTRUCTIONS_NAME = "skill.md";
 const METADATA_NAMES = ["metadata.json", "metadata.yaml", "metadata.yml"];
-// Fixed timestamp so generated bundle zips are byte-for-byte reproducible
-// (otherwise every CI run re-commits an identical-but-different-bytes zip).
-const FIXED_ZIP_DATE = new Date("2000-01-01T00:00:00Z");
+// Fixed timestamp so generated bundle zips are byte-for-byte reproducible.
+// adm-zip encodes the DOS time from the Date's *local* components, so this must
+// be built from local components (not a UTC instant) to stay identical across
+// timezones (e.g. a contributor's machine vs. CI running in UTC).
+const FIXED_ZIP_DATE = new Date(2000, 0, 1, 0, 0, 0);
 // Order in which frontmatter keys are emitted for generated content files.
 const FIELD_ORDER = [
   "name",
