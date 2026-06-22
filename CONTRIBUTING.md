@@ -44,6 +44,25 @@ Best for instruction-only skills with no scripts.
 
 ## Required metadata
 
+Metadata lives in a **YAML frontmatter block** — the section fenced by `---`
+lines at the very top of the file. For a zip submission this is the top of the
+`SKILL.md` inside the zip; for a direct contribution it's the top of
+`src/content/skills/<slug>.md`. Everything **after** the closing `---` is the
+skill's instructions.
+
+```markdown
+---
+name: Meeting Summarizer
+description: Turn a meeting transcript into concise notes and action items.
+platforms: [Cowork, Copilot Studio]
+tags: [meetings, productivity]
+author: Your Name
+authorUrl: https://example.com
+---
+
+You are the **Meeting Summarizer** skill. Write the agent instructions here…
+```
+
 Every skill **must** include these frontmatter fields, or the build fails:
 
 | Field         | Type     | Notes                                               |
