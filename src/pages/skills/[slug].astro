@@ -65,21 +65,6 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
         <p class="text-lg text-slate-300">{d.description}</p>
 
         {
-          d.agentDescription && (
-            <div class="mt-5 rounded-xl border border-brand-500/20 bg-brand-500/5 p-4">
-              <h2 class="text-xs font-semibold uppercase tracking-wider text-brand-300">
-                Agent description
-              </h2>
-              <p class="mt-1.5 text-sm text-slate-300">{d.agentDescription}</p>
-              <p class="mt-2 text-xs text-slate-500">
-                The model reads this to decide when to invoke the skill — it ships
-                in the downloaded <code class="text-brand-200">skill.md</code> frontmatter.
-              </p>
-            </div>
-          )
-        }
-
-        {
           d.tags.length > 0 && (
             <div class="mt-4 flex flex-wrap gap-2">
               {d.tags.map((tag) => (
@@ -95,6 +80,17 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
         }
 
         <hr class="my-7 border-white/5" />
+
+        {
+          d.agentDescription && (
+            <div class="mb-6">
+              <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-300">
+                Description
+              </h2>
+              <p class="text-slate-300">{d.agentDescription}</p>
+            </div>
+          )
+        }
 
         <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-300">
           Instructions
@@ -130,9 +126,9 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
 
           <h3 class="text-sm font-semibold text-white">Add this skill</h3>
           <p class="mt-1 text-xs text-slate-400">
-            Download the instructions and add them to your {
-              d.platforms.length === 1 ? d.platforms[0] : "agent"
-            } agent.
+            Download the instructions and add them to {
+              d.platforms.length === 1 ? d.platforms[0] : "your platform"
+            }.
           </p>
 
           <div class="mt-4 flex flex-col gap-2">
