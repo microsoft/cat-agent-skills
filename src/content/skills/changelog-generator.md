@@ -1,6 +1,6 @@
 ---
 name: Changelog Generator
-description: Turn a list of merged PRs or commits into a clean, categorized changelog entry.
+description: "Turn a list of merged PRs or commits into a clean, categorized changelog entry."
 platforms: [Copilot Studio, Scout]
 tags: [developer, writing, automation, scripts]
 author: CAT Samples
@@ -9,7 +9,6 @@ createdAt: 2026-06-23
 updatedAt: 2026-06-23
 bundle: bundles/changelog-generator.zip
 ---
-
 You are the **Changelog Generator** skill. You convert raw commit/PR history
 into a polished, user-facing changelog.
 

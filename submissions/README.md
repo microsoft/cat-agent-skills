@@ -1,55 +1,88 @@
-# Skill submissions (zip)
+# Submit a skill
 
-Drop a single self-contained **`<slug>.zip`** in this folder to contribute a
-skill without hand-editing the site. On every pull request, CI runs the import
-pipeline (`npm run import:submissions`), which:
+**Every** skill is contributed by dropping a file in this `submissions/` folder
+and opening a pull request — you never edit `src/content/skills/` by hand. On
+each PR, CI validates your metadata and generates the published skill page (and
+any download bundle) for you.
 
-1. Finds each new/changed `submissions/*.zip`.
-2. Reads the front-page **`SKILL.md`** inside it (your instructions + metadata).
-3. **Validates the metadata** — a missing or invalid required field fails the PR
-   with a message listing exactly what's wrong.
-4. Writes `src/content/skills/<slug>.md`.
-5. Bundles any remaining files (scripts, schemas, README) into
-   `public/bundles/<slug>.zip` and links it from the skill page.
+Choose whichever fits your skill:
 
-The `<slug>` is the zip filename without `.zip` (e.g. `meeting-summarizer.zip`
-→ `/skills/meeting-summarizer`). Use lowercase, hyphenated names.
+## Option 1 — a single Markdown file
 
-## Required zip layout
+Best for instruction-only skills (no scripts).
+
+Add `submissions/<slug>.md` with the metadata in its frontmatter:
+
+```markdown
+---
+name: Meeting Summarizer
+description: Turn a meeting transcript into concise notes and action items.
+platforms: [Cowork, Copilot Studio]
+tags: [meetings, productivity]
+author: Your Name
+authorUrl: https://example.com
+---
+
+You are the **Meeting Summarizer** skill. Write the agent instructions here…
+```
+
+See [`skill.template.md`](./skill.template.md).
+
+## Option 2 — a zip (metadata kept in its own file)
+
+Best when your skill ships scripts, or you'd rather keep metadata out of the
+instructions file. Add `submissions/<slug>.zip` containing:
 
 ```
 meeting-summarizer.zip
-├── SKILL.md            # required: front page (frontmatter metadata + instructions)
-├── README.md           # optional: goes into the downloadable bundle
-└── scripts/            # optional: helper scripts, schemas, etc. (bundled)
+├── skill.md          # instructions only — no frontmatter needed
+├── metadata.json     # OR metadata.yaml — all the metadata fields
+└── scripts/          # optional helper files (bundled for download)
     └── summarize.py
 ```
 
-- `SKILL.md` **must** sit at the root of the zip.
-- Everything other than `SKILL.md` is packaged into the downloadable bundle.
-- If the zip contains only `SKILL.md`, no bundle is produced.
+`metadata.json` example:
 
-## Required metadata (frontmatter in `SKILL.md`)
+```json
+{
+  "name": "Meeting Summarizer",
+  "description": "Turn a meeting transcript into concise notes and action items.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["meetings", "productivity"],
+  "author": "Your Name",
+  "authorUrl": "https://example.com"
+}
+```
 
-| Field         | Required | Notes                                                        |
-| ------------- | -------- | ------------------------------------------------------------ |
-| `name`        | ✅       | Display name.                                                |
-| `description` | ✅       | One-line summary.                                            |
-| `platforms`   | ✅       | One or more of `Cowork`, `Copilot Studio`, `Scout`.          |
-| `tags`        | ✅       | Lowercase tags for search/filtering.                         |
-| `author`      |          | Person or team.                                              |
-| `version`     |          | Semantic version, e.g. `1.0.0`.                              |
-| `createdAt`   |          | `YYYY-MM-DD`.                                                |
-| `updatedAt`   |          | `YYYY-MM-DD`.                                                |
-| `bundle`      |          | Set automatically by the pipeline — do not add it yourself.  |
+See [`metadata.template.json`](./metadata.template.json). The same fields work in
+a `metadata.yaml` if you prefer YAML.
 
-See [`SKILL.template.md`](./SKILL.template.md) for a starting point and
-[`../docs/authoring-skills.md`](../docs/authoring-skills.md) for full guidance.
+> The `<slug>` is the file name without its extension (e.g.
+> `meeting-summarizer.zip` → `/skills/meeting-summarizer`). Use lowercase,
+> hyphenated names.
+
+## Metadata fields
+
+| Field         | Required | Notes                                                       |
+| ------------- | -------- | ----------------------------------------------------------- |
+| `name`        | ✅       | Display name.                                               |
+| `description` | ✅       | One-line summary.                                           |
+| `platforms`   | ✅       | One or more of `Cowork`, `Copilot Studio`, `Scout`.         |
+| `tags`        | ✅       | Lowercase tags for search/filtering.                        |
+| `author`      |          | Person or team.                                             |
+| `authorUrl`   |          | Link to the author's website/profile.                       |
+| `version`     |          | Semantic version, e.g. `1.0.0`.                             |
+| `createdAt`   |          | `YYYY-MM-DD`.                                               |
+| `updatedAt`   |          | `YYYY-MM-DD`.                                               |
+| `bundle`      |          | Set automatically by the pipeline — do not add it yourself. |
+
+A missing or invalid **required** field fails the PR with a message listing
+exactly what's wrong.
 
 ## Try it locally before opening a PR
 
 ```bash
-npm run check:submissions   # validate metadata only, write nothing
-npm run import:submissions   # actually extract into the site
-npm run build                # confirm the site builds with your skill
+npm run check:submissions    # validate metadata only, write nothing
+npm run import:submissions   # generate the skill page(s) + bundle(s)
+npm run build                # confirm the site builds
 ```

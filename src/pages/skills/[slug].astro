@@ -20,8 +20,8 @@ const { Content } = await render(skill);
 const updated = formatDate(d.updatedAt ?? d.createdAt);
 const created = formatDate(d.createdAt);
 
-const meta: Array<[string, string]> = [];
-if (d.author) meta.push(["Author", d.author]);
+const meta: Array<[string, string, string?]> = [];
+if (d.author) meta.push(["Author", d.author, d.authorUrl]);
 if (d.version) meta.push(["Version", d.version]);
 if (created) meta.push(["Added", created]);
 if (updated && updated !== created) meta.push(["Updated", updated]);
@@ -165,10 +165,23 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
           {
             meta.length > 0 && (
               <dl class="mt-5 space-y-2 border-t border-white/5 pt-4 text-sm">
-                {meta.map(([k, v]) => (
+                {meta.map(([k, v, href]) => (
                   <div class="flex justify-between gap-3">
                     <dt class="text-slate-400">{k}</dt>
-                    <dd class="text-right font-medium text-slate-200">{v}</dd>
+                    <dd class="text-right font-medium text-slate-200">
+                      {href ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener"
+                          class="text-brand-300 underline hover:text-brand-200 transition-colors"
+                        >
+                          {v}
+                        </a>
+                      ) : (
+                        v
+                      )}
+                    </dd>
                   </div>
                 ))}
               </dl>

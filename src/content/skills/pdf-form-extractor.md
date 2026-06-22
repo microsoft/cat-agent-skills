@@ -4,6 +4,7 @@ description: Pull structured fields from filled PDF forms and validate them agai
 platforms: [Copilot Studio]
 tags: [documents, extraction, automation, scripts]
 author: Document AI Lab
+authorUrl: https://example.com/document-ai-lab
 version: 0.9.0
 createdAt: 2026-03-22
 updatedAt: 2026-05-18

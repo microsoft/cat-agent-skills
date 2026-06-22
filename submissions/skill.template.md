@@ -4,6 +4,7 @@ description: One-line summary shown on the card and detail page.
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [productivity, automation]
 author: Your Name
+authorUrl: https://example.com
 version: 1.0.0
 createdAt: 2026-01-01
 updatedAt: 2026-01-01
