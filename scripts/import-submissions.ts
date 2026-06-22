@@ -1,30 +1,43 @@
 /**
  * Import skill submissions into the site content.
  *
- * Everything is contributed through the `submissions/` folder, as either:
+ * Every skill is contributed through the `submissions/` folder as a self-
+ * contained submission — either an uncompressed folder or its zipped
+ * equivalent — with the SAME shape:
  *
- *   submissions/<slug>.md   A single markdown file with metadata in its
- *                           frontmatter (best for instruction-only skills).
+ *   submissions/<slug>/        (or submissions/<slug>.zip containing the same)
+ *   ├── skill.md       The canonical Agent Skills file: frontmatter with
+ *   │                  `name` + `description` (the AGENT-facing description the
+ *   │                  model reads to decide when to invoke the skill) followed
+ *   │                  by the instructions body.
+ *   ├── metadata.json  (or metadata.yaml) Catalog metadata for THIS gallery:
+ *   │                  `description` (the human catalog/gallery summary),
+ *   │                  `platforms`, `tags`, `author`, `authorUrl`, `version`…
+ *   └── scripts/       Optional helper files, packaged into a download bundle.
  *
- *   submissions/<slug>.zip  A bundle containing:
- *                             - skill.md       the instructions (no frontmatter
- *                                              needed),
- *                             - metadata.json  OR metadata.yaml — all metadata,
- *                                              kept OUT of the instructions file,
- *                             - optional scripts / other files (bundled).
+ * The two descriptions are deliberately separate:
+ *   - skill.md frontmatter `description`  → `agentDescription` (what the agent reads)
+ *   - metadata.json `description`         → `description`      (what the gallery shows)
  *
- * For every submission this script validates the metadata against the shared
- * schema (HARD FAIL on error), then generates the canonical
- * `src/content/skills/<slug>.md` (which authors never edit by hand). Zip
- * submissions with extra files also get a deterministic
- * `public/bundles/<slug>.zip`, with `bundle:` injected into the frontmatter.
+ * For every submission this script validates the merged metadata against the
+ * shared schema (HARD FAIL on error), then generates the canonical
+ * `src/content/skills/<slug>.md` (which authors never edit by hand). Submissions
+ * with extra files also get a deterministic `public/bundles/<slug>.zip`, with
+ * `bundle:` injected into the frontmatter.
  *
  * Usage:
  *   tsx scripts/import-submissions.ts            # import everything
  *   tsx scripts/import-submissions.ts --check    # validate only, write nothing
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, join, posix, relative, sep } from "node:path";
 import AdmZip from "adm-zip";
 import matter from "gray-matter";
 import { validateSkillData } from "./validate-skill.ts";
@@ -45,6 +58,7 @@ const FIXED_ZIP_DATE = new Date(2000, 0, 1, 0, 0, 0);
 const FIELD_ORDER = [
   "name",
   "description",
+  "agentDescription",
   "platforms",
   "tags",
   "author",
@@ -60,6 +74,17 @@ const FIELD_ORDER = [
 const checkOnly = process.argv.includes("--check");
 
 type ImportProblem = { source: string; problems: string[] };
+/** A file inside a submission, with a forward-slash relative path. */
+type SubFile = { path: string; data: Buffer };
+/** A loaded submission (folder or zip), before parsing/validation. */
+type Submission = {
+  slug: string;
+  label: string;
+  skillMd?: string;
+  metaName?: string;
+  metaText?: string;
+  scripts: SubFile[];
+};
 
 function quote(value: string): string {
   return /[:#\[\]{},'"]|^\s|\s$/.test(value) ? JSON.stringify(value) : value;
@@ -103,21 +128,11 @@ function parseMetadataFile(name: string, text: string): Record<string, unknown> 
   return matter(`---\n${text}\n---\n`).data;
 }
 
-/** Find a zip entry by base name (case-insensitive), preferring the shallowest. */
-function findEntry(zip: AdmZip, names: string[]): AdmZip.IZipEntry | undefined {
-  return zip
-    .getEntries()
-    .filter(
-      (e) => !e.isDirectory && names.includes(basename(e.entryName).toLowerCase()),
-    )
-    .sort((a, b) => a.entryName.split("/").length - b.entryName.split("/").length)[0];
-}
-
-/** Write a deterministic zip from the given entries. */
-function writeBundle(entries: AdmZip.IZipEntry[], outPath: string): void {
+/** Write a deterministic zip from the given files. */
+function writeBundle(files: SubFile[], outPath: string): void {
   const out = new AdmZip();
-  for (const entry of [...entries].sort((a, b) => a.entryName.localeCompare(b.entryName))) {
-    out.addFile(entry.entryName, entry.getData());
+  for (const file of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
+    out.addFile(file.path, file.data);
   }
   for (const entry of out.getEntries()) entry.header.time = FIXED_ZIP_DATE;
   out.writeZip(outPath);
@@ -129,71 +144,100 @@ function writeIfChanged(path: string, content: string): void {
   writeFileSync(path, content, "utf8");
 }
 
-/** Import a standalone `submissions/<slug>.md`. */
-function importMarkdown(mdPath: string): ImportProblem | null {
-  const slug = basename(mdPath).replace(/\.md$/i, "");
-  const source = readFileSync(mdPath, "utf8");
-  const label = `submissions/${basename(mdPath)}`;
-
-  let data: Record<string, unknown>;
-  try {
-    data = matter(source).data;
-  } catch (err) {
-    return { source: label, problems: [`could not parse frontmatter: ${(err as Error).message}`] };
+/** Recursively list every file under `dir`, with forward-slash relative paths. */
+function listFiles(dir: string, baseDir = dir): SubFile[] {
+  const out: SubFile[] = [];
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) {
+      out.push(...listFiles(full, baseDir));
+    } else {
+      out.push({ path: relative(baseDir, full).split(sep).join("/"), data: readFileSync(full) });
+    }
   }
-  const result = validateSkillData(data, label);
-  if (!result.ok) return { source: label, problems: result.problems };
-
-  if (!checkOnly) {
-    mkdirSync(CONTENT_DIR, { recursive: true });
-    writeIfChanged(join(CONTENT_DIR, `${slug}.md`), source);
-    console.log(`\u2713 ${label} \u2192 src/content/skills/${slug}.md`);
-  }
-  return null;
+  return out;
 }
 
-/** Import a `submissions/<slug>.zip`. */
-function importZip(zipPath: string): ImportProblem | null {
-  const slug = basename(zipPath).replace(/\.zip$/i, "");
-  const label = `submissions/${basename(zipPath)}`;
-  const zip = new AdmZip(zipPath);
-
-  const instructions = findEntry(zip, [INSTRUCTIONS_NAME]);
-  if (!instructions) {
-    return { source: label, problems: [`no \`skill.md\` found at the zip root`] };
-  }
-
-  const metaEntry = findEntry(zip, METADATA_NAMES);
-  const parsed = matter(zip.readAsText(instructions));
-  let meta: Record<string, unknown>;
-  if (metaEntry) {
-    try {
-      meta = parseMetadataFile(metaEntry.entryName, zip.readAsText(metaEntry));
-    } catch (err) {
-      return {
-        source: label,
-        problems: [`could not parse ${basename(metaEntry.entryName)}: ${(err as Error).message}`],
-      };
+/** Split a submission's files into skill.md, metadata.*, and bundled scripts. */
+function classify(slug: string, label: string, files: SubFile[]): Submission {
+  const sub: Submission = { slug, label, scripts: [] };
+  // Prefer the shallowest skill.md / metadata.* if duplicated in subfolders.
+  const byDepth = (a: SubFile, b: SubFile) =>
+    a.path.split("/").length - b.path.split("/").length;
+  const sorted = [...files].sort(byDepth);
+  for (const file of sorted) {
+    const base = posix.basename(file.path).toLowerCase();
+    if (base === INSTRUCTIONS_NAME && sub.skillMd === undefined) {
+      sub.skillMd = file.data.toString("utf8");
+    } else if (METADATA_NAMES.includes(base) && sub.metaText === undefined) {
+      sub.metaName = base;
+      sub.metaText = file.data.toString("utf8");
+    } else {
+      sub.scripts.push(file);
     }
-  } else {
-    // Back-compat: fall back to frontmatter inside skill.md.
-    meta = parsed.data;
   }
+  return sub;
+}
+
+/** Validate + generate one classified submission. */
+function processSubmission(sub: Submission): ImportProblem | null {
+  const { slug, label } = sub;
+  if (sub.skillMd === undefined) {
+    return { source: label, problems: [`no \`skill.md\` found`] };
+  }
+  if (sub.metaText === undefined) {
+    return {
+      source: label,
+      problems: [`no metadata file found (expected ${METADATA_NAMES.join(" / ")})`],
+    };
+  }
+
+  // skill.md → name + agent-facing description (its own frontmatter) + body.
+  const parsed = matter(sub.skillMd);
+  const skillFm = parsed.data as Record<string, unknown>;
+
+  // metadata.* → catalog metadata for this gallery.
+  let catalog: Record<string, unknown>;
+  try {
+    catalog = parseMetadataFile(sub.metaName!, sub.metaText);
+  } catch (err) {
+    return { source: label, problems: [`could not parse ${sub.metaName}: ${(err as Error).message}`] };
+  }
+
+  const problems: string[] = [];
+  const name = (skillFm.name ?? catalog.name) as string | undefined;
+  if (!name) problems.push("`name` is required in skill.md frontmatter");
+  const agentDescription = skillFm.description as string | undefined;
+  if (!agentDescription) {
+    problems.push("`description` (agent-facing) is required in skill.md frontmatter");
+  }
+  if (!catalog.description) {
+    problems.push("`description` (catalog) is required in the metadata file");
+  }
+  if (problems.length) return { source: label, problems };
+
+  // Merge into the canonical frontmatter: catalog fields win, plus name from the
+  // skill file and the agent description mapped to its own key.
+  const { name: _n, description: _d, ...catalogRest } = catalog;
+  const meta: Record<string, unknown> = {
+    name,
+    description: catalog.description,
+    agentDescription,
+    ...catalogRest,
+  };
+
+  const hasBundle = sub.scripts.length > 0;
+  if (hasBundle) meta.bundle = `bundles/${slug}.zip`;
 
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };
-
-  const skip = new Set([instructions.entryName, metaEntry?.entryName].filter(Boolean) as string[]);
-  const scriptEntries = zip.getEntries().filter((e) => !e.isDirectory && !skip.has(e.entryName));
-  const hasBundle = scriptEntries.length > 0;
-  if (hasBundle) meta = { ...meta, bundle: `bundles/${slug}.zip` };
 
   if (!checkOnly) {
     mkdirSync(CONTENT_DIR, { recursive: true });
     writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, parsed.content));
     if (hasBundle) {
       mkdirSync(BUNDLES_DIR, { recursive: true });
-      writeBundle(scriptEntries, join(BUNDLES_DIR, `${slug}.zip`));
+      writeBundle(sub.scripts, join(BUNDLES_DIR, `${slug}.zip`));
     }
     console.log(
       `\u2713 ${label} \u2192 src/content/skills/${slug}.md` +
@@ -203,31 +247,47 @@ function importZip(zipPath: string): ImportProblem | null {
   return null;
 }
 
+/** Load a `submissions/<slug>/` folder. */
+function loadFolder(dir: string): Submission {
+  const slug = basename(dir);
+  return classify(slug, `submissions/${slug}/`, listFiles(dir));
+}
+
+/** Load a `submissions/<slug>.zip`. */
+function loadZip(zipPath: string): Submission {
+  const slug = basename(zipPath).replace(/\.zip$/i, "");
+  const files = new AdmZip(zipPath)
+    .getEntries()
+    .filter((e) => !e.isDirectory)
+    .map((e) => ({ path: e.entryName.split("\\").join("/"), data: e.getData() }));
+  return classify(slug, `submissions/${basename(zipPath)}`, files);
+}
+
 function main() {
   if (!existsSync(SUBMISSIONS_DIR)) {
     console.log("No submissions/ directory \u2014 nothing to import.");
     return;
   }
 
-  const files = readdirSync(SUBMISSIONS_DIR);
-  const ignore = new Set(["readme.md", "skill.template.md"]);
-  const mds = files.filter(
-    (f) => f.toLowerCase().endsWith(".md") && !ignore.has(f.toLowerCase()),
-  );
-  const zips = files.filter((f) => f.toLowerCase().endsWith(".zip"));
+  const submissions: Submission[] = [];
+  for (const name of readdirSync(SUBMISSIONS_DIR)) {
+    if (name.startsWith(".") || name.startsWith("_")) continue; // _template, etc.
+    const full = join(SUBMISSIONS_DIR, name);
+    if (statSync(full).isDirectory()) {
+      submissions.push(loadFolder(full));
+    } else if (name.toLowerCase().endsWith(".zip")) {
+      submissions.push(loadZip(full));
+    }
+  }
 
-  if (mds.length === 0 && zips.length === 0) {
+  if (submissions.length === 0) {
     console.log("No submissions found in submissions/.");
     return;
   }
 
   const problems: ImportProblem[] = [];
-  for (const f of mds) {
-    const p = importMarkdown(join(SUBMISSIONS_DIR, f));
-    if (p) problems.push(p);
-  }
-  for (const f of zips) {
-    const p = importZip(join(SUBMISSIONS_DIR, f));
+  for (const sub of submissions) {
+    const p = processSubmission(sub);
     if (p) problems.push(p);
   }
 
@@ -238,18 +298,17 @@ function main() {
       for (const msg of p.problems) console.error(`    \u2022 ${msg}`);
     }
     console.error(
-      "\nEvery submission needs valid metadata (name, description, platforms, " +
-        "tags) \u2014 in the .md frontmatter, or in metadata.json/metadata.yaml " +
-        "inside the zip. Fix the items above and retry.",
+      "\nEach submission needs skill.md (frontmatter `name` + agent-facing " +
+        "`description`, then instructions) and a metadata file with a catalog " +
+        "`description`, `platforms`, and `tags`. Fix the items above and retry.",
     );
     process.exit(1);
   }
 
-  const total = mds.length + zips.length;
   console.log(
     checkOnly
-      ? `\nAll ${total} submission(s) passed validation (check-only, nothing written).`
-      : `\nImported ${total} submission(s).`,
+      ? `\nAll ${submissions.length} submission(s) passed validation (check-only, nothing written).`
+      : `\nImported ${submissions.length} submission(s).`,
   );
 }
 

@@ -1,83 +1,95 @@
 # Submit a skill
 
-**Every** skill is contributed by dropping a file in this `submissions/` folder
-and opening a pull request — you never edit `src/content/skills/` by hand. On
-each PR, CI validates your metadata and generates the published skill page (and
-any download bundle) for you.
+**Every** skill is contributed by adding it to this `submissions/` folder and
+opening a pull request — you never edit `src/content/skills/` by hand. On each
+PR, CI validates your metadata and generates the published skill page (and any
+download bundle) for you.
 
-Choose whichever fits your skill:
+Every submission has the **same shape**, whether you add it as a folder or as a
+zip of that same folder:
 
-## Option 1 — a single Markdown file
+```
+submissions/<slug>/            (or submissions/<slug>.zip containing the same)
+├── skill.md          # the agent skill: frontmatter (name + agent description) + instructions
+├── metadata.json     # OR metadata.yaml — catalog details for this gallery
+└── scripts/          # optional helper files (packaged into a download bundle)
+    └── do-thing.py
+```
 
-Best for instruction-only skills (no scripts).
+The `<slug>` is the folder (or zip) name — use lowercase, hyphenated names, e.g.
+`submissions/meeting-summarizer/` -> `/skills/meeting-summarizer`. Start by
+copying [`_template/`](./_template).
 
-Add `submissions/<slug>.md` with the metadata in its frontmatter:
+## Two descriptions — they are different on purpose
+
+| | Lives in | Who reads it |
+| --- | --- | --- |
+| **Agent description** | `skill.md` frontmatter `description` | the **agent/model**, to decide *when to invoke* the skill |
+| **Catalog description** | `metadata.json` `description` | **people** browsing this gallery (card + top of the detail page) |
+
+Write the agent description as a precise trigger ("Use this skill whenever the
+user… BEFORE calling…"). Write the catalog description as a friendly one-liner.
+
+## `skill.md` — name + description + instructions
+
+The canonical Agent Skills file: frontmatter with the display `name` and the
+**agent-facing** `description`, then the instructions body. All three are
+required.
 
 ```markdown
 ---
 name: Meeting Summarizer
-description: Turn a meeting transcript into concise notes and action items.
-platforms: [Cowork, Copilot Studio]
-tags: [meetings, productivity]
-author: Your Name
-authorUrl: https://example.com
+description: Use this skill whenever the user asks to summarize a meeting transcript, before drafting any reply.
 ---
 
-You are the **Meeting Summarizer** skill. Write the agent instructions here…
+Turn the transcript into concise notes and action items…
 ```
 
-See [`skill.template.md`](./skill.template.md).
+## `metadata.json` — catalog details
 
-## Option 2 — a zip (metadata kept in its own file)
-
-Best when your skill ships scripts, or you'd rather keep metadata out of the
-instructions file. Add `submissions/<slug>.zip` containing:
-
-```
-meeting-summarizer.zip
-├── skill.md          # instructions only — no frontmatter needed
-├── metadata.json     # OR metadata.yaml — all the metadata fields
-└── scripts/          # optional helper files (bundled for download)
-    └── summarize.py
-```
-
-`metadata.json` example:
+All the catalog details for the gallery (kept out of the agent file):
 
 ```json
 {
-  "name": "Meeting Summarizer",
   "description": "Turn a meeting transcript into concise notes and action items.",
   "platforms": ["Cowork", "Copilot Studio"],
   "tags": ["meetings", "productivity"],
   "author": "Your Name",
-  "authorUrl": "https://example.com"
+  "authorUrl": "https://example.com",
+  "version": "1.0.0",
+  "createdAt": "2026-01-01",
+  "updatedAt": "2026-01-01"
 }
 ```
 
-See [`metadata.template.json`](./metadata.template.json). The same fields work in
-a `metadata.yaml` if you prefer YAML.
-
-> The `<slug>` is the file name without its extension (e.g.
-> `meeting-summarizer.zip` → `/skills/meeting-summarizer`). Use lowercase,
-> hyphenated names.
+The same fields work in a `metadata.yaml` if you prefer YAML.
 
 ## Metadata fields
 
-| Field         | Required | Notes                                                       |
-| ------------- | -------- | ----------------------------------------------------------- |
-| `name`        | ✅       | Display name.                                               |
-| `description` | ✅       | One-line summary.                                           |
-| `platforms`   | ✅       | One or more of `Cowork`, `Copilot Studio`, `Scout`.         |
-| `tags`        | ✅       | Lowercase tags for search/filtering.                        |
-| `author`      |          | Person or team.                                             |
-| `authorUrl`   |          | Link to the author's website/profile.                       |
-| `version`     |          | Semantic version, e.g. `1.0.0`.                             |
-| `createdAt`   |          | `YYYY-MM-DD`.                                               |
-| `updatedAt`   |          | `YYYY-MM-DD`.                                               |
-| `bundle`      |          | Set automatically by the pipeline — do not add it yourself. |
+| Field         | Where           | Required | Notes                                                        |
+| ------------- | --------------- | -------- | ------------------------------------------------------------ |
+| `name`        | `skill.md`      | yes      | Display name.                                                |
+| `description` | `skill.md`      | yes      | **Agent-facing** trigger description.                        |
+| `description` | `metadata.json` | yes      | **Catalog** summary shown in the gallery.                    |
+| `platforms`   | `metadata.json` | yes      | One or more of `Cowork`, `Copilot Studio`, `Scout`.          |
+| `tags`        | `metadata.json` | yes      | Lowercase tags for search/filtering.                         |
+| `author`      | `metadata.json` |          | Person or team.                                              |
+| `authorUrl`   | `metadata.json` |          | Link to the author's website/profile.                        |
+| `version`     | `metadata.json` |          | Semantic version, e.g. `1.0.0`.                              |
+| `createdAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
+| `updatedAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
+| `coverColor`  | `metadata.json` |          | CSS color to override the auto-generated cover.              |
+| `featured`    | `metadata.json` |          | `true` to sort the skill to the top.                         |
+| `bundle`      | —               |          | Set automatically when you include `scripts/` — don't add it.|
 
 A missing or invalid **required** field fails the PR with a message listing
 exactly what's wrong.
+
+## Updating an existing skill
+
+Same path: edit the files in your `submissions/<slug>/` folder (or replace the
+`<slug>.zip`) and open a PR. The slug is the identity — same slug updates the
+existing skill, a new slug creates a new one.
 
 ## Try it locally before opening a PR
 

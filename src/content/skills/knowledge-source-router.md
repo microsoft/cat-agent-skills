@@ -1,15 +1,15 @@
 ---
 name: Knowledge Source Router
-description: Routes knowledge queries to the right region-specific source based on the user's location. You MUST invoke this skill BEFORE calling the KnowledgeSearch tool.
+description: "Route Copilot Studio knowledge searches to the right region-specific source (Americas, EMEA, APAC, or Global) based on where the user is, so answers stay locally accurate."
+agentDescription: "Determines which region-specific knowledge source(s) to search based on the user's location. You MUST invoke this skill BEFORE calling the KnowledgeSearch tool, and pass the chosen source(s) as its `sources` parameter."
 platforms: [Copilot Studio]
 tags: [knowledge, routing, localization, location, grounding]
 author: Adi Leibowitz
-authorUrl: https://microsoft.github.io/mcscatblog/
+authorUrl: "https://microsoft.github.io/mcscatblog/"
 version: 1.0.0
 createdAt: 2026-06-23
 updatedAt: 2026-06-23
 ---
-
 Pick the correct region-specific knowledge source(s) for a query based on the
 **user's location**, so answers are grounded in content that is accurate for
 where the user is. Always do this BEFORE calling the `KnowledgeSearch` tool, and

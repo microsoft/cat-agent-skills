@@ -16,7 +16,9 @@ export const GET: APIRoute = ({ props }) => {
 
   const lines: string[] = ["---"];
   lines.push(`name: ${quote(String(d.name))}`);
-  lines.push(`description: ${quote(String(d.description))}`);
+  // The downloadable skill.md is the canonical agent artifact, so its
+  // `description` is the agent-facing one (fall back to the catalog summary).
+  lines.push(`description: ${quote(String(d.agentDescription ?? d.description))}`);
   if (Array.isArray(d.platforms) && d.platforms.length) {
     lines.push(`platforms: [${(d.platforms as string[]).map(quote).join(", ")}]`);
   }

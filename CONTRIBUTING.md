@@ -5,48 +5,64 @@ instruction set for an AI agent — targeting one or more of **Cowork**,
 **Copilot Studio**, and **Scout** — published here with an optional `.zip` of
 helper scripts.
 
-You contribute by dropping **one file in the [`submissions/`](submissions/)
+You contribute by adding **one submission to the [`submissions/`](submissions/)
 folder** and opening a pull request. You never edit `src/content/skills/`
 directly — CI validates your metadata and generates the published page (and any
 download bundle) for you.
 
-## Two ways to submit
+## The submission shape
 
-### 1. A single Markdown file — `submissions/<slug>.md`
+Every submission is the same, whether you add it as a folder or a zip of that
+folder:
 
-Best for instruction-only skills. Put the metadata in the frontmatter and the
-instructions in the body. Start from
-[`submissions/skill.template.md`](submissions/skill.template.md).
+```
+submissions/<slug>/            (or submissions/<slug>.zip containing the same)
+├── skill.md          # the agent skill: frontmatter (name + agent description) + instructions
+├── metadata.json     # OR metadata.yaml — catalog details for this gallery
+└── scripts/          # optional helper files (packaged into a download bundle)
+```
 
-### 2. A zip — `submissions/<slug>.zip`
+Copy [`submissions/_template/`](submissions/_template) to get started. The
+`<slug>` is the folder/zip name (lowercase, hyphenated), e.g.
+`meeting-summarizer` → `/skills/meeting-summarizer`. See
+[`submissions/README.md`](submissions/README.md) for the full reference.
 
-Best when your skill ships scripts, or you'd rather keep metadata **out** of the
-instructions file. The zip contains:
+## Two descriptions
 
-- `skill.md` — the instructions (no frontmatter needed),
-- `metadata.json` **or** `metadata.yaml` — all the metadata fields
-  (start from [`submissions/metadata.template.json`](submissions/metadata.template.json)),
-- optional scripts / other files, which become a downloadable bundle.
+A skill carries **two** descriptions, on purpose:
 
-The `<slug>` is the file name without its extension (e.g.
-`meeting-summarizer.zip` → `/skills/meeting-summarizer`). Use lowercase,
-hyphenated names. See [`submissions/README.md`](submissions/README.md) for the
-exact layouts.
+- **Agent description** — `skill.md`'s frontmatter `description`. The model reads
+  this to decide *when to invoke* the skill (write it as a precise trigger).
+- **Catalog description** — `metadata.json`'s `description`. The friendly
+  one-liner shown to people in the gallery.
 
-## Required metadata
+## `skill.md`
 
-Whether it lives in a `.md` frontmatter or a `metadata.json`/`metadata.yaml`,
-every skill **must** include these fields or the PR fails:
+The canonical Agent Skills file — frontmatter `name` + agent `description`, then
+the instructions body. All three are required:
 
-| Field         | Type     | Notes                                               |
+```markdown
+---
+name: Meeting Summarizer
+description: Use this skill whenever the user asks to summarize a meeting transcript, before drafting a reply.
+---
+
+Turn the transcript into concise notes and action items…
+```
+
+## `metadata.json`
+
+The catalog details, kept out of the agent file:
+
+| Field         | Required | Notes                                               |
 | ------------- | -------- | --------------------------------------------------- |
-| `name`        | string   | Display name.                                       |
-| `description` | string   | One-line summary.                                   |
-| `platforms`   | string[] | One or more of `Cowork`, `Copilot Studio`, `Scout`. |
-| `tags`        | string[] | Lowercase tags for search/filtering.                |
+| `description` | yes      | Catalog summary shown in the gallery.               |
+| `platforms`   | yes      | One or more of `Cowork`, `Copilot Studio`, `Scout`. |
+| `tags`        | yes      | Lowercase tags for search/filtering.                |
 
 Optional: `author`, `authorUrl`, `version`, `createdAt`, `updatedAt`,
-`coverColor`, `featured`. (`bundle` is set automatically by the pipeline.)
+`coverColor`, `featured`. (`bundle` is set automatically when you include
+`scripts/`.)
 
 ## Validate locally
 
@@ -64,8 +80,8 @@ On a pull request, [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 1. Imports your submission, **hard-failing** with an itemized message if any
    required metadata is missing or invalid.
-2. Generates `src/content/skills/<slug>.md` (and `public/bundles/<slug>.zip` for
-   zips) and commits them back to your PR branch (same-repo PRs).
+2. Generates `src/content/skills/<slug>.md` (and `public/bundles/<slug>.zip` when
+   you include scripts) and commits them back to your PR branch (same-repo PRs).
 3. Builds the site.
 
 Merges to `main` deploy to GitHub Pages.

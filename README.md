@@ -34,36 +34,52 @@ npm run preview  # preview the production build locally
 
 ## 🧩 Adding a skill
 
-Drop **one file in the [`submissions/`](submissions/) folder** and open a PR —
-you never edit `src/content/skills/` by hand. CI validates the metadata and
+Add **one submission to the [`submissions/`](submissions/) folder** and open a
+PR — you never edit `src/content/skills/` by hand. CI validates the metadata and
 generates the published page (and any download bundle) for you. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide.
 
-- **`submissions/<slug>.md`** — a single Markdown file with metadata in its
-  frontmatter. Best for instruction-only skills.
-- **`submissions/<slug>.zip`** — `skill.md` (instructions) + `metadata.json` or
-  `metadata.yaml` (metadata, kept out of the instructions file) + optional
-  scripts that become a downloadable bundle.
+Every submission has the same shape, as a folder or a zip of that folder:
 
-Minimal single-file example (`submissions/my-great-skill.md`):
+```
+submissions/<slug>/        (or submissions/<slug>.zip)
+├── skill.md       # agent skill: frontmatter (name + agent description) + instructions
+├── metadata.json  # OR metadata.yaml — catalog details for this gallery
+└── scripts/       # optional helper files → downloadable bundle
+```
+
+A skill carries **two** descriptions: the **agent** description in `skill.md`
+frontmatter (what the model reads to decide when to invoke), and the **catalog**
+description in `metadata.json` (the friendly one-liner shown in the gallery).
+
+`submissions/my-great-skill/skill.md`:
 
 ```markdown
 ---
 name: My Great Skill
-description: One-line summary shown on the card and detail page.
-platforms: [Cowork, Copilot Studio, Scout]
-tags: [productivity, automation]
-author: Your Name
-authorUrl: https://example.com
-version: 1.0.0
+description: Use this skill whenever the user… (the agent-facing trigger).
 ---
 
-You are the **My Great Skill** skill. Write the agent instructions here as
-Markdown — this body becomes the "Instructions" section on the detail page.
+Write the agent instructions here as Markdown — this body becomes the
+"Instructions" section on the detail page.
 ```
 
-> `platforms` is required and must be one or more of `Cowork`, `Copilot Studio`,
-> `Scout`. PRs run a build check that validates every skill against the schema.
+`submissions/my-great-skill/metadata.json`:
+
+```json
+{
+  "description": "One-line catalog summary shown on the card and detail page.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["productivity", "automation"],
+  "author": "Your Name",
+  "authorUrl": "https://example.com",
+  "version": "1.0.0"
+}
+```
+
+> `description`, `platforms`, and `tags` are required (`platforms` must be one or
+> more of `Cowork`, `Copilot Studio`, `Scout`). PRs run a build check that
+> validates every skill against the schema.
 
 ## 📁 Project structure
 
@@ -81,7 +97,7 @@ src/
     skills.json.ts       metadata endpoint
 public/
   bundles/         downloadable .zip script bundles
-submissions/       drop-in <slug>.zip skill submissions (extracted by CI)
+submissions/       drop-in skill submissions (folder or <slug>.zip; imported by CI)
 scripts/           import-submissions + validate-skill (the zip pipeline)
 .github/workflows/ ci.yml (PR build check) + deploy.yml (Pages deploy)
 ```

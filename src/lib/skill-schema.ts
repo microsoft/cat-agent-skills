@@ -11,7 +11,14 @@ import { PLATFORMS } from "./skills";
 /** Zod schema for a skill's frontmatter metadata. */
 export const skillSchema = z.object({
   name: z.string(),
+  // Catalog/gallery summary shown to humans on the card, search, and the top of
+  // the detail page. Comes from metadata.json.
   description: z.string(),
+  // The agent-facing description the model reads to decide when to invoke the
+  // skill. Comes from the `description` in skill.md's own frontmatter (the
+  // canonical Agent Skills format). Optional so older catalog-only skills still
+  // validate.
+  agentDescription: z.string().optional(),
   // Agent platform(s) the skill targets: Cowork, Copilot Studio, and/or Scout.
   platforms: z.array(z.enum(PLATFORMS)).nonempty(),
   tags: z.array(z.string()).nonempty(),
