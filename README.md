@@ -34,10 +34,16 @@ npm run preview  # preview the production build locally
 
 ## 🧩 Adding a skill
 
-Skills live in `src/content/skills/` as Markdown files. To add one, open a PR
-that adds `src/content/skills/<your-skill>.md`. See
-[`docs/authoring-skills.md`](docs/authoring-skills.md) for the full frontmatter
-spec and how to bundle scripts in a `.zip`.
+There are two ways to contribute — see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+the full guide.
+
+- **Submit a zip** (recommended for skills with scripts): drop
+  `submissions/<slug>.zip` containing a front-page `SKILL.md`. CI extracts it
+  into the site, bundles any scripts, and validates the metadata.
+- **Add a Markdown file**: open a PR adding
+  `src/content/skills/<your-skill>.md`. See
+  [`docs/authoring-skills.md`](docs/authoring-skills.md) for the full frontmatter
+  spec and how to bundle scripts in a `.zip`.
 
 Minimal example:
 
@@ -74,6 +80,8 @@ src/
     skills.json.ts       metadata endpoint
 public/
   bundles/         downloadable .zip script bundles
+submissions/       drop-in <slug>.zip skill submissions (extracted by CI)
+scripts/           import-submissions + validate-skill (the zip pipeline)
 .github/workflows/ ci.yml (PR build check) + deploy.yml (Pages deploy)
 ```
 
@@ -84,6 +92,13 @@ validates every skill against the content schema). Pushing to `main` triggers
 `.github/workflows/deploy.yml`, which builds and publishes the site to GitHub
 Pages at `https://microsoft.github.io/cat-agent-skills/`. Enable Pages in the
 repo settings with the **GitHub Actions** source.
+
+## 🆘 Support
+
+CAT Agent Skills is an **example implementation**. The underlying Microsoft
+features (Power Apps, Power Automate, Dataverse, Copilot Studio, etc.) are fully
+supported, but the skills themselves are provided as-is. See
+[`SUPPORT.md`](SUPPORT.md) for how to file issues and get help.
 
 ## License
 

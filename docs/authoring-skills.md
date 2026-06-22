@@ -4,6 +4,38 @@ A **skill** is a reusable instruction set for an AI agent — targeting one or m
 of **Cowork**, **Copilot Studio**, and **Scout** — published in this gallery as a
 single Markdown file (optionally accompanied by a `.zip` of helper scripts).
 
+You can contribute in **two ways**:
+
+- **Submit a zip** — drop `submissions/<slug>.zip` (containing a front-page
+  `SKILL.md`) and CI extracts it for you. See
+  [Zip submissions](#0-zip-submissions-recommended) below.
+- **Add a Markdown file directly** — hand-author `src/content/skills/<slug>.md`,
+  covered in the rest of this guide.
+
+## 0. Zip submissions (recommended)
+
+Place a single `<slug>.zip` in [`../submissions/`](../submissions/) with this
+layout:
+
+```
+meeting-summarizer.zip
+├── SKILL.md            # required: frontmatter metadata + instructions, at the zip root
+├── README.md           # optional: included in the downloadable bundle
+└── scripts/            # optional: helper scripts, bundled automatically
+    └── summarize.py
+```
+
+On every PR the import pipeline (`npm run import:submissions`):
+
+1. Reads the front-page `SKILL.md` and **validates its metadata** — a missing or
+   invalid required field **fails the PR** with an itemized message.
+2. Writes `src/content/skills/<slug>.md` (slug = the zip filename).
+3. Packages everything else into `public/bundles/<slug>.zip` and sets the
+   `bundle:` field automatically.
+
+Validate locally first with `npm run check:submissions`. The frontmatter fields
+are identical to those described below.
+
 ## 1. Create the Markdown file
 
 Add a file at `src/content/skills/<slug>.md`. The file name (without `.md`)
