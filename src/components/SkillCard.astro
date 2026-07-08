@@ -12,6 +12,7 @@ interface Props {
   author?: string;
   coverColor?: string;
   hasBundle?: boolean;
+  rating?: number;
 }
 
 const {
@@ -23,6 +24,7 @@ const {
   author,
   coverColor,
   hasBundle = false,
+  rating = 0,
 } = Astro.props;
 ---
 
@@ -49,10 +51,23 @@ const {
     >
       <span class="truncate">{author ? `by ${author}` : "Community skill"}</span
       >
-      <span
-        class="font-medium text-brand-300 opacity-0 transition-opacity group-hover:opacity-100"
-        >View →</span
-      >
+      <span class="flex shrink-0 items-center gap-3">
+        {
+          rating > 0 && (
+            <span
+              class="flex items-center gap-1 text-slate-400"
+              title={`${rating} ${rating === 1 ? "rating" : "ratings"}`}
+            >
+              <span aria-hidden="true">👍</span>
+              {rating}
+            </span>
+          )
+        }
+        <span
+          class="font-medium text-brand-300 opacity-0 transition-opacity group-hover:opacity-100"
+          >View →</span
+        >
+      </span>
     </div>
   </div>
 </a>

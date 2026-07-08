@@ -4,6 +4,14 @@ import SkillCover from "../../components/SkillCover.astro";
 import { getCollection, render } from "astro:content";
 import { formatDate, PLATFORM_COLORS } from "../../lib/skills";
 import { withBase } from "../../lib/url";
+import { getRating } from "../../lib/ratings";
+import {
+  RATINGS_ENABLED,
+  GISCUS_REPO,
+  GISCUS_REPO_ID,
+  GISCUS_CATEGORY,
+  GISCUS_CATEGORY_ID,
+} from "../../lib/ratings-config";
 
 export async function getStaticPaths() {
   const skills = await getCollection("skills");
@@ -19,6 +27,7 @@ const { Content } = await render(skill);
 
 const updated = formatDate(d.updatedAt ?? d.createdAt);
 const created = formatDate(d.createdAt);
+const rating = getRating(skill.id);
 
 const meta: Array<[string, string, string?]> = [];
 if (d.author) meta.push(["Author", d.author, d.authorUrl]);
@@ -63,6 +72,18 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
       <!-- Main content -->
       <div>
         <p class="text-lg text-slate-300">{d.description}</p>
+
+        <div class="mt-3 flex items-center gap-2">
+          <a
+            href="#rate"
+            class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-200 hover:border-brand-500/50 hover:text-white transition-colors"
+            title="Rate this skill"
+          >
+            <span aria-hidden="true">👍</span>
+            <span>{rating}</span>
+            <span class="text-slate-400">{rating === 1 ? "rating" : "ratings"}</span>
+          </a>
+        </div>
 
         {
           d.tags.length > 0 && (
@@ -212,5 +233,55 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
         </div>
       </aside>
     </div>
+
+    <section id="rate" class="mt-10 scroll-mt-24 border-t border-white/5 pt-8">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-brand-300">
+        Rate &amp; discuss this skill
+      </h2>
+      {
+        RATINGS_ENABLED ? (
+          <>
+            <p class="mt-2 text-sm text-slate-400">
+              Give this skill a 👍 with your GitHub account. Ratings power the
+              gallery's "Top rated" sort (refreshed on each deploy).
+            </p>
+            <div class="mt-5">
+              <script
+                is:inline
+                src="https://giscus.app/client.js"
+                data-repo={GISCUS_REPO}
+                data-repo-id={GISCUS_REPO_ID}
+                data-category={GISCUS_CATEGORY}
+                data-category-id={GISCUS_CATEGORY_ID}
+                data-mapping="specific"
+                data-term={skill.id}
+                data-strict="1"
+                data-reactions-enabled="1"
+                data-emit-metadata="0"
+                data-input-position="bottom"
+                data-theme="dark"
+                data-lang="en"
+                crossorigin="anonymous"
+                async
+              />
+            </div>
+          </>
+        ) : (
+          <p class="mt-2 text-sm text-slate-400">
+            Ratings open in a{" "}
+            <a
+              href={`https://github.com/${GISCUS_REPO}/discussions`}
+              target="_blank"
+              rel="noopener"
+              class="text-brand-300 underline hover:text-brand-200 transition-colors"
+            >
+              GitHub Discussion
+            </a>{" "}
+            for each skill. This gallery isn't wired to a Discussions category
+            yet, so voting is temporarily unavailable.
+          </p>
+        )
+      }
+    </section>
   </div>
 </Layout>
