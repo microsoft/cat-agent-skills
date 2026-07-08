@@ -12,18 +12,24 @@ download bundle) for you.
 
 ## The submission shape
 
-Every submission is the same, whether you add it as a folder or a zip of that
-folder:
+Every submission is a `submissions/<slug>/` folder with a `metadata.json` gallery
+sidecar plus **exactly one** skill payload — either an unpacked skill or a
+pre-packaged zip:
 
 ```
-submissions/<slug>/            (or submissions/<slug>.zip containing the same)
-├── skill.md          # the agent skill: frontmatter (name + agent description) + instructions
-├── metadata.json     # OR metadata.yaml — catalog details for this gallery
-└── scripts/          # optional helper files (packaged into a download bundle)
+submissions/<slug>/
+├── metadata.json     # OR metadata.yaml — catalog details (sidecar, not bundled)
+└── EITHER an unpacked canonical Agent Skill…
+    ├── SKILL.md      # frontmatter (name + agent description) + instructions
+    ├── scripts/      # optional executable code
+    ├── references/   # optional docs
+    └── assets/       # optional templates / data files
+    …OR a single pre-packaged bundle:
+    └── <name>.zip    # a canonical Agent Skill (root SKILL.md + files)
 ```
 
 Copy [`submissions/_template/`](submissions/_template) to get started. The
-`<slug>` is the folder/zip name (lowercase, hyphenated), e.g.
+`<slug>` is the folder name (lowercase, hyphenated), e.g.
 `meeting-summarizer` → `/skills/meeting-summarizer`. See
 [`submissions/README.md`](submissions/README.md) for the full reference.
 
@@ -31,19 +37,19 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 
 A skill carries **two** descriptions, on purpose:
 
-- **Agent description** — `skill.md`'s frontmatter `description`. The model reads
+- **Agent description** — `SKILL.md`'s frontmatter `description`. The model reads
   this to decide *when to invoke* the skill (write it as a precise trigger).
 - **Catalog description** — `metadata.json`'s `description`. The friendly
   one-liner shown to people in the gallery.
 
-## `skill.md`
+## `SKILL.md`
 
-The canonical Agent Skills file — frontmatter `name` + agent `description`, then
-the instructions body. All three are required:
+The canonical Agent Skills file — frontmatter `name` (a slug matching the folder)
++ agent `description`, then the instructions body. All three are required:
 
 ```markdown
 ---
-name: Meeting Summarizer
+name: meeting-summarizer
 description: Use this skill whenever the user asks to summarize a meeting transcript, before drafting a reply.
 ---
 
@@ -52,17 +58,19 @@ Turn the transcript into concise notes and action items…
 
 ## `metadata.json`
 
-The catalog details, kept out of the agent file:
+The catalog details, kept out of the agent file (a sidecar — never packaged into
+the download bundle):
 
 | Field         | Required | Notes                                               |
 | ------------- | -------- | --------------------------------------------------- |
+| `name`        | yes      | Display name shown in the gallery.                  |
 | `description` | yes      | Catalog summary shown in the gallery.               |
 | `platforms`   | yes      | One or more of `Cowork`, `Copilot Studio`, `Scout`. |
 | `tags`        | yes      | Lowercase tags for search/filtering.                |
 
 Optional: `author`, `authorUrl`, `version`, `createdAt`, `updatedAt`,
-`coverColor`, `featured`. (`bundle` is set automatically when you include
-`scripts/`.)
+`coverColor`, `featured`. (`bundle` is set automatically when your skill ships
+files beyond `SKILL.md`.)
 
 ## Validate locally
 
@@ -81,7 +89,8 @@ On a pull request, [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 1. Imports your submission, **hard-failing** with an itemized message if any
    required metadata is missing or invalid.
 2. Generates `src/content/skills/<slug>.md` (and `public/bundles/<slug>.zip` when
-   you include scripts) and commits them back to your PR branch (same-repo PRs).
+   your skill ships files beyond `SKILL.md`) and commits them back to your PR
+   branch (same-repo PRs).
 3. Builds the site.
 
 Merges to `main` deploy to GitHub Pages.

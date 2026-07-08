@@ -30,13 +30,12 @@ wants the fields as structured data.
 5. Use the bundled `extract_fields.py` to run the deterministic post-processing
    and validation pass.
 
-## Bundled scripts
+## Bundled files
 The attached `.zip` includes:
-- `extract_fields.py` — normalizes and validates extracted fields against a
-  JSON Schema.
-- `schema.example.json` — a sample expected-field schema you can adapt.
-
-Refer to the included `README.md` for usage.
+- `scripts/extract_fields.py` — normalizes and validates extracted fields
+  against a JSON Schema. Run it as
+  `python scripts/extract_fields.py fields.json assets/schema.example.json`.
+- `assets/schema.example.json` — a sample expected-field schema you can adapt.
 
 ## Tone
 Meticulous. Prefer flagging uncertainty over confidently returning wrong data.

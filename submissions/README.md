@@ -5,45 +5,57 @@ opening a pull request — you never edit `src/content/skills/` by hand. On each
 PR, CI validates your metadata and generates the published skill page (and any
 download bundle) for you.
 
-Every submission has the **same shape**, whether you add it as a folder or as a
-zip of that same folder:
+Every submission is a **`submissions/<slug>/` folder** containing a
+`metadata.json` gallery sidecar plus **exactly one** skill payload, in one of
+two shapes:
 
 ```
-submissions/<slug>/            (or submissions/<slug>.zip containing the same)
-├── skill.md          # the agent skill: frontmatter (name + agent description) + instructions
+submissions/<slug>/
 ├── metadata.json     # OR metadata.yaml — catalog details for this gallery
-└── scripts/          # optional helper files (packaged into a download bundle)
-    └── do-thing.py
+│                     # (a SIDECAR — never packaged into the download bundle)
+└── EITHER an unpacked canonical Agent Skill…
+    ├── SKILL.md      # frontmatter (name + agent description) + instructions
+    ├── scripts/      # optional executable code
+    ├── references/   # optional docs the agent reads on demand
+    └── assets/       # optional templates / data files
+    …OR a single pre-packaged bundle:
+    └── <name>.zip    # a canonical Agent Skill (root SKILL.md + files)
 ```
 
-The `<slug>` is the folder (or zip) name — use lowercase, hyphenated names, e.g.
+The `<slug>` is the folder name — use lowercase, hyphenated names, e.g.
 `submissions/meeting-summarizer/` -> `/skills/meeting-summarizer`. Start by
 copying [`_template/`](./_template).
+
+Bundling is **verbatim** — whatever you put in `scripts/`/`references/`/`assets/`
+(or inside your `.zip`) ships exactly as authored. Only `metadata.*` is stripped;
+it is a sidecar and never lands inside the bundle.
 
 ## Two descriptions — they are different on purpose
 
 | | Lives in | Who reads it |
 | --- | --- | --- |
-| **Agent description** | `skill.md` frontmatter `description` | the **agent/model**, to decide *when to invoke* the skill |
+| **Agent description** | `SKILL.md` frontmatter `description` | the **agent/model**, to decide *when to invoke* the skill |
 | **Catalog description** | `metadata.json` `description` | **people** browsing this gallery (card + top of the detail page) |
 
 Write the agent description as a precise trigger ("Use this skill whenever the
 user… BEFORE calling…"). Write the catalog description as a friendly one-liner.
 
-## `skill.md` — name + description + instructions
+## `SKILL.md` — name + description + instructions
 
-The canonical Agent Skills file: frontmatter with the display `name` and the
-**agent-facing** `description`, then the instructions body. All three are
-required.
+The canonical Agent Skills file: frontmatter with a slug `name` (lowercase,
+hyphenated, **matching the folder name**) and the **agent-facing** `description`,
+then the instructions body. All three are required.
 
 ```markdown
 ---
-name: Meeting Summarizer
+name: meeting-summarizer
 description: Use this skill whenever the user asks to summarize a meeting transcript, before drafting any reply.
 ---
 
 Turn the transcript into concise notes and action items…
 ```
+
+The human-friendly **display name** lives in `metadata.json` (`name`), not here.
 
 ## `metadata.json` — catalog details
 
@@ -51,6 +63,7 @@ All the catalog details for the gallery (kept out of the agent file):
 
 ```json
 {
+  "name": "Meeting Summarizer",
   "description": "Turn a meeting transcript into concise notes and action items.",
   "platforms": ["Cowork", "Copilot Studio"],
   "tags": ["meetings", "productivity"],
@@ -68,8 +81,9 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 
 | Field         | Where           | Required | Notes                                                        |
 | ------------- | --------------- | -------- | ------------------------------------------------------------ |
-| `name`        | `skill.md`      | yes      | Display name.                                                |
-| `description` | `skill.md`      | yes      | **Agent-facing** trigger description.                        |
+| `name`        | `SKILL.md`      | yes      | Slug (lowercase-hyphenated), must match the folder name.     |
+| `description` | `SKILL.md`      | yes      | **Agent-facing** trigger description.                        |
+| `name`        | `metadata.json` | yes      | **Display** name shown in the gallery.                       |
 | `description` | `metadata.json` | yes      | **Catalog** summary shown in the gallery.                    |
 | `platforms`   | `metadata.json` | yes      | One or more of `Cowork`, `Copilot Studio`, `Scout`.          |
 | `tags`        | `metadata.json` | yes      | Lowercase tags for search/filtering.                         |
@@ -80,7 +94,7 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 | `updatedAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
 | `coverColor`  | `metadata.json` |          | CSS color to override the auto-generated cover.              |
 | `featured`    | `metadata.json` |          | `true` to sort the skill to the top.                         |
-| `bundle`      | —               |          | Set automatically when you include `scripts/` — don't add it.|
+| `bundle`      | —               |          | Set automatically when your skill ships files beyond `SKILL.md` — don't add it.|
 
 A missing or invalid **required** field fails the PR with a message listing
 exactly what's wrong.
@@ -88,8 +102,8 @@ exactly what's wrong.
 ## Updating an existing skill
 
 Same path: edit the files in your `submissions/<slug>/` folder (or replace the
-`<slug>.zip`) and open a PR. The slug is the identity — same slug updates the
-existing skill, a new slug creates a new one.
+`<name>.zip` payload) and open a PR. The slug is the identity — same slug updates
+the existing skill, a new slug creates a new one.
 
 ## Try it locally before opening a PR
 

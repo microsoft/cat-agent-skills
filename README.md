@@ -17,8 +17,8 @@ deployed as a static site to GitHub Pages.
 - **Client-side search** and **tag filtering** with shareable
   `?q=`/`?tag=`/`?platform=` URLs.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
-- **Downloads**: the skill as a `.md` file, plus an optional `.zip` script
-  bundle when a skill ships executable helpers.
+- **Downloads**: the skill as a `SKILL.md` file, plus an optional `.zip` bundle
+  when a skill ships files beyond its `SKILL.md`.
 
 ## 🚀 Local development
 
@@ -39,24 +39,28 @@ PR — you never edit `src/content/skills/` by hand. CI validates the metadata a
 generates the published page (and any download bundle) for you. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide.
 
-Every submission has the same shape, as a folder or a zip of that folder:
+Every submission is a `submissions/<slug>/` folder with a `metadata.json` sidecar
+plus one skill payload — an unpacked `SKILL.md` (+ optional dirs) or a `.zip`:
 
 ```
-submissions/<slug>/        (or submissions/<slug>.zip)
-├── skill.md       # agent skill: frontmatter (name + agent description) + instructions
-├── metadata.json  # OR metadata.yaml — catalog details for this gallery
-└── scripts/       # optional helper files → downloadable bundle
+submissions/<slug>/
+├── metadata.json  # OR metadata.yaml — catalog details (sidecar, not bundled)
+└── EITHER an unpacked skill…       OR a pre-packaged bundle:
+    ├── SKILL.md   # name + agent description + instructions   └── <name>.zip
+    ├── scripts/   # optional executable code
+    ├── references/# optional docs
+    └── assets/    # optional templates / data files
 ```
 
-A skill carries **two** descriptions: the **agent** description in `skill.md`
+A skill carries **two** descriptions: the **agent** description in `SKILL.md`
 frontmatter (what the model reads to decide when to invoke), and the **catalog**
 description in `metadata.json` (the friendly one-liner shown in the gallery).
 
-`submissions/my-great-skill/skill.md`:
+`submissions/my-great-skill/SKILL.md`:
 
 ```markdown
 ---
-name: My Great Skill
+name: my-great-skill
 description: Use this skill whenever the user… (the agent-facing trigger).
 ---
 
@@ -68,6 +72,7 @@ Write the agent instructions here as Markdown — this body becomes the
 
 ```json
 {
+  "name": "My Great Skill",
   "description": "One-line catalog summary shown on the card and detail page.",
   "platforms": ["Cowork", "Copilot Studio", "Scout"],
   "tags": ["productivity", "automation"],
@@ -77,8 +82,8 @@ Write the agent instructions here as Markdown — this body becomes the
 }
 ```
 
-> `description`, `platforms`, and `tags` are required (`platforms` must be one or
-> more of `Cowork`, `Copilot Studio`, `Scout`). PRs run a build check that
+> `name`, `description`, `platforms`, and `tags` are required (`platforms` must be
+> one or more of `Cowork`, `Copilot Studio`, `Scout`). PRs run a build check that
 > validates every skill against the schema.
 
 ## 📁 Project structure
@@ -96,9 +101,9 @@ src/
     tags/[tag].astro     per-tag listing
     skills.json.ts       metadata endpoint
 public/
-  bundles/         downloadable .zip script bundles
-submissions/       drop-in skill submissions (folder or <slug>.zip; imported by CI)
-scripts/           import-submissions + validate-skill (the zip pipeline)
+  bundles/         downloadable .zip skill bundles
+submissions/       drop-in skill submissions (folders imported by CI)
+scripts/           import-submissions + validate-skill (the bundling pipeline)
 .github/workflows/ ci.yml (PR build check) + deploy.yml (Pages deploy)
 ```
 

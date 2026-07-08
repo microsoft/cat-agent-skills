@@ -18,9 +18,9 @@ export const GET: APIRoute = ({ props }) => {
   // Copilot Studio / Agent Skills expect a slug-style identifier for `name`
   // (the display name lives in the gallery's catalog metadata).
   lines.push(`name: ${quote(skill.id)}`);
-  // The downloadable skill.md is the canonical Agent Skills artifact: it carries
-  // only `name` + the agent-facing `description` (catalog metadata stays on the
-  // gallery page). Fall back to the catalog summary if no agent description.
+  // The downloadable file is the canonical Agent Skills artifact `SKILL.md`: it
+  // carries only `name` + the agent-facing `description` (catalog metadata stays
+  // on the gallery page). Fall back to the catalog summary if no agent description.
   lines.push(`description: ${quote(String(d.agentDescription ?? d.description))}`);
   lines.push("---", "");
 
@@ -30,7 +30,7 @@ export const GET: APIRoute = ({ props }) => {
   return new Response(frontmatter + body, {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${skill.id}.md"`,
+      "Content-Disposition": `attachment; filename="SKILL.md"`,
     },
   });
 };

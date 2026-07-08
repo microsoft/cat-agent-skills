@@ -23,13 +23,12 @@ text and asks to "file", "submit", or "log" an expense.
    the structured JSON to generate the final CSV.
 5. Always end by asking the user to review; **never auto-submit**.
 
-## Bundled scripts
-This skill ships a `.zip` containing helper scripts:
-- `build_report.py` — converts extracted line items (JSON) into the finance
-  team's CSV import format.
-- `policy_rules.json` — the editable policy thresholds used above.
-
-See the included `README.md` for setup and usage.
+## Bundled files
+This skill ships a `.zip` containing:
+- `scripts/build_report.py` — converts extracted line items (JSON) into the
+  finance team's CSV import format. Run it as
+  `python scripts/build_report.py line_items.json > expense_report.csv`.
+- `assets/policy_rules.json` — the editable policy thresholds used above.
 
 ## Tone
 Precise and compliance-aware. When in doubt, flag rather than assume.
