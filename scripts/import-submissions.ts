@@ -1,29 +1,39 @@
 /**
  * Import skill submissions into the site content.
  *
- * Every skill is contributed through the `submissions/` folder as a self-
- * contained submission — either an uncompressed folder or its zipped
- * equivalent — with the SAME shape:
+ * Every skill is contributed as a `submissions/<slug>/` folder holding a
+ * `metadata.json` gallery sidecar plus EXACTLY ONE skill payload, in one of two
+ * shapes:
  *
- *   submissions/<slug>/        (or submissions/<slug>.zip containing the same)
- *   ├── skill.md       The canonical Agent Skills file: frontmatter with
- *   │                  `name` + `description` (the AGENT-facing description the
- *   │                  model reads to decide when to invoke the skill) followed
- *   │                  by the instructions body.
+ *   submissions/<slug>/
  *   ├── metadata.json  (or metadata.yaml) Catalog metadata for THIS gallery:
  *   │                  `description` (the human catalog/gallery summary),
  *   │                  `platforms`, `tags`, `author`, `authorUrl`, `version`…
- *   └── scripts/       Optional helper files, packaged into a download bundle.
+ *   │                  It is a SIDECAR — never packaged into the download bundle.
+ *   └── EITHER an unpacked canonical Agent Skill:
+ *   │     ├── SKILL.md     frontmatter `name` + `description` (the AGENT-facing
+ *   │     │                description the model reads to decide when to invoke
+ *   │     │                the skill), followed by the instructions body.
+ *   │     ├── scripts/     optional executable code
+ *   │     ├── references/  optional docs
+ *   │     └── assets/      optional templates / data files
+ *   │   OR a pre-packaged bundle:
+ *         └── <name>.zip   a canonical Agent Skill (root SKILL.md + files).
  *
  * The two descriptions are deliberately separate:
- *   - skill.md frontmatter `description`  → `agentDescription` (what the agent reads)
+ *   - SKILL.md frontmatter `description`  → `agentDescription` (what the agent reads)
  *   - metadata.json `description`         → `description`      (what the gallery shows)
  *
  * For every submission this script validates the merged metadata against the
  * shared schema (HARD FAIL on error), then generates the canonical
- * `src/content/skills/<slug>.md` (which authors never edit by hand). Submissions
- * with extra files also get a deterministic `public/bundles/<slug>.zip`, with
- * `bundle:` injected into the frontmatter.
+ * `src/content/skills/<slug>.md` (which authors never edit by hand). Any skill
+ * that ships files beyond SKILL.md also gets a deterministic
+ * `public/bundles/<slug>.zip`, with `bundle:` injected into the frontmatter.
+ *
+ * Bundling is VERBATIM — no file classification logic. An unpacked skill is
+ * zipped exactly as authored (minus the metadata sidecar); a packed submission
+ * is exploded, its root SKILL.md validated, then re-bundled deterministically
+ * from the exploded contents (so the output can never contain metadata.json).
  *
  * Usage:
  *   tsx scripts/import-submissions.ts            # import everything
@@ -47,8 +57,13 @@ const SUBMISSIONS_DIR = join(ROOT, "submissions");
 const CONTENT_DIR = join(ROOT, "src", "content", "skills");
 const BUNDLES_DIR = join(ROOT, "public", "bundles");
 
+// Instruction file match key. Compared against a lowercased basename, so it
+// matches the canonical `SKILL.md` (and a legacy lowercase `skill.md`). The
+// generated bundle always emits it as uppercase `SKILL.md`.
 const INSTRUCTIONS_NAME = "skill.md";
 const METADATA_NAMES = ["metadata.json", "metadata.yaml", "metadata.yml"];
+// Canonical name emitted for the instruction file inside every download bundle.
+const BUNDLE_INSTRUCTIONS_NAME = "SKILL.md";
 // Fixed timestamp so generated bundle zips are byte-for-byte reproducible.
 // adm-zip encodes the DOS time from the Date's *local* components, so this must
 // be built from local components (not a UTC instant) to stay identical across
@@ -76,14 +91,21 @@ const checkOnly = process.argv.includes("--check");
 type ImportProblem = { source: string; problems: string[] };
 /** A file inside a submission, with a forward-slash relative path. */
 type SubFile = { path: string; data: Buffer };
-/** A loaded submission (folder or zip), before parsing/validation. */
+/** A loaded submission (folder or packed zip), before parsing/validation. */
 type Submission = {
   slug: string;
   label: string;
   skillMd?: string;
   metaName?: string;
   metaText?: string;
-  scripts: SubFile[];
+  /**
+   * Every file that ships in the download bundle, at its authored path
+   * (excluding the `metadata.*` sidecar and the root instruction file, which is
+   * re-emitted as `SKILL.md`). Packaged verbatim — no reclassification.
+   */
+  bundleFiles: SubFile[];
+  /** Problems detected while loading (e.g. ambiguous or missing payload). */
+  loadProblems?: string[];
 };
 
 function quote(value: string): string {
@@ -158,41 +180,58 @@ function listFiles(dir: string, baseDir = dir): SubFile[] {
   return out;
 }
 
-/** Split a submission's files into skill.md, metadata.*, and bundled scripts. */
-function classify(slug: string, label: string, files: SubFile[]): Submission {
-  const sub: Submission = { slug, label, scripts: [] };
-  // Prefer the shallowest skill.md / metadata.* if duplicated in subfolders.
+/**
+ * Split a payload's files into the root SKILL.md, the metadata sidecar, and the
+ * verbatim bundle files. No reclassification: every file that is not the root
+ * instruction file or a metadata sidecar ships in the bundle at its authored
+ * path. `metadata.*` is only adopted as the catalog source if one was not
+ * already provided alongside the payload (it is never bundled either way).
+ */
+function classifyPayload(sub: Submission, files: SubFile[]): void {
+  // Prefer the shallowest SKILL.md / metadata.* if duplicated in subfolders.
   const byDepth = (a: SubFile, b: SubFile) =>
     a.path.split("/").length - b.path.split("/").length;
   const sorted = [...files].sort(byDepth);
   for (const file of sorted) {
     const base = posix.basename(file.path).toLowerCase();
-    if (base === INSTRUCTIONS_NAME && sub.skillMd === undefined) {
+    const isRoot = !file.path.includes("/");
+    if (base === INSTRUCTIONS_NAME && isRoot && sub.skillMd === undefined) {
       sub.skillMd = file.data.toString("utf8");
-    } else if (METADATA_NAMES.includes(base) && sub.metaText === undefined) {
-      sub.metaName = base;
-      sub.metaText = file.data.toString("utf8");
+    } else if (METADATA_NAMES.includes(base)) {
+      // Sidecar — never bundled. Adopt as catalog source only if not already set.
+      if (sub.metaText === undefined) {
+        sub.metaName = base;
+        sub.metaText = file.data.toString("utf8");
+      }
     } else {
-      sub.scripts.push(file);
+      sub.bundleFiles.push(file);
     }
   }
-  return sub;
 }
 
 /** Validate + generate one classified submission. */
 function processSubmission(sub: Submission): ImportProblem | null {
   const { slug, label } = sub;
+  if (sub.loadProblems?.length) {
+    return { source: label, problems: sub.loadProblems };
+  }
   if (sub.skillMd === undefined) {
-    return { source: label, problems: [`no \`skill.md\` found`] };
+    return {
+      source: label,
+      problems: ["no root-level `SKILL.md` found in the submission payload"],
+    };
   }
   if (sub.metaText === undefined) {
     return {
       source: label,
-      problems: [`no metadata file found (expected ${METADATA_NAMES.join(" / ")})`],
+      problems: [
+        `no metadata sidecar found next to the payload ` +
+          `(expected ${METADATA_NAMES.join(" / ")})`,
+      ],
     };
   }
 
-  // skill.md → name + agent-facing description (its own frontmatter) + body.
+  // SKILL.md → name + agent-facing description (its own frontmatter) + body.
   const parsed = matter(sub.skillMd);
   const skillFm = parsed.data as Record<string, unknown>;
 
@@ -207,21 +246,21 @@ function processSubmission(sub: Submission): ImportProblem | null {
   const problems: string[] = [];
   const slugName = skillFm.name as string | undefined;
   if (!slugName) {
-    problems.push("`name` is required in skill.md frontmatter (must be a slug)");
+    problems.push("`name` is required in SKILL.md frontmatter (must be a slug)");
   } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slugName)) {
     problems.push(
-      `\`name\` in skill.md must be a slug (lowercase letters, numbers, and ` +
+      `\`name\` in SKILL.md must be a slug (lowercase letters, numbers, and ` +
         `hyphens) \u2014 got "${slugName}"`,
     );
   } else if (slugName !== slug) {
     problems.push(
-      `\`name\` in skill.md ("${slugName}") must match the submission ` +
-        `folder/zip name ("${slug}")`,
+      `\`name\` in SKILL.md ("${slugName}") must match the submission ` +
+        `folder name ("${slug}")`,
     );
   }
   const agentDescription = skillFm.description as string | undefined;
   if (!agentDescription) {
-    problems.push("`description` (agent-facing) is required in skill.md frontmatter");
+    problems.push("`description` (agent-facing) is required in SKILL.md frontmatter");
   }
   if (!catalog.name) {
     problems.push("`name` (display name) is required in the metadata file");
@@ -232,8 +271,8 @@ function processSubmission(sub: Submission): ImportProblem | null {
   if (problems.length) return { source: label, problems };
 
   // Merge into the canonical frontmatter. The gallery `name` is the human display
-  // name from metadata; the slug (skill.md `name`) is the file id used for the
-  // route and the downloadable skill.md. The agent description gets its own key.
+  // name from metadata; the slug (SKILL.md `name`) is the file id used for the
+  // route and the downloadable SKILL.md. The agent description gets its own key.
   const { name: displayName, description: catalogDescription, ...catalogRest } = catalog;
   const meta: Record<string, unknown> = {
     name: displayName,
@@ -242,7 +281,7 @@ function processSubmission(sub: Submission): ImportProblem | null {
     ...catalogRest,
   };
 
-  const hasBundle = sub.scripts.length > 0;
+  const hasBundle = sub.bundleFiles.length > 0;
   if (hasBundle) meta.bundle = `bundles/${slug}.zip`;
 
   const result = validateSkillData(meta, label);
@@ -253,11 +292,11 @@ function processSubmission(sub: Submission): ImportProblem | null {
     writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, parsed.content));
     if (hasBundle) {
       mkdirSync(BUNDLES_DIR, { recursive: true });
-      // The bundle must carry the skill instructions as a root-level SKILL.md
-      // (what agent-skill uploaders require) alongside the helper scripts.
+      // The bundle is the canonical Agent Skill: a root-level SKILL.md (what
+      // agent-skill uploaders require) plus every payload file verbatim.
       const bundleFiles: SubFile[] = [
-        { path: "SKILL.md", data: Buffer.from(sub.skillMd, "utf8") },
-        ...sub.scripts,
+        { path: BUNDLE_INSTRUCTIONS_NAME, data: Buffer.from(sub.skillMd, "utf8") },
+        ...sub.bundleFiles,
       ];
       writeBundle(bundleFiles, join(BUNDLES_DIR, `${slug}.zip`));
     }
@@ -269,20 +308,57 @@ function processSubmission(sub: Submission): ImportProblem | null {
   return null;
 }
 
-/** Load a `submissions/<slug>/` folder. */
-function loadFolder(dir: string): Submission {
+/**
+ * Load a `submissions/<slug>/` folder: a `metadata.json` sidecar plus exactly
+ * one skill payload — either an unpacked canonical skill (root `SKILL.md` +
+ * optional dirs) or a single pre-packaged `<name>.zip`.
+ */
+function loadSubmission(dir: string): Submission {
   const slug = basename(dir);
-  return classify(slug, `submissions/${slug}/`, listFiles(dir));
-}
+  const label = `submissions/${slug}/`;
+  const sub: Submission = { slug, label, bundleFiles: [] };
+  const problems: string[] = [];
 
-/** Load a `submissions/<slug>.zip`. */
-function loadZip(zipPath: string): Submission {
-  const slug = basename(zipPath).replace(/\.zip$/i, "");
-  const files = new AdmZip(zipPath)
-    .getEntries()
-    .filter((e) => !e.isDirectory)
-    .map((e) => ({ path: e.entryName.split("\\").join("/"), data: e.getData() }));
-  return classify(slug, `submissions/${basename(zipPath)}`, files);
+  const topFiles = readdirSync(dir).filter((n) => statSync(join(dir, n)).isFile());
+  const zips = topFiles.filter((n) => n.toLowerCase().endsWith(".zip"));
+  const hasRootSkill = topFiles.some((n) => n.toLowerCase() === INSTRUCTIONS_NAME);
+
+  // Metadata sidecar (top-level, next to the payload — never inside the bundle).
+  const metaFile = topFiles.find((n) => METADATA_NAMES.includes(n.toLowerCase()));
+  if (metaFile) {
+    sub.metaName = metaFile.toLowerCase();
+    sub.metaText = readFileSync(join(dir, metaFile), "utf8");
+  }
+
+  if (zips.length > 0 && hasRootSkill) {
+    problems.push(
+      "submission has BOTH an unpacked SKILL.md and a .zip payload \u2014 " +
+        "provide exactly one",
+    );
+  } else if (zips.length > 1) {
+    problems.push(
+      `submission has ${zips.length} .zip files \u2014 provide exactly one ` +
+        "packed payload",
+    );
+  } else if (zips.length === 1) {
+    // Packed: explode the zip, then re-bundle from its exploded contents.
+    const files = new AdmZip(join(dir, zips[0]))
+      .getEntries()
+      .filter((e) => !e.isDirectory)
+      .map((e) => ({ path: e.entryName.split("\\").join("/"), data: e.getData() }));
+    classifyPayload(sub, files);
+  } else if (hasRootSkill) {
+    // Unpacked: bundle the folder contents verbatim (minus the metadata sidecar).
+    classifyPayload(sub, listFiles(dir));
+  } else {
+    problems.push(
+      "submission has no payload \u2014 add a root `SKILL.md` (with optional " +
+        "`scripts/`, `references/`, `assets/`) or a single `<name>.zip`",
+    );
+  }
+
+  if (problems.length) sub.loadProblems = problems;
+  return sub;
 }
 
 function main() {
@@ -295,10 +371,10 @@ function main() {
   for (const name of readdirSync(SUBMISSIONS_DIR)) {
     if (name.startsWith(".") || name.startsWith("_")) continue; // _template, etc.
     const full = join(SUBMISSIONS_DIR, name);
+    // Submissions are folders. A skill is packaged as a `<name>.zip` *inside* its
+    // submission folder, not as a top-level zip in submissions/.
     if (statSync(full).isDirectory()) {
-      submissions.push(loadFolder(full));
-    } else if (name.toLowerCase().endsWith(".zip")) {
-      submissions.push(loadZip(full));
+      submissions.push(loadSubmission(full));
     }
   }
 
@@ -320,9 +396,11 @@ function main() {
       for (const msg of p.problems) console.error(`    \u2022 ${msg}`);
     }
     console.error(
-      "\nEach submission needs skill.md (frontmatter `name` + agent-facing " +
-        "`description`, then instructions) and a metadata file with a catalog " +
-        "`description`, `platforms`, and `tags`. Fix the items above and retry.",
+      "\nEach submission is a `submissions/<slug>/` folder with a `metadata.*` " +
+        "sidecar (catalog `description`, `platforms`, `tags`) plus exactly one " +
+        "payload: an unpacked `SKILL.md` (frontmatter `name` + agent-facing " +
+        "`description`, then instructions) or a single `<name>.zip`. Fix the " +
+        "items above and retry.",
     );
     process.exit(1);
   }
