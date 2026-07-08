@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import SkillCard from "../components/SkillCard.astro";
 import { getCollection } from "astro:content";
 import { PLATFORMS, PLATFORM_COLORS } from "../lib/skills";
+import { getRating } from "../lib/ratings";
 
 const skills = (await getCollection("skills")).sort((a, b) => {
   if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
@@ -143,12 +144,24 @@ const allTags = [...tagCounts.entries()].sort(
 
   <!-- Gallery -->
   <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-    <div class="mb-5 flex items-baseline justify-between">
+    <div class="mb-5 flex items-baseline justify-between gap-4">
       <h2 class="text-lg font-semibold text-white">
         Skills <span id="result-count" class="text-slate-400"
           >({skills.length})</span
         >
       </h2>
+      <label class="flex items-center gap-2 text-sm text-slate-400">
+        <span class="hidden sm:inline">Sort by</span>
+        <select
+          id="sort-select"
+          class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 focus:border-brand-500 focus:outline-none"
+        >
+          <option value="featured">Featured</option>
+          <option value="rating">Top rated</option>
+          <option value="name">Name (A–Z)</option>
+          <option value="newest">Newest</option>
+        </select>
+      </label>
     </div>
 
     <div
@@ -163,6 +176,13 @@ const allTags = [...tagCounts.entries()].sort(
             data-desc={skill.data.description.toLowerCase()}
             data-tags={skill.data.tags.join(",").toLowerCase()}
             data-platforms={skill.data.platforms.join(",")}
+            data-rating={getRating(skill.id)}
+            data-featured={skill.data.featured ? "1" : "0"}
+            data-updated={(
+              skill.data.updatedAt ??
+              skill.data.createdAt ??
+              new Date(0)
+            ).getTime()}
           >
             <SkillCard
               slug={skill.id}
@@ -173,6 +193,7 @@ const allTags = [...tagCounts.entries()].sort(
               author={skill.data.author}
               coverColor={skill.data.coverColor}
               hasBundle={Boolean(skill.data.bundle)}
+              rating={getRating(skill.id)}
             />
           </div>
         ))
@@ -204,12 +225,19 @@ const allTags = [...tagCounts.entries()].sort(
   const countEl = document.getElementById("result-count")!;
   const emptyEl = document.getElementById("empty-state")!;
   const sentinel = document.getElementById("scroll-sentinel")!;
+  const sortSelect = document.getElementById("sort-select") as HTMLSelectElement;
+
+  const SORTS = ["featured", "rating", "name", "newest"] as const;
+  type SortMode = (typeof SORTS)[number];
 
   let query = "";
   let activeTag = "";
   let activePlatform = "";
+  let sortMode: SortMode = "featured";
   let shown = BATCH;
   let matched: HTMLElement[] = items;
+
+  const num = (el: HTMLElement, key: string) => Number(el.dataset[key] ?? "0") || 0;
 
   function computeMatched(): HTMLElement[] {
     return items.filter((el) => {
@@ -223,6 +251,31 @@ const allTags = [...tagCounts.entries()].sort(
     });
   }
 
+  function applySort(list: HTMLElement[]): HTMLElement[] {
+    const byName = (a: HTMLElement, b: HTMLElement) =>
+      (a.dataset.name ?? "").localeCompare(b.dataset.name ?? "");
+    return [...list].sort((a, b) => {
+      switch (sortMode) {
+        case "rating":
+          return num(b, "rating") - num(a, "rating") || byName(a, b);
+        case "name":
+          return byName(a, b);
+        case "newest":
+          return num(b, "updated") - num(a, "updated") || byName(a, b);
+        case "featured":
+        default:
+          return num(b, "featured") - num(a, "featured") || byName(a, b);
+      }
+    });
+  }
+
+  function reorderDom() {
+    const frag = document.createDocumentFragment();
+    matched.forEach((el) => frag.appendChild(el));
+    items.filter((el) => !matched.includes(el)).forEach((el) => frag.appendChild(el));
+    gallery.appendChild(frag);
+  }
+
   function render() {
     items.forEach((el) => (el.style.display = "none"));
     matched.slice(0, shown).forEach((el) => (el.style.display = ""));
@@ -231,8 +284,9 @@ const allTags = [...tagCounts.entries()].sort(
   }
 
   function refilter() {
-    matched = computeMatched();
+    matched = applySort(computeMatched());
     shown = BATCH;
+    reorderDom();
     render();
   }
 
@@ -284,7 +338,13 @@ const allTags = [...tagCounts.entries()].sort(
     });
   });
 
-  // Infinite scroll: reveal more as the sentinel comes into view.
+  // Sort dropdown
+  sortSelect.addEventListener("change", () => {
+    const v = sortSelect.value as SortMode;
+    sortMode = SORTS.includes(v) ? v : "featured";
+    syncUrl();
+    refilter();
+  });
   const io = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting && shown < matched.length) {
@@ -296,12 +356,13 @@ const allTags = [...tagCounts.entries()].sort(
   );
   io.observe(sentinel);
 
-  // URL state (?q=&tag=&platform=) for shareable filters.
+  // URL state (?q=&tag=&platform=&sort=) for shareable filters.
   function syncUrl() {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (activeTag) params.set("tag", activeTag);
     if (activePlatform) params.set("platform", activePlatform);
+    if (sortMode !== "featured") params.set("sort", sortMode);
     const qs = params.toString();
     history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
   }
@@ -311,6 +372,9 @@ const allTags = [...tagCounts.entries()].sort(
     query = (params.get("q") ?? "").toLowerCase();
     activeTag = params.get("tag") ?? "";
     activePlatform = params.get("platform") ?? "";
+    const s = params.get("sort") as SortMode | null;
+    sortMode = s && SORTS.includes(s) ? s : "featured";
+    sortSelect.value = sortMode;
     if (query) search.value = query;
     paintChips(tagChips, "tag", activeTag);
     paintChips(platformChips, "platform", activePlatform);

@@ -76,6 +76,7 @@ export type SkillSummary = {
   version?: string;
   hasBundle: boolean;
   featured: boolean;
+  rating: number;
   gradient: string;
   initials: string;
 };

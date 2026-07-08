@@ -12,7 +12,8 @@
     "astro": "astro",
     "validate:skills": "tsx scripts/validate-skill.ts src/content/skills/*.md",
     "import:submissions": "tsx scripts/import-submissions.ts",
-    "check:submissions": "tsx scripts/import-submissions.ts --check"
+    "check:submissions": "tsx scripts/import-submissions.ts --check",
+    "ratings:fetch": "tsx scripts/fetch-ratings.ts"
   },
   "dependencies": {
     "astro": "^5.6.1"

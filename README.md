@@ -15,8 +15,12 @@ deployed as a static site to GitHub Pages.
   assets to maintain).
 - **Platform filtering** across Cowork, Copilot Studio, and Scout.
 - **Client-side search** and **tag filtering** with shareable
-  `?q=`/`?tag=`/`?platform=` URLs.
+  `?q=`/`?tag=`/`?platform=`/`?sort=` URLs.
+- **Sort** by Featured, Top rated, Name, or Newest.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
+- **Skill ratings**: 👍 a skill with your GitHub account (via GitHub
+  Discussions); the gallery bakes in the counts and offers a "Top rated" sort.
+  See [`docs/ratings.md`](docs/ratings.md).
 - **Downloads**: the skill as a `SKILL.md` file, plus an optional `.zip` bundle
   when a skill ships files beyond its `SKILL.md`.
 
@@ -94,17 +98,18 @@ src/
   content/skills/  generated skill pages (produced from submissions/ — do not edit by hand)
   layouts/         base page layout
   lib/             cover theming + small helpers
+  data/            ratings.json (build-time 👍 snapshot; see docs/ratings.md)
   pages/
-    index.astro          home gallery (search + filter + infinite scroll)
-    skills/[slug].astro  skill detail page
+    index.astro          home gallery (search + filter + sort + infinite scroll)
+    skills/[slug].astro  skill detail page (instructions, download, ratings)
     skills/[slug].md.ts  raw Markdown download endpoint
     tags/[tag].astro     per-tag listing
     skills.json.ts       metadata endpoint
 public/
   bundles/         downloadable .zip skill bundles
 submissions/       drop-in skill submissions (folders imported by CI)
-scripts/           import-submissions + validate-skill (the bundling pipeline)
-.github/workflows/ ci.yml (PR build check) + deploy.yml (Pages deploy)
+scripts/           import-submissions + validate-skill + fetch-ratings
+.github/workflows/ ci.yml (PR build check) + deploy.yml (Pages deploy + ratings)
 ```
 
 ## 🚢 Deployment
@@ -114,6 +119,11 @@ validates every skill against the content schema). Pushing to `main` triggers
 `.github/workflows/deploy.yml`, which builds and publishes the site to GitHub
 Pages at `https://microsoft.github.io/cat-agent-skills/`. Enable Pages in the
 repo settings with the **GitHub Actions** source.
+
+Before each build, `deploy.yml` runs `npm run ratings:fetch` to snapshot 👍
+counts from GitHub Discussions, and a daily `schedule` cron refreshes them
+without a code push. See [`docs/ratings.md`](docs/ratings.md) for the one-time
+giscus/Discussions setup.
 
 ## 🆘 Support
 
