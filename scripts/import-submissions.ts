@@ -253,7 +253,13 @@ function processSubmission(sub: Submission): ImportProblem | null {
     writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, parsed.content));
     if (hasBundle) {
       mkdirSync(BUNDLES_DIR, { recursive: true });
-      writeBundle(sub.scripts, join(BUNDLES_DIR, `${slug}.zip`));
+      // The bundle must carry the skill instructions as a root-level SKILL.md
+      // (what agent-skill uploaders require) alongside the helper scripts.
+      const bundleFiles: SubFile[] = [
+        { path: "SKILL.md", data: Buffer.from(sub.skillMd, "utf8") },
+        ...sub.scripts,
+      ];
+      writeBundle(bundleFiles, join(BUNDLES_DIR, `${slug}.zip`));
     }
     console.log(
       `\u2713 ${label} \u2192 src/content/skills/${slug}.md` +
