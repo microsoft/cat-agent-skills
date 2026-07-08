@@ -4,13 +4,15 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Refresh baked-in skill ratings (👍 reaction counts) once a day even when
-  # there are no code pushes, so "Top rated" sort stays current.
+  # Refresh baked-in skill ratings (positive reaction counts) once a day even
+  # when there are no code pushes, so "Top rated" sort stays current. The build
+  # and deploy only run when the counts actually changed, so quiet days don't
+  # produce a redundant no-op deployment (see the "Fetch skill ratings" step).
   schedule:
     - cron: "0 6 * * *"
 
 permissions:
-  contents: read
+  contents: write # commit the refreshed ratings snapshot back to main
   pages: write
   id-token: write
   discussions: read
@@ -23,6 +25,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.ratings.outputs.should_deploy }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,18 +38,47 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Fetch skill ratings
-        run: npm run ratings:fetch
+        id: ratings
+        run: |
+          npm run ratings:fetch
+          if git diff --quiet -- src/data/ratings.json; then
+            changed=false
+          else
+            changed=true
+          fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          # Always build/deploy on code pushes and manual runs; on the daily
+          # cron, only when the reaction counts actually changed.
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "$changed" = "true" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "No rating changes on scheduled run; skipping build and deploy."
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Persist refreshed ratings
+        if: steps.ratings.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/ratings.json
+          git commit -m "chore(ratings): refresh skill reaction counts"
+          # A GITHUB_TOKEN push does not retrigger workflows, so this run still
+          # owns the deploy below; the commit only keeps tomorrow's diff stable.
+          git push || echo "::warning::Could not push refreshed ratings; will retry next run."
       - name: Build
+        if: steps.ratings.outputs.should_deploy == 'true'
         run: npm run build
       - name: Upload Pages artifact
+        if: steps.ratings.outputs.should_deploy == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
     needs: build
+    if: needs.build.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
