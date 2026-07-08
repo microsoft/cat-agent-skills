@@ -26,8 +26,11 @@ import { fileURLToPath } from "node:url";
 const OUT = resolve(dirname(fileURLToPath(import.meta.url)), "../src/data/ratings.json");
 
 const REPO = process.env.GISCUS_REPO ?? "microsoft/cat-agent-skills";
-const CATEGORY = process.env.GISCUS_CATEGORY ?? "Skill Ratings";
+const CATEGORY = process.env.GISCUS_CATEGORY ?? "Announcements";
 const TOKEN = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? "";
+
+/** Skill slugs: 1-64 chars, lowercase alnum + single hyphens (agentskills spec). */
+const SLUG_RE = /^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$/;
 
 type Ratings = Record<string, number>;
 
@@ -128,7 +131,10 @@ async function main(): Promise<void> {
       for (const node of conn.nodes as any[]) {
         if (node.category?.name !== CATEGORY) continue;
         const slug = node.title.trim();
-        if (!slug) continue;
+        // Only slug-shaped titles are skill discussions. This keeps the welcome
+        // post and any real announcements (we share the Announcements category)
+        // out of the ratings snapshot.
+        if (!SLUG_RE.test(slug)) continue;
         ratings[slug] = (ratings[slug] ?? 0) + thumbsUp(node.reactionGroups);
       }
       after = conn.pageInfo.hasNextPage ? conn.pageInfo.endCursor : null;

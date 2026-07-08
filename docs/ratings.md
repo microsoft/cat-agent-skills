@@ -7,7 +7,7 @@ where they naturally belong — on GitHub — and read at build time.
 ## How it works
 
 ```
-GitHub Discussions (category "Skill Ratings")
+GitHub Discussions (Announcements category)
     │   one discussion per skill; discussion title == skill slug
     │   the 👍 (THUMBS_UP) reaction count is the rating
     ▼
@@ -28,25 +28,42 @@ Gallery cards + detail pages + "Top rated" sort on the homepage
 - **Graceful by default:** with no `GITHUB_TOKEN`, no Discussions, or on a fork,
   `ratings.json` stays `{}` and every skill simply shows `0`. Nothing breaks.
 
-## One-time setup (maintainers)
+## Setup (already wired for this repo)
 
-The voting widget stays hidden until giscus is configured (`RATINGS_ENABLED` in
-[`src/lib/ratings-config.ts`](../src/lib/ratings-config.ts) is `false` until then).
+This repository is already configured: Discussions is enabled, giscus points at
+the **Announcements** category, and the repo/category IDs are committed in
+[`src/lib/ratings-config.ts`](../src/lib/ratings-config.ts) (they are public
+giscus client IDs, safe to commit). The only remaining manual step is installing
+the **giscus GitHub App** (below), after which voting is live.
 
-1. **Enable Discussions** on the repository (Settings → General → Features).
-2. **Create a Discussion category** named `Skill Ratings` (any format works;
-   "Announcements" keeps the list tidy since only maintainers open threads, but
-   giscus can also auto-create discussions on first vote).
-3. **Install the giscus GitHub App** on the repo: <https://github.com/apps/giscus>.
-4. On <https://giscus.app>, enter the repo and pick the `Skill Ratings` category.
-   Copy the generated **Repository ID** and **Category ID**.
-5. Paste them into [`src/lib/ratings-config.ts`](../src/lib/ratings-config.ts)
-   (`GISCUS_REPO_ID`, `GISCUS_CATEGORY_ID`) **or** provide them at build time as
-   the env vars `PUBLIC_GISCUS_REPO_ID` and `PUBLIC_GISCUS_CATEGORY_ID`. These are
-   public client IDs (giscus ships them in the browser bundle) — safe to commit.
+We reuse the **Announcements** category because it is the giscus-recommended
+type — only maintainers and the giscus app can open threads, so votes can
+auto-create one discussion per skill without opening the door to spam. Skill
+discussions are titled by slug; the welcome/announcement posts are ignored by
+`fetch-ratings.ts` because their titles aren't slug-shaped.
 
-That's it. On the next deploy the widget appears and `scripts/fetch-ratings.ts`
-starts populating counts.
+**To install the app (one time):** open
+<https://github.com/apps/giscus>, click **Install**, and select
+`microsoft/cat-agent-skills`.
+
+### Re-provisioning from scratch
+
+If you ever need to point ratings at a different repo or category:
+
+1. **Enable Discussions** (Settings → General → Features) and pick a category
+   (an **Announcement**-type category is recommended).
+2. **Install the giscus GitHub App**: <https://github.com/apps/giscus>.
+3. Fetch the IDs with the API (no need to visit giscus.app):
+
+   ```bash
+   gh api graphql -f query='{ repository(owner:"microsoft", name:"cat-agent-skills"){ id discussionCategories(first:20){ nodes{ id name } } } }'
+   ```
+
+4. Put the repo id + category id (and matching category name) into
+   [`src/lib/ratings-config.ts`](../src/lib/ratings-config.ts), or provide them
+   at build time via `PUBLIC_GISCUS_REPO_ID` / `PUBLIC_GISCUS_CATEGORY_ID` /
+   `PUBLIC_GISCUS_CATEGORY`. Keep the category name in sync with the
+   `GISCUS_CATEGORY` default in `scripts/fetch-ratings.ts`.
 
 ## Refreshing counts
 

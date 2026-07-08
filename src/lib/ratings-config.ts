@@ -22,13 +22,13 @@
 export const GISCUS_REPO = import.meta.env.PUBLIC_GISCUS_REPO ?? "microsoft/cat-agent-skills";
 
 /** giscus repository id (public client id, safe to commit). */
-export const GISCUS_REPO_ID = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? "";
+export const GISCUS_REPO_ID = import.meta.env.PUBLIC_GISCUS_REPO_ID ?? "R_kgDOSwZGlA";
 
 /** Discussion category name that holds the rating discussions. */
-export const GISCUS_CATEGORY = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Skill Ratings";
+export const GISCUS_CATEGORY = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? "Announcements";
 
 /** giscus category id (public client id, safe to commit). */
-export const GISCUS_CATEGORY_ID = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "";
+export const GISCUS_CATEGORY_ID = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID ?? "DIC_kwDOSwZGlM4DAxet";
 
 /**
  * The rating widget renders only when giscus has been fully configured. This
