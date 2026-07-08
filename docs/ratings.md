@@ -9,7 +9,7 @@ where they naturally belong — on GitHub — and read at build time.
 ```
 GitHub Discussions (Announcements category)
     │   one discussion per skill; discussion title == skill slug
-    │   the 👍 (THUMBS_UP) reaction count is the rating
+    │   positive reactions (👍 ❤️ 🎉 🚀 😄) are summed as the rating; 👎/😕/👀 ignored
     ▼
 scripts/fetch-ratings.ts   (GraphQL, runs in CI with GITHUB_TOKEN)
     ▼
