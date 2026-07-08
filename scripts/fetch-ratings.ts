@@ -3,9 +3,10 @@
  * build-time snapshot to `src/data/ratings.json`.
  *
  * Each skill maps to one Discussion whose title is the skill slug (giscus
- * `mapping="specific"`, `term=slug`). The rating is the number of THUMBS_UP
- * reactions on that Discussion. The homepage uses this snapshot to sort skills
- * by rating; the live vote is reflected on the next build/scheduled rebuild.
+ * `mapping="specific"`, `term=slug`). The rating is the number of *positive*
+ * reactions on that Discussion (👍 ❤️ 🎉 🚀 😄); negative reactions (👎 😕) and
+ * neutral (👀) are ignored. The homepage uses this snapshot to sort skills by
+ * rating; the live vote is reflected on the next build/scheduled rebuild.
  *
  * Usage:
  *   GITHUB_TOKEN=... npm run ratings:fetch
@@ -103,9 +104,23 @@ const QUERY = `
 
 type ReactionGroup = { content: string; reactors: { totalCount: number } };
 
-function thumbsUp(groups: ReactionGroup[] | undefined): number {
-  const group = (groups ?? []).find((g) => g.content === "THUMBS_UP");
-  return group?.reactors?.totalCount ?? 0;
+// GitHub reaction contents split into sentiment buckets. The rating counts only
+// positive reactions; negatives (👎/😕) and neutral (👀) never contribute, so a
+// thumbs-down can't drag a skill's score down or turn into a "rating".
+const POSITIVE_REACTIONS = new Set([
+  "THUMBS_UP", // 👍
+  "HEART", // ❤️
+  "HOORAY", // 🎉
+  "ROCKET", // 🚀
+  "LAUGH", // 😄
+]);
+
+function positiveScore(groups: ReactionGroup[] | undefined): number {
+  let total = 0;
+  for (const g of groups ?? []) {
+    if (POSITIVE_REACTIONS.has(g.content)) total += g.reactors?.totalCount ?? 0;
+  }
+  return total;
 }
 
 async function main(): Promise<void> {
@@ -135,7 +150,7 @@ async function main(): Promise<void> {
         // post and any real announcements (we share the Announcements category)
         // out of the ratings snapshot.
         if (!SLUG_RE.test(slug)) continue;
-        ratings[slug] = (ratings[slug] ?? 0) + thumbsUp(node.reactionGroups);
+        ratings[slug] = (ratings[slug] ?? 0) + positiveScore(node.reactionGroups);
       }
       after = conn.pageInfo.hasNextPage ? conn.pageInfo.endCursor : null;
     } while (after);
