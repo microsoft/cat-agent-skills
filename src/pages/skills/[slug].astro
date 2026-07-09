@@ -176,7 +176,9 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
             {
               isPlugin
                 ? "Download the plugin package and install it in Microsoft 365 Copilot Cowork."
-                : `Download the instructions and add them to ${
+                : `Download the ${
+                    d.bundle ? "bundle" : "instructions"
+                  } and add ${d.bundle ? "it" : "them"} to ${
                     d.platforms.length === 1 ? d.platforms[0] : "your platform"
                   }.`
             }
@@ -204,32 +206,11 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                 )
               ) : (
                 <>
-                  <a
-                    href={withBase(`/skills/${skill.id}.md`)}
-                    download="SKILL.md"
-                    class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      class="h-4 w-4"
-                    >
-                      <path
-                        d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                    Download .md
-                  </a>
-                  {d.bundle && (
+                  {d.bundle ? (
                     <a
                       href={withBase(`/${d.bundle}`)}
                       download
-                      class="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                      class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -239,7 +220,29 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                       >
                         <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
                       </svg>
-                      Download bundle
+                      Download bundle (.zip)
+                    </a>
+                  ) : (
+                    <a
+                      href={withBase(`/skills/${skill.id}.md`)}
+                      download="SKILL.md"
+                      class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        class="h-4 w-4"
+                      >
+                        <path
+                          d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      Download .md
                     </a>
                   )}
                 </>
