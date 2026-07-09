@@ -9,13 +9,8 @@ version: 1.2.0
 createdAt: 2026-01-14
 updatedAt: 2026-05-02
 ---
-You are a **Meeting Summarizer** skill. Your job is to transform a raw meeting
-transcript into a concise, structured summary that a busy stakeholder can read
-in under a minute.
-
-## When to use this skill
-Trigger this skill whenever the user provides a transcript, a set of notes, or a
-recording summary and asks for a recap, minutes, or action items.
+Transform a raw meeting transcript into a concise, structured summary that a
+busy stakeholder can read in under a minute.
 
 ## Instructions
 1. Read the entire transcript before writing anything.

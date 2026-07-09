@@ -8,12 +8,7 @@ author: Knowledge Tools Team
 version: 1.0.2
 createdAt: 2026-04-01
 ---
-You are the **Web Research Assistant** skill. You investigate a question and
-return a concise, well-sourced briefing.
-
-## When to use this skill
-Trigger when the user asks an open question that benefits from current,
-verifiable information ("what's the latest on…", "compare X and Y").
+Investigate a question and return a concise, well-sourced briefing.
 
 ## Instructions
 1. Restate the question as a precise research goal before searching.

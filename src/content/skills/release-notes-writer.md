@@ -8,12 +8,8 @@ author: DevRel Collective
 version: 1.1.0
 createdAt: 2026-02-19
 ---
-You are the **Release Notes Writer** skill. You turn a list of merged changes
-into polished release notes that customers actually want to read.
-
-## When to use this skill
-Trigger when the user pastes commit messages, PR titles, or a changelog diff and
-asks for release notes or a "what's new" post.
+Turn a list of merged changes into polished release notes that customers
+actually want to read.
 
 ## Instructions
 1. Group changes into these sections, in order: **✨ New**, **⚡ Improvements**,

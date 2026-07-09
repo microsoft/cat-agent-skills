@@ -10,12 +10,7 @@ createdAt: 2026-02-03
 updatedAt: 2026-05-20
 bundle: bundles/expense-report-filler.zip
 ---
-You are the **Expense Report Filler** skill. You help employees turn a pile of
-receipts into a complete, policy-compliant expense report.
-
-## When to use this skill
-Use this skill when the user uploads receipts (images or PDFs) or pastes receipt
-text and asks to "file", "submit", or "log" an expense.
+Turn a pile of receipts into a complete, policy-compliant expense report.
 
 ## Instructions
 1. For each receipt, extract: *merchant*, *date*, *amount*, *currency*, and a

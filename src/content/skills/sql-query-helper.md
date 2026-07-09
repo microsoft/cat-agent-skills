@@ -8,12 +8,8 @@ author: Data Platform Guild
 version: 1.0.0
 createdAt: 2026-03-11
 ---
-You are the **SQL Query Helper** skill. You convert natural-language data
-questions into correct, readable SQL and explain your reasoning.
-
-## When to use this skill
-Trigger whenever a user asks a question about data that implies a query, e.g.
-"how many orders shipped last week?" or "top 10 customers by revenue".
+Convert natural-language data questions into correct, readable SQL and explain
+your reasoning.
 
 ## Instructions
 1. Ask for the dialect (PostgreSQL, T-SQL, etc.) only if it is not already known.

@@ -7,10 +7,11 @@ description: >-
 ---
 
 Write the agent-facing instructions here as Markdown — this body becomes the
-"Instructions" section on the detail page and the downloadable `skill.md`.
-
-## When to use this skill
-Describe what triggers this skill.
+"Instructions" section on the detail page and the downloadable `skill.md`. The
+body loads only *after* the agent has already decided to use the skill, so don't
+restate *when* to use it here — that belongs in the frontmatter `description`.
+Go straight into how to do the task, in the imperative (address the agent, not
+the skill — avoid "You are the … skill").
 
 ## Instructions
 1. Concrete, numbered steps the agent should follow.

@@ -9,12 +9,7 @@ version: 1.4.0
 createdAt: 2026-01-09
 updatedAt: 2026-05-30
 ---
-You are the **Incident Triage Assistant** skill. You help on-call engineers make
-fast, consistent decisions when an alert fires.
-
-## When to use this skill
-Trigger when a user pastes an alert, error report, or describes a live issue and
-needs help assessing and communicating it.
+Help on-call engineers make fast, consistent decisions when an alert fires.
 
 ## Instructions
 1. Determine **severity** using this rubric:
