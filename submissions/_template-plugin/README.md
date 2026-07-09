@@ -26,7 +26,7 @@ set `platforms` in `metadata.json` — the importer forces `["Cowork"]`.
 
 ```
 <your-plugin>.zip
-├── manifest.json      # M365 app manifest, manifestVersion "1.28"
+├── manifest.json      # M365 app manifest, manifestVersion "devPreview" or "1.28"
 ├── color.png          # 192×192 color icon (must match icons.color in manifest)
 ├── outline.png        # 32×32 outline icon (must match icons.outline)
 └── skills/

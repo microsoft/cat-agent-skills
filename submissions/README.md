@@ -116,7 +116,7 @@ submissions/<slug>/
 ├── metadata.json         # catalog sidecar (name/description/tags optional —
 │                         #  they fall back to the manifest)
 └── <name>.zip
-    ├── manifest.json     # M365 app manifest (manifestVersion 1.28)
+    ├── manifest.json     # M365 app manifest (manifestVersion "devPreview" or "1.28")
     ├── color.png         # 192×192 color icon (referenced by the manifest)
     ├── outline.png       # 32×32 outline icon (referenced by the manifest)
     └── skills/
@@ -132,7 +132,9 @@ The importer forces `platforms: ["Cowork"]` and `type: "plugin"`, publishes the
 show a **Plugin** badge on their card and are filterable on the homepage.
 
 Validation is thorough and will fail the PR with an itemized list if anything is
-off: the manifest must be valid JSON with `manifestVersion` `1.28`, a GUID `id`,
+off: the manifest must be valid JSON with a `manifestVersion` of `"devPreview"`
+or `"1.28"` (real-world plugins and Microsoft's conversion script emit
+`"devPreview"`; the docs reference `"1.28"`), a GUID `id`,
 non-empty `name.short`/`description.short`, and `icons.color`/`icons.outline`
 that reference real PNGs of the exact required dimensions; there must be at least
 one `agentSkills` entry (or connector); and every `agentSkills[].folder` must
