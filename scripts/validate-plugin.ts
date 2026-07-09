@@ -44,7 +44,10 @@ const MANIFEST_NAME = "manifest.json";
 const SKILL_NAME = "skill.md"; // compared lowercased
 const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const GUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-const EXPECTED_MANIFEST_VERSION = "1.28";
+// Cowork's agentSkills/agentConnectors are a preview manifest feature, so the
+// conversion script and real-world packages emit "devPreview"; the published
+// docs reference the stable "1.28". Accept either.
+const ACCEPTED_MANIFEST_VERSIONS = ["1.28", "devPreview"];
 // Companion-file limits (per skill), from the Cowork plugin docs.
 const MAX_COMPANION_FILES = 20;
 const MAX_COMPANION_BYTES = 5 * 1024 * 1024;
@@ -109,10 +112,12 @@ export function validatePluginFiles(
   // --- Top-level manifest fields ---------------------------------------------
   const manifestVersion = manifest.manifestVersion;
   if (!nonEmptyString(manifestVersion)) {
-    problems.push("manifest.manifestVersion is required (expected \"1.28\")");
-  } else if (manifestVersion !== EXPECTED_MANIFEST_VERSION) {
     problems.push(
-      `manifest.manifestVersion should be "${EXPECTED_MANIFEST_VERSION}" ` +
+      `manifest.manifestVersion is required (expected one of ${ACCEPTED_MANIFEST_VERSIONS.map((v) => `"${v}"`).join(" or ")})`,
+    );
+  } else if (!ACCEPTED_MANIFEST_VERSIONS.includes(manifestVersion)) {
+    problems.push(
+      `manifest.manifestVersion should be ${ACCEPTED_MANIFEST_VERSIONS.map((v) => `"${v}"`).join(" or ")} ` +
         `(got "${manifestVersion}")`,
     );
   }
