@@ -16,11 +16,6 @@ Turn a short interview into a charming, vibrant, highly visual **3-slide
 new-marketing-campaign deck** by filling a bundled PowerPoint template with a
 bundled Python script.
 
-## When to use this skill
-Use this whenever the user asks for a marketing-campaign deck, launch
-presentation, brand pitch, or "3 slides for a new campaign." If they haven't
-given the details yet, run the interview below.
-
 ## Step 1 — Interview the user
 Ask for these (accept short answers; anything they skip gets a tasteful
 default). Ask them in a single, friendly batch:
