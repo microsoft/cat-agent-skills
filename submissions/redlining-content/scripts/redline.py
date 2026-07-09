@@ -11,7 +11,7 @@ submission's wording; rejecting all keeps the template.
 
 Usage:
     python redline.py <submission.docx|.pdf> [output.docx]
-    python redline.py <template.dotx|.docx> <submission.docx|.pdf> [output.docx]
+    python redline.py --template <template.dotx|.docx> <submission.docx|.pdf> [output.docx]
 
 If no template is given, the single .dotx/.docx bundled in assets/ is
 auto-discovered and used as the baseline (its file name doesn't matter). PDF
@@ -25,6 +25,7 @@ untouched and are excluded from the diff on both sides.
 Pure lxml + standard library for .docx; .pdf additionally uses pdfplumber
 (with a pypdfium2 fallback). All are available in the Copilot Studio sandbox.
 """
+import argparse
 import copy
 import datetime
 import os
@@ -556,21 +557,28 @@ def redline(submission_path, template_path=None, out_path=None):
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    if not args:
-        print("Usage: python redline.py <submission.docx|.pdf> [output.docx]")
-        print("       python redline.py <template.dotx|.docx> <submission.docx|.pdf> [output.docx]")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        prog="redline.py",
+        description="Redline a .docx/.pdf submission against a template as Word "
+                    "tracked changes.",
+    )
+    parser.add_argument(
+        "--template",
+        metavar="PATH",
+        default=None,
+        help="Template (.dotx/.docx) to use as the baseline. Defaults to the "
+             "single template bundled in assets/.",
+    )
+    parser.add_argument(
+        "submission",
+        help="The uploaded file to compare against the template (.docx or .pdf).",
+    )
+    parser.add_argument(
+        "output",
+        nargs="?",
+        default=None,
+        help="Output .docx path. Defaults to <submission>_redlined.docx.",
+    )
+    ns = parser.parse_args()
 
-    template = submission = out = None
-    if len(args) == 1:
-        submission = args[0]                       # template defaults to bundled asset
-    elif len(args) == 2:
-        if args[0].lower().endswith(".dotx"):
-            template, submission = args            # explicit template + submission
-        else:
-            submission, out = args                 # submission + output path
-    else:
-        template, submission, out = args[0], args[1], args[2]
-
-    redline(submission, template, out)
+    redline(ns.submission, ns.template, ns.output)

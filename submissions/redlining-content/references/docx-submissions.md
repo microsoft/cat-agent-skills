@@ -47,6 +47,6 @@ inside content that changed.
 ## Run
 
 ```
-python scripts/redline.py <submission.docx>                       # bundled template
-python scripts/redline.py <template.dotx|.docx> <submission.docx> # explicit template
+python scripts/redline.py <submission.docx>                                   # bundled template
+python scripts/redline.py --template <template.dotx|.docx> <submission.docx>  # explicit template
 ```

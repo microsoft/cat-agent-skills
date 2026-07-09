@@ -63,6 +63,6 @@ compare.
 ## Run
 
 ```
-python scripts/redline.py <submission.pdf>                       # bundled template
-python scripts/redline.py <template.dotx|.docx> <submission.pdf> # explicit template
+python scripts/redline.py <submission.pdf>                                   # bundled template
+python scripts/redline.py --template <template.dotx|.docx> <submission.pdf>  # explicit template
 ```

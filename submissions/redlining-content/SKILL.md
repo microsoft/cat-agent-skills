@@ -36,8 +36,8 @@ All are present in the Copilot Studio sandbox — no `pip install` required.
    `python scripts/redline.py <submission.docx|.pdf> [output.docx]`
    The bundled template in `assets/` is auto-discovered and used as the
    baseline (whatever its file name).
-   To override the template explicitly:
-   `python scripts/redline.py <template.dotx|.docx> <submission.docx|.pdf> [output.docx]`
+   To override the template explicitly, pass it via `--template`:
+   `python scripts/redline.py --template <template.dotx|.docx> <submission.docx|.pdf> [output.docx]`
 2. Return the output `.docx` to the user. Output defaults to the submission
    name with a `_redlined.docx` suffix.
 
@@ -91,13 +91,3 @@ See the focused reference docs:
 - A brand-new paragraph in the submission is tracked as inserted **words** at
   the nearest template position; a hard paragraph break may not be recreated.
 - Matching is by visible text; curly quotes/apostrophes are compared literally.
-
-## Test
-
-`python test_redline.py` builds a sample template plus a modified `.docx`
-submission **and** `.pdf` submissions, runs the redline on each, and asserts:
-insertions/deletions with the correct author, Track Changes on, a valid
-reopenable `.docx`, that a **wrapped** PDF paragraph produces no false
-differences, that a template **table** passes through for PDFs without false
-insertions, and that an edited **table cell** in a `.docx` submission is
-redlined with `<w:tcPr>` preserved.
