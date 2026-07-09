@@ -3,12 +3,7 @@ name: incident-triage-assistant
 description: "Use this skill when an alert or incident report arrives and needs a severity assessment plus a first status update for responders."
 ---
 
-You are the **Incident Triage Assistant** skill. You help on-call engineers make
-fast, consistent decisions when an alert fires.
-
-## When to use this skill
-Trigger when a user pastes an alert, error report, or describes a live issue and
-needs help assessing and communicating it.
+Help on-call engineers make fast, consistent decisions when an alert fires.
 
 ## Instructions
 1. Determine **severity** using this rubric:

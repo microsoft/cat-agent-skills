@@ -23,11 +23,14 @@ export async function getStaticPaths() {
 
 const { skill } = Astro.props;
 const d = skill.data;
+const isPlugin = d.type === "plugin";
+const noun = isPlugin ? "plugin" : "skill";
 const { Content } = await render(skill);
 
 const updated = formatDate(d.updatedAt ?? d.createdAt);
 const created = formatDate(d.createdAt);
 const rating = getRating(skill.id);
+const isSample = d.tags.includes("sample");
 
 const meta: Array<[string, string, string?]> = [];
 if (d.author) meta.push(["Author", d.author, d.authorUrl]);
@@ -64,9 +67,30 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
         tags={d.tags}
         coverColor={d.coverColor}
         hasBundle={Boolean(d.bundle)}
+        type={d.type}
         variant="hero"
       />
     </div>
+
+    {
+      isSample && (
+        <div class="mt-5 flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 p-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="mt-0.5 h-5 w-5 shrink-0 text-amber-400"
+          >
+            <path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3L18 8v.02l-6 3.33-6-3.33V8l6-3.7zM5 9.7l6 3.33v6.64l-6-3.33V9.7zm14 0v6.64l-6 3.33v-6.64l6-3.33z" />
+          </svg>
+          <p class="text-sm text-amber-100/90">
+            <span class="font-semibold text-amber-200">Sample {noun}.</span> This
+            is placeholder / demo content included to show how the gallery works —
+            not a real, production-ready submission.
+          </p>
+        </div>
+      )
+    }
 
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
       <!-- Main content -->
@@ -77,7 +101,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
           <a
             href="#rate"
             class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-200 hover:border-brand-500/50 hover:text-white transition-colors"
-            title="Rate this skill"
+            title={`Rate this ${noun}`}
           >
             <span aria-hidden="true">👍</span>
             <span>{rating}</span>
@@ -145,51 +169,83 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
 
           <hr class="my-5 border-white/5" />
 
-          <h3 class="text-sm font-semibold text-white">Add this skill</h3>
+          <h3 class="text-sm font-semibold text-white">
+            {isPlugin ? "Add this plugin" : "Add this skill"}
+          </h3>
           <p class="mt-1 text-xs text-slate-400">
-            Download the instructions and add them to {
-              d.platforms.length === 1 ? d.platforms[0] : "your platform"
-            }.
+            {
+              isPlugin
+                ? "Download the plugin package and install it in Microsoft 365 Copilot Cowork."
+                : `Download the ${
+                    d.bundle ? "bundle" : "instructions"
+                  } and add ${d.bundle ? "it" : "them"} to ${
+                    d.platforms.length === 1 ? d.platforms[0] : "your platform"
+                  }.`
+            }
           </p>
 
           <div class="mt-4 flex flex-col gap-2">
-            <a
-              href={withBase(`/skills/${skill.id}.md`)}
-              download="SKILL.md"
-              class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                class="h-4 w-4"
-              >
-                <path
-                  d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
-              </svg>
-              Download .md
-            </a>
             {
-              d.bundle && (
-                <a
-                  href={withBase(`/${d.bundle}`)}
-                  download
-                  class="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    class="h-4 w-4"
+              isPlugin ? (
+                d.bundle && (
+                  <a
+                    href={withBase(`/${d.bundle}`)}
+                    download
+                    class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
                   >
-                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
-                  </svg>
-                  Download bundle
-                </a>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      class="h-4 w-4"
+                    >
+                      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                    </svg>
+                    Download plugin package (.zip)
+                  </a>
+                )
+              ) : (
+                <>
+                  {d.bundle ? (
+                    <a
+                      href={withBase(`/${d.bundle}`)}
+                      download
+                      class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        class="h-4 w-4"
+                      >
+                        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                      </svg>
+                      Download bundle (.zip)
+                    </a>
+                  ) : (
+                    <a
+                      href={withBase(`/skills/${skill.id}.md`)}
+                      download="SKILL.md"
+                      class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        class="h-4 w-4"
+                      >
+                        <path
+                          d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      Download .md
+                    </a>
+                  )}
+                </>
               )
             }
           </div>
@@ -221,7 +277,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
           }
 
           <p class="mt-5 border-t border-white/5 pt-4 text-xs text-slate-500">
-            This skill is an example implementation provided as-is. See{" "}
+            This {noun} is an example implementation provided as-is. See{" "}
             <a
               href="https://github.com/microsoft/cat-agent-skills/blob/main/SUPPORT.md"
               target="_blank"
@@ -236,13 +292,13 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
 
     <section id="rate" class="mt-10 scroll-mt-24 border-t border-white/5 pt-8">
       <h2 class="text-sm font-semibold uppercase tracking-wider text-brand-300">
-        Rate &amp; discuss this skill
+        Rate &amp; discuss this {noun}
       </h2>
       {
         RATINGS_ENABLED ? (
           <>
             <p class="mt-2 text-sm text-slate-400">
-              Give this skill a 👍 with your GitHub account. Ratings power the
+              Give this {noun} a 👍 with your GitHub account. Ratings power the
               gallery's "Top rated" sort (refreshed on each deploy).
             </p>
             <div class="mt-5">

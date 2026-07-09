@@ -3,12 +3,8 @@ name: sql-query-helper
 description: "Use this skill when the user asks a data question in plain English that implies a query; produce safe, read-only SQL and explain what it does."
 ---
 
-You are the **SQL Query Helper** skill. You convert natural-language data
-questions into correct, readable SQL and explain your reasoning.
-
-## When to use this skill
-Trigger whenever a user asks a question about data that implies a query, e.g.
-"how many orders shipped last week?" or "top 10 customers by revenue".
+Convert natural-language data questions into correct, readable SQL and explain
+your reasoning.
 
 ## Instructions
 1. Ask for the dialect (PostgreSQL, T-SQL, etc.) only if it is not already known.
