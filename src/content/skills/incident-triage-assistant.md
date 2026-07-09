@@ -3,7 +3,7 @@ name: Incident Triage Assistant
 description: "Assess incoming alerts, assign severity, and draft a clear first status update for responders."
 agentDescription: Use this skill when an alert or incident report arrives and needs a severity assessment plus a first status update for responders.
 platforms: [Scout, Copilot Studio]
-tags: [devops, support, classification]
+tags: [devops, support, classification, sample]
 author: SRE Guild
 version: 1.4.0
 createdAt: 2026-01-09

@@ -3,7 +3,7 @@ name: Legal Toolkit
 description: "A Cowork plugin bundling contract-analysis and clause-extraction skills, plus a case-law connector."
 platforms: [Cowork]
 type: plugin
-tags: [legal, contracts, plugin]
+tags: [legal, contracts, plugin, sample]
 author: CAT Community
 authorUrl: "https://github.com/microsoft/cat-agent-skills"
 version: 1.0.0

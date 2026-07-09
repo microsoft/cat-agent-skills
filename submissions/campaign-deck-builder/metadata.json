@@ -1,0 +1,11 @@
+{
+  "name": "Campaign Deck Builder",
+  "description": "Turn a short interview into a charming, vibrant 3-slide marketing-campaign deck by filling a bundled PowerPoint template.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["marketing", "presentations", "powerpoint", "automation", "scripts"],
+  "author": "Adi Leibowitz",
+  "authorUrl": "https://microsoft.github.io/mcscatblog/",
+  "version": "1.0.0",
+  "createdAt": "2026-07-09",
+  "updatedAt": "2026-07-09"
+}

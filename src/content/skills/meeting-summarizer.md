@@ -3,7 +3,7 @@ name: Meeting Summarizer
 description: "Turn raw meeting transcripts into crisp summaries with decisions, action items, and owners."
 agentDescription: "Use this skill whenever the user provides a meeting transcript or asks for meeting notes; produce a summary with decisions, action items, and owners."
 platforms: [Cowork, Copilot Studio]
-tags: [productivity, summarization, meetings]
+tags: [productivity, summarization, meetings, sample]
 author: Copilot Studio Team
 version: 1.2.0
 createdAt: 2026-01-14

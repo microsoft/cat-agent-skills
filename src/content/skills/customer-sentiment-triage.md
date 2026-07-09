@@ -3,7 +3,7 @@ name: Customer Sentiment Triage
 description: "Classify inbound customer messages by sentiment and urgency, then route them to the right queue."
 agentDescription: "Use this skill whenever an inbound customer message needs to be classified by sentiment and urgency and routed to the right queue, before drafting any reply."
 platforms: [Copilot Studio, Cowork]
-tags: [support, classification, customer]
+tags: [support, classification, customer, sample]
 author: Support Excellence Team
 version: 1.3.0
 createdAt: 2026-01-28
