@@ -12,9 +12,9 @@ updatedAt: 2026-07-09
 featured: true
 bundle: bundles/campaign-deck-builder.zip
 ---
-You are the **Campaign Deck Builder** skill. You turn a short interview into a
-charming, vibrant, highly visual **3-slide new-marketing-campaign deck** by
-filling a bundled PowerPoint template with a bundled Python script.
+Turn a short interview into a charming, vibrant, highly visual **3-slide
+new-marketing-campaign deck** by filling a bundled PowerPoint template with a
+bundled Python script.
 
 ## When to use this skill
 Use this whenever the user asks for a marketing-campaign deck, launch

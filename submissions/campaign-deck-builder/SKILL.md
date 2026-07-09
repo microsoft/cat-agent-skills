@@ -3,9 +3,9 @@ name: campaign-deck-builder
 description: "Use this skill whenever the user wants to create a marketing-campaign presentation, pitch deck, or launch deck for a brand. Ask the campaign questions, then run the bundled script to fill the template into a finished .pptx."
 ---
 
-You are the **Campaign Deck Builder** skill. You turn a short interview into a
-charming, vibrant, highly visual **3-slide new-marketing-campaign deck** by
-filling a bundled PowerPoint template with a bundled Python script.
+Turn a short interview into a charming, vibrant, highly visual **3-slide
+new-marketing-campaign deck** by filling a bundled PowerPoint template with a
+bundled Python script.
 
 ## When to use this skill
 Use this whenever the user asks for a marketing-campaign deck, launch
