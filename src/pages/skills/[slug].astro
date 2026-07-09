@@ -5,6 +5,7 @@ import { getCollection, render } from "astro:content";
 import { formatDate, PLATFORM_COLORS } from "../../lib/skills";
 import { withBase } from "../../lib/url";
 import { getRating } from "../../lib/ratings";
+import { ANALYTICS_ENABLED } from "../../lib/analytics-config";
 import {
   RATINGS_ENABLED,
   GISCUS_REPO,
@@ -191,6 +192,9 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                   <a
                     href={withBase(`/${d.bundle}`)}
                     download
+                    data-clarity-event="skill_download"
+                    data-clarity-skill={skill.id}
+                    data-clarity-download-type="plugin"
                     class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
                   >
                     <svg
@@ -210,6 +214,9 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                     <a
                       href={withBase(`/${d.bundle}`)}
                       download
+                      data-clarity-event="skill_download"
+                      data-clarity-skill={skill.id}
+                      data-clarity-download-type="bundle"
                       class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
                     >
                       <svg
@@ -226,6 +233,9 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                     <a
                       href={withBase(`/skills/${skill.id}.md`)}
                       download="SKILL.md"
+                      data-clarity-event="skill_download"
+                      data-clarity-skill={skill.id}
+                      data-clarity-download-type="markdown"
                       class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
                     >
                       <svg
@@ -340,4 +350,16 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
       }
     </section>
   </div>
+  {
+    ANALYTICS_ENABLED && (
+      <script
+        is:inline
+        set:html={`(function(){function fire(){if(typeof window.clarity!=="function"){return setTimeout(fire,300);}window.clarity("set","skill",${JSON.stringify(
+          skill.id
+        )});window.clarity("set","skillType",${JSON.stringify(
+          d.type
+        )});window.clarity("event","skill_view");}fire();})();`}
+      />
+    )
+  }
 </Layout>

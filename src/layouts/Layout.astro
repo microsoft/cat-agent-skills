@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { withBase } from "../lib/url";
+import { ANALYTICS_ENABLED, CLARITY_PROJECT_ID } from "../lib/analytics-config";
 
 interface Props {
   title?: string;
@@ -28,6 +29,15 @@ const fullTitle =
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
+    {
+      ANALYTICS_ENABLED && (
+        <script
+          is:inline
+          type="text/javascript"
+          set:html={`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_PROJECT_ID}");`}
+        />
+      )
+    }
   </head>
   <body class="min-h-screen flex flex-col antialiased">
     <header
@@ -88,5 +98,13 @@ const fullTitle =
         </p>
       </div>
     </footer>
+    {
+      ANALYTICS_ENABLED && (
+        <script
+          is:inline
+          set:html={`document.addEventListener("click",function(e){var el=e.target&&e.target.closest?e.target.closest("[data-clarity-event]"):null;if(!el)return;if(typeof window.clarity!=="function")return;var name=el.getAttribute("data-clarity-event");if(!name)return;for(var i=0;i<el.attributes.length;i++){var a=el.attributes[i];if(a.name.indexOf("data-clarity-")===0&&a.name!=="data-clarity-event"){var key=a.name.slice("data-clarity-".length).replace(/-([a-z])/g,function(m,c){return c.toUpperCase();});window.clarity("set",key,a.value);}}window.clarity("event",name);},true);`}
+        />
+      )
+    }
   </body>
 </html>
