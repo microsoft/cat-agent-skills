@@ -1,10 +1,11 @@
 ---
-import { coverGradient, initials, PLATFORM_COLORS, type Platform } from "../lib/skills";
+import { coverGradient, initials, PLATFORM_COLORS, type Platform, type SkillType } from "../lib/skills";
 
 interface Props {
   slug: string;
   name: string;
   platforms?: Platform[];
+  type?: SkillType;
   tags?: string[];
   coverColor?: string;
   hasBundle?: boolean;
@@ -17,6 +18,7 @@ const {
   slug,
   name,
   platforms = [],
+  type = "skill",
   tags = [],
   coverColor,
   hasBundle = false,
@@ -58,6 +60,24 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
   >
     <div class="flex items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-1.5">
+        {
+          type === "plugin" && (
+            <span
+              class="flex items-center gap-1 rounded-md bg-brand-500/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm"
+              title="A Cowork plugin (M365 app package)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="h-3 w-3"
+              >
+                <path d="M10 3v4a1 1 0 0 1-1 1H5m14 0h-4a1 1 0 0 1-1-1V3m0 18v-4a1 1 0 0 1 1-1h4M5 16h4a1 1 0 0 1 1 1v4M4 8h16v8H4z" />
+              </svg>
+              Plugin
+            </span>
+          )
+        }
         {
           shownPlatforms.map((platform) => (
             <span
