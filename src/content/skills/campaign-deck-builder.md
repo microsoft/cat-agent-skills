@@ -9,6 +9,7 @@ authorUrl: "https://microsoft.github.io/mcscatblog/"
 version: 1.0.0
 createdAt: 2026-07-09
 updatedAt: 2026-07-09
+featured: true
 bundle: bundles/campaign-deck-builder.zip
 ---
 You are the **Campaign Deck Builder** skill. You turn a short interview into a

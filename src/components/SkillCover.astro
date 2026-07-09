@@ -29,6 +29,8 @@ const {
 const gradient = coverGradient(slug, coverColor);
 const mark = initials(name);
 const isHero = variant === "hero";
+const isSample = tags.includes("sample");
+const shownTags = tags.filter((t) => t !== "sample");
 const shownPlatforms = isHero ? platforms : platforms.slice(0, 2);
 const extraPlatforms = platforms.length - shownPlatforms.length;
 ---
@@ -37,6 +39,7 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
   class:list={[
     "relative overflow-hidden",
     isHero ? "h-56 sm:h-64" : "aspect-[16/10]",
+    isSample && "ring-2 ring-inset ring-amber-400/70",
     className,
   ]}
   style={`background-image:${gradient}`}
@@ -60,6 +63,24 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
   >
     <div class="flex items-center justify-between gap-2">
       <div class="flex flex-wrap items-center gap-1.5">
+        {
+          isSample && (
+            <span
+              class="flex items-center gap-1 rounded-md bg-amber-400 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-ink-950 shadow-sm"
+              title="A sample / demo skill — placeholder content, not a real submission"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="h-3 w-3"
+              >
+                <path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3L18 8v.02l-6 3.33-6-3.33V8l6-3.7zM5 9.7l6 3.33v6.64l-6-3.33V9.7zm14 0v6.64l-6 3.33v-6.64l6-3.33z" />
+              </svg>
+              Sample
+            </span>
+          )
+        }
         {
           type === "plugin" && (
             <span
@@ -127,9 +148,9 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
         {name}
       </h3>
       {
-        tags.length > 0 && (
+        shownTags.length > 0 && (
           <div class="mt-2 flex flex-wrap gap-1.5">
-            {tags.slice(0, isHero ? 8 : 3).map((t) => (
+            {shownTags.slice(0, isHero ? 8 : 3).map((t) => (
               <span class="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
                 {t}
               </span>

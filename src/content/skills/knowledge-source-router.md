@@ -9,6 +9,7 @@ authorUrl: "https://microsoft.github.io/mcscatblog/"
 version: 1.0.0
 createdAt: 2026-06-23
 updatedAt: 2026-06-23
+featured: true
 ---
 Pick the correct region-specific knowledge source(s) for a query based on the
 **user's location**, so answers are grounded in content that is accurate for

@@ -30,6 +30,7 @@ const { Content } = await render(skill);
 const updated = formatDate(d.updatedAt ?? d.createdAt);
 const created = formatDate(d.createdAt);
 const rating = getRating(skill.id);
+const isSample = d.tags.includes("sample");
 
 const meta: Array<[string, string, string?]> = [];
 if (d.author) meta.push(["Author", d.author, d.authorUrl]);
@@ -70,6 +71,26 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
         variant="hero"
       />
     </div>
+
+    {
+      isSample && (
+        <div class="mt-5 flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-400/10 p-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="mt-0.5 h-5 w-5 shrink-0 text-amber-400"
+          >
+            <path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3L18 8v.02l-6 3.33-6-3.33V8l6-3.7zM5 9.7l6 3.33v6.64l-6-3.33V9.7zm14 0v6.64l-6 3.33v-6.64l6-3.33z" />
+          </svg>
+          <p class="text-sm text-amber-100/90">
+            <span class="font-semibold text-amber-200">Sample {noun}.</span> This
+            is placeholder / demo content included to show how the gallery works —
+            not a real, production-ready submission.
+          </p>
+        </div>
+      )
+    }
 
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
       <!-- Main content -->

@@ -8,7 +8,6 @@ author: Contoso Finance Ops
 version: 2.0.1
 createdAt: 2026-02-03
 updatedAt: 2026-05-20
-featured: true
 bundle: bundles/expense-report-filler.zip
 ---
 You are the **Expense Report Filler** skill. You help employees turn a pile of

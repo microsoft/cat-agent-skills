@@ -8,7 +8,6 @@ author: Copilot Studio Team
 version: 1.2.0
 createdAt: 2026-01-14
 updatedAt: 2026-05-02
-featured: true
 ---
 You are a **Meeting Summarizer** skill. Your job is to transform a raw meeting
 transcript into a concise, structured summary that a busy stakeholder can read
