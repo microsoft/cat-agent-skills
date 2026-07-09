@@ -7,6 +7,12 @@
 export const PLATFORMS = ["Cowork", "Copilot Studio", "Scout"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 
+/**
+ * A submission is either a single cross-platform Agent Skill or a Cowork plugin
+ * (an M365 app package bundling one or more skills + optional connectors).
+ */
+export type SkillType = "skill" | "plugin";
+
 /** Brand accent color used for each platform's badge. */
 export const PLATFORM_COLORS: Record<Platform, string> = {
   Cowork: "#7c3aed",
@@ -71,6 +77,7 @@ export type SkillSummary = {
   name: string;
   description: string;
   platforms: Platform[];
+  type: SkillType;
   tags: string[];
   author?: string;
   version?: string;

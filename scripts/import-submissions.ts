@@ -51,6 +51,12 @@ import { basename, join, posix, relative, sep } from "node:path";
 import AdmZip from "adm-zip";
 import matter from "gray-matter";
 import { validateSkillData } from "./validate-skill.ts";
+import {
+  isPluginPackage,
+  validatePluginFiles,
+  type PluginConnector,
+  type PluginSkill,
+} from "./validate-plugin.ts";
 
 const ROOT = join(import.meta.dirname, "..");
 const SUBMISSIONS_DIR = join(ROOT, "submissions");
@@ -75,6 +81,7 @@ const FIELD_ORDER = [
   "description",
   "agentDescription",
   "platforms",
+  "type",
   "tags",
   "author",
   "authorUrl",
@@ -95,6 +102,8 @@ type SubFile = { path: string; data: Buffer };
 type Submission = {
   slug: string;
   label: string;
+  /** "skill" (default) or a Cowork "plugin" (an M365 app package). */
+  kind: "skill" | "plugin";
   skillMd?: string;
   metaName?: string;
   metaText?: string;
@@ -104,6 +113,11 @@ type Submission = {
    * re-emitted as `SKILL.md`). Packaged verbatim — no reclassification.
    */
   bundleFiles: SubFile[];
+  /**
+   * For a plugin: the exploded M365 app-package files (manifest.json, icons,
+   * skills/…), verbatim minus any metadata sidecar. Shipped as the download.
+   */
+  pluginFiles?: SubFile[];
   /** Problems detected while loading (e.g. ambiguous or missing payload). */
   loadProblems?: string[];
 };
@@ -215,6 +229,7 @@ function processSubmission(sub: Submission): ImportProblem | null {
   if (sub.loadProblems?.length) {
     return { source: label, problems: sub.loadProblems };
   }
+  if (sub.kind === "plugin") return processPlugin(sub);
   if (sub.skillMd === undefined) {
     return {
       source: label,
@@ -309,6 +324,144 @@ function processSubmission(sub: Submission): ImportProblem | null {
 }
 
 /**
+ * Build the synthesized detail-page body for a Cowork plugin. There is no single
+ * SKILL.md to show, so we render an overview, the contained skills/connectors,
+ * and how to install the package on Cowork.
+ */
+function buildPluginBody(opts: {
+  overview: string;
+  skills: PluginSkill[];
+  connectors: PluginConnector[];
+}): string {
+  const { overview, skills, connectors } = opts;
+  const lines: string[] = [overview.trim(), ""];
+  lines.push(
+    "> **Cowork plugin.** This is a Microsoft 365 Copilot **Cowork** app " +
+      "package (a `.zip` bundling the skills and connectors below). It installs " +
+      "on Cowork only.",
+    "",
+  );
+  if (skills.length) {
+    lines.push("## Skills in this plugin", "");
+    for (const s of skills) {
+      const desc = s.description ? ` \u2014 ${s.description.trim()}` : "";
+      lines.push(`- **${s.name}**${desc}`);
+    }
+    lines.push("");
+  }
+  if (connectors.length) {
+    lines.push("## Connectors", "");
+    for (const c of connectors) {
+      const title = c.displayName ?? c.id ?? "connector";
+      const idPart = c.id && c.displayName ? ` (\`${c.id}\`)` : "";
+      const desc = c.description ? ` \u2014 ${c.description.trim()}` : "";
+      lines.push(`- **${title}**${idPart}${desc}`);
+    }
+    lines.push("");
+  }
+  lines.push(
+    "## Install",
+    "",
+    "1. Download the plugin package (the `.zip` on this page).",
+    "2. Upload it to your tenant via **M365 admin center \u203a Manage apps \u203a " +
+      "Upload custom app**, or sideload it for testing with the " +
+      "[Microsoft 365 Agents Toolkit CLI](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/microsoft-365-agents-toolkit-cli) " +
+      "(`atk install --file-path <zip> --scope Personal`).",
+    "3. Open **Cowork \u203a Sources & Skills \u203a Plugins** and enable it from the " +
+      "**Discover** section.",
+    "",
+    "See [Build plugins for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development) " +
+      "for details.",
+  );
+  return lines.join("\n") + "\n";
+}
+
+/**
+ * Validate + generate a Cowork plugin submission: a pre-built M365 app-package
+ * `.zip` (root `manifest.json` + icons + `skills/`) plus a `metadata.*` sidecar.
+ * The package ships verbatim as the download; the detail page is synthesized.
+ */
+function processPlugin(sub: Submission): ImportProblem | null {
+  const { slug, label } = sub;
+  if (sub.metaText === undefined) {
+    return {
+      source: label,
+      problems: [
+        `no metadata sidecar found next to the plugin package ` +
+          `(expected ${METADATA_NAMES.join(" / ")})`,
+      ],
+    };
+  }
+
+  const pluginFiles = sub.pluginFiles ?? [];
+  const pv = validatePluginFiles(pluginFiles, label);
+  if (!pv.ok) return { source: label, problems: pv.problems };
+
+  let catalog: Record<string, unknown>;
+  try {
+    catalog = parseMetadataFile(sub.metaName!, sub.metaText);
+  } catch (err) {
+    return { source: label, problems: [`could not parse ${sub.metaName}: ${(err as Error).message}`] };
+  }
+
+  // Catalog fields fall back to the manifest when the sidecar omits them.
+  const manifest = pv.manifest ?? {};
+  const mName = (manifest.name as Record<string, unknown> | undefined)?.short;
+  const mDesc = manifest.description as Record<string, unknown> | undefined;
+  const displayName = (catalog.name as string | undefined) ?? (mName as string | undefined);
+  const catalogDescription =
+    (catalog.description as string | undefined) ?? (mDesc?.short as string | undefined);
+
+  const problems: string[] = [];
+  if (!displayName) {
+    problems.push("`name` is required in the metadata file (or manifest.name.short)");
+  }
+  if (!catalogDescription) {
+    problems.push("`description` is required in the metadata file (or manifest.description.short)");
+  }
+  if (problems.length) return { source: label, problems };
+
+  // A plugin is Cowork-only; drop any name/description/platforms/type from the
+  // sidecar so they can't override the derived values.
+  const {
+    name: _n,
+    description: _d,
+    platforms: _p,
+    type: _t,
+    ...catalogRest
+  } = catalog;
+  const meta: Record<string, unknown> = {
+    name: displayName,
+    description: catalogDescription,
+    platforms: ["Cowork"],
+    type: "plugin",
+    ...catalogRest,
+    bundle: `bundles/${slug}.zip`,
+  };
+
+  const result = validateSkillData(meta, label);
+  if (!result.ok) return { source: label, problems: result.problems };
+
+  if (!checkOnly) {
+    const overview =
+      (mDesc?.full as string | undefined) ??
+      (mDesc?.short as string | undefined) ??
+      catalogDescription!;
+    const body = buildPluginBody({ overview, skills: pv.skills, connectors: pv.connectors });
+    mkdirSync(CONTENT_DIR, { recursive: true });
+    writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, body));
+    mkdirSync(BUNDLES_DIR, { recursive: true });
+    // Ship the M365 app package verbatim (deterministic order + fixed mtime).
+    writeBundle(pluginFiles, join(BUNDLES_DIR, `${slug}.zip`));
+    console.log(
+      `\u2713 ${label} \u2192 src/content/skills/${slug}.md ` +
+        `(plugin, + public/bundles/${slug}.zip)`,
+    );
+  }
+  return null;
+}
+
+/**
  * Load a `submissions/<slug>/` folder: a `metadata.json` sidecar plus exactly
  * one skill payload — either an unpacked canonical skill (root `SKILL.md` +
  * optional dirs) or a single pre-packaged `<name>.zip`.
@@ -316,7 +469,7 @@ function processSubmission(sub: Submission): ImportProblem | null {
 function loadSubmission(dir: string): Submission {
   const slug = basename(dir);
   const label = `submissions/${slug}/`;
-  const sub: Submission = { slug, label, bundleFiles: [] };
+  const sub: Submission = { slug, label, kind: "skill", bundleFiles: [] };
   const problems: string[] = [];
 
   const topFiles = readdirSync(dir).filter((n) => statSync(join(dir, n)).isFile());
@@ -341,12 +494,22 @@ function loadSubmission(dir: string): Submission {
         "packed payload",
     );
   } else if (zips.length === 1) {
-    // Packed: explode the zip, then re-bundle from its exploded contents.
+    // Packed payload: explode the zip. A root-level `manifest.json` marks a
+    // Cowork plugin (an M365 app package); otherwise it's a canonical Agent
+    // Skill (root `SKILL.md`), re-bundled from its exploded contents.
     const files = new AdmZip(join(dir, zips[0]))
       .getEntries()
       .filter((e) => !e.isDirectory)
       .map((e) => ({ path: e.entryName.split("\\").join("/"), data: e.getData() }));
-    classifyPayload(sub, files);
+    if (isPluginPackage(files)) {
+      sub.kind = "plugin";
+      // Ship the package verbatim, minus any stray metadata sidecar.
+      sub.pluginFiles = files.filter(
+        (f) => !METADATA_NAMES.includes(basename(f.path).toLowerCase()),
+      );
+    } else {
+      classifyPayload(sub, files);
+    }
   } else if (hasRootSkill) {
     // Unpacked: bundle the folder contents verbatim (minus the metadata sidecar).
     classifyPayload(sub, listFiles(dir));

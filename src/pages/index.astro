@@ -144,24 +144,46 @@ const allTags = [...tagCounts.entries()].sort(
 
   <!-- Gallery -->
   <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-    <div class="mb-5 flex items-baseline justify-between gap-4">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-lg font-semibold text-white">
         Skills <span id="result-count" class="text-slate-400"
           >({skills.length})</span
         >
       </h2>
-      <label class="flex items-center gap-2 text-sm text-slate-400">
-        <span class="hidden sm:inline">Sort by</span>
-        <select
-          id="sort-select"
-          class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 focus:border-brand-500 focus:outline-none"
-        >
-          <option value="featured">Featured</option>
-          <option value="rating">Top rated</option>
-          <option value="name">Name (A–Z)</option>
-          <option value="newest">Newest</option>
-        </select>
-      </label>
+      <div class="flex flex-wrap items-center gap-3">
+        <div id="type-filters" class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-type=""
+            class="type-chip rounded-full border border-brand-500 bg-brand-500/20 px-3 py-1 text-sm font-medium text-white transition"
+            aria-pressed="true">All</button
+          >
+          <button
+            type="button"
+            data-type="skill"
+            class="type-chip rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:text-white"
+            aria-pressed="false">Skills</button
+          >
+          <button
+            type="button"
+            data-type="plugin"
+            class="type-chip rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:text-white"
+            aria-pressed="false">Plugins</button
+          >
+        </div>
+        <label class="flex items-center gap-2 text-sm text-slate-400">
+          <span class="hidden sm:inline">Sort by</span>
+          <select
+            id="sort-select"
+            class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 focus:border-brand-500 focus:outline-none"
+          >
+            <option value="featured">Featured</option>
+            <option value="rating">Top rated</option>
+            <option value="name">Name (A–Z)</option>
+            <option value="newest">Newest</option>
+          </select>
+        </label>
+      </div>
     </div>
 
     <div
@@ -176,6 +198,7 @@ const allTags = [...tagCounts.entries()].sort(
             data-desc={skill.data.description.toLowerCase()}
             data-tags={skill.data.tags.join(",").toLowerCase()}
             data-platforms={skill.data.platforms.join(",")}
+            data-type={skill.data.type}
             data-rating={getRating(skill.id)}
             data-featured={skill.data.featured ? "1" : "0"}
             data-updated={(
@@ -189,6 +212,7 @@ const allTags = [...tagCounts.entries()].sort(
               name={skill.data.name}
               description={skill.data.description}
               platforms={skill.data.platforms}
+              type={skill.data.type}
               tags={skill.data.tags}
               author={skill.data.author}
               coverColor={skill.data.coverColor}
@@ -222,6 +246,9 @@ const allTags = [...tagCounts.entries()].sort(
   const platformChips = Array.from(
     document.querySelectorAll<HTMLButtonElement>(".platform-chip")
   );
+  const typeChips = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(".type-chip")
+  );
   const countEl = document.getElementById("result-count")!;
   const emptyEl = document.getElementById("empty-state")!;
   const sentinel = document.getElementById("scroll-sentinel")!;
@@ -233,6 +260,7 @@ const allTags = [...tagCounts.entries()].sort(
   let query = "";
   let activeTag = "";
   let activePlatform = "";
+  let activeType = "";
   let sortMode: SortMode = "featured";
   let shown = BATCH;
   let matched: HTMLElement[] = items;
@@ -245,9 +273,10 @@ const allTags = [...tagCounts.entries()].sort(
       const platforms = (el.dataset.platforms ?? "").split(",");
       const tagOk = !activeTag || tags.includes(activeTag);
       const platformOk = !activePlatform || platforms.includes(activePlatform);
+      const typeOk = !activeType || (el.dataset.type ?? "skill") === activeType;
       const text = `${el.dataset.name} ${el.dataset.desc} ${el.dataset.tags}`;
       const queryOk = !query || text.includes(query);
-      return tagOk && platformOk && queryOk;
+      return tagOk && platformOk && typeOk && queryOk;
     });
   }
 
@@ -303,7 +332,7 @@ const allTags = [...tagCounts.entries()].sort(
 
   function paintChips(
     chips: HTMLButtonElement[],
-    key: "tag" | "platform",
+    key: "tag" | "platform" | "type",
     active: string
   ) {
     chips.forEach((c) => {
@@ -338,6 +367,16 @@ const allTags = [...tagCounts.entries()].sort(
     });
   });
 
+  // Type chips (All / Skills / Plugins)
+  typeChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      activeType = chip.dataset.type ?? "";
+      paintChips(typeChips, "type", activeType);
+      syncUrl();
+      refilter();
+    });
+  });
+
   // Sort dropdown
   sortSelect.addEventListener("change", () => {
     const v = sortSelect.value as SortMode;
@@ -362,6 +401,7 @@ const allTags = [...tagCounts.entries()].sort(
     if (query) params.set("q", query);
     if (activeTag) params.set("tag", activeTag);
     if (activePlatform) params.set("platform", activePlatform);
+    if (activeType) params.set("type", activeType);
     if (sortMode !== "featured") params.set("sort", sortMode);
     const qs = params.toString();
     history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
@@ -372,12 +412,14 @@ const allTags = [...tagCounts.entries()].sort(
     query = (params.get("q") ?? "").toLowerCase();
     activeTag = params.get("tag") ?? "";
     activePlatform = params.get("platform") ?? "";
+    activeType = params.get("type") ?? "";
     const s = params.get("sort") as SortMode | null;
     sortMode = s && SORTS.includes(s) ? s : "featured";
     sortSelect.value = sortMode;
     if (query) search.value = query;
     paintChips(tagChips, "tag", activeTag);
     paintChips(platformChips, "platform", activePlatform);
+    paintChips(typeChips, "type", activeType);
     refilter();
   }
 
