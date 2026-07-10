@@ -13,26 +13,31 @@ export type Platform = (typeof PLATFORMS)[number];
  */
 export type SkillType = "skill" | "plugin";
 
-/** Brand accent color used for each platform's badge. */
+/** Brand accent color used for each platform's badge (CAT palette). */
 export const PLATFORM_COLORS: Record<Platform, string> = {
-  Cowork: "#7c3aed",
-  "Copilot Studio": "#2563eb",
+  Cowork: "#7f39fb",
+  "Copilot Studio": "#0078d4",
   Scout: "#0d9488",
 };
 
+/**
+ * Cover gradient pairs drawn from the CAT brand spectrum
+ * (blue -> purple -> pink -> orange). Calm enough to read well against both
+ * light and dark backgrounds.
+ */
 const COVER_PALETTE: Array<[string, string]> = [
-  ["#3461ff", "#7a3cff"],
-  ["#ff5f6d", "#ffc371"],
-  ["#11998e", "#38ef7d"],
-  ["#8e2de2", "#4a00e0"],
-  ["#f7971e", "#ffd200"],
-  ["#00b4db", "#0083b0"],
-  ["#fc466b", "#3f5efb"],
-  ["#e96443", "#904e95"],
-  ["#1d976c", "#93f9b9"],
-  ["#4776e6", "#8e54e9"],
-  ["#ff512f", "#dd2476"],
-  ["#2193b0", "#6dd5ed"],
+  ["#0078d4", "#5b8def"],
+  ["#5b8def", "#7f39fb"],
+  ["#7f39fb", "#c26cf3"],
+  ["#c26cf3", "#d83b73"],
+  ["#d83b73", "#ff8c00"],
+  ["#0078d4", "#7f39fb"],
+  ["#3aa0ff", "#5b8def"],
+  ["#7f39fb", "#d83b73"],
+  ["#0d9488", "#5b8def"],
+  ["#c26cf3", "#5b8def"],
+  ["#d83b73", "#c26cf3"],
+  ["#0078d4", "#0d9488"],
 ];
 
 /** Stable hash for a string (FNV-1a style, good enough for theming). */

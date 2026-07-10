@@ -30,7 +30,7 @@ const { tag, skills } = Astro.props;
   <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
     <a
       href={withBase("/")}
-      class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+      class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg transition-colors"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -46,16 +46,16 @@ const { tag, skills } = Astro.props;
       All skills
     </a>
 
-    <h1 class="mt-4 text-3xl font-extrabold tracking-tight text-white">
-      <span class="text-brand-300">#</span>{tag}
+    <h1 class="mt-4 text-3xl font-extrabold tracking-tight text-fg">
+      <span class="text-accent-text">#</span>{tag}
     </h1>
-    <p class="mt-1 text-slate-400">
+    <p class="mt-1 text-muted">
       {skills.length}
       {skills.length === 1 ? "skill" : "skills"} tagged “{tag}”.
     </p>
 
     <div
-      class="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
     >
       {
         skills.map((skill) => (

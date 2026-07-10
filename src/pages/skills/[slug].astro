@@ -44,7 +44,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
   <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
     <a
       href={withBase("/")}
-      class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+      class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg transition-colors"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +60,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
       Back to gallery
     </a>
 
-    <div class="mt-5 overflow-hidden rounded-2xl border border-white/5">
+    <div class="mt-5 overflow-hidden rounded-2xl border border-border">
       <SkillCover
         slug={skill.id}
         name={d.name}
@@ -80,12 +80,12 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            class="mt-0.5 h-5 w-5 shrink-0 text-amber-400"
+            class="mt-0.5 h-5 w-5 shrink-0 text-amber-500"
           >
             <path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3L18 8v.02l-6 3.33-6-3.33V8l6-3.7zM5 9.7l6 3.33v6.64l-6-3.33V9.7zm14 0v6.64l-6 3.33v-6.64l6-3.33z" />
           </svg>
-          <p class="text-sm text-amber-100/90">
-            <span class="font-semibold text-amber-200">Sample {noun}.</span> This
+          <p class="text-sm text-fg/80">
+            <span class="font-semibold text-fg">Sample {noun}.</span> This
             is placeholder / demo content included to show how the gallery works —
             not a real, production-ready submission.
           </p>
@@ -96,17 +96,17 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
     <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
       <!-- Main content -->
       <div>
-        <p class="text-lg text-slate-300">{d.description}</p>
+        <p class="text-lg text-muted">{d.description}</p>
 
         <div class="mt-3 flex items-center gap-2">
           <a
             href="#rate"
-            class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-200 hover:border-brand-500/50 hover:text-white transition-colors"
+            class="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-fg hover:border-accent/50 hover:text-fg transition-colors"
             title={`Rate this ${noun}`}
           >
             <span aria-hidden="true">👍</span>
             <span>{rating}</span>
-            <span class="text-slate-400">{rating === 1 ? "rating" : "ratings"}</span>
+            <span class="text-muted">{rating === 1 ? "rating" : "ratings"}</span>
           </a>
         </div>
 
@@ -116,7 +116,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
               {d.tags.map((tag) => (
                 <a
                   href={withBase(`/tags/${encodeURIComponent(tag)}`)}
-                  class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300 hover:border-brand-500/50 hover:text-white transition-colors"
+                  class="rounded-full border border-border bg-surface-2 px-3 py-1 text-sm text-muted hover:border-accent/50 hover:text-fg transition-colors"
                 >
                   {tag}
                 </a>
@@ -125,24 +125,24 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
           )
         }
 
-        <hr class="my-7 border-white/5" />
+        <hr class="my-7 border-border" />
 
         {
           d.agentDescription && (
             <div class="mb-6">
-              <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-300">
+              <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-accent-text">
                 Description
               </h2>
-              <p class="text-slate-300">{d.agentDescription}</p>
+              <p class="text-muted">{d.agentDescription}</p>
             </div>
           )
         }
 
-        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-brand-300">
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent-text">
           Instructions
         </h2>
         <article
-          class="prose prose-invert max-w-none prose-headings:text-white prose-a:text-brand-300 prose-strong:text-white prose-code:text-brand-200 prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-slate-300 prose-th:text-white"
+          class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg"
         >
           <Content />
         </article>
@@ -150,14 +150,14 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
 
       <!-- Sidebar -->
       <aside class="lg:sticky lg:top-20 lg:self-start">
-        <div class="rounded-2xl border border-white/5 bg-ink-900 p-5">
-          <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <div class="rounded-2xl border border-border bg-surface p-5">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-subtle">
             Works with
           </h3>
           <div class="mt-2 flex flex-wrap gap-2">
             {
               d.platforms.map((platform) => (
-                <span class="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-200">
+                <span class="flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-fg">
                   <span
                     class="h-2 w-2 rounded-full"
                     style={`background:${PLATFORM_COLORS[platform]}`}
@@ -168,12 +168,12 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
             }
           </div>
 
-          <hr class="my-5 border-white/5" />
+          <hr class="my-5 border-border" />
 
-          <h3 class="text-sm font-semibold text-white">
+          <h3 class="text-sm font-semibold text-fg">
             {isPlugin ? "Add this plugin" : "Add this skill"}
           </h3>
-          <p class="mt-1 text-xs text-slate-400">
+          <p class="mt-1 text-xs text-muted">
             {
               isPlugin
                 ? "Download the plugin package and install it in Microsoft 365 Copilot Cowork."
@@ -195,7 +195,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                     data-clarity-event="skill_download"
                     data-clarity-skill={skill.id}
                     data-clarity-download-type="plugin"
-                    class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
+                    class="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 transition-opacity"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -217,7 +217,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                       data-clarity-event="skill_download"
                       data-clarity-skill={skill.id}
                       data-clarity-download-type="bundle"
-                      class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
+                      class="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 transition-opacity"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -236,7 +236,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                       data-clarity-event="skill_download"
                       data-clarity-skill={skill.id}
                       data-clarity-download-type="markdown"
-                      class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 transition-colors"
+                      class="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 transition-opacity"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -262,17 +262,17 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
 
           {
             meta.length > 0 && (
-              <dl class="mt-5 space-y-2 border-t border-white/5 pt-4 text-sm">
+              <dl class="mt-5 space-y-2 border-t border-border pt-4 text-sm">
                 {meta.map(([k, v, href]) => (
                   <div class="flex justify-between gap-3">
-                    <dt class="text-slate-400">{k}</dt>
-                    <dd class="text-right font-medium text-slate-200">
+                    <dt class="text-muted">{k}</dt>
+                    <dd class="text-right font-medium text-fg">
                       {href ? (
                         <a
                           href={href}
                           target="_blank"
                           rel="noopener"
-                          class="text-brand-300 underline hover:text-brand-200 transition-colors"
+                          class="text-accent-text underline hover:opacity-80 transition-opacity"
                         >
                           {v}
                         </a>
@@ -286,13 +286,13 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
             )
           }
 
-          <p class="mt-5 border-t border-white/5 pt-4 text-xs text-slate-500">
+          <p class="mt-5 border-t border-border pt-4 text-xs text-subtle">
             This {noun} is an example implementation provided as-is. See{" "}
             <a
               href="https://github.com/microsoft/cat-agent-skills/blob/main/SUPPORT.md"
               target="_blank"
               rel="noopener"
-              class="underline hover:text-slate-300 transition-colors"
+              class="underline hover:text-fg transition-colors"
               >Support</a
             >{" "}for how to get help.
           </p>
@@ -300,14 +300,14 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
       </aside>
     </div>
 
-    <section id="rate" class="mt-10 scroll-mt-24 border-t border-white/5 pt-8">
-      <h2 class="text-sm font-semibold uppercase tracking-wider text-brand-300">
+    <section id="rate" class="mt-10 scroll-mt-24 border-t border-border pt-8">
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-accent-text">
         Rate &amp; discuss this {noun}
       </h2>
       {
         RATINGS_ENABLED ? (
           <>
-            <p class="mt-2 text-sm text-slate-400">
+            <p class="mt-2 text-sm text-muted">
               Give this {noun} a 👍 with your GitHub account. Ratings power the
               gallery's "Top rated" sort (refreshed on each deploy).
             </p>
@@ -325,7 +325,7 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                 data-reactions-enabled="1"
                 data-emit-metadata="0"
                 data-input-position="bottom"
-                data-theme="dark"
+                data-theme="light"
                 data-lang="en"
                 crossorigin="anonymous"
                 async
@@ -333,13 +333,13 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
             </div>
           </>
         ) : (
-          <p class="mt-2 text-sm text-slate-400">
+          <p class="mt-2 text-sm text-muted">
             Ratings open in a{" "}
             <a
               href={`https://github.com/${GISCUS_REPO}/discussions`}
               target="_blank"
               rel="noopener"
-              class="text-brand-300 underline hover:text-brand-200 transition-colors"
+              class="text-accent-text underline hover:opacity-80 transition-opacity"
             >
               GitHub Discussion
             </a>{" "}
@@ -350,6 +350,11 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
       }
     </section>
   </div>
+  {/* Keep the giscus embed's theme in sync with the light/dark toggle. */}
+  <script
+    is:inline
+    set:html={`(function(){function frame(){return document.querySelector('iframe.giscus-frame');}function themeFor(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';}function apply(){var f=frame();if(!f||!f.contentWindow)return;f.contentWindow.postMessage({giscus:{setConfig:{theme:themeFor()}}},'https://giscus.app');}document.addEventListener('themechange',apply);window.addEventListener('message',function(e){if(e.origin==='https://giscus.app'&&e.data&&e.data.giscus&&'discussion'in e.data.giscus){apply();}});})();`}
+  />
   {
     ANALYTICS_ENABLED && (
       <script

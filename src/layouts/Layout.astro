@@ -18,7 +18,7 @@ const fullTitle =
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-default-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -28,7 +28,12 @@ const fullTitle =
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
+    <link rel="icon" type="image/png" href={withBase("/paw.png")} />
+    {/* Set the theme before paint to avoid a flash of the wrong theme. */}
+    <script
+      is:inline
+      set:html={`(function(){try{var d=document.documentElement;var def=d.dataset.defaultTheme||'light';var key='cat-theme';var stored=localStorage.getItem(key);var sys=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':(window.matchMedia?'light':def);d.setAttribute('data-theme',stored||sys);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`}
+    />
     {
       ANALYTICS_ENABLED && (
         <script
@@ -41,7 +46,7 @@ const fullTitle =
   </head>
   <body class="min-h-screen flex flex-col antialiased">
     <header
-      class="sticky top-0 z-30 border-b border-white/5 bg-ink-950/80 backdrop-blur-md"
+      class="sticky top-0 z-30 border-b border-border bg-bg/80 backdrop-blur-md"
     >
       <div
         class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6"
@@ -50,25 +55,62 @@ const fullTitle =
           href={withBase("/")}
           class="flex items-center gap-2.5 font-semibold tracking-tight"
         >
-          <span
-            class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-700 text-sm font-bold text-white shadow-lg shadow-brand-700/30"
-          >
-            AS
-          </span>
-          <span class="text-white">Agent Skills</span>
+          <img
+            src={withBase("/paw.png")}
+            alt=""
+            width="32"
+            height="32"
+            class="h-8 w-8"
+          />
+          <span class="cat-wordmark">Agent Skills</span>
         </a>
-        <nav class="flex items-center gap-5 text-sm text-slate-300">
+        <nav class="flex items-center gap-3 text-sm text-muted sm:gap-5">
           <a
             href={withBase("/")}
-            class="hover:text-white transition-colors">Browse</a
+            class="hover:text-fg transition-colors">Browse</a
           >
           <a
             href="https://github.com/microsoft/cat-agent-skills/blob/main/CONTRIBUTING.md"
             target="_blank"
             rel="noopener"
-            class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 hover:bg-white/10 hover:text-white transition-colors"
+            class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 hover:border-accent/50 hover:text-fg transition-colors"
             >Contribute a skill</a
           >
+          <button
+            id="theme-toggle"
+            type="button"
+            aria-label="Toggle light and dark theme"
+            title="Toggle theme"
+            class="grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface-2 text-muted hover:border-accent/50 hover:text-fg transition-colors"
+          >
+            <svg
+              class="hidden h-4 w-4 dark:block"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="4"></circle>
+              <path
+                d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"
+              ></path>
+            </svg>
+            <svg
+              class="block h-4 w-4 dark:hidden"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+            </svg>
+          </button>
         </nav>
       </div>
     </header>
@@ -77,15 +119,15 @@ const fullTitle =
       <slot />
     </main>
 
-    <footer class="border-t border-white/5 bg-ink-950">
+    <footer class="border-t border-border bg-bg">
       <div
-        class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-8 text-sm text-slate-400 sm:flex-row sm:px-6"
+        class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-8 text-sm text-muted sm:flex-row sm:px-6"
       >
         <p>
-          Community gallery of skills for <span class="text-slate-200"
+          Community gallery of skills for <span class="text-fg"
             >Cowork</span
-          >, <span class="text-slate-200">Copilot Studio</span>, and <span
-            class="text-slate-200">Scout</span
+          >, <span class="text-fg">Copilot Studio</span>, and <span
+            class="text-fg">Scout</span
           > agents.
         </p>
         <p>
@@ -93,11 +135,16 @@ const fullTitle =
             href="https://github.com/microsoft/cat-agent-skills"
             target="_blank"
             rel="noopener"
-            class="hover:text-white transition-colors">View on GitHub</a
+            class="hover:text-fg transition-colors">View on GitHub</a
           >
         </p>
       </div>
     </footer>
+
+    <script
+      is:inline
+      set:html={`(function(){var d=document.documentElement;var key='cat-theme';var btn=document.getElementById('theme-toggle');if(btn){btn.addEventListener('click',function(){var next=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',next);try{localStorage.setItem(key,next);}catch(e){}document.dispatchEvent(new CustomEvent('themechange',{detail:{theme:next}}));});}if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');var onSys=function(e){var stored=null;try{stored=localStorage.getItem(key);}catch(_){}if(stored)return;var next=e.matches?'dark':'light';d.setAttribute('data-theme',next);document.dispatchEvent(new CustomEvent('themechange',{detail:{theme:next}}));};if(mq.addEventListener)mq.addEventListener('change',onSys);else if(mq.addListener)mq.addListener(onSys);}})();`}
+    />
     {
       ANALYTICS_ENABLED && (
         <script

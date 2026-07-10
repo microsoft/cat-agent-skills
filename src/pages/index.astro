@@ -30,28 +30,24 @@ const allTags = [...tagCounts.entries()].sort(
 
 <Layout>
   <!-- Hero -->
-  <section class="relative overflow-hidden border-b border-white/5">
-    <div
-      class="pointer-events-none absolute inset-0 opacity-40"
-      style="background-image: radial-gradient(60% 60% at 50% 0%, rgba(52,97,255,.35) 0%, transparent 70%);"
-    >
-    </div>
-    <div class="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
+  <section class="border-b border-border bg-surface/40">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
       <h1
-        class="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl"
+        class="text-2xl font-bold tracking-tight text-fg sm:text-3xl"
       >
         The gallery of skills for your AI agents
       </h1>
-      <p class="mt-4 max-w-2xl text-lg text-slate-300">
-        Browse community-built skills — drop-in instructions and script bundles
-        that teach your agents new tricks. Find one, download the markdown (and
-        scripts), and add it to <span class="text-white">Cowork</span>, <span
-          class="text-white">Copilot Studio</span
-        >, or <span class="text-white">Scout</span>.
+      <p class="mt-2 max-w-2xl text-muted">
+        Browse <span class="text-fg">skills and plugins contributed by the
+        community</span>: drop-in instructions and script bundles that teach your
+        agents new tricks. Find one, download the markdown (and scripts), and add
+        it to <span class="text-fg">Cowork</span>, <span
+          class="text-fg">Copilot Studio</span
+        >, or <span class="text-fg">Scout</span>.
       </p>
 
       <!-- Search -->
-      <div class="mt-8 max-w-xl">
+      <div class="mt-6 max-w-xl">
         <label for="skill-search" class="sr-only">Search skills</label>
         <div class="relative">
           <svg
@@ -60,7 +56,7 @@ const allTags = [...tagCounts.entries()].sort(
             fill="none"
             stroke="currentColor"
             stroke-width="2"
-            class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+            class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle"
           >
             <circle cx="11" cy="11" r="7"></circle>
             <path d="m21 21-4.3-4.3" stroke-linecap="round"></path>
@@ -70,7 +66,7 @@ const allTags = [...tagCounts.entries()].sort(
             type="search"
             placeholder="Search skills by name, description, or tag…"
             autocomplete="off"
-            class="w-full rounded-xl border border-white/10 bg-ink-900/80 py-3 pl-11 pr-4 text-white placeholder:text-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
+            class="w-full rounded-xl border border-border bg-surface py-2.5 pl-11 pr-4 text-fg placeholder:text-subtle outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/25"
           />
         </div>
       </div>
@@ -78,18 +74,18 @@ const allTags = [...tagCounts.entries()].sort(
   </section>
 
   <!-- Platform filters -->
-  <section class="border-b border-white/5 bg-ink-950/80">
+  <section class="border-b border-border bg-bg">
     <div
       class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6"
     >
-      <span class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+      <span class="text-xs font-semibold uppercase tracking-wider text-subtle"
         >Platform</span
       >
       <div id="platform-filters" class="flex flex-wrap gap-2">
         <button
           type="button"
           data-platform=""
-          class="platform-chip rounded-full border border-brand-500 bg-brand-500/20 px-3.5 py-1.5 text-sm font-semibold text-white transition"
+          class="platform-chip rounded-full border border-accent bg-accent-soft px-3.5 py-1.5 text-sm font-semibold text-accent-text transition"
           aria-pressed="true">All platforms</button
         >
         {
@@ -97,7 +93,7 @@ const allTags = [...tagCounts.entries()].sort(
             <button
               type="button"
               data-platform={platform}
-              class="platform-chip flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm font-semibold text-slate-300 transition hover:border-white/30 hover:text-white"
+              class="platform-chip flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3.5 py-1.5 text-sm font-semibold text-muted transition hover:border-accent/40 hover:text-fg"
               aria-pressed="false"
             >
               <span
@@ -105,7 +101,7 @@ const allTags = [...tagCounts.entries()].sort(
                 style={`background:${PLATFORM_COLORS[platform]}`}
               />
               {platform}
-              <span class="text-xs text-slate-500">
+              <span class="text-xs text-subtle">
                 {platformCounts.get(platform) ?? 0}
               </span>
             </button>
@@ -116,13 +112,13 @@ const allTags = [...tagCounts.entries()].sort(
   </section>
 
   <!-- Tag filters -->
-  <section class="border-b border-white/5 bg-ink-950/60">
+  <section class="border-b border-border bg-bg">
     <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6">
       <div id="tag-filters" class="flex flex-wrap gap-2">
         <button
           type="button"
           data-tag=""
-          class="tag-chip rounded-full border border-brand-500 bg-brand-500/20 px-3 py-1 text-sm font-medium text-white transition"
+          class="tag-chip rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition"
           aria-pressed="true">All</button
         >
         {
@@ -130,11 +126,11 @@ const allTags = [...tagCounts.entries()].sort(
             <button
               type="button"
               data-tag={tag}
-              class="tag-chip rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:text-white"
+              class="tag-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
               aria-pressed="false"
             >
               {tag}
-              <span class="ml-1 text-xs text-slate-500">{count}</span>
+              <span class="ml-1 text-xs text-subtle">{count}</span>
             </button>
           ))
         }
@@ -145,8 +141,8 @@ const allTags = [...tagCounts.entries()].sort(
   <!-- Gallery -->
   <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
-      <h2 class="text-lg font-semibold text-white">
-        Skills <span id="result-count" class="text-slate-400"
+      <h2 class="text-lg font-semibold text-fg">
+        Skills <span id="result-count" class="text-muted"
           >({skills.length})</span
         >
       </h2>
@@ -155,27 +151,27 @@ const allTags = [...tagCounts.entries()].sort(
           <button
             type="button"
             data-type=""
-            class="type-chip rounded-full border border-brand-500 bg-brand-500/20 px-3 py-1 text-sm font-medium text-white transition"
+            class="type-chip rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition"
             aria-pressed="true">All</button
           >
           <button
             type="button"
             data-type="skill"
-            class="type-chip rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:text-white"
+            class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
             aria-pressed="false">Skills</button
           >
           <button
             type="button"
             data-type="plugin"
-            class="type-chip rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-slate-300 transition hover:border-white/30 hover:text-white"
+            class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
             aria-pressed="false">Plugins</button
           >
         </div>
-        <label class="flex items-center gap-2 text-sm text-slate-400">
+        <label class="flex items-center gap-2 text-sm text-muted">
           <span class="hidden sm:inline">Sort by</span>
           <select
             id="sort-select"
-            class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-slate-200 focus:border-brand-500 focus:outline-none"
+            class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none"
           >
             <option value="featured">Featured</option>
             <option value="rating">Top rated</option>
@@ -188,7 +184,7 @@ const allTags = [...tagCounts.entries()].sort(
 
     <div
       id="gallery"
-      class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
     >
       {
         skills.map((skill) => (
@@ -224,7 +220,7 @@ const allTags = [...tagCounts.entries()].sort(
       }
     </div>
 
-    <p id="empty-state" class="hidden py-16 text-center text-slate-400">
+    <p id="empty-state" class="hidden py-16 text-center text-muted">
       No skills match your search. Try a different term or clear the filters.
     </p>
 
@@ -233,7 +229,7 @@ const allTags = [...tagCounts.entries()].sort(
 </Layout>
 
 <script>
-  const BATCH = 8;
+  const BATCH = 12;
 
   const gallery = document.getElementById("gallery")!;
   const items = Array.from(
@@ -338,12 +334,12 @@ const allTags = [...tagCounts.entries()].sort(
     chips.forEach((c) => {
       const on = (c.dataset[key] ?? "") === active;
       c.setAttribute("aria-pressed", String(on));
-      c.classList.toggle("border-brand-500", on);
-      c.classList.toggle("bg-brand-500/20", on);
-      c.classList.toggle("text-white", on);
-      c.classList.toggle("border-white/10", !on);
-      c.classList.toggle("bg-white/5", !on);
-      c.classList.toggle("text-slate-300", !on);
+      c.classList.toggle("border-accent", on);
+      c.classList.toggle("bg-accent-soft", on);
+      c.classList.toggle("text-accent-text", on);
+      c.classList.toggle("border-border", !on);
+      c.classList.toggle("bg-surface-2", !on);
+      c.classList.toggle("text-muted", !on);
     });
   }
 
