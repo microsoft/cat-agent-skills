@@ -9,6 +9,7 @@ authorUrl: "https://github.com/AndrewHessMSFT"
 version: 1.0.0
 createdAt: 2026-07-08
 updatedAt: 2026-07-08
+featured: true
 bundle: bundles/redlining-content.zip
 ---
 # Redlining Content Skill
