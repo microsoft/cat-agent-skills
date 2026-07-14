@@ -1,0 +1,889 @@
+# Curated Python library catalog for the Agent Harness Explorer.
+#
+# This file is human-maintained reference data. It is intentionally
+# independent of any installed version or runtime status. Version numbers,
+# availability, and observation dates live in snapshots, never here.
+#
+# Schema (per entry):
+#   name              (required) PyPI distribution name, lowercased.
+#   import_name       (required) Top-level module used in `import`.
+#   category          (required) One value from the category taxonomy below.
+#   description       (required) One short human-readable sentence.
+#   documentation_url (required) Official documentation, https preferred.
+#   tags              (optional) Lowercase keywords for task-based lookup.
+#
+# Category taxonomy:
+#   Office documents, Data, Data science, AI, Web, Networking, Images,
+#   Documents, Serialization, Testing, Utilities, Cloud, Databases,
+#   Visualization, Security.
+#
+# Contribution guidelines: keep descriptions to a single neutral sentence,
+# link to official docs (not blog posts), pick the closest existing category
+# before inventing a new one, and keep entries sorted by name.
+
+catalog_version: "1.1"
+updated_at: "2026-07-14"
+
+libraries:
+  - name: python-docx
+    import_name: docx
+    category: Office documents
+    description: Create and manage Microsoft Word .docx files.
+    documentation_url: https://python-docx.readthedocs.io/
+    tags:
+      - word
+      - office
+      - document
+  - name: openpyxl
+    import_name: openpyxl
+    category: Office documents
+    description: Read, create, and modify Excel .xlsx workbooks.
+    documentation_url: https://openpyxl.readthedocs.io/
+    tags:
+      - excel
+      - spreadsheet
+      - office
+  - name: python-pptx
+    import_name: pptx
+    category: Office documents
+    description: Create and update Microsoft PowerPoint .pptx presentations.
+    documentation_url: https://python-pptx.readthedocs.io/
+    tags:
+      - powerpoint
+      - slides
+      - office
+  - name: pandas
+    import_name: pandas
+    category: Data science
+    description: Fast, flexible data structures for tabular data analysis.
+    documentation_url: https://pandas.pydata.org/docs/
+    tags:
+      - dataframe
+      - analysis
+      - tabular
+  - name: numpy
+    import_name: numpy
+    category: Data science
+    description: Fundamental package for array computing and numerical work.
+    documentation_url: https://numpy.org/doc/
+    tags:
+      - array
+      - math
+      - numeric
+  - name: scipy
+    import_name: scipy
+    category: Data science
+    description: Scientific computing routines built on NumPy.
+    documentation_url: https://docs.scipy.org/doc/scipy/
+    tags:
+      - science
+      - optimization
+      - statistics
+  - name: matplotlib
+    import_name: matplotlib
+    category: Visualization
+    description: Comprehensive library for creating static and animated plots.
+    documentation_url: https://matplotlib.org/stable/
+    tags:
+      - plot
+      - chart
+      - visualization
+  - name: pillow
+    import_name: PIL
+    category: Images
+    description: Image processing library for opening, editing, and saving images.
+    documentation_url: https://pillow.readthedocs.io/
+    tags:
+      - image
+      - graphics
+      - photo
+  - name: requests
+    import_name: requests
+    category: Networking
+    description: Simple, human-friendly HTTP client for Python.
+    documentation_url: https://requests.readthedocs.io/
+    tags:
+      - http
+      - web
+      - client
+  - name: httpx
+    import_name: httpx
+    category: Networking
+    description: Next-generation HTTP client with sync and async support.
+    documentation_url: https://www.python-httpx.org/
+    tags:
+      - http
+      - async
+      - client
+  - name: beautifulsoup4
+    import_name: bs4
+    category: Web
+    description: Parse and navigate HTML and XML documents.
+    documentation_url: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
+    tags:
+      - html
+      - scraping
+      - parsing
+  - name: lxml
+    import_name: lxml
+    category: Web
+    description: Fast XML and HTML parsing and XPath querying.
+    documentation_url: https://lxml.de/
+    tags:
+      - xml
+      - html
+      - xpath
+  - name: pyyaml
+    import_name: yaml
+    category: Serialization
+    description: YAML parser and emitter for Python.
+    documentation_url: https://pyyaml.org/wiki/PyYAMLDocumentation
+    tags:
+      - yaml
+      - config
+      - serialization
+  - name: pydantic
+    import_name: pydantic
+    category: Utilities
+    description: Data validation and settings management using type hints.
+    documentation_url: https://docs.pydantic.dev/
+    tags:
+      - validation
+      - schema
+      - typing
+  - name: jinja2
+    import_name: jinja2
+    category: Utilities
+    description: Templating engine for generating text and HTML output.
+    documentation_url: https://jinja.palletsprojects.com/
+    tags:
+      - template
+      - html
+      - rendering
+  - name: pypdf
+    import_name: pypdf
+    category: Documents
+    description: Read, split, merge, and transform PDF files in pure Python.
+    documentation_url: https://pypdf.readthedocs.io/
+    tags:
+      - pdf
+      - document
+      - merge
+  - name: reportlab
+    import_name: reportlab
+    category: Documents
+    description: Generate PDF documents and graphics programmatically.
+    documentation_url: https://docs.reportlab.com/
+    tags:
+      - pdf
+      - generation
+      - report
+  - name: markdown
+    import_name: markdown
+    category: Documents
+    description: Convert Markdown text into HTML.
+    documentation_url: https://python-markdown.github.io/
+    tags:
+      - markdown
+      - html
+      - text
+  - name: scikit-learn
+    import_name: sklearn
+    category: AI
+    description: Machine learning algorithms for classification, regression, and clustering.
+    documentation_url: https://scikit-learn.org/stable/
+    tags:
+      - ml
+      - modeling
+      - prediction
+  - name: openai
+    import_name: openai
+    category: AI
+    description: Official client library for the OpenAI API.
+    documentation_url: https://platform.openai.com/docs/libraries
+    tags:
+      - llm
+      - api
+      - openai
+  - name: tiktoken
+    import_name: tiktoken
+    category: AI
+    description: Fast byte-pair-encoding tokenizer for OpenAI models.
+    documentation_url: https://github.com/openai/tiktoken
+    tags:
+      - tokenizer
+      - llm
+      - encoding
+  - name: sqlalchemy
+    import_name: sqlalchemy
+    category: Databases
+    description: SQL toolkit and Object Relational Mapper for Python.
+    documentation_url: https://docs.sqlalchemy.org/
+    tags:
+      - sql
+      - orm
+      - database
+  - name: playwright
+    import_name: playwright
+    category: Web
+    description: Browser automation for Chromium, Firefox, and WebKit.
+    documentation_url: https://playwright.dev/python/
+    tags:
+      - browser
+      - automation
+      - testing
+  - name: cryptography
+    import_name: cryptography
+    category: Security
+    description: Cryptographic recipes and primitives for Python.
+    documentation_url: https://cryptography.io/
+    tags:
+      - crypto
+      - encryption
+      - security
+  - name: python-dateutil
+    import_name: dateutil
+    category: Utilities
+    description: Powerful extensions to the standard datetime module.
+    documentation_url: https://dateutil.readthedocs.io/
+    tags:
+      - date
+      - time
+      - parsing
+  - name: annotated-doc
+    import_name: annotated_doc
+    category: Utilities
+    description: Attach inline documentation to values using the typing Annotated hint.
+    documentation_url: https://github.com/fastapi/annotated-doc
+    tags:
+      - typing
+      - documentation
+  - name: annotated-types
+    import_name: annotated_types
+    category: Utilities
+    description: Reusable constraint types for use with typing Annotated.
+    documentation_url: https://github.com/annotated-types/annotated-types
+    tags:
+      - typing
+      - validation
+  - name: anyio
+    import_name: anyio
+    category: Networking
+    description: Asynchronous concurrency and networking layer over asyncio and Trio.
+    documentation_url: https://anyio.readthedocs.io/
+    tags:
+      - async
+      - concurrency
+      - networking
+  - name: certifi
+    import_name: certifi
+    category: Security
+    description: Curated collection of Mozilla root CA certificates for TLS validation.
+    documentation_url: https://github.com/certifi/python-certifi
+    tags:
+      - tls
+      - certificates
+      - security
+  - name: cffi
+    import_name: cffi
+    category: Utilities
+    description: Foreign Function Interface for calling C code from Python.
+    documentation_url: https://cffi.readthedocs.io/
+    tags:
+      - ffi
+      - c
+      - bindings
+  - name: charset-normalizer
+    import_name: charset_normalizer
+    category: Utilities
+    description: Character-set detection and text encoding normalization.
+    documentation_url: https://charset-normalizer.readthedocs.io/
+    tags:
+      - encoding
+      - text
+  - name: click
+    import_name: click
+    category: Utilities
+    description: Composable toolkit for building command-line interfaces.
+    documentation_url: https://click.palletsprojects.com/
+    tags:
+      - cli
+      - commands
+  - name: cobble
+    import_name: cobble
+    category: Utilities
+    description: Create Python data objects with generated equality and repr methods.
+    documentation_url: https://github.com/mwilliamson/python-cobble
+    tags:
+      - data
+      - objects
+  - name: contourpy
+    import_name: contourpy
+    category: Visualization
+    description: Calculate contour lines and filled contours from 2D grids.
+    documentation_url: https://contourpy.readthedocs.io/
+    tags:
+      - contours
+      - plotting
+  - name: cycler
+    import_name: cycler
+    category: Visualization
+    description: Composable style cycles used by Matplotlib.
+    documentation_url: https://matplotlib.org/cycler/
+    tags:
+      - plotting
+      - styles
+  - name: defusedxml
+    import_name: defusedxml
+    category: Security
+    description: XML parsing hardened against denial-of-service and entity-expansion attacks.
+    documentation_url: https://github.com/tiran/defusedxml
+    tags:
+      - xml
+      - security
+  - name: dracarys
+    import_name: dracarys
+    category: AI
+    description: Copilot Studio enhanced orchestrator that powers the agent.
+    documentation_url: https://learn.microsoft.com/microsoft-copilot-studio/agents-experience/overview
+    tags:
+      - orchestrator
+      - copilot-studio
+      - agent
+  - name: et_xmlfile
+    import_name: et_xmlfile
+    category: Office documents
+    description: Low-memory helper for writing large XML files, used by openpyxl.
+    documentation_url: https://foss.heptapod.net/openpyxl/et_xmlfile
+    tags:
+      - xml
+      - excel
+  - name: fastapi
+    import_name: fastapi
+    category: Web
+    description: Modern high-performance web framework for building APIs with type hints.
+    documentation_url: https://fastapi.tiangolo.com/
+    tags:
+      - api
+      - web
+      - async
+  - name: fastembed
+    import_name: fastembed
+    category: AI
+    description: Lightweight, fast library for generating text and image embeddings.
+    documentation_url: https://github.com/qdrant/fastembed
+    tags:
+      - embeddings
+      - nlp
+  - name: filelock
+    import_name: filelock
+    category: Utilities
+    description: Platform-independent advisory file locking mechanism.
+    documentation_url: https://py-filelock.readthedocs.io/
+    tags:
+      - locking
+      - concurrency
+  - name: flatbuffers
+    import_name: flatbuffers
+    category: Serialization
+    description: Memory-efficient cross-platform serialization library.
+    documentation_url: https://flatbuffers.dev/
+    tags:
+      - serialization
+      - binary
+  - name: fonttools
+    import_name: fontTools
+    category: Utilities
+    description: Read, write, and manipulate TrueType and OpenType fonts.
+    documentation_url: https://fonttools.readthedocs.io/
+    tags:
+      - fonts
+      - typography
+  - name: fsspec
+    import_name: fsspec
+    category: Utilities
+    description: Unified pythonic interface to local, remote, and embedded filesystems.
+    documentation_url: https://filesystem-spec.readthedocs.io/
+    tags:
+      - filesystem
+      - storage
+  - name: github-copilot-sdk
+    import_name: copilot
+    category: AI
+    description: Python SDK for programmatic control of the GitHub Copilot CLI over JSON-RPC.
+    documentation_url: https://github.com/github/copilot-sdk
+    tags:
+      - copilot
+      - sdk
+      - agent
+  - name: grpcio
+    import_name: grpc
+    category: Networking
+    description: gRPC framework for high-performance remote procedure calls.
+    documentation_url: https://grpc.io/
+    tags:
+      - rpc
+      - networking
+  - name: grpcio-tools
+    import_name: grpc_tools
+    category: Networking
+    description: Protocol Buffers and gRPC code-generation tools for Python.
+    documentation_url: https://grpc.io/
+    tags:
+      - rpc
+      - protobuf
+      - codegen
+  - name: h11
+    import_name: h11
+    category: Networking
+    description: Pure-Python, spec-compliant HTTP/1.1 protocol implementation.
+    documentation_url: https://h11.readthedocs.io/
+    tags:
+      - http
+      - protocol
+  - name: hf-xet
+    import_name: hf_xet
+    category: AI
+    description: Xet storage backend for fast Hugging Face Hub uploads and downloads.
+    documentation_url: https://github.com/huggingface/xet-core
+    tags:
+      - huggingface
+      - storage
+  - name: httpcore
+    import_name: httpcore
+    category: Networking
+    description: Minimal low-level HTTP client that powers the HTTPX transport.
+    documentation_url: https://www.encode.io/httpcore/
+    tags:
+      - http
+      - client
+  - name: httptools
+    import_name: httptools
+    category: Networking
+    description: Fast HTTP request and response parser based on the Node.js parser.
+    documentation_url: https://github.com/MagicStack/httptools
+    tags:
+      - http
+      - parser
+  - name: huggingface_hub
+    import_name: huggingface_hub
+    category: AI
+    description: Client for sharing and downloading models and datasets on the Hugging Face Hub.
+    documentation_url: https://huggingface.co/docs/huggingface_hub
+    tags:
+      - huggingface
+      - models
+  - name: idna
+    import_name: idna
+    category: Networking
+    description: Internationalized Domain Names in Applications (IDNA) encoding support.
+    documentation_url: https://github.com/kjd/idna
+    tags:
+      - dns
+      - encoding
+  - name: kiwisolver
+    import_name: kiwisolver
+    category: Visualization
+    description: Fast implementation of the Cassowary constraint solver used by Matplotlib.
+    documentation_url: https://kiwisolver.readthedocs.io/
+    tags:
+      - layout
+      - solver
+  - name: loguru
+    import_name: loguru
+    category: Utilities
+    description: Simplified, opinionated logging for Python.
+    documentation_url: https://loguru.readthedocs.io/
+    tags:
+      - logging
+  - name: magika
+    import_name: magika
+    category: AI
+    description: Deep-learning-based file content type detection from Google.
+    documentation_url: https://google.github.io/magika/
+    tags:
+      - file-type
+      - detection
+  - name: mammoth
+    import_name: mammoth
+    category: Office documents
+    description: Convert Word .docx documents to HTML or Markdown.
+    documentation_url: https://github.com/mwilliamson/python-mammoth
+    tags:
+      - word
+      - docx
+      - convert
+  - name: markdownify
+    import_name: markdownify
+    category: Documents
+    description: Convert HTML into Markdown.
+    documentation_url: https://github.com/matthewwithanm/python-markdownify
+    tags:
+      - html
+      - markdown
+  - name: markitdown
+    import_name: markitdown
+    category: Documents
+    description: Convert files and Office documents to Markdown for LLM workflows.
+    documentation_url: https://github.com/microsoft/markitdown
+    tags:
+      - markdown
+      - convert
+  - name: MarkupSafe
+    import_name: markupsafe
+    category: Web
+    description: Safely add untrusted strings to HTML and XML markup.
+    documentation_url: https://markupsafe.palletsprojects.com/
+    tags:
+      - html
+      - escaping
+  - name: mmh3
+    import_name: mmh3
+    category: Utilities
+    description: Python bindings for the MurmurHash3 non-cryptographic hash.
+    documentation_url: https://github.com/hajimes/mmh3
+    tags:
+      - hashing
+  - name: mpmath
+    import_name: mpmath
+    category: Data science
+    description: Arbitrary-precision floating-point arithmetic.
+    documentation_url: https://mpmath.org/
+    tags:
+      - math
+      - precision
+  - name: narwhals
+    import_name: narwhals
+    category: Data
+    description: Compatibility layer for pandas, Polars, and other dataframe libraries.
+    documentation_url: https://narwhals-dev.github.io/narwhals/
+    tags:
+      - dataframe
+      - compatibility
+  - name: noto-cjk-fonts
+    import_name: noto_cjk_fonts
+    category: Documents
+    description: Bundled Noto Sans and Serif CJK fonts for rendering Chinese, Japanese, and Korean text.
+    documentation_url: https://github.com/notofonts/noto-cjk
+    tags:
+      - fonts
+      - cjk
+  - name: onnxruntime
+    import_name: onnxruntime
+    category: AI
+    description: Cross-platform inference and training accelerator for ONNX models.
+    documentation_url: https://onnxruntime.ai/
+    tags:
+      - onnx
+      - inference
+  - name: opencv-python-headless
+    import_name: cv2
+    category: Images
+    description: OpenCV computer-vision library packaged without GUI dependencies.
+    documentation_url: https://docs.opencv.org/
+    tags:
+      - computer-vision
+      - images
+  - name: orjson
+    import_name: orjson
+    category: Serialization
+    description: Fast JSON serialization library implemented in Rust.
+    documentation_url: https://github.com/ijl/orjson
+    tags:
+      - json
+      - serialization
+  - name: packaging
+    import_name: packaging
+    category: Utilities
+    description: Core utilities for Python package versions, specifiers, and markers.
+    documentation_url: https://packaging.pypa.io/
+    tags:
+      - packaging
+      - versions
+  - name: pdfminer.six
+    import_name: pdfminer
+    category: Documents
+    description: Extract text, layout, and metadata from PDF files.
+    documentation_url: https://pdfminersix.readthedocs.io/
+    tags:
+      - pdf
+      - extraction
+  - name: pdfplumber
+    import_name: pdfplumber
+    category: Documents
+    description: Extract text, tables, and shapes from PDFs, built on pdfminer.six.
+    documentation_url: https://github.com/jsvine/pdfplumber
+    tags:
+      - pdf
+      - tables
+  - name: plotly
+    import_name: plotly
+    category: Visualization
+    description: Interactive, browser-based charting and plotting library.
+    documentation_url: https://plotly.com/python/
+    tags:
+      - charts
+      - interactive
+  - name: protobuf
+    import_name: google.protobuf
+    category: Serialization
+    description: Google Protocol Buffers language-neutral data serialization.
+    documentation_url: https://protobuf.dev/
+    tags:
+      - serialization
+      - protobuf
+  - name: py_rust_stemmers
+    import_name: py_rust_stemmers
+    category: AI
+    description: Fast Snowball word stemmers implemented in Rust.
+    documentation_url: https://github.com/qdrant/py-rust-stemmers
+    tags:
+      - nlp
+      - stemming
+  - name: pyarrow
+    import_name: pyarrow
+    category: Data
+    description: Python bindings for Apache Arrow columnar in-memory data.
+    documentation_url: https://arrow.apache.org/docs/python/
+    tags:
+      - arrow
+      - columnar
+  - name: pyclipper
+    import_name: pyclipper
+    category: Images
+    description: Python wrapper for the Clipper polygon clipping and offsetting library.
+    documentation_url: https://github.com/fonttools/pyclipper
+    tags:
+      - geometry
+      - polygons
+  - name: pycparser
+    import_name: pycparser
+    category: Utilities
+    description: Complete C99 parser written in pure Python.
+    documentation_url: https://github.com/eliben/pycparser
+    tags:
+      - c
+      - parser
+  - name: pydantic-settings
+    import_name: pydantic_settings
+    category: Utilities
+    description: Settings management using Pydantic models and environment variables.
+    documentation_url: https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+    tags:
+      - settings
+      - config
+  - name: pydantic_core
+    import_name: pydantic_core
+    category: Utilities
+    description: Rust-based validation core that powers Pydantic v2.
+    documentation_url: https://github.com/pydantic/pydantic-core
+    tags:
+      - validation
+      - core
+  - name: PyJWT
+    import_name: jwt
+    category: Security
+    description: Encode and decode JSON Web Tokens (JWT).
+    documentation_url: https://pyjwt.readthedocs.io/
+    tags:
+      - jwt
+      - auth
+      - security
+  - name: pyparsing
+    import_name: pyparsing
+    category: Utilities
+    description: Library for creating and executing grammar-based text parsers.
+    documentation_url: https://pyparsing-docs.readthedocs.io/
+    tags:
+      - parsing
+      - grammar
+  - name: pypdfium2
+    import_name: pypdfium2
+    category: Documents
+    description: Python bindings to PDFium for rendering and inspecting PDFs.
+    documentation_url: https://pypdfium2.readthedocs.io/
+    tags:
+      - pdf
+      - rendering
+  - name: python-dotenv
+    import_name: dotenv
+    category: Utilities
+    description: Load environment variables from .env files.
+    documentation_url: https://saurabh-kumar.com/python-dotenv/
+    tags:
+      - env
+      - config
+  - name: rank-bm25
+    import_name: rank_bm25
+    category: AI
+    description: Collection of BM25 ranking algorithms for information retrieval.
+    documentation_url: https://github.com/dorianbrown/rank_bm25
+    tags:
+      - search
+      - ranking
+  - name: rapidocr-onnxruntime
+    import_name: rapidocr_onnxruntime
+    category: AI
+    description: OCR toolkit running PaddleOCR models via ONNX Runtime.
+    documentation_url: https://github.com/RapidAI/RapidOCR
+    tags:
+      - ocr
+      - onnx
+  - name: seaborn
+    import_name: seaborn
+    category: Visualization
+    description: Statistical data visualization built on Matplotlib.
+    documentation_url: https://seaborn.pydata.org/
+    tags:
+      - plotting
+      - statistics
+  - name: setuptools
+    import_name: setuptools
+    category: Utilities
+    description: Build system and packaging tools for Python projects.
+    documentation_url: https://setuptools.pypa.io/
+    tags:
+      - packaging
+      - build
+  - name: shapely
+    import_name: shapely
+    category: Data
+    description: Manipulation and analysis of planar geometric objects.
+    documentation_url: https://shapely.readthedocs.io/
+    tags:
+      - geometry
+      - gis
+  - name: six
+    import_name: six
+    category: Utilities
+    description: Python 2 and 3 compatibility helpers.
+    documentation_url: https://six.readthedocs.io/
+    tags:
+      - compatibility
+  - name: soupsieve
+    import_name: soupsieve
+    category: Web
+    description: CSS selector library used by Beautiful Soup.
+    documentation_url: https://facelessuser.github.io/soupsieve/
+    tags:
+      - css
+      - selectors
+  - name: starlette
+    import_name: starlette
+    category: Web
+    description: Lightweight ASGI framework and toolkit that underpins FastAPI.
+    documentation_url: https://www.starlette.io/
+    tags:
+      - asgi
+      - web
+  - name: sympy
+    import_name: sympy
+    category: Data science
+    description: Symbolic mathematics and computer algebra system.
+    documentation_url: https://docs.sympy.org/
+    tags:
+      - math
+      - symbolic
+  - name: tabulate
+    import_name: tabulate
+    category: Utilities
+    description: Pretty-print tabular data in a variety of text formats.
+    documentation_url: https://github.com/astanin/python-tabulate
+    tags:
+      - tables
+      - formatting
+  - name: tokenizers
+    import_name: tokenizers
+    category: AI
+    description: Fast, production-ready text tokenizers from Hugging Face.
+    documentation_url: https://huggingface.co/docs/tokenizers
+    tags:
+      - nlp
+      - tokenization
+  - name: tqdm
+    import_name: tqdm
+    category: Utilities
+    description: Fast, extensible progress bar for loops and iterables.
+    documentation_url: https://tqdm.github.io/
+    tags:
+      - progress
+      - cli
+  - name: typing-inspection
+    import_name: typing_inspection
+    category: Utilities
+    description: Runtime inspection utilities for typing annotations.
+    documentation_url: https://github.com/pydantic/typing-inspection
+    tags:
+      - typing
+      - introspection
+  - name: typing_extensions
+    import_name: typing_extensions
+    category: Utilities
+    description: Backported and experimental type hints for older Python versions.
+    documentation_url: https://typing-extensions.readthedocs.io/
+    tags:
+      - typing
+  - name: tzdata
+    import_name: tzdata
+    category: Utilities
+    description: IANA time zone database packaged for Python.
+    documentation_url: https://tzdata.readthedocs.io/
+    tags:
+      - timezone
+      - date
+  - name: urllib3
+    import_name: urllib3
+    category: Networking
+    description: Powerful, user-friendly HTTP client library.
+    documentation_url: https://urllib3.readthedocs.io/
+    tags:
+      - http
+      - client
+  - name: uvicorn
+    import_name: uvicorn
+    category: Web
+    description: Lightning-fast ASGI server implementation.
+    documentation_url: https://www.uvicorn.org/
+    tags:
+      - asgi
+      - server
+  - name: uvloop
+    import_name: uvloop
+    category: Networking
+    description: Fast, drop-in replacement for the asyncio event loop built on libuv.
+    documentation_url: https://uvloop.readthedocs.io/
+    tags:
+      - async
+      - event-loop
+  - name: watchfiles
+    import_name: watchfiles
+    category: Utilities
+    description: Fast file-change watching and auto-reloading, powered by Rust.
+    documentation_url: https://watchfiles.helpmanual.io/
+    tags:
+      - filesystem
+      - reload
+  - name: websockets
+    import_name: websockets
+    category: Networking
+    description: Library for building WebSocket servers and clients with asyncio.
+    documentation_url: https://websockets.readthedocs.io/
+    tags:
+      - websocket
+      - async
+  - name: wheel
+    import_name: wheel
+    category: Utilities
+    description: Reference implementation of the Python wheel packaging format.
+    documentation_url: https://wheel.readthedocs.io/
+    tags:
+      - packaging
+      - build
+  - name: xlsxwriter
+    import_name: xlsxwriter
+    category: Office documents
+    description: Create Excel .xlsx files with formatting, charts, and formulas.
+    documentation_url: https://xlsxwriter.readthedocs.io/
+    tags:
+      - excel
+      - xlsx

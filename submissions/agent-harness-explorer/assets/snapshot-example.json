@@ -1,0 +1,168 @@
+{
+  "schemaVersion": "1.0",
+  "snapshotId": "2026-07-13T20-42-18Z",
+  "capturedAt": "2026-07-13T20:42:18Z",
+  "skillVersion": "0.1.0",
+  "probeSuiteVersion": "0.1.0",
+  "catalogVersion": "1.0",
+  "runtime": {
+    "pythonVersion": "3.13.5",
+    "implementation": "CPython",
+    "platform": "Linux-6.8.0-x86_64",
+    "machine": "x86_64"
+  },
+  "pythonLibraries": [
+    {
+      "id": "python.package:numpy",
+      "name": "numpy",
+      "version": "2.1.3",
+      "status": "available",
+      "importName": "numpy",
+      "category": "Data science",
+      "description": "Fundamental package for array computing and numerical work.",
+      "documentationUrl": "https://numpy.org/doc/",
+      "tags": [
+        "array",
+        "math",
+        "numeric"
+      ],
+      "catalogStatus": "cataloged"
+    },
+    {
+      "id": "python.package:pandas",
+      "name": "pandas",
+      "version": "2.2.3",
+      "status": "available",
+      "importName": "pandas",
+      "category": "Data science",
+      "description": "Fast, flexible data structures for tabular data analysis.",
+      "documentationUrl": "https://pandas.pydata.org/docs/",
+      "tags": [
+        "dataframe",
+        "analysis",
+        "tabular"
+      ],
+      "catalogStatus": "cataloged"
+    },
+    {
+      "id": "python.package:python-docx",
+      "name": "python-docx",
+      "version": "1.2.0",
+      "status": "available",
+      "importName": "docx",
+      "category": "Office documents",
+      "description": "Create and manage Microsoft Word .docx files.",
+      "documentationUrl": "https://python-docx.readthedocs.io/",
+      "tags": [
+        "word",
+        "office",
+        "document"
+      ],
+      "catalogStatus": "cataloged"
+    },
+    {
+      "id": "python.package:some-internal-lib",
+      "name": "some-internal-lib",
+      "version": "0.4.1",
+      "status": "available",
+      "category": "Uncataloged",
+      "description": "",
+      "documentationUrl": "",
+      "catalogStatus": "uncataloged"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "python.runtime",
+      "status": "available",
+      "value": "3.13.5",
+      "details": {
+        "implementation": "CPython",
+        "platform": "Linux-6.8.0-x86_64",
+        "machine": "x86_64",
+        "pythonVersion": "3.13.5"
+      },
+      "confidence": "high",
+      "source": "runtime"
+    },
+    {
+      "id": "runtime.filesystem:temp-dir",
+      "status": "available",
+      "value": true,
+      "confidence": "high",
+      "source": "runtime"
+    },
+    {
+      "id": "runtime.filesystem:write",
+      "status": "unverified",
+      "value": null,
+      "confidence": "low",
+      "source": "skipped"
+    },
+    {
+      "id": "runtime.network:https",
+      "status": "unverified",
+      "value": null,
+      "confidence": "low",
+      "source": "skipped"
+    },
+    {
+      "id": "runtime.os",
+      "status": "available",
+      "value": "Linux",
+      "details": {
+        "system": "Linux",
+        "release": "6.8.0",
+        "machine": "x86_64"
+      },
+      "confidence": "high",
+      "source": "runtime"
+    },
+    {
+      "id": "runtime.subprocess:exec",
+      "status": "unverified",
+      "value": null,
+      "confidence": "low",
+      "source": "skipped"
+    },
+    {
+      "id": "tool.visibility",
+      "status": "not-visible",
+      "value": null,
+      "confidence": "low",
+      "source": "no-observations"
+    }
+  ],
+  "probes": [
+    {
+      "probeId": "python-runtime-packages",
+      "probeVersion": "0.1.0",
+      "status": "success",
+      "safetyLevel": "passive"
+    },
+    {
+      "probeId": "runtime-environment",
+      "probeVersion": "0.1.0",
+      "status": "success",
+      "safetyLevel": "passive"
+    },
+    {
+      "probeId": "tool-mcp-visibility",
+      "probeVersion": "0.1.0",
+      "status": "skipped",
+      "safetyLevel": "passive"
+    }
+  ],
+  "warnings": [
+    "No observations provided; the agent must enumerate tools, skills, and MCP servers from its own context."
+  ],
+  "summary": {
+    "available": 8,
+    "visible": 0,
+    "restricted": 0,
+    "unknown": 4,
+    "libraries": 4,
+    "uncataloged": 1
+  },
+  "fingerprint": "sha256:c57bb5994034da3a2aeb2cf9d56fcfbedc7f4240ae3f8eb52948cebdb09e1a8d"
+}
