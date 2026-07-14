@@ -23,6 +23,7 @@
     "@tailwindcss/vite": "^4.1.4",
     "@types/adm-zip": "^0.5.8",
     "adm-zip": "^0.5.17",
+    "croner": "^9.1.0",
     "gray-matter": "^4.0.3",
     "tailwindcss": "^4.1.4",
     "tsx": "^4.22.4"

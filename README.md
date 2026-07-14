@@ -23,6 +23,9 @@ deployed as a static site to GitHub Pages.
   See [`docs/ratings.md`](docs/ratings.md).
 - **Downloads**: the skill as a `SKILL.md` file, plus an optional `.zip` bundle
   when a skill ships files beyond its `SKILL.md`.
+- **More than skills**: also hosts **Cowork plugins** (M365 `.zip` packages) and
+  **Scout automations** (scheduled `.json` exports), each with its own badge,
+  filter, and verbatim download.
 
 ## 🚀 Local development
 
@@ -89,6 +92,11 @@ Write the agent instructions here as Markdown — this body becomes the
 > `name`, `description`, `platforms`, and `tags` are required (`platforms` must be
 > one or more of `Cowork`, `Copilot Studio`, `Scout`). PRs run a build check that
 > validates every skill against the schema.
+
+> Besides single skills, you can submit a **Cowork plugin** (a `.zip` M365 app
+> package, Cowork-only) or a **Scout automation** (a `.json` export, Scout-only).
+> Both drop into `submissions/<slug>/` the same way and are auto-detected by their
+> payload. See [`submissions/README.md`](submissions/README.md) for the details.
 
 ## 📁 Project structure
 

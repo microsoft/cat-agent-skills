@@ -1,0 +1,39 @@
+{
+  "description": "While the owner is OOF, watches a group chat for questions, answers them from local knowledge docs (with an AI-generated caveat), logs anything it can't answer for later review, and pings the owner on Teams relay if its config is incomplete.",
+  "schedule": {
+    "kind": "interval",
+    "naturalLanguage": "every 15 minutes",
+    "days": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "intervalMinutes": 15,
+    "anchor": {
+      "hour": 0,
+      "minute": 0
+    },
+    "hour": 0,
+    "minute": 0
+  },
+  "teamsNotify": "auto",
+  "id": "e4mxnk1pmrked1ny",
+  "name": "spend more time with friends and family",
+  "steps": [
+    {
+      "id": "1",
+      "label": "Main",
+      "prompt": "You are running the \"spend more time with friends and family\" automation. Work through these steps in order and stop early if instructed. All file paths are resolved at runtime relative to the Scout workspace so this automation is portable across machines and operating systems. Never hardcode an absolute path or a specific username.\n\nSTEP 0 — Resolve paths (portable, cross-OS).\n- Determine the workspace root (WS): this is the automation's current working directory. Get it portably: on macOS/Linux run the shell command `pwd`; on Windows run `cd` (cmd) or `$PWD.Path` (PowerShell). Trim whitespace/newlines from the result. Use whichever shell the OS provides.\n- Derive these paths by joining onto WS using the OS-native separator (the shell result for WS already uses the correct separator; just append subpaths with that same separator — forward slash `/` on macOS/Linux, backslash `\\` on Windows). Let SEP be that separator:\n  - BOT_DIR      = WS + SEP + \"friends-family-bot\"\n  - CONFIG_PATH  = BOT_DIR + SEP + \"config.json\"\n  - KNOWLEDGE_DIR = BOT_DIR + SEP + \"knowledge\"\n  - UNANSWERED   = BOT_DIR + SEP + \"unanswered.md\"\n- Use these resolved variables everywhere below. If you are ever unsure of the separator, prefer forward slashes — the filesystem tools accept them on all platforms.\n\nDEFAULT_CONFIG (the template to write when bootstrapping a missing config file). Note the path values are LEFT BLANK/relative on purpose — fill knowledgeDocs and unansweredLog with the runtime-resolved KNOWLEDGE_DIR and UNANSWERED values when you write the file, so nothing personal is hardcoded:\n{\n  \"chatId\": \"\",\n  \"knowledgeDocs\": [ \"<KNOWLEDGE_DIR>\" ],\n  \"unansweredLog\": \"<UNANSWERED>\",\n  \"lastProcessedMessageId\": \"\",\n  \"answerCaveat\": \"\\ud83e\\udd16 This is an AI-generated reply from Scout on behalf of the account owner (who is currently away). Please verify anything important.\",\n  \"ownerRelayEmail\": \"\"\n}\n\nSTEP 1 — Load or bootstrap config.\n- Try to read CONFIG_PATH as JSON.\n- If the file does NOT exist (or BOT_DIR is missing): create BOT_DIR and KNOWLEDGE_DIR if needed, then WRITE DEFAULT_CONFIG to CONFIG_PATH with <KNOWLEDGE_DIR> and <UNANSWERED> replaced by the actual runtime-resolved paths. This self-creates a config the user can fill in. Treat the freshly written config as loaded and continue to validation.\n- If the file exists but is unparseable/corrupt: do NOT overwrite it (avoid clobbering user edits). Treat as a fatal config error and go to STEP 1b, naming the parse problem.\n\nSTEP 1a — Validate.\n- Required fields: `chatId` (non-empty), and `knowledgeDocs` (a non-empty array whose folders/files actually exist and contain at least one readable knowledge file other than README.md).\n- Optional: `unansweredLog`, `lastProcessedMessageId`, `answerCaveat`, `ownerRelayEmail`.\n\nSTEP 1b — If any required field is missing/empty/invalid (including right after a fresh bootstrap, where they will be empty):\n- Do NOT touch the monitored chat. Instead, complain to the owner over the Teams relay so they can fix it.\n  - Check relay status with m_relay_status; if not connected, call m_relay_connect.\n  - Determine where to send: if `ownerRelayEmail` is set, call workiq_create_chat_by_email with it; otherwise send to the Teams self-chat (workiq_create_chat_by_email with the current user's own email from workiq_get_my_profile).\n  - Send a concise message naming exactly which fields are unset/invalid and the CONFIG_PATH to edit. If you just bootstrapped the file, say so, e.g.: \"⚠️ 'spend more time with friends and family' created a blank config at CONFIG_PATH but chatId and knowledge docs are still empty. Fill them in to activate.\"\n  - Then STOP the run. Register result \"blocked: incomplete config (<fields>)\". Do not proceed to later steps.\n\nSTEP 2 — Fetch new messages.\n- Call workiq_list_chat_messages for `chatId` (newest first, limit ~30).\n- Determine which messages are NEW: those posted after `lastProcessedMessageId`. If `lastProcessedMessageId` is empty, only consider messages from the last 60 minutes (do NOT backfill the whole history).\n- Ignore messages sent by the owner themselves (compare against workiq_get_my_profile) and ignore system/event messages.\n\nSTEP 3 — Identify questions.\n- From the NEW messages, pick those that are genuinely asking a question (ends with \"?\", or is clearly interrogative / a request for info). Skip greetings, reactions, and small talk.\n\nSTEP 4 — Answer from knowledge docs.\n- Read the contents of every knowledge file referenced by `knowledgeDocs` (recurse into folders; skip README.md). Treat this as the ONLY source of truth.\n- For each question, try to answer strictly from the knowledge docs. Do not invent facts not supported by the docs.\n- If you have a supported answer: post a reply in the chat using workiq_reply_to_chat_message (reply to that specific message). Prepend/append the caveat from `answerCaveat` (or a sensible default if unset) so it's clear the reply is AI-generated by Scout on the owner's behalf.\n- If the docs do NOT contain enough to answer: append a row to the `unansweredLog` markdown table with local timestamp, asker display name, the question text, and the message id / chat reference. Do NOT post a guess to the chat.\n\nSTEP 5 — Update state.\n- Set `lastProcessedMessageId` in CONFIG_PATH to the id of the newest message you processed, and write the file back (preserve all other fields).\n\nSTEP 6 — Register a short result summary: how many new questions were found, how many answered in-chat, how many logged as unanswered. Only surface to Teams if something needs the owner's attention (e.g. unanswered questions logged), otherwise keep it quiet."
+    }
+  ],
+  "enabled": false,
+  "oneShot": false,
+  "createdAt": "2026-07-14T08:36:20.014Z",
+  "updatedAt": "2026-07-14T09:23:04.158Z",
+  "triggerType": "schedule",
+  "lastExecutedAt": null
+}

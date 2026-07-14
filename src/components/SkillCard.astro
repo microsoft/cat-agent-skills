@@ -33,6 +33,7 @@ const gradient = coverGradient(slug, coverColor);
 const mark = initials(name);
 const isSample = tags.includes("sample");
 const isPlugin = type === "plugin";
+const isAutomation = type === "automation";
 const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
 ---
 
@@ -64,6 +65,16 @@ const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
               title="A Cowork plugin (M365 app package)"
             >
               Plugin
+            </span>
+          )
+        }
+        {
+          isAutomation && (
+            <span
+              class="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-text"
+              title="A Scout automation (scheduled .json)"
+            >
+              Automation
             </span>
           )
         }
@@ -116,7 +127,7 @@ const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
       {
         shownTags.length === 0 && (
           <span class="truncate text-xs text-subtle">
-            {author ? `by ${author}` : isPlugin ? "Cowork plugin" : "Community skill"}
+            {author ? `by ${author}` : isPlugin ? "Cowork plugin" : isAutomation ? "Scout automation" : "Community skill"}
           </span>
         )
       }
@@ -124,7 +135,7 @@ const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
     <span class="flex shrink-0 items-center gap-2.5 text-xs text-subtle">
       {
         hasBundle && (
-          <span class="flex items-center gap-1" title="Includes a downloadable bundle">
+          <span class="flex items-center gap-1" title={isAutomation ? "Includes a downloadable automation file" : "Includes a downloadable bundle"}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -133,7 +144,7 @@ const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
             >
               <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
             </svg>
-            .zip
+            {isAutomation ? ".json" : ".zip"}
           </span>
         )
       }

@@ -100,6 +100,29 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
           )
         }
         {
+          type === "automation" && (
+            <span
+              class="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent-fg backdrop-blur-sm"
+              title="A Scout automation (scheduled .json)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-3 w-3"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+              Automation
+            </span>
+          )
+        }
+        {
           shownPlatforms.map((platform) => (
             <span
               class="flex items-center gap-1.5 rounded-md bg-black/30 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm"
@@ -124,7 +147,11 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
         hasBundle && (
           <span
             class="flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-sm"
-            title="Includes a downloadable script bundle"
+            title={
+              type === "automation"
+                ? "Includes a downloadable automation file"
+                : "Includes a downloadable script bundle"
+            }
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -134,7 +161,7 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
             >
               <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
             </svg>
-            .zip
+            {type === "automation" ? ".json" : ".zip"}
           </span>
         )
       }

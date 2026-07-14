@@ -45,6 +45,20 @@ the [Cowork plugins section](submissions/README.md#cowork-plugins-advanced) of
 the submissions reference for the required package contents and validation
 rules.
 
+### Scout automations
+
+You can also submit a **Scout automation** — a scheduled/triggered `.json`
+(a schedule plus an ordered list of prompt steps) that runs **only** in Scout.
+An automation submission is a `submissions/<slug>/` folder with a `metadata.json`
+sidecar plus a single `.json` automation export; the fact that the one
+non-sidecar top-level file is a `.json` (instead of a `.zip` or a `SKILL.md`)
+marks it as an automation. The `.json` is published verbatim as the download and
+re-imports directly into Scout. Copy
+[`submissions/_template-automation/`](submissions/_template-automation) to start
+and see the
+[Scout automations section](submissions/README.md#scout-automations-advanced) of
+the submissions reference for the required shape and validation rules.
+
 ## Two descriptions
 
 A skill carries **two** descriptions, on purpose:

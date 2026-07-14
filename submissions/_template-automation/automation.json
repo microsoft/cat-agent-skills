@@ -1,0 +1,20 @@
+{
+  "name": "My Scout Automation",
+  "description": "One line describing what this automation does on each run.",
+  "triggerType": "schedule",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "every day at 9:00 AM",
+    "days": [],
+    "time": { "hour": 9, "minute": 0 },
+    "hour": 9,
+    "minute": 0
+  },
+  "steps": [
+    {
+      "label": "Main",
+      "prompt": "Describe, step by step, what the agent should do when this automation runs. Keep each step's prompt self-contained."
+    }
+  ],
+  "teamsNotify": "auto"
+}

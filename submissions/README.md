@@ -142,6 +142,49 @@ exist with a `SKILL.md` whose frontmatter `name` is kebab-case and matches the
 folder. See [`legal-toolkit/`](./legal-toolkit) for a complete example, and copy
 [`_template-plugin/`](./_template-plugin) to start.
 
+## Scout automations (advanced)
+
+The gallery also hosts **Scout automations** — a scheduled/triggered `.json`
+(a schedule plus an ordered list of prompt steps) that runs **only** in Scout.
+
+An automation submission is a `submissions/<slug>/` folder with a `metadata.json`
+sidecar plus a **single `.json` automation export**. It's auto-detected as an
+automation because the one non-sidecar top-level file is a `.json` (not a `.zip`,
+not a `SKILL.md`):
+
+```
+submissions/<slug>/
+├── metadata.json          # catalog sidecar (name/description/tags optional —
+│                          #  they fall back to the automation's own fields)
+└── <name>.json            # the Scout automation export
+    ├── name               # non-empty string
+    ├── schedule           # required: single | interval | multi | monthly | cron
+    ├── steps[]            # { label, prompt } — the ordered prompt steps
+    └── …                  # optional: description, triggerType, model, etc.
+```
+
+The importer forces `platforms: ["Scout"]` and `type: "automation"`, publishes
+the `.json` **verbatim** as the download, and synthesizes the detail page
+(overview, the trigger/schedule, each step's prompt, and import steps).
+Automations show an **Automation** badge on their card and are filterable on the
+homepage. The exact `.json` you submit is what's offered for download and
+re-imported into Scout — so strip any personal paths or secrets first.
+
+This matches Scout's own GitHub-directory import convention: when Scout imports a
+bundle from a GitHub directory, **every root-level `.json` is an automation** and
+a `skills/` subdirectory holds skills. The file you submit here is the exact file
+Scout imports.
+
+Validation is a faithful port of Scout's import schema
+(`scripts/validate-automation.ts`) and will fail the PR with an itemized list if
+anything is off: `name` must be non-empty, every step needs a `label` and
+`prompt`, and `schedule` must be a valid discriminated union — including that an
+`interval`'s `intervalMinutes` divides 1440 evenly, a `monthly` selector can
+actually fire, and a `cron` expression is valid and fireable. Copy
+[`_template-automation/`](./_template-automation) to start, and see
+[`spend-more-time-with-friends-and-family/`](./spend-more-time-with-friends-and-family)
+for a complete example.
+
 ## Updating an existing skill
 
 Same path: edit the files in your `submissions/<slug>/` folder (or replace the

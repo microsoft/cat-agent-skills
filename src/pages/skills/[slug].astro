@@ -2,6 +2,12 @@
 import Layout from "../../layouts/Layout.astro";
 import SkillCover from "../../components/SkillCover.astro";
 import { getCollection, render } from "astro:content";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  validateAutomationData,
+  type AutomationDigest,
+} from "../../../scripts/validate-automation";
 import { formatDate, PLATFORM_COLORS } from "../../lib/skills";
 import { withBase } from "../../lib/url";
 import { getRating } from "../../lib/ratings";
@@ -25,8 +31,22 @@ export async function getStaticPaths() {
 const { skill } = Astro.props;
 const d = skill.data;
 const isPlugin = d.type === "plugin";
-const noun = isPlugin ? "plugin" : "skill";
+const isAutomation = d.type === "automation";
+const noun = isPlugin ? "plugin" : isAutomation ? "automation" : "skill";
 const { Content } = await render(skill);
+
+// For automations, parse the published `.json` at build time so we can render
+// its trigger + prompt steps as structured UI instead of raw markdown.
+let automation: AutomationDigest | null = null;
+if (isAutomation && d.bundle) {
+  try {
+    const raw = readFileSync(join(process.cwd(), "public", d.bundle), "utf8");
+    const res = validateAutomationData(JSON.parse(raw), skill.id);
+    if (res.ok && res.digest) automation = res.digest;
+  } catch {
+    automation = null;
+  }
+}
 
 const updated = formatDate(d.updatedAt ?? d.createdAt);
 const created = formatDate(d.createdAt);
@@ -128,24 +148,86 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
         <hr class="my-7 border-border" />
 
         {
-          d.agentDescription && (
-            <div class="mb-6">
-              <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-accent-text">
-                Description
-              </h2>
-              <p class="text-muted">{d.agentDescription}</p>
+          isAutomation && automation ? (
+            <div>
+              <div class="mb-6">
+                <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-accent-text">
+                  Trigger
+                </h2>
+                <p class="flex items-center gap-2 text-muted">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="h-4 w-4 shrink-0 text-accent-text"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3 2" />
+                  </svg>
+                  <span>
+                    <span class="font-medium text-fg">
+                      {automation.triggerType === "condition"
+                        ? "Runs on a condition"
+                        : "Runs on a schedule"}
+                    </span>
+                    {" — "}
+                    {automation.scheduleSummary}
+                  </span>
+                </p>
+              </div>
+
+              <div class="mb-3 flex items-baseline gap-2">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-accent-text">
+                  Steps
+                </h2>
+                <span class="text-xs text-subtle">
+                  {automation.steps.length}{" "}
+                  {automation.steps.length === 1 ? "step" : "steps"}
+                </span>
+              </div>
+              <ol class="space-y-6">
+                {automation.steps.map((step, i) => (
+                  <li>
+                    <div class="mb-2 flex items-center gap-2.5">
+                      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                        {i + 1}
+                      </span>
+                      <h3 class="font-semibold text-fg">
+                        {step.label || `Step ${i + 1}`}
+                      </h3>
+                    </div>
+                    <pre
+                      class="max-h-[28rem] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-surface-2 px-4 py-3.5 font-mono text-[13px] leading-relaxed text-muted"
+                      set:text={step.prompt}
+                    />
+                  </li>
+                ))}
+              </ol>
             </div>
+          ) : (
+            <>
+              {d.agentDescription && (
+                <div class="mb-6">
+                  <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-accent-text">
+                    Description
+                  </h2>
+                  <p class="text-muted">{d.agentDescription}</p>
+                </div>
+              )}
+
+              <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent-text">
+                Instructions
+              </h2>
+              <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+                <Content />
+              </article>
+            </>
           )
         }
-
-        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent-text">
-          Instructions
-        </h2>
-        <article
-          class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg"
-        >
-          <Content />
-        </article>
       </div>
 
       <!-- Sidebar -->
@@ -171,12 +253,14 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
           <hr class="my-5 border-border" />
 
           <h3 class="text-sm font-semibold text-fg">
-            {isPlugin ? "Add this plugin" : "Add this skill"}
+            {isPlugin ? "Add this plugin" : isAutomation ? "Add this automation" : "Add this skill"}
           </h3>
           <p class="mt-1 text-xs text-muted">
             {
               isPlugin
                 ? "Download the plugin package and install it in Microsoft 365 Copilot Cowork."
+                : isAutomation
+                ? "Download the automation and import it into Microsoft Scout (Automations \u203a Import)."
                 : `Download the ${
                     d.bundle ? "bundle" : "instructions"
                   } and add ${d.bundle ? "it" : "them"} to ${
@@ -206,6 +290,33 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
                       <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
                     </svg>
                     Download plugin package (.zip)
+                  </a>
+                )
+              ) : isAutomation ? (
+                d.bundle && (
+                  <a
+                    href={withBase(`/${d.bundle}`)}
+                    download={`${skill.id}.json`}
+                    data-clarity-event="skill_download"
+                    data-clarity-skill={skill.id}
+                    data-clarity-download-type="automation"
+                    class="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-accent-fg hover:opacity-90 transition-opacity"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="h-4 w-4"
+                    >
+                      <path
+                        d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    Download automation (.json)
                   </a>
                 )
               ) : (

@@ -51,6 +51,7 @@ import { basename, join, posix, relative, sep } from "node:path";
 import AdmZip from "adm-zip";
 import matter from "gray-matter";
 import { validateSkillData } from "./validate-skill.ts";
+import { validateAutomationData, type AutomationDigest } from "./validate-automation.ts";
 import {
   isPluginPackage,
   validatePluginFiles,
@@ -102,11 +103,14 @@ type SubFile = { path: string; data: Buffer };
 type Submission = {
   slug: string;
   label: string;
-  /** "skill" (default) or a Cowork "plugin" (an M365 app package). */
-  kind: "skill" | "plugin";
+  /** "skill" (default), a Cowork "plugin", or a Scout "automation". */
+  kind: "skill" | "plugin" | "automation";
   skillMd?: string;
   metaName?: string;
   metaText?: string;
+  /** For an automation: the raw Scout automation `.json`, shipped verbatim. */
+  automationJson?: string;
+  automationJsonName?: string;
   /**
    * Every file that ships in the download bundle, at its authored path
    * (excluding the `metadata.*` sidecar and the root instruction file, which is
@@ -230,6 +234,7 @@ function processSubmission(sub: Submission): ImportProblem | null {
     return { source: label, problems: sub.loadProblems };
   }
   if (sub.kind === "plugin") return processPlugin(sub);
+  if (sub.kind === "automation") return processAutomation(sub);
   if (sub.skillMd === undefined) {
     return {
       source: label,
@@ -461,6 +466,163 @@ function processPlugin(sub: Submission): ImportProblem | null {
   return null;
 }
 
+// Day-of-week labels for rendering a schedule's `days` array (0 = Sunday).
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/**
+ * Build the synthesized detail-page body for a Scout automation. There is no
+ * SKILL.md, so we render an overview, the trigger/schedule, the ordered prompt
+ * steps, and how to import the `.json` into Scout.
+ */
+function buildAutomationBody(opts: {
+  overview: string;
+  digest: AutomationDigest;
+  slug: string;
+}): string {
+  const { overview, digest, slug } = opts;
+  const lines: string[] = [overview.trim(), ""];
+  lines.push(
+    "> **Scout automation.** This is a Microsoft **Scout** automation (a `.json` " +
+      "of a schedule plus ordered prompt steps). It runs on Scout only.",
+    "",
+  );
+
+  lines.push("## Trigger", "");
+  if (digest.triggerType === "condition") {
+    lines.push(`Runs on a **condition** — ${digest.scheduleSummary}.`, "");
+  } else {
+    lines.push(`Runs on a **schedule** — ${digest.scheduleSummary}.`, "");
+  }
+
+  lines.push("## Steps", "");
+  digest.steps.forEach((step, i) => {
+    const label = step.label?.trim() || `Step ${i + 1}`;
+    lines.push(`### ${i + 1}. ${label}`, "");
+    // Fence the prompt verbatim so its own Markdown/paths render literally.
+    lines.push("```text", step.prompt.replace(/```/g, "``\u200b`"), "```", "");
+  });
+
+  lines.push(
+    "## Import into Scout",
+    "",
+    "1. Download the automation (the `.json` on this page).",
+    "2. In **Scout \u203a Automations**, choose **Import** and select the file " +
+      "(or paste its contents). Review the schedule and steps, then enable it.",
+    "",
+    "You can also point Scout's **Import from GitHub** at a repository directory " +
+      "of automation `.json` files (a `skills/` subfolder is installed " +
+      "automatically). This automation's file is " +
+      `\`submissions/${slug}/\` in this repo.`,
+    "",
+    "> Review the steps before enabling — automations act on your behalf on a " +
+      "schedule.",
+  );
+  return lines.join("\n") + "\n";
+}
+
+/**
+ * Validate + generate a Scout automation submission: a raw Scout automation
+ * `.json` plus a `metadata.*` sidecar. The `.json` ships verbatim as the
+ * download (re-importable into Scout); the detail page is synthesized.
+ */
+function processAutomation(sub: Submission): ImportProblem | null {
+  const { slug, label } = sub;
+  if (sub.automationJson === undefined) {
+    return { source: label, problems: ["no automation `.json` payload found"] };
+  }
+  if (sub.metaText === undefined) {
+    return {
+      source: label,
+      problems: [
+        `no metadata sidecar found next to the automation ` +
+          `(expected ${METADATA_NAMES.join(" / ")})`,
+      ],
+    };
+  }
+
+  // Validate the automation against Scout's import contract.
+  const av = validateAutomationData(
+    (() => {
+      try {
+        return JSON.parse(sub.automationJson!);
+      } catch {
+        return null;
+      }
+    })(),
+    label,
+  );
+  if (!av.ok || !av.digest) {
+    const problems = av.problems.length
+      ? av.problems
+      : [`${sub.automationJsonName ?? "automation.json"} is not valid JSON`];
+    return { source: label, problems };
+  }
+  const digest = av.digest;
+
+  let catalog: Record<string, unknown>;
+  try {
+    catalog = parseMetadataFile(sub.metaName!, sub.metaText);
+  } catch (err) {
+    return { source: label, problems: [`could not parse ${sub.metaName}: ${(err as Error).message}`] };
+  }
+
+  // Catalog name/description fall back to the automation's own fields.
+  const displayName = (catalog.name as string | undefined) ?? digest.name;
+  const catalogDescription =
+    (catalog.description as string | undefined) ?? digest.description;
+
+  const problems: string[] = [];
+  if (!displayName) {
+    problems.push("`name` is required in the metadata file (or the automation's `name`)");
+  }
+  if (!catalogDescription) {
+    problems.push(
+      "`description` is required in the metadata file (or the automation's `description`)",
+    );
+  }
+  if (problems.length) return { source: label, problems };
+
+  // An automation is Scout-only; drop any name/description/platforms/type from
+  // the sidecar so they can't override the derived values.
+  const {
+    name: _n,
+    description: _d,
+    platforms: _p,
+    type: _t,
+    ...catalogRest
+  } = catalog;
+  const meta: Record<string, unknown> = {
+    name: displayName,
+    description: catalogDescription,
+    platforms: ["Scout"],
+    type: "automation",
+    ...catalogRest,
+    bundle: `bundles/${slug}.json`,
+  };
+
+  const result = validateSkillData(meta, label);
+  if (!result.ok) return { source: label, problems: result.problems };
+
+  if (!checkOnly) {
+    const body = buildAutomationBody({
+      overview: catalogDescription!,
+      digest,
+      slug,
+    });
+    mkdirSync(CONTENT_DIR, { recursive: true });
+    writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, body));
+    mkdirSync(BUNDLES_DIR, { recursive: true });
+    // Ship the automation `.json` verbatim so the gallery download equals the
+    // exact file Scout imports.
+    writeIfChanged(join(BUNDLES_DIR, `${slug}.json`), sub.automationJson);
+    console.log(
+      `\u2713 ${label} \u2192 src/content/skills/${slug}.md ` +
+        `(automation, + public/bundles/${slug}.json)`,
+    );
+  }
+  return null;
+}
+
 /**
  * Load a `submissions/<slug>/` folder: a `metadata.json` sidecar plus exactly
  * one skill payload — either an unpacked canonical skill (root `SKILL.md` +
@@ -514,10 +676,29 @@ function loadSubmission(dir: string): Submission {
     // Unpacked: bundle the folder contents verbatim (minus the metadata sidecar).
     classifyPayload(sub, listFiles(dir));
   } else {
-    problems.push(
-      "submission has no payload \u2014 add a root `SKILL.md` (with optional " +
-        "`scripts/`, `references/`, `assets/`) or a single `<name>.zip`",
+    // A Scout automation payload: a single top-level `.json` that is NOT the
+    // metadata sidecar (all root `.json` files are automations by Scout's
+    // GitHub-import convention). The sidecar carries the catalog metadata.
+    const automationJsons = topFiles.filter(
+      (n) =>
+        n.toLowerCase().endsWith(".json") && !METADATA_NAMES.includes(n.toLowerCase()),
     );
+    if (automationJsons.length === 1) {
+      sub.kind = "automation";
+      sub.automationJsonName = automationJsons[0];
+      sub.automationJson = readFileSync(join(dir, automationJsons[0]), "utf8");
+    } else if (automationJsons.length > 1) {
+      problems.push(
+        `submission has ${automationJsons.length} automation .json files \u2014 ` +
+          "provide exactly one (plus the `metadata.*` sidecar)",
+      );
+    } else {
+      problems.push(
+        "submission has no payload \u2014 add a root `SKILL.md` (with optional " +
+          "`scripts/`, `references/`, `assets/`), a single `<name>.zip`, or a " +
+          "single Scout automation `<name>.json`",
+      );
+    }
   }
 
   if (problems.length) sub.loadProblems = problems;
@@ -562,8 +743,8 @@ function main() {
       "\nEach submission is a `submissions/<slug>/` folder with a `metadata.*` " +
         "sidecar (catalog `description`, `platforms`, `tags`) plus exactly one " +
         "payload: an unpacked `SKILL.md` (frontmatter `name` + agent-facing " +
-        "`description`, then instructions) or a single `<name>.zip`. Fix the " +
-        "items above and retry.",
+        "`description`, then instructions), a single `<name>.zip`, or a single " +
+        "Scout automation `<name>.json`. Fix the items above and retry.",
     );
     process.exit(1);
   }
