@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cat-agent-skills/agent-harness-explorer/comparison.schema.json",
+  "title": "Agent Harness Snapshot Comparison",
+  "type": "object",
+  "required": [
+    "fromSnapshotId",
+    "toSnapshotId",
+    "identical",
+    "added",
+    "removed",
+    "versionChanged",
+    "statusChanged",
+    "unverified"
+  ],
+  "properties": {
+    "fromSnapshotId": { "type": ["string", "null"] },
+    "toSnapshotId": { "type": ["string", "null"] },
+    "fromFingerprint": { "type": ["string", "null"] },
+    "toFingerprint": { "type": ["string", "null"] },
+    "identical": { "type": "boolean" },
+    "probeChanged": { "type": "boolean" },
+    "added": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "removed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "wasStatus": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "versionChanged": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "from", "to"],
+        "properties": {
+          "id": { "type": "string" },
+          "from": { "type": ["string", "null"] },
+          "to": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "statusChanged": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "from", "to"],
+        "properties": {
+          "id": { "type": "string" },
+          "from": { "type": ["string", "null"] },
+          "to": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "unverified": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": { "id": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": true
+}

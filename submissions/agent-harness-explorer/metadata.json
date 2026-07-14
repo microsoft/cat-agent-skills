@@ -1,0 +1,18 @@
+{
+  "name": "Agent Harness Explorer",
+  "description": "Discover, document, and monitor what the agent harness can do — Python libraries, tools, MCP servers, and runtime capabilities — with repeatable, comparable snapshots.",
+  "platforms": ["Copilot Studio", "Cowork", "Scout"],
+  "tags": [
+    "diagnostics",
+    "runtime",
+    "python",
+    "capabilities",
+    "snapshots",
+    "scripts"
+  ],
+  "author": "Chris Garty and Andrew Hess",
+  "authorUrl": "https://github.com/cgarty_microsoft",
+  "version": "0.1.0",
+  "createdAt": "2026-07-14",
+  "updatedAt": "2026-07-14"
+}
