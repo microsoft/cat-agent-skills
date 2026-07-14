@@ -2,7 +2,7 @@
 
 A reusable **Agent Skill** for the CAT Agent Skills gallery that helps makers
 **discover, understand, document, and monitor** the capabilities of an agent
-harness.
+harness: runtime, tools, skills, MCP servers, and Python libraries.
 
 It answers questions like:
 
@@ -24,19 +24,26 @@ it with natural-language requests. Under the hood it runs standard-library-only
 Python scripts (PyYAML is used if present, otherwise a built-in fallback parses
 the catalog), so **no install step is required**.
 
+### Step-by-step in Copilot Studio - Generate a harness report
+
+1. **Create an agent** in the new Copilot Studio experience, or open an existing
+   enhanced-orchestrator agent.
+2. **Add this skill** - in the Build tab, click the "Skills +" button and upload a zip file containing the `agent-harness-explorer` skills folder with its md files and scripts.
+3. **Trigger the report in chat** — in the Preview tab, ask for an evaluation and report by prompting with *"Inspect the harness"* or *"What can this harness do?"*.
+
 ### Talk to the agent
 
-Ask things like:
+After adding the `agent-harness-explorer` skills folder to an agent, you can ask things like:
 
 | You say | The skill does |
 | --- | --- |
 | "What can this harness do?" / "Inspect the harness." | Runs passive probes and summarizes runtime + capabilities. |
 | "Which Python libraries are installed?" | Captures a snapshot and renders the category-grouped inventory. |
 | "What should I use to create Word documents?" | Looks up the curated catalog, confirms the package is installed, links its docs. |
-| "Capture a snapshot." / "Remember this." | Captures, compares to the last snapshot, stores a compact copy in memory. |
-| "Save this as my baseline." | Designates the current snapshot as the baseline. |
-| "Compare with my baseline." / "What changed since last week?" | Diffs two snapshots by stable capability ID. |
-| "Export the latest snapshot." | Emits JSON + Markdown for durable/shared retention. |
+| "Capture a snapshot." / "Remember this." | Captures a snapshot of harness capabilities, compares to the last snapshot, stores a compact copy in memory. |
+| "Save this as my baseline." | Designates the current capabilities snapshot as the baseline. |
+| "Compare with my baseline." / "What changed since last week?" | Shows which harness capabilities were added, removed, or changed since a baseline (matched by stable capability ID). |
+| "Export the latest snapshot." | Emits JSON + Markdown for durable/shared retention of the latest capabilities snapshot. |
 
 ### Safety at a glance
 
