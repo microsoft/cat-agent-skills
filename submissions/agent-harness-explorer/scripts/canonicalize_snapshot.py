@@ -129,6 +129,7 @@ def _minimal_catalog_parse(text: str) -> Dict[str, Any]:
     current: Dict[str, Any] | None = None
     in_libraries = False
     in_tags = False
+    entry_indent: int | None = None
 
     def unquote(v: str) -> str:
         v = v.strip()
@@ -146,6 +147,8 @@ def _minimal_catalog_parse(text: str) -> Dict[str, Any]:
         if indent == 0:
             in_libraries = stripped.startswith("libraries:")
             in_tags = False
+            current = None
+            entry_indent = None
             if not in_libraries and ":" in stripped:
                 key, _, val = stripped.partition(":")
                 result[key.strip()] = unquote(val)
@@ -154,12 +157,15 @@ def _minimal_catalog_parse(text: str) -> Dict[str, Any]:
         if not in_libraries:
             continue
 
-        if stripped.startswith("- "):
+        # A new library entry is a "- " marker at the shallowest list indent.
+        # A deeper "- " is a list element (e.g. a tag), not a new entry.
+        if stripped.startswith("- ") and (entry_indent is None or indent <= entry_indent):
+            entry_indent = indent
             current = {}
             libraries.append(current)
             in_tags = False
             key, _, val = stripped[2:].partition(":")
-            if current is not None and key:
+            if key:
                 current[key.strip()] = unquote(val)
         elif stripped.startswith("-"):
             if in_tags and current is not None:

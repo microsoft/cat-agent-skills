@@ -5,7 +5,7 @@ agentDescription: "Use this skill whenever the user wants to inspect, understand
 platforms: [Copilot Studio, Cowork, Scout]
 tags: [diagnostics, runtime, python, capabilities, snapshots, scripts]
 author: Chris Garty and Andrew Hess
-authorUrl: "https://github.com/cgarty_microsoft"
+authorUrl: "https://github.com/ChrisGarty"
 version: 0.1.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14
