@@ -1,21 +1,86 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+/* ------------------------------------------------------------------ */
+/* Theme system                                                        */
+/* Colors come from semantic CSS variables so components style against */
+/* tokens and the whole site flips light <-> dark at runtime via       */
+/* [data-theme] on <html>. The palette is the CAT identity: a Fluent-  */
+/* blue base with a blue -> purple -> pink -> orange brand gradient.    */
+/* ------------------------------------------------------------------ */
 
 @theme {
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-200: #bcd2ff;
-  --color-brand-300: #8eb4ff;
-  --color-brand-400: #598bff;
-  --color-brand-500: #3461ff;
-  --color-brand-600: #1f3df5;
-  --color-brand-700: #182dd8;
-  --color-brand-800: #1a28ae;
-  --color-brand-900: #1b2989;
-  --color-ink-950: #0b0d17;
-  --color-ink-900: #11142a;
-  --color-ink-800: #181c38;
-  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Semantic tokens — every component styles against these. */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+
+  --font-sans: "DM Sans", "Segoe UI", system-ui, -apple-system,
+    BlinkMacSystemFont, sans-serif;
+}
+
+/* Enable `dark:` utilities based on the theme attribute (not OS prefs). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* CAT — light (default before JS runs). */
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f6f9;
+  --fg: #242424;
+  --muted: #5f6368;
+  --subtle: #9aa0a6;
+  --border: #e4e7eb;
+  --accent: #0078d4;
+  --accent-fg: #ffffff;
+  --accent-soft: #e5f1fb;
+  --accent-text: #005a9e;
+  --glow: rgba(0, 120, 212, 0.12);
+
+  /* Brand gradient used by the wordmark and cover monograms. */
+  --cat-gradient: linear-gradient(
+    90deg,
+    #0078d4 0%,
+    #5b8def 18%,
+    #7f39fb 36%,
+    #c26cf3 54%,
+    #d83b73 72%,
+    #ff8c00 100%
+  );
+}
+
+/* CAT — dark. */
+[data-theme="dark"] {
+  --bg: #17181c;
+  --surface: #202228;
+  --surface-2: #282b32;
+  --fg: #f1f2f4;
+  --muted: #aab0ba;
+  --subtle: #757b86;
+  --border: #33363f;
+  --accent: #3aa0ff;
+  --accent-fg: #071322;
+  --accent-soft: #16304a;
+  --accent-text: #7cc2ff;
+  --glow: rgba(58, 160, 255, 0.24);
+}
+
+/* Wordmark painted with the CAT brand gradient. */
+.cat-wordmark {
+  background: var(--cat-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 html {
@@ -23,22 +88,23 @@ html {
 }
 
 body {
-  background-color: var(--color-ink-950);
-  color: #e7e9f3;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
 }
 
-/* Custom scrollbar to match the dark gallery aesthetic */
+/* Custom scrollbar tuned to the theme. */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-ink-900);
+  background: var(--surface-2);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2f55;
+  background: var(--border);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a4178;
+  background: var(--subtle);
 }

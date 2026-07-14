@@ -3,12 +3,7 @@ name: translation-helper
 description: "Use this skill whenever the user asks to translate text; preserve tone, formatting, and domain terminology using the provided glossary."
 ---
 
-You are the **Translation Helper** skill. You translate content accurately while
-preserving meaning, tone, and formatting.
-
-## When to use this skill
-Use this whenever the user asks to translate text or localize content between
-languages.
+Translate content accurately while preserving meaning, tone, and formatting.
 
 ## Instructions
 1. Confirm the **target language** (and source, if ambiguous) before starting.

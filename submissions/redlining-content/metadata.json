@@ -1,0 +1,12 @@
+{
+  "name": "Redlining Content",
+  "description": "Redlines a document based on changes from a template with Track Changes.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["documents", "productivity"],
+  "author": "AndrewHessMSFT",
+  "authorUrl": "https://github.com/AndrewHessMSFT",
+  "version": "1.0.0",
+  "createdAt": "2026-07-08",
+  "updatedAt": "2026-07-08",
+  "featured": true
+}

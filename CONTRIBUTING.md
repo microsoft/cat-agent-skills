@@ -33,6 +33,18 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 `meeting-summarizer` → `/skills/meeting-summarizer`. See
 [`submissions/README.md`](submissions/README.md) for the full reference.
 
+### Cowork plugins
+
+You can also submit a **Cowork plugin** — a Microsoft 365 app package that
+bundles one or more skills (plus optional MCP connectors) and runs **only** in
+Copilot Cowork. A plugin submission is a `submissions/<slug>/` folder with a
+`metadata.json` sidecar plus a single pre-built `.zip` whose **root
+`manifest.json`** (instead of a root `SKILL.md`) marks it as a plugin. Copy
+[`submissions/_template-plugin/`](submissions/_template-plugin) to start and see
+the [Cowork plugins section](submissions/README.md#cowork-plugins-advanced) of
+the submissions reference for the required package contents and validation
+rules.
+
 ## Two descriptions
 
 A skill carries **two** descriptions, on purpose:

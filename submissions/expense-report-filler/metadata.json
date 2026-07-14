@@ -8,11 +8,11 @@
     "finance",
     "automation",
     "forms",
-    "scripts"
+    "scripts",
+    "sample"
   ],
   "author": "Contoso Finance Ops",
   "version": "2.0.1",
   "createdAt": "2026-02-03",
-  "updatedAt": "2026-05-20",
-  "featured": true
+  "updatedAt": "2026-05-20"
 }

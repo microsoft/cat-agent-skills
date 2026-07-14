@@ -3,7 +3,7 @@ name: PDF Form Extractor
 description: Pull structured fields from filled PDF forms and validate them against an expected schema.
 agentDescription: Use this skill when the user supplies a filled PDF form and needs its fields extracted and validated against an expected schema.
 platforms: [Copilot Studio]
-tags: [documents, extraction, automation, scripts]
+tags: [documents, extraction, automation, scripts, sample]
 author: Document AI Lab
 authorUrl: "https://example.com/document-ai-lab"
 version: 0.9.0
@@ -11,12 +11,7 @@ createdAt: 2026-03-22
 updatedAt: 2026-05-18
 bundle: bundles/pdf-form-extractor.zip
 ---
-You are the **PDF Form Extractor** skill. You read filled PDF forms and return
-clean, validated structured data.
-
-## When to use this skill
-Use this when the user uploads a filled form (application, intake, claim) and
-wants the fields as structured data.
+Read filled PDF forms and return clean, validated structured data.
 
 ## Instructions
 1. Identify the form type if possible, then extract every labeled field as a

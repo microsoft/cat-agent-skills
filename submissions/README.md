@@ -99,6 +99,49 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 A missing or invalid **required** field fails the PR with a message listing
 exactly what's wrong.
 
+## Cowork plugins (advanced)
+
+Besides single cross-platform skills, the gallery also hosts **Cowork plugins** —
+Microsoft 365 app packages that bundle one or more skills (plus optional MCP
+connectors) and run **only** in Copilot Cowork. See the
+[Cowork plugin development guide](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development).
+
+A plugin submission is a `submissions/<slug>/` folder with a `metadata.json`
+sidecar plus a **single pre-built `.zip` M365 package**. It's auto-detected as a
+plugin (rather than a single skill) because the `.zip` has a **root
+`manifest.json`** instead of a root `SKILL.md`:
+
+```
+submissions/<slug>/
+├── metadata.json         # catalog sidecar (name/description/tags optional —
+│                         #  they fall back to the manifest)
+└── <name>.zip
+    ├── manifest.json     # M365 app manifest (manifestVersion "devPreview" or "1.28")
+    ├── color.png         # 192×192 color icon (referenced by the manifest)
+    ├── outline.png       # 32×32 outline icon (referenced by the manifest)
+    └── skills/
+        ├── <skill-a>/
+        │   └── SKILL.md  # frontmatter name must match the folder name
+        └── <skill-b>/
+            └── SKILL.md
+```
+
+The importer forces `platforms: ["Cowork"]` and `type: "plugin"`, publishes the
+`.zip` verbatim as the download package, and synthesizes the detail page
+(overview, the skills it contains, any connectors, and install steps). Plugins
+show a **Plugin** badge on their card and are filterable on the homepage.
+
+Validation is thorough and will fail the PR with an itemized list if anything is
+off: the manifest must be valid JSON with a `manifestVersion` of `"devPreview"`
+or `"1.28"` (real-world plugins and Microsoft's conversion script emit
+`"devPreview"`; the docs reference `"1.28"`), a GUID `id`,
+non-empty `name.short`/`description.short`, and `icons.color`/`icons.outline`
+that reference real PNGs of the exact required dimensions; there must be at least
+one `agentSkills` entry (or connector); and every `agentSkills[].folder` must
+exist with a `SKILL.md` whose frontmatter `name` is kebab-case and matches the
+folder. See [`legal-toolkit/`](./legal-toolkit) for a complete example, and copy
+[`_template-plugin/`](./_template-plugin) to start.
+
 ## Updating an existing skill
 
 Same path: edit the files in your `submissions/<slug>/` folder (or replace the
