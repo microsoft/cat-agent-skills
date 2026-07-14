@@ -12,40 +12,28 @@ updatedAt: 2026-07-14
 featured: true
 bundle: bundles/chart-builder.zip
 ---
-Produce clean, consistently-styled charts from tabular data in one call —
-without hand-writing matplotlib. The bundled `scripts/charts.py` toolkit owns
-the plumbing (theming, defaults, auto figure sizing, label rotation, NaN
-handling, saving) so you only choose the chart type and the columns to plot.
-
-## When to use this
-Use it any time the user wants to *see* data: "chart revenue by region",
-"plot the trend", "show the distribution", "make a pie of the breakdown", or
-when a table/CSV would land better as a picture. It's the fast, reliable path —
-prefer it over writing matplotlib from scratch.
-
-## Why prebuilt functions (even without knowing the data shape)
-The functions are **parameterized, not hardcoded**. You don't need to know the
-dimensions or column names ahead of time — you pass the data plus which columns
-map to `x`, `y`, and (optionally) `group`. The library supplies the rest, which
-is why it's both faster and more consistent than bespoke plotting code.
+Generate charts from tabular data via the bundled `scripts/charts.py` toolkit.
+Each function takes a DataFrame or a file path plus the columns to plot, and
+saves a PNG (returning the path). It handles theming, figure sizing, label
+rotation, NaN dropping, legend placement, and saving.
 
 ## Instructions
-1. Identify the data source (a DataFrame, or a `.csv` / `.tsv` / `.json` path)
-   and the columns to plot.
-2. Pick the chart that fits the question (see the table in
-   `references/cheatsheet.md`):
-   - `bar` — one value across categories
-   - `grouped_bar` — a value across categories split by a second dimension
-     (add `stacked=True` for a stacked bar)
-   - `line` — a value over an ordered axis; add `group=` for one line per series
-   - `scatter` — relationship between two numeric columns
-   - `histogram` — distribution of one numeric column
-   - `pie` — parts-of-a-whole share for a few categories
-3. Call the function, passing the column names and a `title`. Every function
-   returns the saved image path.
-4. Surface the resulting image path (or the file) to the user. If a chart type
-   doesn't fit the columns (e.g. a non-numeric axis for `scatter`), pick a
-   better-suited chart rather than forcing it.
+1. Provide the data source: a pandas DataFrame, or a path to a `.csv` / `.tsv` /
+   `.json` file.
+2. Call the function for the chart you need, passing the column names:
+   - `bar(data, x, y)` — one value per category (`horizontal=True` for barh)
+   - `grouped_bar(data, x, y, group)` — value per category split by `group`
+     (`stacked=True` to stack)
+   - `line(data, x, y, group=None)` — value over an ordered axis, one line per
+     `group`
+   - `scatter(data, x, y, group=None, size=None)` — two numeric columns
+   - `histogram(data, y, bins=20, group=None)` — distribution of one column
+   - `pie(data, x, y, donut=False)` — share of `y` per category `x`
+3. Optional keyword args on every chart: `title`, `xlabel`, `ylabel` (derived
+   from column names if omitted), `out` (default `"chart.png"`; pass `None` to
+   skip saving), `dpi` (default `150`), `figsize`, `palette`.
+4. The function returns the saved image path. See `references/cheatsheet.md` for
+   full signatures and a chart-selection table.
 
 ## Usage
 Import:
@@ -69,8 +57,8 @@ python scripts/charts.py grouped_bar sales.csv \
   copy-paste CLI examples.
 - `assets/sample_sales.csv` — a small demo dataset that exercises every chart.
 
-## Defaults & guarantees
-- Consistent, colorblind-friendly palette and understated theme across charts.
+## Defaults
+- Colorblind-friendly palette and a shared theme across charts.
 - Figure size, x-label rotation, and legend placement adapt to the data.
 - Rows with missing values in the plotted columns are dropped before drawing.
 - Output is a saved PNG at 150 DPI by default (override `out` and `dpi`).
