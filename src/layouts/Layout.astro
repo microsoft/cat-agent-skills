@@ -49,11 +49,11 @@ const fullTitle =
       class="sticky top-0 z-30 border-b border-border bg-bg/80 backdrop-blur-md"
     >
       <div
-        class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6"
+        class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6"
       >
         <a
           href={withBase("/")}
-          class="flex items-center gap-2.5 font-semibold tracking-tight"
+          class="flex shrink-0 items-center gap-2.5 font-semibold tracking-tight"
         >
           <img
             src={withBase("/paw.png")}
@@ -62,26 +62,30 @@ const fullTitle =
             height="32"
             class="h-8 w-8"
           />
-          <span class="cat-wordmark">Agent Skills</span>
+          <span class="cat-wordmark whitespace-nowrap">Agent Skills</span>
         </a>
-        <nav class="flex items-center gap-3 text-sm text-muted sm:gap-5">
+        <nav
+          class="flex shrink-0 items-center gap-2.5 text-sm text-muted sm:gap-5"
+        >
           <a
             href={withBase("/")}
-            class="hover:text-fg transition-colors">Browse</a
+            class="hidden hover:text-fg transition-colors sm:inline">Browse</a
           >
           <a
             href="https://github.com/microsoft/cat-agent-skills/blob/main/CONTRIBUTING.md"
             target="_blank"
             rel="noopener"
-            class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 hover:border-accent/50 hover:text-fg transition-colors"
-            >Contribute a skill</a
+            class="whitespace-nowrap rounded-lg border border-border bg-surface-2 px-3 py-1.5 hover:border-accent/50 hover:text-fg transition-colors"
           >
+            <span class="sm:hidden">Contribute</span>
+            <span class="hidden sm:inline">Contribute a skill</span>
+          </a>
           <button
             id="theme-toggle"
             type="button"
             aria-label="Toggle light and dark theme"
             title="Toggle theme"
-            class="grid h-8 w-8 place-items-center rounded-lg border border-border bg-surface-2 text-muted hover:border-accent/50 hover:text-fg transition-colors"
+            class="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-border bg-surface-2 text-muted hover:border-accent/50 hover:text-fg transition-colors"
           >
             <svg
               class="hidden h-4 w-4 dark:block"
