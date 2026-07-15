@@ -83,6 +83,23 @@
   color: transparent;
 }
 
+/* Keep wide markdown tables and code from breaking the page layout on small
+   screens: let oversized tables scroll horizontally within the article, and
+   force long code lines to stay inside their block instead of pushing the page. */
+.prose :where(table) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.prose :where(pre) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.prose :where(code):not(:where(pre code)) {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 html {
   scroll-behavior: smooth;
 }
