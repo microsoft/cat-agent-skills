@@ -8,6 +8,7 @@ author: Adi Leibowitz
 version: 1.0.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14
+featured: true
 bundle: bundles/spend-more-time-with-friends-and-family.json
 ---
 While you're out of office, watches a group chat and answers questions from your local knowledge docs (clearly marked AI-generated), logs anything it can't answer for later, and pings you on Teams if its setup is incomplete.
