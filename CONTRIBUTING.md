@@ -33,6 +33,15 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 `meeting-summarizer` → `/skills/meeting-summarizer`. See
 [`submissions/README.md`](submissions/README.md) for the full reference.
 
+> **Everything except `metadata.*` is bundled into the agent-facing `.zip`,
+> verbatim.** The download bundle *is* the skill the agent loads, so it must
+> contain **only agent-facing files** (`SKILL.md`, `scripts/`, `references/`,
+> `assets/`). **Do not include a `README.md` or any other human-facing file**
+> (CONTRIBUTING, CHANGELOG, docs written for people, etc.) in your submission
+> folder — it will be packaged into the bundle and waste the agent's context.
+> Put contributor notes in your pull request description instead. Only
+> `metadata.json`/`metadata.yaml` is stripped out as a sidecar.
+
 ### Cowork plugins
 
 You can also submit a **Cowork plugin** — a Microsoft 365 app package that

@@ -30,6 +30,14 @@ Bundling is **verbatim** — whatever you put in `scripts/`/`references/`/`asset
 (or inside your `.zip`) ships exactly as authored. Only `metadata.*` is stripped;
 it is a sidecar and never lands inside the bundle.
 
+> ⚠️ **No READMEs or other human-facing files.** Because bundling is verbatim,
+> anything in the folder (other than the `metadata.*` sidecar) is packaged into
+> the agent-facing `.zip` and loaded as part of the skill. A `README.md`,
+> `CONTRIBUTING`, `CHANGELOG`, or any doc written for people just wastes the
+> agent's context. Ship **only agent-facing files** (`SKILL.md`, `scripts/`,
+> `references/`, `assets/`) and put contributor/human notes in your PR
+> description instead.
+
 ## Two descriptions — they are different on purpose
 
 | | Lives in | Who reads it |
