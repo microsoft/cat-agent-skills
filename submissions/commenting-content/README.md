@@ -48,7 +48,7 @@ python scripts/inject-comments-docx.py <input.docx> <output.docx> <comments.json
 ```
 
 - `search_phrase` must be copied **verbatim from `word/document.xml`** — curly quotes, em dashes, etc. must match exactly or the comment will silently fail to anchor.
-- Requires `lxml` (`pip install lxml`)
+- Requires `lxml` (preinstalled in the Copilot Studio sandbox — no `pip install` needed)
 
 ---
 
@@ -93,7 +93,7 @@ See [`REFERENCE-PPTX.md`](./REFERENCE-PPTX.md#sandbox-execution-tips) for the co
 
 - **Never modify original content** — comments only
 - **Author:** always `Copilot Studio AI`
-- Use 🐛 for context, citations, definitions, and improvements
+- Use 💡 for context, citations, definitions, and improvements
 - Use 🧹 for inaccuracies, ambiguities, contradictions, and missing info
 - Only comment where it genuinely helps — not every sentence/slide
 - Run the injection script **once** from the original input file — never re-run against a previously produced output

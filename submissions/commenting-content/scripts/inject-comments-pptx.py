@@ -3,7 +3,7 @@ Inject native PowerPoint comments into a .pptx file.
 Author tag: Copilot Studio AI
 
 Usage:
-    python inject_comments_pptx.py <input.pptx> <output.pptx> <comments.json>
+    python inject-comments-pptx.py <input.pptx> <output.pptx> <comments.json>
 
 comments.json format:
     [
@@ -24,12 +24,12 @@ Notes:
   - Multiple comments on the same slide are all written into a single comment file
     for that slide (ppt/comments/comment<slide>.xml).
 """
-import sys, json, io, zipfile
+import sys, json, io, zipfile, re
 from collections import defaultdict
 from datetime import datetime, timezone
 
 if len(sys.argv) != 4:
-    print("Usage: python inject_comments_pptx.py <input.pptx> <output.pptx> <comments.json>")
+    print("Usage: python inject-comments-pptx.py <input.pptx> <output.pptx> <comments.json>")
     sys.exit(1)
 
 INPUT  = sys.argv[1]
@@ -49,7 +49,7 @@ AUTH_REL = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/
 AUTH_CT  = "application/vnd.openxmlformats-officedocument.presentationml.commentAuthors+xml"
 
 AUTHOR   = "Copilot Studio AI"
-INITIALS = "CA"
+INITIALS = "CS"
 DT       = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -85,21 +85,31 @@ def make_authors_xml(last_idx):
     )
 
 
+def next_rel_id(rels_xml):
+    """Return an rId not already used in the given .rels XML string."""
+    used = {int(n) for n in re.findall(r'Id="rId(\d+)"', rels_xml)}
+    i = 1
+    while i in used:
+        i += 1
+    return f"rId{i}"
+
+
 def ensure_slide_rels(files, slide_num, cm_rel_target):
     """Add a comments relationship to the slide's .rels file, creating it if needed."""
     rels_path = f"ppt/slides/_rels/slide{slide_num}.xml.rels"
     if rels_path in files:
         rels = files[rels_path].decode("utf-8")
         if CM_REL not in rels:
+            rel_id = next_rel_id(rels)
             rels = rels.replace(
                 "</Relationships>",
-                f'  <Relationship Id="rId99{slide_num}" Type="{CM_REL}" Target="{cm_rel_target}"/>\n</Relationships>'
+                f'  <Relationship Id="{rel_id}" Type="{CM_REL}" Target="{cm_rel_target}"/>\n</Relationships>'
             )
     else:
         rels = (
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
-            f'  <Relationship Id="rId99{slide_num}" Type="{CM_REL}" Target="{cm_rel_target}"/>\n'
+            f'  <Relationship Id="rId1" Type="{CM_REL}" Target="{cm_rel_target}"/>\n'
             '</Relationships>'
         )
     files[rels_path] = rels.encode("utf-8")
@@ -151,9 +161,10 @@ prs_rels_path = "ppt/_rels/presentation.xml.rels"
 if prs_rels_path in files:
     pr = files[prs_rels_path].decode("utf-8")
     if AUTH_REL not in pr:
+        rel_id = next_rel_id(pr)
         pr = pr.replace(
             "</Relationships>",
-            f'  <Relationship Id="rId998" Type="{AUTH_REL}" Target="commentAuthors.xml"/>\n</Relationships>'
+            f'  <Relationship Id="{rel_id}" Type="{AUTH_REL}" Target="commentAuthors.xml"/>\n</Relationships>'
         )
         files[prs_rels_path] = pr.encode("utf-8")
 

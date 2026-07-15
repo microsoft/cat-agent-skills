@@ -3,7 +3,7 @@ Inject native Word comments into a .docx file.
 Author tag: Copilot Studio AI
 
 Usage:
-    python inject_comments.py <input.docx> <output.docx> <comments.json>
+    python inject-comments-docx.py <input.docx> <output.docx> <comments.json>
 
 comments.json format:
     [
@@ -15,12 +15,12 @@ comments.json format:
         ...
     ]
 """
-import sys, json, zipfile, io
+import sys, json, zipfile, io, re
 from datetime import datetime, timezone
 from lxml import etree
 
 if len(sys.argv) != 4:
-    print("Usage: python inject_comments.py <input.docx> <output.docx> <comments.json>")
+    print("Usage: python inject-comments-docx.py <input.docx> <output.docx> <comments.json>")
     sys.exit(1)
 
 INPUT  = sys.argv[1]
@@ -52,56 +52,71 @@ def para_text(p_elem):
     return "".join((t.text or "") for t in p_elem.iter(w("t")))
 
 
-def make_comment_xml(comments):
-    """Build the full word/comments.xml bytes."""
-    # Copy namespace declarations from document.xml header
-    NS = {
-        "wpc": "http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas",
-        "cx":  "http://schemas.microsoft.com/office/drawing/2014/chartex",
-        "mc":  "http://schemas.openxmlformats.org/markup-compatibility/2006",
-        "o":   "urn:schemas-microsoft-com:office:office",
-        "r":   REL,
-        "m":   "http://schemas.openxmlformats.org/officeDocument/2006/math",
-        "v":   "urn:schemas-microsoft-com:vml",
-        "wp":  "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
-        "w10": "urn:schemas-microsoft-com:office:word",
-        "w":   W,
-        "w14": "http://schemas.microsoft.com/office/word/2010/wordml",
-        "w15": "http://schemas.microsoft.com/office/word/2012/wordml",
-        "wne": "http://schemas.microsoft.com/office/word/2006/wordml",
-    }
-    root = etree.Element(f"{{{W}}}comments", nsmap=NS)
-    root.set(f"{{{NS['mc']}}}Ignorable", "w14 w15")
+def next_rel_id(rels_xml):
+    """Return an rId not already used in the given .rels XML string."""
+    used = {int(n) for n in re.findall(r'Id="rId(\d+)"', rels_xml)}
+    i = 1
+    while i in used:
+        i += 1
+    return f"rId{i}"
 
-    for cid, _search, paras in comments:
-        cmt = etree.SubElement(root, w("comment"))
-        cmt.set(w("id"),       str(cid))
-        cmt.set(w("author"),   AUTHOR)
-        cmt.set(w("date"),     DATE)
-        cmt.set(w("initials"), INITIALS)
 
-        for idx, line in enumerate(paras):
-            p = etree.SubElement(cmt, w("p"))
-            pPr = etree.SubElement(p, w("pPr"))
-            pStyle = etree.SubElement(pPr, w("pStyle"))
-            pStyle.set(w("val"), "CommentText")
+# Namespace declarations mirrored from document.xml so a freshly created
+# comments.xml validates the same way Word writes it.
+COMMENTS_NS = {
+    "wpc": "http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas",
+    "cx":  "http://schemas.microsoft.com/office/drawing/2014/chartex",
+    "mc":  "http://schemas.openxmlformats.org/markup-compatibility/2006",
+    "o":   "urn:schemas-microsoft-com:office:office",
+    "r":   REL,
+    "m":   "http://schemas.openxmlformats.org/officeDocument/2006/math",
+    "v":   "urn:schemas-microsoft-com:vml",
+    "wp":  "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
+    "w10": "urn:schemas-microsoft-com:office:word",
+    "w":   W,
+    "w14": "http://schemas.microsoft.com/office/word/2010/wordml",
+    "w15": "http://schemas.microsoft.com/office/word/2012/wordml",
+    "wne": "http://schemas.microsoft.com/office/word/2006/wordml",
+}
 
-            # First paragraph gets the annotationRef run
-            if idx == 0:
-                r_ref = etree.SubElement(p, w("r"))
-                rPr_ref = etree.SubElement(r_ref, w("rPr"))
-                rStyle_ref = etree.SubElement(rPr_ref, w("rStyle"))
-                rStyle_ref.set(w("val"), "CommentReference")
-                etree.SubElement(r_ref, w("annotationRef"))
 
-            # Text run
-            r_txt = etree.SubElement(p, w("r"))
-            t = etree.SubElement(r_txt, w("t"))
-            t.text = line
-            if line != line.strip():
-                t.set(XML_SPACE, "preserve")
+def new_comments_root():
+    """Create an empty word/comments.xml root — used only when the document has
+    no comments yet. Existing comments are always preserved and appended to."""
+    root = etree.Element(w("comments"), nsmap=COMMENTS_NS)
+    root.set(f"{{{COMMENTS_NS['mc']}}}Ignorable", "w14 w15")
+    return root
 
-    return etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
+
+def append_comment(root, cid, paras):
+    """Append a single <w:comment> to a comments root, leaving every comment
+    already present in that root untouched."""
+    cmt = etree.SubElement(root, w("comment"))
+    cmt.set(w("id"),       str(cid))
+    cmt.set(w("author"),   AUTHOR)
+    cmt.set(w("date"),     DATE)
+    cmt.set(w("initials"), INITIALS)
+
+    for idx, line in enumerate(paras):
+        p = etree.SubElement(cmt, w("p"))
+        pPr = etree.SubElement(p, w("pPr"))
+        pStyle = etree.SubElement(pPr, w("pStyle"))
+        pStyle.set(w("val"), "CommentText")
+
+        # First paragraph gets the annotationRef run
+        if idx == 0:
+            r_ref = etree.SubElement(p, w("r"))
+            rPr_ref = etree.SubElement(r_ref, w("rPr"))
+            rStyle_ref = etree.SubElement(rPr_ref, w("rStyle"))
+            rStyle_ref.set(w("val"), "CommentReference")
+            etree.SubElement(r_ref, w("annotationRef"))
+
+        # Text run
+        r_txt = etree.SubElement(p, w("r"))
+        t = etree.SubElement(r_txt, w("t"))
+        t.text = line
+        if line != line.strip():
+            t.set(XML_SPACE, "preserve")
 
 
 def inject_comment_in_para(para, cid):
@@ -151,32 +166,49 @@ def main():
     tree     = etree.fromstring(doc_xml)
     body     = tree.find(f"{{{W}}}body")
 
-    # Track which comment ids were successfully placed
-    placed = set()
+    # Merge into any existing comments instead of overwriting them: load the
+    # document's current comments.xml (if present) and continue numbering after
+    # the highest id already in use, so pre-existing comments are never wiped
+    # and newly injected ids can't collide with them.
+    if "word/comments.xml" in file_map:
+        comments_root = etree.fromstring(file_map["word/comments.xml"])
+        existing_ids  = [
+            int(c.get(w("id")))
+            for c in comments_root.findall(w("comment"))
+            if (c.get(w("id")) or "").lstrip("-").isdigit()
+        ]
+    else:
+        comments_root = new_comments_root()
+        existing_ids  = []
+
+    next_id = max(existing_ids) + 1 if existing_ids else 0
 
     # We may need to search the same paragraph for multiple comments,
     # so collect paragraphs first
     para_list = list(body.iter(w("p")))
 
-    for cid, search, _ in COMMENTS:
+    placed = 0
+    for _json_id, search, paras in COMMENTS:
+        cid = next_id  # consumed only if this comment is actually placed
         for para in para_list:
             txt = para_text(para)
             if search in txt:
                 inject_comment_in_para(para, cid)
-                placed.add(cid)
+                append_comment(comments_root, cid, paras)
+                next_id += 1
+                placed  += 1
                 print(f"  ✓ Comment {cid} placed on paragraph: '{txt[:80].strip()}…'")
                 break
         else:
-            print(f"  ✗ Comment {cid}: search text not found: '{search}'")
+            print(f"  ✗ Comment not placed — search text not found: '{search}'")
 
-    # Serialise modified document.xml
+    # Serialise modified document.xml + the merged comments.xml
     file_map["word/document.xml"] = etree.tostring(
         tree, xml_declaration=True, encoding="UTF-8", standalone=True
     )
-
-    # Build comments.xml (only placed comments)
-    active = [c for c in COMMENTS if c[0] in placed]
-    file_map["word/comments.xml"] = make_comment_xml(active)
+    file_map["word/comments.xml"] = etree.tostring(
+        comments_root, xml_declaration=True, encoding="UTF-8", standalone=True
+    )
 
     # Update [Content_Types].xml — add comments override if missing
     ct_xml = file_map["[Content_Types].xml"].decode("utf-8")
@@ -192,9 +224,10 @@ def main():
     # Update word/_rels/document.xml.rels — add comments relationship if missing
     rels_xml = file_map["word/_rels/document.xml.rels"].decode("utf-8")
     if "comments" not in rels_xml:
+        rel_id = next_rel_id(rels_xml)
         rels_xml = rels_xml.replace(
             "</Relationships>",
-            '<Relationship Id="rId99" '
+            f'<Relationship Id="{rel_id}" '
             'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" '
             'Target="comments.xml"/></Relationships>'
         )
@@ -216,7 +249,7 @@ def main():
     with open(OUTPUT, "wb") as f:
         f.write(buf.getvalue())
 
-    print(f"\nDone — {len(placed)} comments written to:\n  {OUTPUT}")
+    print(f"\nDone — {placed} comments written to:\n  {OUTPUT}")
 
 
 if __name__ == "__main__":
