@@ -19,8 +19,8 @@ Analyzes a `.docx` or `.pptx` file, researches its topic using available sources
 | File | Purpose |
 |------|---------|
 | `SKILL.md` | Skill entry point — routing logic and top-level guidelines |
-| `REFERENCE-DOCX.md` | Full workflow + instructions for `.docx` files |
-| `REFERENCE-PPTX.md` | Full workflow + instructions for `.pptx` files |
+| `references/REFERENCE-DOCX.md` | Full workflow + instructions for `.docx` files |
+| `references/REFERENCE-PPTX.md` | Full workflow + instructions for `.pptx` files |
 | `scripts/inject-comments-docx.py` | Python injection engine for Word documents |
 | `scripts/inject-comments-pptx.py` | Python injection engine for PowerPoint presentations |
 
@@ -80,7 +80,7 @@ python scripts/inject-comments-pptx.py <input.pptx> <output.pptx> <comments.json
 
 ## Sandbox Execution Notes
 
-See [`REFERENCE-PPTX.md`](./REFERENCE-PPTX.md#sandbox-execution-tips) for the confirmed working sandbox pattern.
+See [`references/REFERENCE-PPTX.md`](./references/REFERENCE-PPTX.md#sandbox-execution-tips) for the confirmed working sandbox pattern.
 
 **Quick summary:**
 - Remove any pre-existing read-only output file at `/app/created/` before writing
