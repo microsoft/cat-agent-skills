@@ -10,6 +10,12 @@ description: >-
   read-only analysis or minor edits that do not create a new Office file.
 ---
 
+# Human setup instructions
+
+> **For the person installing or configuring this skill:** This section explains
+> setup and optional customization. The agent runtime instructions begin at the
+> clearly marked **Agent runtime instructions** section below.
+
 ## Overview
 
 This skill ensures newly generated PowerPoint presentations and Word documents
@@ -41,7 +47,11 @@ unresolved placeholders do not block discovery.
 - PowerPoint templates must use `.pptx`. Open a `.potx` in PowerPoint and use
   **Save As** to create a `.pptx`; renaming the extension is insufficient.
 
-## Agent instructions
+# Agent runtime instructions
+
+> **For the agent:** Follow the instructions below whenever this skill is
+> invoked. The human setup section above is explanatory documentation, not a
+> runtime procedure.
 
 Before generating a PowerPoint or Word file, select and apply a compatible
 template from `assets/`.
