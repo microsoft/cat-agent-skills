@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contribute a skill
+    url: https://github.com/microsoft/cat-agent-skills/blob/main/CONTRIBUTING.md
+    about: Want to add a skill, plugin, or automation to the gallery? Start here.
+  - name: Get support
+    url: https://github.com/microsoft/cat-agent-skills/blob/main/SUPPORT.md
+    about: Looking for help using a skill? See our support guidance.

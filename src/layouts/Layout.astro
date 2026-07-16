@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { withBase } from "../lib/url";
+import { FEEDBACK_URL } from "../lib/issues";
 import { ANALYTICS_ENABLED, CLARITY_PROJECT_ID } from "../lib/analytics-config";
 
 interface Props {
@@ -68,9 +69,32 @@ const fullTitle =
           class="flex shrink-0 items-center gap-2.5 text-sm text-muted sm:gap-5"
         >
           <a
-            href={withBase("/")}
-            class="hidden hover:text-fg transition-colors sm:inline">Browse</a
+            href={FEEDBACK_URL}
+            target="_blank"
+            rel="noopener"
+            data-clarity-event="report_issue"
+            data-clarity-report-scope="site"
+            title="Report an issue or share feedback"
+            class="inline-flex items-center gap-1.5 hover:text-fg transition-colors"
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-4 w-4 shrink-0"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 8v5"></path>
+              <path d="M12 16h.01"></path>
+            </svg>
+            <span class="hidden sm:inline">Report an issue</span>
+            <span class="sr-only sm:hidden">Report an issue</span>
+          </a>
           <a
             href="https://github.com/microsoft/cat-agent-skills/blob/main/CONTRIBUTING.md"
             target="_blank"

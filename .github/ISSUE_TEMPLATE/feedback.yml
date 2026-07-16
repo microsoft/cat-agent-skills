@@ -1,0 +1,35 @@
+name: Issue or feedback
+description: Report a problem with the gallery, or share feedback and suggestions.
+title: "[Feedback]: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Use this form to report a problem with the
+        gallery site or to share feedback and ideas.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What would you like to do?
+      options:
+        - Report an issue
+        - Share feedback / a suggestion
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: Link to the page this relates to (if applicable).
+      placeholder: https://microsoft.github.io/cat-agent-skills/...
+    validations:
+      required: false
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Describe the issue or share your feedback. For a bug, what did you expect and what happened?
+      placeholder: Tell us more...
+    validations:
+      required: true
