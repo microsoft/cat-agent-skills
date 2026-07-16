@@ -10,8 +10,6 @@ createdAt: 2026-07-16
 updatedAt: 2026-07-16
 bundle: bundles/vacation-urgent-forwarder.zip
 ---
-> **Scout automation installer.** This is a Microsoft **Scout** automation delivered as an installer `.zip` (an `INSTALL.md` plus JSON config file(s)). Download the `.zip`, unzip it, and follow `INSTALL.md` — Scout creates the automation for you. This installer's files are `submissions/vacation-urgent-forwarder/` in this repo.
-
 # Vacation Urgent Forwarder
 
 This package installs one disabled recurring automation that monitors recent work email and Teams messages only during a configured vacation window. It forwards only clearly urgent signals to the user's personal email and keeps a local state file to prevent duplicate alerts.
