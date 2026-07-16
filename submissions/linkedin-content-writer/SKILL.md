@@ -1,6 +1,6 @@
 ---
 name: linkedin-content-writer
-description: Create, polish, rewrite, review, repurpose, brainstorm, or configure evidence-led LinkedIn posts, captions, comments, hooks, ideas, and conversation-scoped writing profiles from facts, notes, drafts, research, announcements, or lived experience. Use for the initial LinkedIn request and every follow-up clarification, revision, correction, constraint, or preference in the active task; preserve evidence, caveats, permissions, and the author's voice.
+description: Create, polish, rewrite, review, repurpose, brainstorm, or configure evidence-led LinkedIn posts, captions, comments, hooks, ideas, and conversation-scoped writing profiles from facts, notes, drafts, research, announcements, or lived experience. Use for the initial LinkedIn request and every follow-up clarification, revision, correction, constraint, or preference in the active task.
 ---
 
 # LinkedIn Content Writer
