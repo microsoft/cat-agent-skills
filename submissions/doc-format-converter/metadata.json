@@ -1,0 +1,11 @@
+{
+  "name": "Universal Document Converter",
+  "description": "Convert documents between Markdown, HTML, PDF, Word, PowerPoint, Excel/CSV and text — fully offline, using only the libraries already in the agent sandbox.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["documents", "conversion", "markdown", "pdf", "office", "scripts"],
+  "author": "Andreas Adner",
+  "authorUrl": "https://github.com/adner",
+  "version": "1.0.0",
+  "createdAt": "2026-07-16",
+  "updatedAt": "2026-07-16"
+}
