@@ -536,17 +536,12 @@ function buildAutomationBody(opts: {
 
 /**
  * Build the synthesized detail-page body for an automation installer. There is
- * no schedule/steps digest, so we prepend a short callout and render the
- * submitted `INSTALL.md` verbatim as the body.
+ * no schedule/steps digest, so the submitted `INSTALL.md` is rendered verbatim
+ * as the body. The "how to install" guidance lives next to the download button
+ * on the detail page, so we don't repeat it as a callout here.
  */
-function buildInstallerBody(install: string, slug: string): string {
-  const callout =
-    "> **Scout automation installer.** This is a Microsoft **Scout** automation " +
-    "delivered as an installer `.zip` (an `INSTALL.md` plus JSON config " +
-    "file(s)). Download the `.zip`, unzip it, and follow `INSTALL.md` — Scout " +
-    `creates the automation for you. This installer's files are ` +
-    `\`submissions/${slug}/\` in this repo.\n`;
-  return `${callout}\n${install.trim()}\n`;
+function buildInstallerBody(install: string, _slug: string): string {
+  return `${install.trim()}\n`;
 }
 
 /**
