@@ -1,0 +1,11 @@
+{
+  "name": "PDF Table Data Conversion",
+  "description": "Extract tables from a PDF document (e.g. contract rebate or pricing schedules) and convert them into a clean, workable Excel spreadsheet or CSV.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["documents", "extraction", "pdf", "csv", "xlsx", "tables", "sharepoint"],
+  "author": "Lewis Baybutt",
+  "authorUrl": "https://github.com/lewisdoesdev",
+  "version": "1.0.0",
+  "createdAt": "2026-07-16",
+  "updatedAt": "2026-07-16"
+}

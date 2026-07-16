@@ -51,7 +51,12 @@ import { basename, join, posix, relative, sep } from "node:path";
 import AdmZip from "adm-zip";
 import matter from "gray-matter";
 import { validateSkillData } from "./validate-skill.ts";
-import { validateAutomationData, type AutomationDigest } from "./validate-automation.ts";
+import {
+  validateAutomationData,
+  validateAutomationInstallerFiles,
+  isAutomationInstaller,
+  type AutomationDigest,
+} from "./validate-automation.ts";
 import {
   isPluginPackage,
   validatePluginFiles,
@@ -111,6 +116,15 @@ type Submission = {
   /** For an automation: the raw Scout automation `.json`, shipped verbatim. */
   automationJson?: string;
   automationJsonName?: string;
+  /**
+   * True when the automation payload is an installer `.zip` (an `INSTALL.md`
+   * plus JSON config file(s)) rather than a bare importable `.json`. Its
+   * `installerFiles` ship verbatim as the download and `installerInstall`
+   * (the INSTALL.md contents) becomes the detail-page body.
+   */
+  installer?: boolean;
+  installerInstall?: string;
+  installerFiles?: SubFile[];
   /**
    * Every file that ships in the download bundle, at its authored path
    * (excluding the `metadata.*` sidecar and the root instruction file, which is
@@ -521,12 +535,100 @@ function buildAutomationBody(opts: {
 }
 
 /**
+ * Build the synthesized detail-page body for an automation installer. There is
+ * no schedule/steps digest, so the submitted `INSTALL.md` is rendered verbatim
+ * as the body. The "how to install" guidance lives next to the download button
+ * on the detail page, so we don't repeat it as a callout here.
+ */
+function buildInstallerBody(install: string, _slug: string): string {
+  return `${install.trim()}\n`;
+}
+
+/**
+ * Validate + generate an automation installer submission: a `.zip` holding an
+ * `INSTALL.md` plus one or more JSON config files, alongside a `metadata.*`
+ * sidecar. The `.zip` ships verbatim as the download; the detail page renders
+ * the `INSTALL.md`. Validation is minimal (INSTALL.md + >=1 JSON present); the
+ * config files are never schema-checked.
+ */
+function processAutomationInstaller(sub: Submission): ImportProblem | null {
+  const { slug, label } = sub;
+  const files = sub.installerFiles ?? [];
+
+  const iv = validateAutomationInstallerFiles(files, label);
+  if (!iv.ok || iv.install === undefined) return { source: label, problems: iv.problems };
+
+  if (sub.metaText === undefined) {
+    return {
+      source: label,
+      problems: [
+        `no metadata sidecar found next to the installer ` +
+          `(expected ${METADATA_NAMES.join(" / ")})`,
+      ],
+    };
+  }
+
+  let catalog: Record<string, unknown>;
+  try {
+    catalog = parseMetadataFile(sub.metaName!, sub.metaText);
+  } catch (err) {
+    return { source: label, problems: [`could not parse ${sub.metaName}: ${(err as Error).message}`] };
+  }
+
+  const problems: string[] = [];
+  if (!catalog.name) {
+    problems.push("`name` (display name) is required in the metadata file");
+  }
+  if (!catalog.description) {
+    problems.push("`description` (catalog) is required in the metadata file");
+  }
+  if (problems.length) return { source: label, problems };
+
+  // An installer is a Scout automation; drop any name/description/platforms/type
+  // from the sidecar so they can't override the derived values.
+  const {
+    name: displayName,
+    description: catalogDescription,
+    platforms: _p,
+    type: _t,
+    ...catalogRest
+  } = catalog;
+  const meta: Record<string, unknown> = {
+    name: displayName,
+    description: catalogDescription,
+    platforms: ["Scout"],
+    type: "automation",
+    ...catalogRest,
+    // A `.zip` bundle (vs a `.json`) is what marks this automation as an installer.
+    bundle: `bundles/${slug}.zip`,
+  };
+
+  const result = validateSkillData(meta, label);
+  if (!result.ok) return { source: label, problems: result.problems };
+
+  if (!checkOnly) {
+    const body = buildInstallerBody(iv.install, slug);
+    mkdirSync(CONTENT_DIR, { recursive: true });
+    writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, body));
+    mkdirSync(BUNDLES_DIR, { recursive: true });
+    // Ship the installer package verbatim (deterministic order + fixed mtime).
+    writeBundle(files, join(BUNDLES_DIR, `${slug}.zip`));
+    console.log(
+      `\u2713 ${label} \u2192 src/content/skills/${slug}.md ` +
+        `(automation installer, + public/bundles/${slug}.zip)`,
+    );
+  }
+  return null;
+}
+
+/**
  * Validate + generate a Scout automation submission: a raw Scout automation
  * `.json` plus a `metadata.*` sidecar. The `.json` ships verbatim as the
  * download (re-importable into Scout); the detail page is synthesized.
  */
 function processAutomation(sub: Submission): ImportProblem | null {
   const { slug, label } = sub;
+  if (sub.installer) return processAutomationInstaller(sub);
   if (sub.automationJson === undefined) {
     return { source: label, problems: ["no automation `.json` payload found"] };
   }
@@ -667,6 +769,14 @@ function loadSubmission(dir: string): Submission {
       sub.kind = "plugin";
       // Ship the package verbatim, minus any stray metadata sidecar.
       sub.pluginFiles = files.filter(
+        (f) => !METADATA_NAMES.includes(basename(f.path).toLowerCase()),
+      );
+    } else if (isAutomationInstaller(files)) {
+      // An automation installer: an `INSTALL.md` + JSON config file(s). Shipped
+      // verbatim as the download; the INSTALL.md becomes the detail-page body.
+      sub.kind = "automation";
+      sub.installer = true;
+      sub.installerFiles = files.filter(
         (f) => !METADATA_NAMES.includes(basename(f.path).toLowerCase()),
       );
     } else {

@@ -64,10 +64,12 @@ const { tag, skills } = Astro.props;
             name={skill.data.name}
             description={skill.data.description}
             platforms={skill.data.platforms}
+            type={skill.data.type}
             tags={skill.data.tags}
             author={skill.data.author}
             coverColor={skill.data.coverColor}
             hasBundle={Boolean(skill.data.bundle)}
+            isInstaller={skill.data.type === "automation" && Boolean(skill.data.bundle?.endsWith(".zip"))}
           />
         ))
       }

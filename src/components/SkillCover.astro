@@ -9,6 +9,8 @@ interface Props {
   tags?: string[];
   coverColor?: string;
   hasBundle?: boolean;
+  /** True when an automation ships as an installer `.zip` (vs an importable `.json`). */
+  isInstaller?: boolean;
   /** "card" for grid thumbnails, "hero" for the detail header. */
   variant?: "card" | "hero";
   class?: string;
@@ -22,6 +24,7 @@ const {
   tags = [],
   coverColor,
   hasBundle = false,
+  isInstaller = false,
   variant = "card",
   class: className = "",
 } = Astro.props;
@@ -148,7 +151,9 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
           <span
             class="flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-sm"
             title={
-              type === "automation"
+              isInstaller
+                ? "Includes a downloadable automation installer"
+                : type === "automation"
                 ? "Includes a downloadable automation file"
                 : "Includes a downloadable script bundle"
             }
@@ -161,7 +166,7 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
             >
               <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
             </svg>
-            {type === "automation" ? ".json" : ".zip"}
+            {type === "automation" && !isInstaller ? ".json" : ".zip"}
           </span>
         )
       }

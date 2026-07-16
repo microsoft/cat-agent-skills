@@ -13,6 +13,8 @@ interface Props {
   author?: string;
   coverColor?: string;
   hasBundle?: boolean;
+  /** True when an automation ships as an installer `.zip` (vs an importable `.json`). */
+  isInstaller?: boolean;
   rating?: number;
 }
 
@@ -26,6 +28,7 @@ const {
   author,
   coverColor,
   hasBundle = false,
+  isInstaller = false,
   rating = 0,
 } = Astro.props;
 
@@ -35,12 +38,17 @@ const isSample = tags.includes("sample");
 const isPlugin = type === "plugin";
 const isAutomation = type === "automation";
 const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
+const isInteractive = !isSample;
+const wrapperClass = isSample
+  ? "group flex h-full cursor-not-allowed select-none flex-col rounded-xl border border-border bg-surface p-4 opacity-55 saturate-50"
+  : "group flex h-full flex-col rounded-xl border border-border bg-surface p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md";
+const Wrapper = isInteractive ? "a" : "div";
+const wrapperProps = isInteractive
+  ? { href: withBase(`/skills/${slug}`) }
+  : { "aria-disabled": "true", title: "Sample / demo skill — placeholder content, not accessible" };
 ---
 
-<a
-  href={withBase(`/skills/${slug}`)}
-  class="group flex h-full flex-col rounded-xl border border-border bg-surface p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md"
->
+<Wrapper class={wrapperClass} {...wrapperProps}>
   <!-- Header: monogram + name + platforms -->
   <div class="flex items-start gap-3">
     <span
@@ -135,7 +143,7 @@ const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
     <span class="flex shrink-0 items-center gap-2.5 text-xs text-subtle">
       {
         hasBundle && (
-          <span class="flex items-center gap-1" title={isAutomation ? "Includes a downloadable automation file" : "Includes a downloadable bundle"}>
+          <span class="flex items-center gap-1" title={isInstaller ? "Includes a downloadable automation installer" : isAutomation ? "Includes a downloadable automation file" : "Includes a downloadable bundle"}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -144,7 +152,7 @@ const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
             >
               <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
             </svg>
-            {isAutomation ? ".json" : ".zip"}
+            {isAutomation && !isInstaller ? ".json" : ".zip"}
           </span>
         )
       }
@@ -161,4 +169,4 @@ const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
       }
     </span>
   </div>
-</a>
+</Wrapper>

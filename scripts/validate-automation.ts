@@ -265,6 +265,81 @@ export function validateAutomationFile(path: string): AutomationValidationResult
   return validateAutomationSource(readFileSync(path, "utf8"), path);
 }
 
+// --- Automation installer (a `.zip` payload) ---------------------------------
+//
+// Besides a bare importable `.json`, an automation may be submitted as an
+// installer `.zip`: an `INSTALL.md` (install procedure + the automation prompt)
+// plus one or more JSON config files the automation consumes at runtime. Scout
+// can't one-click import it — a human/agent follows INSTALL.md — so there is no
+// schedule/steps digest. Validation here is intentionally MINIMAL (no config
+// schema validation): the package must carry an INSTALL.md and at least one
+// JSON file. This keeps arbitrary non-automation zips off this path without
+// second-guessing the config contents.
+
+/** A file inside the installer zip, with a forward-slash relative path. */
+export type InstallerFile = { path: string; data: Buffer };
+
+/** Names treated as the catalog metadata sidecar (never a config payload). */
+const INSTALLER_METADATA_NAMES = ["metadata.json", "metadata.yaml", "metadata.yml"];
+/** The required install-instructions file (compared lowercased). */
+export const INSTALL_NAME = "install.md";
+
+/** True when the exploded zip looks like an automation installer package. */
+export function isAutomationInstaller(files: InstallerFile[]): boolean {
+  const base = (f: InstallerFile) => f.path.split("/").pop()!.toLowerCase();
+  // A packed skill owns the zip via its root SKILL.md; never steal it.
+  if (files.some((f) => base(f) === "skill.md")) return false;
+  const hasInstall = files.some((f) => base(f) === INSTALL_NAME);
+  const hasConfigJson = files.some(
+    (f) => base(f).endsWith(".json") && !INSTALLER_METADATA_NAMES.includes(base(f)),
+  );
+  return hasInstall && hasConfigJson;
+}
+
+export type InstallerValidation = {
+  ok: boolean;
+  problems: string[];
+  /** The INSTALL.md contents (shallowest match), rendered as the detail page. */
+  install?: string;
+};
+
+/**
+ * Validate an automation installer's exploded zip files. Minimal by design:
+ *   - an `INSTALL.md` must be present and non-empty;
+ *   - at least one non-metadata `*.json` config file must be present.
+ * The JSON config files are NOT parsed or schema-checked.
+ */
+export function validateAutomationInstallerFiles(
+  files: InstallerFile[],
+  label: string,
+): InstallerValidation {
+  const base = (f: InstallerFile) => f.path.split("/").pop()!.toLowerCase();
+  const problems: string[] = [];
+
+  // Prefer the shallowest INSTALL.md if the package nests under a folder.
+  const installFiles = files
+    .filter((f) => base(f) === INSTALL_NAME)
+    .sort((a, b) => a.path.split("/").length - b.path.split("/").length);
+  const install = installFiles[0]?.data.toString("utf8");
+  if (install === undefined) {
+    problems.push("no `INSTALL.md` found in the installer zip");
+  } else if (install.trim().length === 0) {
+    problems.push("`INSTALL.md` is empty");
+  }
+
+  const hasConfigJson = files.some(
+    (f) => base(f).endsWith(".json") && !INSTALLER_METADATA_NAMES.includes(base(f)),
+  );
+  if (!hasConfigJson) {
+    problems.push(
+      "no JSON config file found in the installer zip (at least one `*.json` is required)",
+    );
+  }
+
+  if (problems.length) return { ok: false, problems };
+  return { ok: true, problems: [], install };
+}
+
 function main() {
   const files = process.argv.slice(2);
   if (files.length === 0) {

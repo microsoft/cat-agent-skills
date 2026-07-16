@@ -83,6 +83,31 @@
   color: transparent;
 }
 
+/* Keep wide markdown tables and code from breaking the page layout on small
+   screens: let oversized tables scroll horizontally within the article, and
+   force long code lines to stay inside their block instead of pushing the page. */
+.prose :where(table) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.prose :where(pre) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.prose :where(code):not(:where(pre code)) {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+/* Code fences (shiki) carry their own foreground colors. Keep the inline-code
+   accent color (`prose-code:text-accent-text`) from bleeding into `<pre>`
+   blocks — otherwise plain-text blocks, which have no syntax tokens to color,
+   inherit the accent and render as low-contrast blue text on the dark code
+   background in both light and dark themes. */
+.prose :where(pre) code {
+  color: inherit;
+}
+
 html {
   scroll-behavior: smooth;
 }

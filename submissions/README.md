@@ -30,6 +30,14 @@ Bundling is **verbatim** — whatever you put in `scripts/`/`references/`/`asset
 (or inside your `.zip`) ships exactly as authored. Only `metadata.*` is stripped;
 it is a sidecar and never lands inside the bundle.
 
+> ⚠️ **No READMEs or other human-facing files.** Because bundling is verbatim,
+> anything in the folder (other than the `metadata.*` sidecar) is packaged into
+> the agent-facing `.zip` and loaded as part of the skill. A `README.md`,
+> `CONTRIBUTING`, `CHANGELOG`, or any doc written for people just wastes the
+> agent's context. Ship **only agent-facing files** (`SKILL.md`, `scripts/`,
+> `references/`, `assets/`) and put contributor/human notes in your PR
+> description instead.
+
 ## Two descriptions — they are different on purpose
 
 | | Lives in | Who reads it |
@@ -184,6 +192,45 @@ actually fire, and a `cron` expression is valid and fireable. Copy
 [`_template-automation/`](./_template-automation) to start, and see
 [`spend-more-time-with-friends-and-family/`](./spend-more-time-with-friends-and-family)
 for a complete example.
+
+## Scout automation installers (advanced)
+
+Not every automation is a directly-importable `.json`. Some are **installers**: a
+`.zip` you download, unzip, and follow to set the automation up — typically an
+agent reads the instructions, collects your settings into a personal config, and
+calls `m_create_automation`. This suits automations that need per-user
+configuration or a guided setup rather than a one-click import.
+
+An installer submission is a `submissions/<slug>/` folder with a `metadata.json`
+sidecar plus a **single `.zip`** containing an `INSTALL.md` and one or more JSON
+config files. It's auto-detected as an automation installer because the `.zip`
+holds an `INSTALL.md` and at least one JSON file (and no root `SKILL.md` or
+`manifest.json`):
+
+```
+submissions/<slug>/
+├── metadata.json          # catalog sidecar (name/description/tags optional —
+│                          #  they fall back to the automation's own fields)
+└── <name>.zip
+    ├── INSTALL.md         # required: install procedure + the automation prompt
+    └── config.example.json   # required: one or more JSON config file(s)
+```
+
+The importer forces `platforms: ["Scout"]` and `type: "automation"`, publishes
+the `.zip` **verbatim** as the download (offered as a `.zip`), and renders your
+`INSTALL.md` as the detail page. Installers show the same **Automation** badge as
+importable automations and are filterable on the homepage; the download chip
+reads `.zip` instead of `.json`.
+
+Validation is intentionally **minimal**
+(`scripts/validate-automation.ts`) and will fail the PR only if the package is
+missing its `INSTALL.md` (or it's empty) or has no JSON config file. The JSON
+config files are **not** parsed or schema-validated — because the `.zip` ships
+verbatim, strip any personal paths or secrets first and include only files the
+installing agent needs. Copy
+[`_template-automation-installer/`](./_template-automation-installer) to start,
+and see [`vacation-urgent-forwarder/`](./vacation-urgent-forwarder) for a
+complete example.
 
 ## Updating an existing skill
 

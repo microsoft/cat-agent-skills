@@ -1,0 +1,10 @@
+{
+  "name": "My Automation Installer",
+  "description": "The CATALOG summary shown to people browsing the gallery. Optional for installers \u2014 if omitted it falls back to the automation's own fields. (platforms is forced to Scout and must not be set here.)",
+  "tags": ["scout", "automation"],
+  "author": "Your Name",
+  "authorUrl": "https://example.com",
+  "version": "1.0.0",
+  "createdAt": "2026-01-01",
+  "updatedAt": "2026-01-01"
+}

@@ -24,8 +24,9 @@ deployed as a static site to GitHub Pages.
 - **Downloads**: the skill as a `SKILL.md` file, plus an optional `.zip` bundle
   when a skill ships files beyond its `SKILL.md`.
 - **More than skills**: also hosts **Cowork plugins** (M365 `.zip` packages) and
-  **Scout automations** (scheduled `.json` exports), each with its own badge,
-  filter, and verbatim download.
+  **Scout automations** (scheduled `.json` exports) and **Scout automation
+  installers** (a `.zip` with an `INSTALL.md` + JSON config that sets the
+  automation up), each with its own badge, filter, and verbatim download.
 
 ## 🚀 Local development
 
@@ -94,9 +95,11 @@ Write the agent instructions here as Markdown — this body becomes the
 > validates every skill against the schema.
 
 > Besides single skills, you can submit a **Cowork plugin** (a `.zip` M365 app
-> package, Cowork-only) or a **Scout automation** (a `.json` export, Scout-only).
-> Both drop into `submissions/<slug>/` the same way and are auto-detected by their
-> payload. See [`submissions/README.md`](submissions/README.md) for the details.
+> package, Cowork-only), a **Scout automation** (a `.json` export, Scout-only),
+> or a **Scout automation installer** (a `.zip` with an `INSTALL.md` + JSON
+> config, Scout-only). They all drop into `submissions/<slug>/` the same way and
+> are auto-detected by their payload. See
+> [`submissions/README.md`](submissions/README.md) for the details.
 
 ## 📁 Project structure
 

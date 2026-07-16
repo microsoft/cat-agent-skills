@@ -1,0 +1,17 @@
+{
+  "name": "LinkedIn Content Writer",
+  "description": "Create credible LinkedIn content from facts, notes or drafts, with configurable voice and no invented evidence.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "linkedin",
+    "social-media",
+    "writing",
+    "content"
+  ],
+  "author": "Becky Still, Digital Boop Ltd",
+  "authorUrl": "https://digital-boop.co.uk/my-story",
+  "version": "1.0.0",
+  "createdAt": "2026-07-14"
+}
