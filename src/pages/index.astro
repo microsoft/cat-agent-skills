@@ -5,7 +5,11 @@ import { getCollection } from "astro:content";
 import { PLATFORMS, PLATFORM_COLORS } from "../lib/skills";
 import { getRating } from "../lib/ratings";
 
+const isSample = (s: { data: { tags: string[] } }) =>
+  s.data.tags.includes("sample");
+
 const skills = (await getCollection("skills")).sort((a, b) => {
+  if (isSample(a) !== isSample(b)) return isSample(a) ? 1 : -1;
   if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
   return a.data.name.localeCompare(b.data.name);
 });
@@ -203,6 +207,7 @@ const allTags = [...tagCounts.entries()].sort(
             data-type={skill.data.type}
             data-rating={getRating(skill.id)}
             data-featured={skill.data.featured ? "1" : "0"}
+            data-sample={skill.data.tags.includes("sample") ? "1" : "0"}
             data-updated={(
               skill.data.updatedAt ??
               skill.data.createdAt ??
@@ -287,6 +292,8 @@ const allTags = [...tagCounts.entries()].sort(
     const byName = (a: HTMLElement, b: HTMLElement) =>
       (a.dataset.name ?? "").localeCompare(b.dataset.name ?? "");
     return [...list].sort((a, b) => {
+      const sampleDiff = num(a, "sample") - num(b, "sample");
+      if (sampleDiff !== 0) return sampleDiff;
       switch (sortMode) {
         case "rating":
           return num(b, "rating") - num(a, "rating") || byName(a, b);
