@@ -1,13 +1,14 @@
 # Verification test cases
 
-Twelve test cases to verify the Universal Document Converter end-to-end. Run
-them from the skill's root folder (the one containing `scripts/` and
+Fourteen test cases to verify the Universal Document Converter end-to-end.
+Run them from the skill's root folder (the one containing `scripts/` and
 `assets/`). Each case gives the prompt you can ask the agent, the exact
 command behind it, and an observable pass criterion.
 
 The fixtures in `assets/samples/` (`sample.md`, `sample.html`, `sample.csv`,
-`sample.docx`) all describe the same small "Quarterly Product Update"
-document, so conversions can be cross-checked against each other.
+`sample.docx`, `sample.pptx`, `sample.xlsx`) all describe the same small
+"Quarterly Product Update" document, so conversions can be cross-checked
+against each other.
 
 Quick automated check of the core pipelines (cases 1, 3, 5–9):
 
@@ -104,6 +105,25 @@ for t in md pdf docx pptx html txt; do python <skill>/scripts/convert.py <skill>
 - **Prompt:** "Convert everything in `assets/samples/` to Markdown."
 - **Command:** `python scripts/convert.py --batch assets/samples --to md --out-dir /tmp/t12`
 - **Pass:** exit code 0; the printed summary table shows `sample.csv`,
-  `sample.docx`, and `sample.html` as `converted`, `sample.md` as `skipped`
-  (`already md`), and same-stem outputs get disambiguated names
-  (`sample.docx.md`, `sample.html.md`) instead of overwriting each other.
+  `sample.docx`, `sample.html`, `sample.pptx`, and `sample.xlsx` as
+  `converted`, `sample.md` as `skipped` (`already md`), and same-stem outputs
+  get disambiguated names (`sample.docx.md`, `sample.html.md`, …) instead of
+  overwriting each other.
+
+## 13. PPTX → Markdown
+
+- **Prompt:** "Convert `assets/samples/sample.pptx` to Markdown."
+- **Command:** `python scripts/convert.py assets/samples/sample.pptx --to md -o /tmp/t13.md`
+- **Pass:** exit code 0; output contains `# Quarterly Product Update` and
+  `# Highlights` (one heading per slide) plus the bullet text
+  `Faster sync engine`.
+
+## 14. XLSX → Markdown
+
+- **Prompt:** "Show `assets/samples/sample.xlsx` as a Markdown table."
+- **Command:** `python scripts/convert.py assets/samples/sample.xlsx --to md -o /tmp/t14.md`
+- **Pass:** exit code 0; output contains the header row
+  `| Region | Active Users | Growth |` and a row for `APAC`. In the sandbox
+  this uses markitdown (pandas present); without pandas the script warns and
+  falls back to reading the workbook directly with openpyxl — both count as
+  a pass.

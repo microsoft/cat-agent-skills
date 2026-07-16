@@ -138,9 +138,10 @@ def to_markdown_text(path: str, fmt: str) -> str:
         from markitdown import MarkItDown
         result = MarkItDown(enable_plugins=False).convert(path)
         return result.text_content
-    except ImportError:
-        pass
-    if fmt == "docx":  # fallback chain without markitdown
+    except Exception as exc:  # missing optional deps, unreadable file, …
+        render.warn(f"markitdown could not convert {fmt} "
+                    f"({exc.__class__.__name__}); using the {fmt} fallback")
+    if fmt == "docx":
         import mammoth
         with open(path, "rb") as fh:
             html = mammoth.convert_to_html(fh).value
@@ -148,7 +149,47 @@ def to_markdown_text(path: str, fmt: str) -> str:
         return markdownify(html, heading_style="ATX")
     if fmt == "pdf":
         return _pdf_to_text(path)
-    raise ConversionError(f"markitdown is unavailable and no fallback exists for {fmt}.")
+    if fmt == "xlsx":
+        return _xlsx_to_markdown(path)
+    if fmt == "pptx":
+        return _pptx_to_markdown(path)
+    raise ConversionError(f"No working converter for {fmt}.")
+
+
+def _xlsx_to_markdown(path: str) -> str:
+    import openpyxl
+
+    wb = openpyxl.load_workbook(path, data_only=True)
+    doc: list = []
+    for ws in wb.worksheets:
+        rows = [["" if c is None else str(c) for c in row]
+                for row in ws.iter_rows(values_only=True)]
+        rows = [r for r in rows if any(c.strip() for c in r)]
+        if not rows:
+            continue
+        if len(wb.worksheets) > 1:
+            doc.append(blocks_mod.Heading(2, [blocks_mod.Run(ws.title)]))
+        doc.append(blocks_mod.Table(rows))
+    return render.to_markdown(doc)
+
+
+def _pptx_to_markdown(path: str) -> str:
+    from pptx import Presentation
+
+    prs = Presentation(path)
+    doc: list = []
+    for slide in prs.slides:
+        title = slide.shapes.title
+        if title is not None and title.text.strip():
+            doc.append(blocks_mod.Heading(1, [blocks_mod.Run(title.text.strip())]))
+        for shape in slide.shapes:
+            if shape is title or not getattr(shape, "has_text_frame", False):
+                continue
+            for para in shape.text_frame.paragraphs:
+                text = "".join(run.text for run in para.runs).strip()
+                if text:
+                    doc.append(blocks_mod.Paragraph([blocks_mod.Run(text)]))
+    return render.to_markdown(doc)
 
 
 def _pdf_to_text(path: str) -> str:
