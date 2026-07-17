@@ -1,0 +1,21 @@
+{
+  "name": "Brand Voice Pass",
+  "description": "Rewrite drafts into a configurable house style, preserving meaning while removing generic AI phrasing.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "writing",
+    "content",
+    "voice",
+    "style",
+    "editing",
+    "productivity"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}

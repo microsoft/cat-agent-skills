@@ -1,0 +1,20 @@
+{
+  "name": "Skill Authoring Coach",
+  "description": "Help makers design concise, reusable Agent Skills with clear triggers, instructions, resources, and packaging.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "skills",
+    "authoring",
+    "documentation",
+    "productivity",
+    "agent"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}

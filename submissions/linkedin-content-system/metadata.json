@@ -1,0 +1,20 @@
+{
+  "name": "LinkedIn Content System",
+  "description": "Create evidence-led LinkedIn posts, promos, newsletter intros, and long-form copy from supplied facts or drafts.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "linkedin",
+    "social-media",
+    "writing",
+    "marketing",
+    "content"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Blog Post Structure Pass",
+  "description": "Restructure draft or existing blog posts into a stronger narrative without inventing new claims.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "blog",
+    "writing",
+    "editing",
+    "content",
+    "structure",
+    "productivity"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}
