@@ -10,6 +10,7 @@ authorGithub: adner
 version: 1.0.0
 createdAt: 2026-07-16
 updatedAt: 2026-07-16
+featured: true
 bundle: bundles/doc-format-converter.zip
 ---
 Convert documents between formats using the bundled `scripts/convert.py`. It
