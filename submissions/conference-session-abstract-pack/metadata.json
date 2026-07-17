@@ -1,0 +1,21 @@
+{
+  "name": "Conference Session Abstract Pack",
+  "description": "Create CFP-ready talk titles, abstracts, takeaways, speaker notes, and submission copy from a topic.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "writing",
+    "conference",
+    "abstract",
+    "speaking",
+    "content",
+    "productivity"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}
