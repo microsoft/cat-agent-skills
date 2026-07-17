@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <title>Contoso Industrial — AI Use Case Assessment Report</title>
+ <script>
+ (() => {
+ const params = new URLSearchParams(window.location.search);
+  const param = params.get("scoutTheme") || params.get("clawpilotTheme");
+ const theme =
+ param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+ document.documentElement.setAttribute("data-theme", theme);
+ })();
+ </script>
+ <style>
+ :root {
+ color-scheme: light;
+ --cp-bg: #f7f4ef;
+ --cp-bg-elevated: #fcfbf8;
+ --cp-surface: #ffffff;
+ --cp-surface-soft: #f5f5f5;
+ --cp-border: #dedede;
+ --cp-border-strong: #919191;
+ --cp-text: #242424;
+ --cp-text-muted: #5c5c5c;
+ --cp-text-soft: #6f6f6f;
+ --cp-accent: #b11f4b;
+ --cp-accent-hover: #9a1a41;
+ --cp-accent-soft: rgba(177, 31, 75, 0.08);
+ --cp-accent-fg: #ffffff;
+ --cp-success: #16a34a;
+ --cp-danger: #dc2626;
+ --cp-warning: #f59e0b;
+ --cp-link: #0078d4;
+ --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+ --cp-overlay: rgba(255, 255, 255, 0.8);
+ --cp-panel: rgba(255, 255, 255, 0.86);
+ --cp-panel-strong: rgba(255, 255, 255, 0.96);
+ --cp-sheen: rgba(255, 255, 255, 0.55);
+ --cp-highlight: rgba(177, 31, 75, 0.12);
+ }
+ html[data-theme="dark"] {
+ color-scheme: dark;
+ --cp-bg: #3d3b3a;
+ --cp-bg-elevated: #343231;
+ --cp-surface: #292929;
+ --cp-surface-soft: #2e2e2e;
+ --cp-border: #474747;
+ --cp-border-strong: #5f5f5f;
+ --cp-text: #dedede;
+ --cp-text-muted: #919191;
+ --cp-text-soft: #b0b0b0;
+ --cp-accent: #fd8ea1;
+ --cp-accent-hover: #fb7b91;
+ --cp-accent-soft: rgba(253, 142, 161, 0.14);
+ --cp-accent-fg: #1a1a1a;
+ --cp-success: #4ade80;
+ --cp-danger: #f87171;
+ --cp-warning: #fbbf24;
+ --cp-link: #4da6ff;
+ --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+ --cp-overlay: rgba(41, 41, 41, 0.88);
+ --cp-panel: rgba(41, 41, 41, 0.72);
+ --cp-panel-strong: rgba(41, 41, 41, 0.96);
+ --cp-sheen: rgba(255, 255, 255, 0.04);
+ --cp-highlight: rgba(253, 142, 161, 0.12);
+ }
+ :root {
+ --cp-customer-primary: var(--cp-link);
+ --cp-customer-accent: var(--cp-link);
+ --cp-customer-accent-hover: var(--cp-link);
+ --cp-customer-soft: var(--cp-accent-soft);
+ --cp-customer-on-primary: var(--cp-accent-fg);
+ --cp-fit-1: #fde725;
+ --cp-fit-2: #7ad151;
+ --cp-fit-3: #22a884;
+ --cp-fit-4: #2a788e;
+ --cp-fit-5: #414487;
+ --cp-progress-1: var(--cp-link);
+ --cp-progress-2: var(--cp-link);
+ --cp-progress-3: var(--cp-success);
+ --cp-progress-4: var(--cp-warning);
+ --cp-progress-5: var(--cp-link);
+ --cp-card-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+ }
+ * { box-sizing: border-box; }
+ html { scroll-behavior: smooth; }
+ body {
+ margin: 0;
+ min-height: 100vh;
+ background: var(--cp-bg-elevated);
+ color: var(--cp-text);
+ font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+ line-height: 1.55;
+ }
+ .hero {
+ background: var(--cp-customer-primary);
+ border-bottom: 4px solid var(--cp-customer-accent);
+ color: var(--cp-customer-on-primary);
+ padding: 36px 32px;
+ }
+ .hero-inner {
+ max-width: 1540px;
+ margin: 0 auto;
+ display: flex;
+ align-items: center;
+ gap: 24px;
+ }
+ .brand-mark {
+ display: grid;
+ place-items: center;
+ width: 72px;
+ height: 72px;
+ border-radius: 16px;
+ background: var(--cp-surface);
+ color: var(--cp-link);
+ font-size: 28px;
+ font-weight: 900;
+ letter-spacing: 0.02em;
+ flex-shrink: 0;
+ box-shadow: var(--cp-card-shadow);
+ }
+  .brand-mark img { max-width: 82%; max-height: 82%; object-fit: contain; display: none; }
+ .brand-mark.has-logo { background: var(--cp-surface); color: transparent; }
+ .brand-mark.has-logo img { display: block; }
+ .brand-mark.has-logo .brand-letter { display: none; }
+ .hero h1 {
+ margin: 0 0 8px;
+ font-size: clamp(34px, 4vw, 54px);
+ font-weight: 650;
+ line-height: 1.02;
+ letter-spacing: -0.03em;
+ }
+ .hero p { margin: 0; color: var(--cp-customer-on-primary); opacity: 0.9; font-size: 17px; }
+ .hero-strapline { margin-top: 10px; font-size: 12px; letter-spacing: 0.02em; text-transform: uppercase; opacity: 0.75; color: var(--cp-customer-on-primary); }
+ .about-panel { background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-left: 4px solid var(--cp-warning); border-radius: 12px; padding: 14px 18px; margin: 0 0 22px; color: var(--cp-text-muted); font-size: 13px; line-height: 1.5; }
+ .about-panel strong { color: var(--cp-text); font-weight: 700; }
+ .site-footer { max-width: 1540px; margin: 32px auto 0; padding: 22px 32px 32px; border-top: 1px solid var(--cp-border); color: var(--cp-text-soft); font-size: 12px; line-height: 1.55; }
+ .site-footer p { margin: 0 0 8px; }
+ .site-footer .disclaimer { color: var(--cp-text-muted); }
+ .report { max-width: 1540px; margin: 0 auto; padding: 30px; }
+ .view { display: none; }
+ .view.active { display: block; animation: fadeIn 220ms ease-out; }
+ @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+ .section-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin: 0 0 20px; }
+ .section-title h2, .detail-title h2 { margin: 0; color: var(--cp-text); font-size: clamp(27px, 3vw, 38px); line-height: 1.08; font-weight: 720; letter-spacing: -0.02em; }
+ .section-title p, .detail-title p { margin: 8px 0 0; color: var(--cp-text-muted); max-width: 920px; font-size: 15px; }
+ .nav-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+ .button { border: 1px solid var(--cp-border); border-radius: 0.625rem; background: var(--cp-surface); color: var(--cp-text); cursor: pointer; font: inherit; font-weight: 750; padding: 10px 14px; transition: transform 160ms ease, border-color 160ms ease, background 160ms ease; }
+ .button:hover { border-color: var(--cp-link); transform: translateY(-1px); }
+ .button.primary { background: var(--cp-link); border-color: var(--cp-link); color: var(--cp-accent-fg); }
+ .card { background: var(--cp-panel-strong); border: 1px solid var(--cp-border); border-radius: 16px; box-shadow: var(--cp-card-shadow); overflow: hidden; }
+ .card-pad { padding: 24px; }
+ .front-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; margin-bottom: 20px; }
+ .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+ .chart-card { min-height: 570px; }
+ .chart-head, .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+ h3 { margin: 0; color: var(--cp-text); font-size: 14px; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+ h4 { margin: 0 0 8px; color: var(--cp-text); font-size: 16px; }
+ p { color: var(--cp-text-muted); }
+ .chart-frame { position: relative; height: 470px; border: 1px solid var(--cp-border); border-radius: 16px; background: var(--cp-surface); overflow: hidden; }
+ canvas { display: block; width: 100%; height: 100%; }
+ .summary-panel { display: grid; gap: 14px; }
+ .score-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+ .score-card { background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 16px; padding: 18px; text-align: center; }
+ .score-card strong { display: block; font-size: 32px; font-weight: 800; color: var(--cp-customer-primary); line-height: 1; }
+ .score-card strong em { font-size: 16px; font-weight: 600; color: var(--cp-text-muted); font-style: normal; }
+ .score-card span { display: block; margin-top: 4px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--cp-text-muted); }
+ .score-card strong { display: block; color: var(--cp-link); font-size: 30px; line-height: 1; margin-bottom: 8px; }
+ .score-card span { color: var(--cp-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+ .legend-row { display: flex; align-items: center; gap: 8px; color: var(--cp-text-muted); font-size: 13px; margin-bottom: 7px; }
+ .dot { width: 15px; height: 15px; border-radius: 99px; background: var(--dot); border: 1px solid var(--cp-border); flex: 0 0 auto; }
+ .fit-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 8px 0 4px; }
+ .fit-scale span { height: 8px; border-radius: 99px; background: var(--fit-color); }
+ .usecase-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+ .usecase-tile { position: relative; padding: 22px; min-height: 265px; cursor: pointer; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+ .usecase-tile:hover { transform: translateY(-4px); border-color: var(--cp-link); box-shadow: var(--cp-shadow); }
+ .usecase-tile::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--cp-link); }
+ .tile-icon, .detail-icon { border-radius: 16px; display: grid; place-items: center; background: var(--cp-accent-soft); color: var(--cp-link); font-weight: 900; box-shadow: var(--cp-card-shadow); }
+ .tile-icon { width: 50px; height: 50px; margin-bottom: 16px; font-size: 18px; }
+ .usecase-tile h3 { text-transform: none; letter-spacing: 0; font-size: 20px; line-height: 1.18; margin-bottom: 8px; }
+ .tile-tags, .pill-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+ .tag, .pill { border: 1px solid var(--cp-border); border-radius: 99px; background: var(--cp-surface-soft); color: var(--cp-text-muted); font-size: 12px; font-weight: 700; padding: 5px 9px; }
+ .tile-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 18px; }
+ .tile-metric { border-radius: 0.625rem; background: var(--cp-surface-soft); border: 1px solid var(--cp-border); padding: 8px 6px; text-align: center; }
+ .tile-metric strong { display: block; color: var(--cp-text); font-size: 16px; }
+ .tile-metric span { color: var(--cp-text-muted); font-size: 10px; text-transform: uppercase; }
+ .detail-hero { display: flex; align-items: flex-start; gap: 18px; margin: 16px 0 22px; }
+ .detail-icon { width: 68px; height: 68px; font-size: 23px; flex-shrink: 0; }
+ .detail-main-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
+ .left-stack, .right-stack { display: grid; gap: 18px; }
+ .narrative-card { padding: 26px; min-height: 150px; }
+ .narrative-card h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; text-transform: none; letter-spacing: 0; font-size: 20px; }
+ .narrative-card p { margin: 0; font-size: 16px; }
+ .followups-card { border-left: 4px solid var(--cp-customer-accent); }
+ .followups-lead { color: var(--cp-text-muted); font-size: 14px; margin-bottom: 12px !important; }
+ .followups-list { margin: 0; padding-left: 20px; display: grid; gap: 12px; }
+ .followup-item { line-height: 1.5; }
+ .followup-head { display: flex; align-items: baseline; gap: 8px; }
+ .followup-q { font-weight: 600; }
+ .followup-why { color: var(--cp-text-muted); font-size: 14px; margin-top: 4px; }
+ .followup-pri { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: 999px; background: var(--cp-surface-soft); color: var(--cp-text-muted); }
+ .followup-pri.pri-high { background: #fde2e2; color: #a1201f; }
+ .followup-pri.pri-medium { background: #fff2cf; color: #8a6100; }
+ .followup-pri.pri-low { background: #e2edff; color: #1f4a99; }
+ .portfolio-meta { display: flex; justify-content: center; padding: 8px 0 14px; }
+ .meta-row { text-align: center; display: grid; gap: 4px; }
+ .meta-row strong { font-size: 44px; font-weight: 800; color: var(--cp-customer-primary); line-height: 1; }
+ .meta-row span { font-size: 13px; color: var(--cp-text-muted); }
+ .scale-legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+ .scale-legend li { display: grid; grid-template-columns: 100px 60px 1fr; gap: 10px; align-items: baseline; font-size: 14px; }
+ .scale-key { font-weight: 700; color: var(--cp-text); }
+ .scale-val { font-weight: 700; color: var(--cp-customer-accent); background: var(--cp-accent-soft); padding: 2px 8px; border-radius: 8px; text-align: center; }
+ .scale-desc { color: var(--cp-text-muted); }
+ .factor-panel, .context-card { padding: 24px; }
+ .factor-item { margin-bottom: 22px; }
+ .factor-item:last-child { margin-bottom: 0; }
+ .factor-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 7px; }
+ .factor-head strong { color: var(--cp-text); font-size: 14px; }
+ .factor-head span { color: var(--cp-text); font-weight: 900; }
+ .progress-track { height: 8px; border-radius: 99px; background: var(--cp-border); overflow: hidden; margin-bottom: 8px; }
+ .progress-fill { height: 100%; width: calc(var(--score) * 20%); border-radius: 99px; background: var(--factor-color); }
+ .factor-item p { color: var(--cp-text-muted); font-size: 13px; line-height: 1.45; margin: 0; }
+ .context-section { margin-bottom: 20px; }
+ .context-section:last-child { margin-bottom: 0; }
+ .context-section .label { color: var(--cp-text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+ .context-section p { color: var(--cp-text); font-size: 15px; margin: 0; }
+ .mini-matrix { height: 320px; border: 1px solid var(--cp-border); border-radius: 16px; background: var(--cp-surface); overflow: hidden; }
+ .table-card { padding: 24px; margin-top: 28px; }
+ table { width: 100%; border-collapse: collapse; overflow: hidden; border: 1px solid var(--cp-border); border-radius: 0.625rem; }
+ th, td { border-bottom: 1px solid var(--cp-border); padding: 11px 13px; text-align: left; vertical-align: top; }
+ th { background: var(--cp-surface-soft); color: var(--cp-text); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+ tr:last-child td { border-bottom: 0; }
+ .score-pill { display: inline-flex; min-width: 42px; justify-content: center; border-radius: 0.625rem; background: var(--cp-accent-soft); color: var(--cp-link); font-weight: 900; padding: 4px 8px; }
+ .decision-pill { display: inline-flex; align-items: center; gap: 6px; min-width: 96px; justify-content: center; border-radius: 99px; font-weight: 900; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border: 1px solid transparent; }
+ .decision-pill::before { content: ""; width: 8px; height: 8px; border-radius: 99px; background: currentColor; }
+ .decision-pass { background: rgba(22, 163, 74, 0.12); color: var(--cp-success); border-color: rgba(22, 163, 74, 0.35); }
+ .decision-conditional { background: rgba(245, 158, 11, 0.14); color: var(--cp-warning); border-color: rgba(245, 158, 11, 0.4); }
+ .decision-fail { background: rgba(220, 38, 38, 0.12); color: var(--cp-danger); border-color: rgba(220, 38, 38, 0.4); }
+ .verdict-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px 22px; border-radius: 16px; border: 1px solid var(--cp-border); background: var(--cp-surface-soft); margin: 0 0 18px; }
+ .verdict-banner .decision-pill { font-size: 14px; padding: 6px 14px; }
+ .verdict-banner p { margin: 0; color: var(--cp-text); font-size: 14px; flex: 1 1 320px; }
+ .verdict-banner strong { color: var(--cp-text); }
+ ol { color: var(--cp-text-muted); margin: 0; padding-left: 22px; }
+ li { margin-bottom: 8px; }
+ .print-note { color: var(--cp-text-muted); font-size: 13px; margin-top: 16px; }
+ @media (max-width: 1180px) { .front-layout, .detail-main-grid, .info-row { grid-template-columns: 1fr; } .usecase-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+ @media (max-width: 760px) { .hero-inner, .section-title { align-items: flex-start; flex-direction: column; } .report { padding: 18px; } .usecase-grid { grid-template-columns: 1fr; } .score-grid { grid-template-columns: 1fr; } .chart-frame { height: 390px; } .mini-matrix { height: 280px; } .tile-metrics { grid-template-columns: repeat(2, 1fr); } }
+ @media print { body::before { display: none; } .button { display: none; } .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; } .view { display: block !important; } .card { break-inside: avoid; } .site-footer { break-inside: avoid; page-break-inside: avoid; } .about-panel { break-inside: avoid; } }
+</style>
+</head>
+<body>
+ <header class="hero">
+ <div class="hero-inner">
+ <div class="brand-mark" aria-label="customer logo"><span class="brand-letter">C</span><img id="customerLogo" alt="Customer logo" /></div>
+ <div>
+ <h1>Contoso Industrial — Agent Scenario Portfolio</h1>
+ <p>Use Case Assessment Dashboard &middot; Cross-functional agent portfolio</p>
+ <p class="hero-strapline">Working assessment &middot; Generated <span id="reportDate"></span> &middot; AI Use Case Assessment (informal framework)</p>
+ </div>
+ </div>
+ </header>
+
+ <main class="report">
+ <section id="frontPage" class="view active">
+ <aside class="about-panel" role="note" aria-label="About this assessment">
+ <strong>About this assessment.</strong> This report is a working discovery aid produced by an AI-assisted tool using an informal, evolving rubric — not a Microsoft-standard methodology, product recommendation, or commercial commitment. Scores are indicative and depend on the information shared during discovery; they can and will change as new evidence emerges. Intended for internal discussion between the customer and their Microsoft contacts; verify all conclusions with the appropriate specialists before acting on them.
+ </aside>
+ <div class="section-title">
+ <div>
+ <h2>Portfolio prioritization report</h2>
+ <p>Bubble chart first for portfolio triage, followed by use-case tiles that open detailed assessment pages. Scope reflects four candidate agents spanning Finance, Manufacturing Quality, Manufacturing Process, and Customer Experience.</p>
+ </div>
+ <div class="nav-actions">
+ <button class="button" data-scroll="tiles">Use cases</button>
+ <button class="button" data-scroll="readiness">Readiness</button>
+ </div>
+ </div>
+
+ <div class="front-layout">
+ <article class="card chart-card card-pad">
+ <div class="chart-head">
+ <h3>Impact vs Complexity Matrix</h3>
+ <span class="tag">X = Complexity | Y = Impact | Size = Reach | Color = Agentic Fit</span>
+ </div>
+ <div class="chart-frame">
+ <canvas id="portfolioChart" aria-label="Portfolio bubble chart"></canvas>
+ </div>
+ </article>
+
+ <aside class="summary-panel">
+ <article class="card card-pad">
+ <h3>Verdict</h3>
+ <p><strong>READY (CONDITIONAL).</strong> A coherent four-agent portfolio with strong sponsorship signals (CFO, Head of Quality, Manufacturing Engineering, Tools &amp; Services). Delivery can start once cross-system data access (the ERP, MES, industrial test platform, and central product catalog), quantified KPIs, and pilot user counts are confirmed per agent.</p>
+ </article>
+ </aside>
+ </div>
+
+ <div class="info-row">
+ <article class="card card-pad">
+ <div class="panel-head"><h3>How to read this report</h3></div>
+ <div class="portfolio-meta">
+ <div class="meta-row"><strong id="portfolioCount">—</strong><span>use cases in this report</span></div>
+ </div>
+ <ul class="scale-legend">
+ <li><span class="scale-key">Impact</span><span class="scale-val">1–5</span><span class="scale-desc">Higher is more business impact (Y-axis)</span></li>
+ <li><span class="scale-key">Complexity</span><span class="scale-val">1–5</span><span class="scale-desc">Higher is harder to build and run (X-axis)</span></li>
+ <li><span class="scale-key">Reach</span><span class="scale-val">1–100</span><span class="scale-desc">How many people or transactions benefit (bubble size)</span></li>
+ <li><span class="scale-key">Agentic Fit</span><span class="scale-val">1–5</span><span class="scale-desc">How well an agent form fits vs a simpler tool (bubble colour)</span></li>
+ </ul>
+ </article>
+ <article class="card card-pad">
+ <h3>Reading the chart</h3>
+ <p>The shaded sweet-spot zone is high-impact, lower-to-mid-complexity. Bubble size reflects Reach; bubble colour reflects Agentic Fit on the scale below.</p>
+ <div class="fit-scale">
+ <span style="--fit-color:var(--cp-fit-1)"></span>
+ <span style="--fit-color:var(--cp-fit-2)"></span>
+ <span style="--fit-color:var(--cp-fit-3)"></span>
+ <span style="--fit-color:var(--cp-fit-4)"></span>
+ <span style="--fit-color:var(--cp-fit-5)"></span>
+ </div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-1)"></span>Fit 1 — low / deterministic (a simple tool would do)</div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-2)"></span>Fit 2 — mostly deterministic with light reasoning</div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-3)"></span>Fit 3 — hybrid (reasoning + retrieval)</div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-4)"></span>Fit 4 — multi-step orchestration with action-taking</div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-5)"></span>Fit 5 — fully agentic autonomous workflow</div>
+ </article>
+ </div>
+ </aside>
+ </div>
+
+ <div id="tiles" class="section-title">
+ <div>
+ <h2>Use cases</h2>
+ <p>Select a tile to open the detailed report page with score cards, factor bars, narrative sections, and additional context.</p>
+ </div>
+ </div>
+ <div class="usecase-grid" id="usecaseTiles"></div>
+
+ <article id="readiness" class="card table-card">
+ <h3>Intake quality and routing</h3>
+ <p style="margin: 8px 0 16px;">Pass = ready as-is. Conditional = usable but must be closed before delivery kick-off. Fail = blocker that prevents delivery from starting.</p>
+ <div class="verdict-banner">
+ <span class="decision-pill decision-conditional">Overall: Conditional Pass</span>
+ <p><strong>5 of 8</strong> intake dimensions pass cleanly. <strong>3 conditional gaps</strong> must close before delivery kick-off: quantified KPI baselines across all four agents, integration footprint (multi-system access to the ERP, MES, industrial test platform, and central product catalog), and data/PII classification for customer-facing and manufacturing data. No hard fails - sponsorship is named, all four agents are scoped with explicit human-in-the-loop boundaries.</p>
+ </div>
+ <table>
+ <thead><tr><th>Dimension</th><th>Quality</th><th>Decision</th><th>Evidence</th><th>Follow-up needed</th></tr></thead>
+ <tbody>
+ <tr><td>Problem statement</td><td><span class="score-pill">3 / 3</span></td><td><span class="decision-pill decision-pass">Pass</span></td><td>All four agents have crisp problem statements: manual invoice handling, slow expert-bottlenecked investigation, manual work-instruction creation during NPI, and fragmented successor lookup.</td><td>None.</td></tr>
+ <tr><td>Business outcome and metrics</td><td><span class="score-pill">2 / 3</span></td><td><span class="decision-pill decision-conditional">Conditional</span></td><td>Invoice agent has a directional 60-80% processing-time reduction. Quality Investigation, Work Instruction, and Product Successor benefits are qualitative (faster, more consistent, better customer experience).</td><td>Quantify baseline KPIs per agent (current cycle time, error rate, expert-hours, support deflection) and target uplifts.</td></tr>
+ <tr><td>Audience and reach</td><td><span class="score-pill">2 / 3</span></td><td><span class="decision-pill decision-pass">Pass</span></td><td>Personas are explicit per agent: finance analysts and AP teams; quality assurance engineers and factory experts; process and industrial engineers; external external business customers plus internal KAMs and field quality.</td><td>Confirm pilot user count, target plants/markets, and rollout cadence per agent.</td></tr>
+ <tr><td>Integration footprint</td><td><span class="score-pill">1 / 3</span></td><td><span class="decision-pill decision-conditional">Conditional</span></td><td>Heavy and varied: the ERP system, the manufacturing execution system (MES), the industrial test platform, the customer-service system, the central product catalog product e-catalog, plus the corporate document store and the corporate email system. Product Successor is still on Excel today.</td><td>Confirm read/write boundaries, data-access approvals, and migration plan from Excel to governed database for Product Successor before delivery kick-off.</td></tr>
+ <tr><td>Data, PII and compliance</td><td><span class="score-pill">2 / 3</span></td><td><span class="decision-pill decision-conditional">Conditional</span></td><td>Manufacturing and quality data, vendor master data, support request/customer complaint history, and an-customer-facing chatbot. No personal PII for the manufacturing agents but commercial sensitivity is real.</td><td>Confirm data classification, DLP policies, customer-vs-internal segmentation for the chatbot, and SSO model on the customer self-service portal.</td></tr>
+ <tr><td>Risk profile and HITL</td><td><span class="score-pill">3 / 3</span></td><td><span class="decision-pill decision-pass">Pass</span></td><td>Invoice agent flags discrepancies for human approval; the Quality Investigation agent proposes hypotheses with mandatory expert validation; Work Instruction generates editable templates; Product Successor is read-only / advisory.</td><td>None.</td></tr>
+ <tr><td>Agentic fit signal</td><td><span class="score-pill">3 / 3</span></td><td><span class="decision-pill decision-pass">Pass</span></td><td>Clean spread: Invoice and Quality Investigation reason across multi-source data with HITL; Work Instruction is event-triggered content generation; Product Successor is declarative knowledge search and already has a working Copilot Studio prototype.</td><td>Validate against latest Copilot Studio / Foundry capabilities, especially for Product Successor orchestration into the sales orchestration agent.</td></tr>
+ <tr><td>Sponsorship and readiness</td><td><span class="score-pill">3 / 3</span></td><td><span class="decision-pill decision-pass">Pass</span></td><td>Sponsors named across the portfolio: CFO / Head of Finance, Head of Quality / Manufacturing Quality Leadership, Manufacturing &amp; Process Engineering Leadership, Tools &amp; Services Leadership. Working contacts include Quality Engineering Lead (quality investigation), Process Engineering Lead (Work Instruction), Customer Experience Leads.</td><td>Confirm delivery timeline sign-off and Business / Technical / Governance contacts per agent.</td></tr>
+ </tbody>
+ </table>
+ </article>
+ </section>
+
+ <section id="detailPage" class="view">
+ <button class="button" id="backButton">Back to report</button>
+ <div class="detail-hero">
+ <div class="detail-icon" id="detailIcon"></div>
+ <div class="detail-title">
+ <h2 id="detailTitle"></h2>
+ <p id="detailSubtitle"></p>
+ <div class="pill-row" id="detailPills"></div>
+ </div>
+ </div>
+
+ <div class="detail-main-grid">
+ <div class="left-stack">
+ <article class="card card-pad">
+ <div class="chart-head"><h3>Impact vs Complexity Matrix</h3></div>
+ <div class="mini-matrix"><canvas id="detailChart" aria-label="Selected use case matrix"></canvas></div>
+ </article>
+ <article class="card narrative-card"><h3>Description</h3><p id="descriptionText"></p></article>
+ <article class="card narrative-card"><h3>Problem Addressed</h3><p id="problemText"></p></article>
+ <article class="card narrative-card"><h3>Proposed Solution</h3><p id="solutionText"></p></article>
+ <article class="card narrative-card"><h3>Expected Benefits</h3><p id="benefitsText"></p></article>
+ <article class="card narrative-card"><h3>Potential Risks &amp; Barriers</h3><p id="risksText"></p></article>
+ <article class="card narrative-card followups-card" id="followupsCard" hidden>
+ <h3>Outstanding Questions &amp; Follow-ups</h3>
+ <p class="followups-lead">Answering these would sharpen the assessment. Come back with new information and re-run this skill to update the report.</p>
+ <ol id="followupsList" class="followups-list"></ol>
+ </article>
+<article class="card context-card"><h3>Additional Context</h3><div id="additionalContext"></div></article>
+ </div>
+
+ <aside class="right-stack">
+ <article class="card card-pad">
+ <h3>Assessment Scores</h3>
+ <div class="score-grid" id="detailScores"></div>
+ <p class="print-note">Bubble size = Reach. Bubble colour = Agentic Fit.</p>
+ <div class="fit-scale">
+ <span style="--fit-color:var(--cp-fit-1)"></span>
+ <span style="--fit-color:var(--cp-fit-2)"></span>
+ <span style="--fit-color:var(--cp-fit-3)"></span>
+ <span style="--fit-color:var(--cp-fit-4)"></span>
+ <span style="--fit-color:var(--cp-fit-5)"></span>
+ </div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-1)"></span>1 — simple tool would do</div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-3)"></span>3 — hybrid reasoning + retrieval</div>
+ <div class="legend-row"><span class="dot" style="--dot:var(--cp-fit-5)"></span>5 — fully agentic autonomous</div>
+ </article>
+ <article class="card factor-panel">
+ <h3>Impact Factors</h3>
+ <div id="impactFactors"></div>
+ </article>
+ <article class="card factor-panel">
+ <h3>Complexity Factors</h3>
+ <div id="complexityFactors"></div>
+ </article>
+</aside>
+ </div>
+ </section>
+ </main>
+
+ <script>
+ const useCases = [
+ {
+ id: "invoice",
+ icon: "IP",
+ title: "Invoice Processing Agent",
+ subtitle: "Contoso Industrial — Finance / Accounts Payable",
+ category: "Document Processing",
+ subcategory: "Invoice Capture &amp; ERP Posting",
+ impact: 3.6,
+ complexity: 3.4,
+ reach: 35,
+ fit: 4,
+ description: "An autonomous document-processing agent that ingests partner invoices (PDF, email, scanned), extracts and validates data against vendor master records, flags discrepancies, and creates entries in the ERP system. Notifies finance teams when human review is required.",
+ problem: "Manual invoice handling is time-consuming and error-prone. Finance analysts and AP teams spend large parts of their cycle on data entry and validation, which slows month-end closing and reduces financial visibility.",
+ solution: "Inbound invoices are ingested from the corporate email system and shared the corporate document store folders. The agent extracts vendor, amount, VAT, and line items, validates against the vendor master and historical patterns, posts clean invoices to ERP, and routes flagged exceptions to the AP team for review. Outputs include structured ERP entries plus an exception report.",
+ benefits: "Reduce invoice processing time by an indicative 60-80%, minimise human error, improve financial visibility and compliance, and accelerate month-end close.",
+ risks: "ERP write access raises governance and audit-trail expectations. Variable invoice formats (scans, multi-page PDFs, foreign-language) may stress extraction. Vendor-master data quality directly drives validation accuracy. Sensitive supplier data must respect DLP and segregation-of-duties rules.",
+ context: {
+ "Current Automation & AI Usage": "Manual today. AP analysts process invoices through email and shared folders, key fields into ERP, and reconcile against vendor master. No structured AI assistance.",
+ "Primary Work Type": "Autonomous document processing with structured output and human-in-the-loop on exceptions.",
+ "Expertise & Tuning": "Needs the invoice-extraction schema, vendor master, ERP posting rules, exception taxonomy, and approval thresholds. Tuning required per ERP instance .",
+ "Risk & Control Profile": "Moderate to high. ERP writes touch financial records; needs four-eyes on exceptions, full audit trail, and DLP on supplier-sensitive content.",
+ "Reach": "Finance analysts (5-20 users depending on company size) plus AP teams. Scalable across finance shared services and entities.",
+ "Agentic Fit": "Score 4 - Agentic Interactive. The agent reasons across documents, validates against systems of record, and writes back to ERP within explicit policy boundaries."
+ },
+ impactFactors: [
+ ["Security & Compliance", 4, "Acts on financial records; reinforces controls when properly configured (audit trail, four-eyes on exceptions, vendor-master validation)."],
+ ["Speed & Agility", 5, "Replaces manual keying and validation; directly compresses invoice cycle time and accelerates month-end close."],
+ ["Quality & Consistency", 4, "Standardised extraction and validation cuts data-entry errors and inconsistent treatment across analysts."],
+ ["Scalability & Reach", 3, "Applies to every AP intake channel; reach grows linearly with invoice volume but is bounded per entity."],
+ ["Cost Savings & ROI", 4, "Indicative 60-80% processing-time reduction translates to material FTE savings; baseline cost per invoice still to be confirmed."]
+ ],
+ complexityFactors: [
+ ["Data & Integrations", 4, "Requires the corporate email system, the corporate document store intake, plus authenticated write access to the ERP system and vendor master data."],
+ ["Security Constraints", 4, "Financial data and supplier records under tight DLP and SOX-like controls; segregation of duties must be preserved."],
+ ["Human in the Loop", 3, "Clean invoices post automatically; exceptions route to AP review. HITL discipline is critical for audit defensibility."],
+ ["Document Quality", 3, "Heterogeneous invoice formats (PDF, scanned, email body, multi-page) and multi-language stress extraction."],
+ ["Approvals & Governance", 4, "ERP write access requires finance, audit, and IT sign-off plus an approval-threshold policy."]
+ ],
+ outstandingQuestions: [
+ { question: "What is the current cost per invoice processed and target reduction?", why: "Confirms the financial-impact estimate and unlocks a firmer ROI band.", priority: "High" },
+ { question: "Which ERP write endpoints are approved for automated agents today?", why: "Determines whether MVP can post directly or must stage exceptions for human posting.", priority: "High" },
+ { question: "What percentage of invoices arrive as scanned PDFs vs structured PDFs vs email body?", why: "Drives extraction complexity, model choice, and confidence-threshold tuning.", priority: "Medium" },
+ { question: "Is there an existing exception taxonomy in the AP team?", why: "Affects how quickly the HITL routing logic can be codified.", priority: "Low" }
+ ]
+ },
+ {
+ id: "qia",
+ icon: "RC",
+ title: "Quality Investigation AI Agent",
+ subtitle: "Contoso Industrial — Manufacturing Quality",
+ category: "Knowledge &amp; Reasoning",
+ subcategory: "Quality Investigation Assistant",
+ impact: 4.2,
+ complexity: 4.0,
+ reach: 25,
+ fit: 4,
+ description: "An AI assistant for quality engineers that classifies incoming support requests (support requests), retrieves similar historical cases, pulls relevant data from manufacturing and quality systems, performs initial analysis, and proposes evidence-based root causes for expert validation. Generates an editable investigation report after human sign-off.",
+ problem: "Quality investigation is slow, manual, and depends on a small group of experienced quality engineers. support requests describe symptoms rather than causes, so engineers iterate across the manufacturing execution system (MES), ERP, IPT, and the corporate document store to gather evidence. Investigation cycles are long and outcomes inconsistent across factories.",
+ solution: "The agent classifies support requests against historical patterns, retrieves and ranks similar cases, identifies the data sources required for the investigation, fetches relevant production / test / process data, and generates ranked root-cause hypotheses with supporting evidence. Output is reviewed by a human expert who validates findings before the investigation report is finalised.",
+ benefits: "Significant reduction in investigation cycle time and support request time-to-resolution, reduced dependency on individual expert knowledge, improved consistency of investigation outcomes across factories, and better reuse of historical investigation knowledge.",
+ risks: "Heavy multi-system data access (the MES, ERP, industrial test platform, and customer-service system, the corporate document store historical reports). Data availability and consistency vary by site. Change management and trust in AI-supported investigation recommendations are real adoption risks.",
+ context: {
+ "Current Automation & AI Usage": "Manual today. Engineers stitch evidence across MES, ERP, IPT, and historical the corporate document store records. No structured AI assistance.",
+ "Primary Work Type": "Knowledge search and retrieval, multi-source data analysis, structured hypothesis generation, document creation - all with human-in-the-loop validation.",
+ "Expertise & Tuning": "Needs the support request taxonomy, investigation report template, mapping of data sources to investigation steps, and a curated corpus of past investigation cases for retrieval.",
+ "Risk & Control Profile": "Moderate. Read-only across most systems; the agent proposes hypotheses but never auto-resolves a support request. Adoption risk is the dominant risk class.",
+ "Reach": "Quality assurance engineers and factory production experts. Typically single-digit experts per plant, scalable globally across the customer's production sites.",
+ "Agentic Fit": "Score 4 - Agentic Interactive. Multi-step reasoning over heterogeneous sources with explicit human validation gates."
+ },
+ impactFactors: [
+ ["Security & Compliance", 3, "Read-only access to manufacturing systems; sensitivity is moderate but investigation reports may inform customer responses, so quality of evidence matters."],
+ ["Speed & Agility", 5, "Compresses support request triage, evidence-gathering, and hypothesis-generation steps that today take an experienced engineer days."],
+ ["Quality & Consistency", 5, "Standardises investigation structure and reasoning across plants, raising baseline quality and reducing variance between experts."],
+ ["Scalability & Reach", 4, "Applies to every site that handles support requests; scales the expert pool effectively without growing headcount."],
+ ["Cost Savings & ROI", 4, "Material savings from reduced expert-hours per investigation and faster customer resolution; baseline hours per investigation to be quantified."]
+ ],
+ complexityFactors: [
+ ["Data & Integrations", 5, "Requires authenticated read across the MES, ERP, industrial test platform, customer-service system, and historical document archive. Largest integration footprint in the portfolio."],
+ ["Security Constraints", 4, "Manufacturing and customer-complaint data have strict access controls; cross-plant access boundaries differ by region."],
+ ["Human in the Loop", 3, "Mandatory expert validation before investigation report is finalised; the agent never auto-resolves a support request."],
+ ["Document Quality", 4, "Historical investigation reports vary in structure and language across factories; retrieval quality depends on corpus normalisation."],
+ ["Approvals & Governance", 4, "Cross-system data access requires manufacturing, quality, and IT alignment plus formal change-management to introduce AI-supported quality investigation."]
+ ]
+ },
+ {
+ id: "workinstruction",
+ icon: "WI",
+ title: "Work Instruction AI Agent",
+ subtitle: "Contoso Industrial — Process Engineering",
+ category: "Content Generation",
+ subcategory: "Work Instruction Authoring",
+ impact: 3.4,
+ complexity: 2.6,
+ reach: 30,
+ fit: 4,
+ description: "An AI agent that converts audio and video recordings from pilot runs and sample production into standardized step-by-step manufacturing work instructions. Extracts transcripts, summarises into structured steps, allocates content into a predefined template, and stores generated instructions centrally for reuse.",
+ problem: "Work instructions today are created manually, are inconsistently translated into local languages, and must be recreated from scratch for new projects. This causes missing details, slow operational readiness during NPI, knowledge loss, and quality risks across factories.",
+ solution: "When a new pilot-run video is dropped into the configured the corporate document store folder, the agent extracts the audio and video transcripts, summarises them into clear step-by-step instructions, allocates the steps into a standard work-instruction template, and stores the final document in a designated folder. No direct end-user chat interface; processing is event-triggered.",
+ benefits: "Reduced effort and time to create or update work instructions, improved consistency across factories, reduced knowledge loss through standardised documentation, faster operational readiness during NPI and process changes, and lower risk of quality issues from unclear instructions.",
+ risks: "Output quality depends on consistent video and audio recordings during pilot runs. Heavy dependency on the standardised template. Storage permissions and translation expectations must be confirmed up front.",
+ context: {
+ "Current Automation & AI Usage": "Manual today. Engineers transcribe pilot runs informally and write instructions from scratch per project. No event-triggered automation.",
+ "Primary Work Type": "Content generation and editing from multimedia inputs, plus knowledge curation through templated outputs.",
+ "Expertise & Tuning": "Needs the master work-instruction template, transcription and summarisation guidance, and storage conventions for new vs existing documents.",
+ "Risk & Control Profile": "Low to moderate. Outputs are draft instructions reviewed by process engineers before deployment to a line; no autonomous changes to production.",
+ "Reach": "Process engineers, industrial engineers, and manufacturing assistants. Used per production line, scalable across factories.",
+ "Agentic Fit": "Score 4 - Agentic Interactive. Event-triggered, multi-step content generation with structured output and storage."
+ },
+ impactFactors: [
+ ["Security & Compliance", 3, "Operates on internal manufacturing media stored in the corporate document store; standard tenant DLP."],
+ ["Speed & Agility", 4, "Cuts the time from pilot run to first-draft work instruction, supporting faster NPI and process transfers."],
+ ["Quality & Consistency", 4, "Template-anchored outputs raise consistency and reduce missing detail across factories."],
+ ["Scalability & Reach", 3, "Applies to every line introducing or updating instructions; scales naturally across plants."],
+ ["Cost Savings & ROI", 3, "Soft savings from reduced authoring effort; primary value is faster NPI and reduced knowledge loss."]
+ ],
+ complexityFactors: [
+ ["Data & Integrations", 2, "the corporate document store trigger plus transcription. No external systems for MVP."],
+ ["Security Constraints", 2, "Internal multimedia and document storage; standard DLP."],
+ ["Human in the Loop", 2, "Process engineer reviews and finalises before deployment to a line."],
+ ["Document Quality", 3, "Pilot-run video quality varies; weak recordings produce weak instructions."],
+ ["Approvals & Governance", 2, "Storage and template ownership must be assigned; otherwise standard declarative-agent governance."]
+ ]
+ },
+ {
+ id: "successor",
+ icon: "PS",
+ title: "Product Successor Finder",
+ subtitle: "Contoso Industrial — Customer Experience",
+ category: "Customer Experience",
+ subcategory: "Knowledge Search &amp; Retrieval",
+ impact: 3.8,
+ complexity: 2.4,
+ reach: 70,
+ fit: 3,
+ description: "A knowledge-search agent that identifies the latest active successor for discontinued or phased-out products by tracing historical successor chains. Returns a structured specification overview with direct links to product documentation. Already exists as a working Copilot Studio prototype delivered through the an internal innovation programme.",
+ problem: "external business customers needing to replace drivers or modules in products (failures, warranty cases, upgrades) often do not know what the current successor is for products active many years ago. Knowledge is fragmented, manual lookups are slow, and incorrect replacements cause delays and customer frustration.",
+ solution: "The agent accepts a product or material code as input, traces the full successor chain in the historical the legacy product catalog data, identifies the most recent active successor, and returns a structured specification summary with direct documentation links. Today the data source is an Excel file; the planned migration is to a governed database tied to the central product catalog. Designed to plug into the future the sales orchestration agent orchestration.",
+ benefits: "Faster resolution of replacement, warranty, and upgrade requests; improved customer experience and self-service; reduced workload for KAMs, application engineers, and customer support; upsell and cross-sell opportunities through recommendations of newer or higher-value products.",
+ risks: "Successor data is currently in Excel rather than a governed database. the central product catalog data readiness is a dependency. Alignment with the broader CX platform strategy (e.g. the strategic customer-experience platform) and the the sales orchestration agent orchestration roadmap is still in flight.",
+ context: {
+ "Current Automation & AI Usage": "Working Copilot Studio prototype from the an internal innovation programme, sourced today from an Excel file with the legacy product catalog successor data.",
+ "Primary Work Type": "Knowledge search and retrieval with structured specification summarisation. Read-only.",
+ "Expertise & Tuning": "Needs the the legacy product catalog successor logic, MCM e-catalog mapping, product specification source, and a clear data-source migration plan from Excel to a governed database.",
+ "Risk & Control Profile": "Lower than action-taking agents. Read-only, customer-facing through the customer self-service portal (SSO) and the customer's external customer portals; no transactional authority.",
+ "Reach": "External external business customers plus internal KAMs, application engineers, and field quality teams. Globally scalable across external customer channels.",
+ "Agentic Fit": "Score 3 - Hybrid. Strong AI value in retrieval and summarisation, but the workflow is user-invoked and read-only rather than fully agentic."
+ },
+ impactFactors: [
+ ["Security & Compliance", 3, "Customer-facing chatbot on the customer's external customer portal and the customer self-service portal; SSO-gated for personalised pricing once orchestrated."],
+ ["Speed & Agility", 4, "Self-service answers replace expert lookups for replacement, warranty, and upgrade requests."],
+ ["Quality & Consistency", 4, "Standardised successor logic and structured specification summaries reduce incorrect replacements."],
+ ["Scalability & Reach", 5, "External external business customers plus internal teams; globally scalable across external customer channels with reuse for the other customer segments."],
+ ["Cost Savings & ROI", 3, "Reduced support workload and increased upsell/cross-sell potential; baseline support volume to be confirmed."]
+ ],
+ complexityFactors: [
+ ["Data & Integrations", 3, "Today: Excel + product e-catalog URL. Target: governed database tied to the central product catalog. Future orchestration into the sales orchestration agent adds connectors over time."],
+ ["Security Constraints", 2, "Public website plus SSO-enabled the customer self-service portal; standard CX-platform controls apply."],
+ ["Human in the Loop", 1, "Read-only output; no automated transactions or document edits."],
+ ["Document Quality", 3, "Successor data quality is the main risk - currently in Excel; planned migration to a database is required for reliability at scale."],
+ ["Approvals & Governance", 3, "Requires alignment with CX platform strategy (e.g. the strategic customer-experience platform), the central IT delivery team capacity, and website roadmap."]
+ ]
+ }
+ ];
+
+ const palette = ["--cp-progress-1", "--cp-progress-2", "--cp-progress-3", "--cp-progress-4", "--cp-progress-5"];
+ const front = document.getElementById("frontPage");
+ const detail = document.getElementById("detailPage");
+ let selected = useCases[0];
+
+ // Inject portfolio use-case count into the "How to read this report" panel
+ (function () {
+ const el = document.getElementById("portfolioCount");
+ if (el) el.textContent = useCases.length;
+ })();
+
+ function cssVar(name) {
+ return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+ }
+
+ function showFront() {
+ detail.classList.remove("active");
+ front.classList.add("active");
+ window.scrollTo({ top: 0, behavior: "smooth" });
+ requestAnimationFrame(() => drawMatrix("portfolioChart", useCases, null));
+ }
+
+ function showDetail(agent) {
+ selected = agent;
+ front.classList.remove("active");
+ detail.classList.add("active");
+ renderDetail(agent);
+ window.scrollTo({ top: 0, behavior: "smooth" });
+ requestAnimationFrame(() => drawMatrix("detailChart", useCases, agent.id));
+ }
+
+ function renderTiles() {
+ document.getElementById("usecaseTiles").innerHTML = useCases.map((agent) => `
+ <article class="card usecase-tile" data-id="${agent.id}">
+ <div class="tile-icon">${agent.icon}</div>
+ <h3>${agent.title}</h3>
+ <p>${agent.description}</p>
+ <div class="tile-tags">
+ <span class="tag">${agent.category}</span>
+ <span class="tag">${agent.subcategory}</span>
+ </div>
+ <div class="tile-metrics">
+ <div class="tile-metric"><strong>${agent.impact.toFixed(1)}</strong><span>Impact</span></div>
+ <div class="tile-metric"><strong>${agent.complexity.toFixed(1)}</strong><span>Complexity</span></div>
+ <div class="tile-metric"><strong>${agent.reach}</strong><span>Reach</span></div>
+ <div class="tile-metric"><strong>${agent.fit}</strong><span>Fit</span></div>
+ </div>
+ </article>
+ `).join("");
+ document.querySelectorAll(".usecase-tile").forEach((tile) => {
+ tile.addEventListener("click", () => showDetail(useCases.find((agent) => agent.id === tile.dataset.id)));
+ });
+ }
+
+ function renderFactorList(targetId, factors) {
+ document.getElementById(targetId).innerHTML = factors.map((factor, index) => `
+ <div class="factor-item">
+ <div class="factor-head"><strong>${factor[0]}</strong><span>${factor[1].toFixed(1)}</span></div>
+ <div class="progress-track"><div class="progress-fill" style="--score:${factor[1]};--factor-color:var(${palette[index % palette.length]})"></div></div>
+ <p>${factor[2]}</p>
+ </div>
+ `).join("");
+ }
+
+ function renderFollowups(items) {
+ const card = document.getElementById("followupsCard");
+ const list = document.getElementById("followupsList");
+ if (!items || !items.length) { card.hidden = true; list.innerHTML = ""; return; }
+ card.hidden = false;
+ const iconMap = { high: "🔴", medium: "🟡", low: "🟢" };
+ list.innerHTML = items.map((q) => {
+ const question = typeof q === "string" ? q : (q.question || "");
+ const why = (typeof q === "object" && q.why) ? q.why : "";
+ const priority = (typeof q === "object" && q.priority) ? q.priority : "";
+ const icon = priority ? (iconMap[priority.toLowerCase()] || "") : "";
+ const pri = priority ? `<span class="followup-pri pri-${priority.toLowerCase()}">${icon} ${priority}</span>` : "";
+ const rationale = why ? `<div class="followup-why">${why}</div>` : "";
+ return `<li class="followup-item"><div class="followup-head">${pri}<span class="followup-q">${question}</span></div>${rationale}</li>`;
+ }).join("");
+ }
+
+ function renderDetail(agent) {
+ document.getElementById("detailIcon").textContent = agent.icon;
+ document.getElementById("detailTitle").innerHTML = agent.title;
+ document.getElementById("detailSubtitle").textContent = agent.subtitle;
+ document.getElementById("detailPills").innerHTML = `<span class="pill">${agent.category}</span><span class="pill">${agent.subcategory}</span>`;
+ document.getElementById("descriptionText").textContent = agent.description;
+ document.getElementById("problemText").textContent = agent.problem;
+ document.getElementById("solutionText").textContent = agent.solution;
+ document.getElementById("benefitsText").textContent = agent.benefits;
+ document.getElementById("risksText").textContent = agent.risks;
+ document.getElementById("detailScores").innerHTML = `
+ <div class="score-card"><strong>${agent.impact.toFixed(1)}<em> / 5</em></strong><span>Impact</span></div>
+ <div class="score-card"><strong>${agent.complexity.toFixed(1)}<em> / 5</em></strong><span>Complexity</span></div>
+ <div class="score-card"><strong>${agent.reach}<em> / 100</em></strong><span>Reach</span></div>
+ <div class="score-card"><strong>${agent.fit}<em> / 5</em></strong><span>Agentic Fit</span></div>
+ `;
+ renderFactorList("impactFactors", agent.impactFactors);
+ renderFactorList("complexityFactors", agent.complexityFactors);
+ renderFollowups(agent.outstandingQuestions || []);
+ document.getElementById("additionalContext").innerHTML = Object.entries(agent.context).map(([key, value]) => `
+ <section class="context-section"><div class="label">${key}</div><p>${value}</p></section>
+ `).join("");
+ }
+
+ function drawMatrix(canvasId, agents, selectedId) {
+ const canvas = document.getElementById(canvasId);
+ if (!canvas) return;
+ const rect = canvas.getBoundingClientRect();
+ const scale = window.devicePixelRatio || 1;
+ canvas.width = Math.max(640, rect.width * scale);
+ canvas.height = Math.max(300, rect.height * scale);
+ const ctx = canvas.getContext("2d");
+ ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+ const width = canvas.width / scale;
+ const height = canvas.height / scale;
+ const pad = { left: 62, right: 28, top: 22, bottom: 52 };
+ const plotW = width - pad.left - pad.right;
+ const plotH = height - pad.top - pad.bottom;
+ const text = cssVar("--cp-text");
+ const muted = cssVar("--cp-text-muted");
+ const border = cssVar("--cp-border");
+ const surface = cssVar("--cp-surface");
+ const accent = cssVar("--cp-customer-accent");
+
+ ctx.clearRect(0, 0, width, height);
+ ctx.fillStyle = cssVar("--cp-surface-soft");
+ ctx.fillRect(0, 0, width, height);
+
+ ctx.fillStyle = cssVar("--cp-highlight");
+ ctx.strokeStyle = cssVar("--cp-link");
+ ctx.setLineDash([6, 4]);
+ const zoneX = pad.left + (1 / 5) * plotW;
+ const zoneY = pad.top;
+ ctx.fillRect(zoneX, zoneY, (2 / 5) * plotW, (2.5 / 5) * plotH);
+ ctx.strokeRect(zoneX, zoneY, (2 / 5) * plotW, (2.5 / 5) * plotH);
+ ctx.setLineDash([]);
+
+ for (let i = 0; i <= 5; i += 1) {
+ const x = pad.left + (i / 5) * plotW;
+ const y = pad.top + plotH - (i / 5) * plotH;
+ ctx.strokeStyle = border;
+ ctx.lineWidth = 1;
+ ctx.beginPath();
+ ctx.moveTo(x, pad.top);
+ ctx.lineTo(x, pad.top + plotH);
+ ctx.moveTo(pad.left, y);
+ ctx.lineTo(pad.left + plotW, y);
+ ctx.stroke();
+ ctx.fillStyle = muted;
+ ctx.font = "12px Segoe UI, Aptos, Calibri, sans-serif";
+ ctx.textAlign = "center";
+ ctx.fillText(String(i), x, pad.top + plotH + 23);
+ ctx.textAlign = "right";
+ ctx.fillText(String(i), pad.left - 10, y + 4);
+ }
+
+ ctx.strokeStyle = accent;
+ ctx.setLineDash([7, 6]);
+ ctx.beginPath();
+ ctx.moveTo(pad.left + (2.5 / 5) * plotW, pad.top);
+ ctx.lineTo(pad.left + (2.5 / 5) * plotW, pad.top + plotH);
+ ctx.moveTo(pad.left, pad.top + plotH - (2.5 / 5) * plotH);
+ ctx.lineTo(pad.left + plotW, pad.top + plotH - (2.5 / 5) * plotH);
+ ctx.stroke();
+ ctx.setLineDash([]);
+
+ ctx.strokeStyle = text;
+ ctx.lineWidth = 1.5;
+ ctx.beginPath();
+ ctx.moveTo(pad.left, pad.top);
+ ctx.lineTo(pad.left, pad.top + plotH);
+ ctx.lineTo(pad.left + plotW, pad.top + plotH);
+ ctx.stroke();
+
+ ctx.fillStyle = text;
+ ctx.font = "700 12px Segoe UI, Aptos, Calibri, sans-serif";
+ ctx.textAlign = "center";
+ ctx.fillText("COMPLEXITY →", pad.left + plotW / 2, height - 14);
+ ctx.save();
+ ctx.translate(18, pad.top + plotH / 2);
+ ctx.rotate(-Math.PI / 2);
+ ctx.fillText("IMPACT →", 0, 0);
+ ctx.restore();
+
+ agents.forEach((agent) => {
+ const x = pad.left + (agent.complexity / 5) * plotW;
+ const y = pad.top + plotH - (agent.impact / 5) * plotH;
+ const radius = Math.max(11, 10 + (agent.reach / 100) * 34);
+ const color = cssVar(`--cp-fit-${agent.fit}`);
+ const active = !selectedId || selectedId === agent.id;
+
+ ctx.globalAlpha = active ? 0.9 : 0.18;
+ ctx.fillStyle = color;
+ ctx.beginPath();
+ ctx.arc(x, y, radius, 0, Math.PI * 2);
+ ctx.fill();
+ ctx.strokeStyle = surface;
+ ctx.lineWidth = selectedId === agent.id ? 4 : 2;
+ ctx.stroke();
+ ctx.globalAlpha = active ? 1 : 0.38;
+ ctx.fillStyle = text;
+ ctx.font = "700 12px Segoe UI, Aptos, Calibri, sans-serif";
+ ctx.textAlign = "left";
+ const label = agent.title.replace(/&amp;/g, "&").replace(" Agent", "");
+ ctx.fillText(label, x + radius + 7, y + 4);
+ ctx.globalAlpha = 1;
+ });
+ }
+
+ const reportDateEl = document.getElementById("reportDate");
+ if (reportDateEl) {
+ reportDateEl.textContent = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+ }
+ document.getElementById("backButton").addEventListener("click", showFront);
+ document.querySelectorAll("[data-scroll]").forEach((button) => {
+ button.addEventListener("click", () => document.getElementById(button.dataset.scroll).scrollIntoView({ behavior: "smooth" }));
+ });
+ renderTiles();
+ requestAnimationFrame(() => drawMatrix("portfolioChart", useCases, null));
+ window.addEventListener("resize", () => {
+ if (front.classList.contains("active")) drawMatrix("portfolioChart", useCases, null);
+ if (detail.classList.contains("active")) drawMatrix("detailChart", useCases, selected.id);
+ });
+ </script>
+
+ <footer class="site-footer" role="contentinfo">
+ <p class="disclaimer"><strong>Disclaimer.</strong> This report is a discovery aid generated by an AI-assisted assessment tool based on information provided by the customer. It reflects an informal working assessment against an evolving internal rubric — not a Microsoft product recommendation, architectural blueprint, licensing commitment, warranty, or authoritative Microsoft position. AI-generated content can contain errors and omissions; verify all findings, figures, and scores with the appropriate business, security, privacy, legal, and technical specialists before acting on them.</p>
+ <p class="disclaimer">Microsoft and its affiliates make no representations, warranties, or guarantees of any kind — express or implied — regarding the accuracy, completeness, fitness for a particular purpose, or outcomes derived from this report. Any decisions taken on the basis of this content remain the responsibility of the reader and their organisation.</p>
+ <p>The rubric, scoring bands, and category taxonomy referenced in this report are internal working frameworks and are subject to change without notice. All customer-supplied content in this report belongs to the customer.</p>
+ </footer>
+</body>
+</html>
+
+
+
+

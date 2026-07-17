@@ -53,6 +53,7 @@ plus one skill payload — an unpacked `SKILL.md` (+ optional dirs) or a `.zip`:
 ```
 submissions/<slug>/
 ├── metadata.json  # OR metadata.yaml — catalog details (sidecar, not bundled)
+├── README.md      # OPTIONAL human-facing note (not bundled) — shown on the page
 └── EITHER an unpacked skill…       OR a pre-packaged bundle:
     ├── SKILL.md   # name + agent description + instructions   └── <name>.zip
     ├── scripts/   # optional executable code
@@ -62,7 +63,10 @@ submissions/<slug>/
 
 A skill carries **two** descriptions: the **agent** description in `SKILL.md`
 frontmatter (what the model reads to decide when to invoke), and the **catalog**
-description in `metadata.json` (the friendly one-liner shown in the gallery).
+description in `metadata.json` (the friendly one-liner shown in the gallery). An optional **`README.md`** adds a third, human-only voice: it never ships to the
+agent and, when present, **becomes the main content** on the detail page — the
+author's overview, setup, and usage — with the exact `SKILL.md` still offered as
+the download.
 
 `submissions/my-great-skill/SKILL.md`:
 

@@ -1,0 +1,21 @@
+{
+  "name": "Blog Content Auditor",
+  "description": "Audit blog posts or a blog library for clarity, structure, evidence, audience fit, and improvement priority.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "blog",
+    "content",
+    "audit",
+    "writing",
+    "seo",
+    "productivity"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}

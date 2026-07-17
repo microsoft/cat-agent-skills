@@ -1,0 +1,20 @@
+{
+  "name": "POV Line Generator",
+  "description": "Generate sharp, specific point-of-view lines for posts, slides, talks, campaigns, or positioning work.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "writing",
+    "positioning",
+    "marketing",
+    "content",
+    "social-media"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}
