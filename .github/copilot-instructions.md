@@ -38,10 +38,12 @@ Either the executable steps are made portable to the targeted runtime, or the
 - Do **not** hand-commit generated artifacts: `src/content/skills/*` and
   `public/bundles/*` are produced by CI, never by the contributor.
 - The bundle ships **only agent-facing files** (`SKILL.md`, `scripts/`,
-  `references/`, `assets/`). No `README.md`, `CONTRIBUTING`, `CHANGELOG`, or
-  other human-facing docs in the submission folder — everything except the
-  `metadata.*` sidecar is packaged into the agent bundle and wastes context.
-  Human/contributor notes belong in the PR description.
+  `references/`, `assets/`). The two human-facing files are **never bundled**:
+  the `metadata.*` sidecar and an **optional `README.md`** (which becomes the
+  gallery detail page's main content). Everything else in the submission folder
+  *is* packaged into the agent bundle and wastes context, so no `CONTRIBUTING`,
+  `CHANGELOG`, or other stray docs next to the payload — those notes belong in
+  the PR description.
 - `SKILL.md` is agent-only: no "Human setup instructions" / Overview / Quick
   start prose. Open straight into the agent instructions.
 - `references/`, `assets/`, and `scripts/` are **top-level siblings** inside the
