@@ -10,6 +10,15 @@ name: Skillbot
 on:
   discussion_comment:
     types: [created]
+  # Manual test path: run the exact same greet logic against a chosen skill's
+  # discussion without waiting for (or faking) a real first comment. Used to
+  # validate the bot live; production still fires via discussion_comment.
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Skill slug to greet (its discussion title), e.g. doc-format-converter"
+        required: true
+        type: string
 
 permissions:
   contents: read # read the generated skill frontmatter
@@ -18,24 +27,21 @@ permissions:
 
 # One greeting per discussion is plenty; don't stack runs for a busy thread.
 concurrency:
-  group: skillbot-${{ github.event.discussion.number }}
+  group: skillbot-${{ github.event.discussion.number || inputs.slug }}
   cancel-in-progress: false
 
 jobs:
   greet:
     runs-on: ubuntu-latest
-    # Fast gate: only the ratings/skill discussion category, only the very first
-    # comment (also prevents the bot's own reply from re-triggering — it becomes
-    # comment #2), and never react to another bot.
-    #
-    # TEMPORARY (one-off live test): the first-comment gate
-    #   github.event.discussion.comments == 1 &&
-    # is removed from the `if:` below so ANY new comment on a skill discussion
-    # fires the bot. Loop-safety still holds via the `!= 'Bot'` guard (the bot
-    # posts as github-actions[bot]). RESTORE that line before final merge.
+    # Fast gate for the automatic path: only the ratings/skill discussion
+    # category, only the very first comment (which also prevents the bot's own
+    # reply from re-triggering — it becomes comment #2), and never react to
+    # another bot. The manual workflow_dispatch path bypasses this gate.
     if: >-
-      github.event.discussion.category.name == 'Announcements' &&
-      github.event.comment.user.type != 'Bot'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.discussion.category.name == 'Announcements' &&
+       github.event.discussion.comments == 1 &&
+       github.event.comment.user.type != 'Bot')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,8 +59,38 @@ jobs:
             const fs = require("fs");
             const path = require("path");
 
-            const discussion = context.payload.discussion;
-            const commenter = (context.payload.comment.user.login || "").toLowerCase();
+            const isDispatch = context.eventName === "workflow_dispatch";
+
+            // Resolve the target discussion + who commented. For the automatic
+            // path both come from the event payload. For the manual test path we
+            // look the discussion up by slug (its title) and treat it as if a
+            // non-author commented (so nothing is skipped by the self-guard).
+            let discussion;
+            let commenter;
+            if (isDispatch) {
+              const wantSlug = (context.payload.inputs.slug || "").trim();
+              const { repository } = await github.graphql(
+                `query ($owner: String!, $name: String!) {
+                   repository(owner: $owner, name: $name) {
+                     discussions(first: 100, orderBy: { field: CREATED_AT, direction: DESC }) {
+                       nodes { title node_id: id comments { totalCount } category { name } }
+                     }
+                   }
+                 }`,
+                { owner: context.repo.owner, name: context.repo.repo },
+              );
+              discussion = (repository.discussions.nodes || []).find(
+                (d) => (d.title || "").trim() === wantSlug,
+              );
+              if (!discussion) {
+                core.warning(`No discussion titled "${wantSlug}" found; nothing to do.`);
+                return;
+              }
+              commenter = "__manual-test__";
+            } else {
+              discussion = context.payload.discussion;
+              commenter = (context.payload.comment.user.login || "").toLowerCase();
+            }
 
             // Each skill discussion is titled with the skill slug (giscus
             // mapping="specific"). Anything else (welcome posts, real
