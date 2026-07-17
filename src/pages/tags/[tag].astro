@@ -70,6 +70,7 @@ const { tag, skills } = Astro.props;
             coverColor={skill.data.coverColor}
             hasBundle={Boolean(skill.data.bundle)}
             isInstaller={skill.data.type === "automation" && Boolean(skill.data.bundle?.endsWith(".zip"))}
+            featured={skill.data.featured}
           />
         ))
       }

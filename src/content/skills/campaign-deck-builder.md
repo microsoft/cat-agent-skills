@@ -10,7 +10,6 @@ authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-07-09
 updatedAt: 2026-07-09
-featured: true
 bundle: bundles/campaign-deck-builder.zip
 ---
 Turn a short interview into a charming, vibrant, highly visual **3-slide

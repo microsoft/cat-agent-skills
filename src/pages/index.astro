@@ -250,6 +250,7 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
               hasBundle={Boolean(skill.data.bundle)}
               isInstaller={skill.data.type === "automation" && Boolean(skill.data.bundle?.endsWith(".zip"))}
               rating={getRating(skill.id)}
+              featured={skill.data.featured}
             />
           </div>
         ))
