@@ -99,16 +99,19 @@ jobs:
             // --- Pun via GitHub Models (best-effort) ------------------------
             // Grounded ONLY on the trusted skill name + description — never the
             // untrusted comment body — so a commenter can't inject the model.
-            const fallback = `👋 First comment on **${name}** — nice! Bringing in the author for you.`;
+            const fallback = `📣 Ping! **${name}** just got its first comment — and that's officially your problem now.`;
             let punLine = fallback;
             try {
               const system =
-                "You write a single short, upbeat, PG one-liner (ideally a gentle pun) " +
-                "welcoming discussion of a software tool. Max 140 characters. No hashtags, " +
-                "no emoji spam, no @-mentions, no quotes, plain text only.";
+                "You write a single short, cheeky one-liner (a little snarky, but " +
+                "friendly and PG — never mean) that pokes fun while summoning a " +
+                "software tool's author to a new discussion comment, implying their " +
+                "attention is required. Max 140 characters. No hashtags, no emoji " +
+                "spam, no @-mentions, no quotes, plain text only.";
               const user =
                 `The tool is called "${name}". It does: ${description}. ` +
-                `Write one welcoming pun/one-liner for the first comment on its discussion.`;
+                `Someone just left the first comment on its discussion. Write one ` +
+                `snarky one-liner nudging the author that their attention is needed.`;
               const res = await fetch("https://models.github.ai/inference/chat/completions", {
                 method: "POST",
                 headers: {
@@ -135,7 +138,7 @@ jobs:
                   .replace(/[`@]/g, "")
                   .trim();
                 if (text.length > 0 && text.length <= 200) {
-                  punLine = `👋 ${text}`;
+                  punLine = `📣 ${text}`;
                 } else {
                   core.info("Model output empty or too long; using fallback greeting.");
                 }
@@ -146,8 +149,12 @@ jobs:
               core.info(`Pun generation failed (${err.message}); using fallback greeting.`);
             }
 
-            // The workflow — not the model — controls the real mention.
-            const body = `${punLine}\n\ncc @${author} — the author of this skill. Thanks for weighing in! 🎉`;
+            // The workflow — not the model — controls the real mention. Frame it
+            // as an attention-required alert (with a wink) for the skill author.
+            const body =
+              `${punLine}\n\n` +
+              `@${author} — you're the author of **${name}**, and someone just ` +
+              `poked your skill. 👀 Mind swinging by to take a look?`;
 
             try {
               await github.graphql(
