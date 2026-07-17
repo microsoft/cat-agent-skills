@@ -10,48 +10,7 @@ description: >-
   read-only analysis or minor edits that do not create a new Office file.
 ---
 
-# Human setup instructions
-
-> **For the person installing or configuring this skill:** This section explains
-> setup and optional customization. The agent runtime instructions begin at the
-> clearly marked **Agent runtime instructions** section below.
-
-## Overview
-
-This skill ensures newly generated PowerPoint presentations and Word documents
-use an approved brand template instead of starting from a blank file.
-
-## Quick start
-
-1. Download the skill ZIP and import it in Copilot Studio from
-   **Build > Add skill > Upload a skill**.
-2. Recommended: add the approved PowerPoint or Word template as SharePoint agent
-   knowledge. This lets the brand team update the template centrally while the
-   agent retrieves the latest available version at runtime.
-3. Alternatively, place the template directly in the skill's `assets/` folder
-   and repackage the ZIP. The complete skill package must remain within the
-   current 20 MB Copilot Studio skill limit.
-
-For one clearly identifiable template, no manifest or brand-placeholder changes
-are required. The skill automatically discovers compatible templates in
-`assets/` and configured agent knowledge. Disabled starter manifest entries and
-unresolved placeholders do not block discovery.
-
-## Optional customization
-
-- Complete the brand-guidance placeholders below for explicit control over
-  voice, terminology, fonts, colors, imagery, legal language, and layout.
-- Configure `assets/template-manifest.json` when the agent has multiple
-  templates and needs deterministic routing, defaults, priorities, or exact
-  SharePoint source mapping.
-- PowerPoint templates must use `.pptx`. Open a `.potx` in PowerPoint and use
-  **Save As** to create a `.pptx`; renaming the extension is insufficient.
-
 # Agent runtime instructions
-
-> **For the agent:** Follow the instructions below whenever this skill is
-> invoked. The human setup section above is explanatory documentation, not a
-> runtime procedure.
 
 Before generating a PowerPoint or Word file, select and apply a compatible
 template from `assets/`.
