@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "1.0",
+  "description": "Canonical internal working object for the AI Use Case Assessment Dracarys agent.",
+  "fieldStatusValues": [
+    "present",
+    "inferred_from_user_content",
+    "missing",
+    "not_enough_info"
+  ],
+  "confidenceValues": [
+    "high",
+    "medium",
+    "low"
+  ],
+  "workingObject": {
+    "session": {
+      "currentStep": "",
+      "progressPercent": 0,
+      "processingMode": "single_use_case",
+      "userConfirmedSubmit": false
+    },
+    "source": {
+      "inputType": "chat_or_file",
+      "uploadedFileNames": [],
+      "candidateUseCaseCount": 0,
+      "selectedProcessingOrder": []
+    },
+    "requiredFields": {
+      "customerName": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "ideaTitle": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "useCaseCategory": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "useCaseSubcategory": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "summary": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "problemNeed": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "proposedSolution": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "expectedBenefits": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "targetAudience": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "personasImpacted": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "potentialRisks": { "value": "", "status": "missing", "evidence": [], "confidence": "low" }
+    },
+    "strengtheningSignals": {
+      "automationAiUsage": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "primaryWorkType": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "expertiseTuning": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "riskControlProfile": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "integrationsDependencies": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "roiComplianceSignals": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "reachVolume": { "value": "", "status": "missing", "evidence": [], "confidence": "low" },
+      "agenticFitSignal": { "value": "", "status": "missing", "evidence": [], "confidence": "low" }
+    },
+    "categoryDecision": {
+      "category": "",
+      "subcategory": "",
+      "confidence": "low",
+      "alternatives": [],
+      "requiresClarification": false,
+      "clarificationQuestion": ""
+    },
+    "assessment": {
+      "impact": [],
+      "complexity": [],
+      "reachScore": null,
+      "agenticFit": null,
+      "impactAverage": null,
+      "complexityAverage": null,
+      "weakSpots": [],
+      "outstandingQuestions": [],
+      "notEnoughInfo": [],
+      "requiresClarification": false,
+      "clarificationQuestion": ""
+    },
+    "qualityGate": {
+      "readyToScore": false,
+      "readyToConfirm": false,
+      "readyToSave": false,
+      "blockingIssues": [],
+      "warnings": []
+    },
+    "saveResult": {
+      "duplicateStatus": "not_checked",
+      "useCaseReadableId": "",
+      "assessmentReadableId": "",
+      "saved": false,
+      "error": ""
+    },
+    "reportResult": {
+      "fileName": "",
+      "validated": false,
+      "sharePointLink": "",
+      "attachedToRecord": false,
+      "error": ""
+    }
+  }
+}
