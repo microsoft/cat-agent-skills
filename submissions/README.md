@@ -13,6 +13,8 @@ two shapes:
 submissions/<slug>/
 ├── metadata.json     # OR metadata.yaml — catalog details for this gallery
 │                     # (a SIDECAR — never packaged into the download bundle)
+├── README.md         # OPTIONAL — human-facing overview shown on the detail page
+│                     # (never bundled, never seen by the agent)
 └── EITHER an unpacked canonical Agent Skill…
     ├── SKILL.md      # frontmatter (name + agent description) + instructions
     ├── scripts/      # optional executable code
@@ -27,16 +29,20 @@ The `<slug>` is the folder name — use lowercase, hyphenated names, e.g.
 copying [`_template/`](./_template).
 
 Bundling is **verbatim** — whatever you put in `scripts/`/`references/`/`assets/`
-(or inside your `.zip`) ships exactly as authored. Only `metadata.*` is stripped;
-it is a sidecar and never lands inside the bundle.
+(or inside your `.zip`) ships exactly as authored. Only `metadata.*` and the
+optional `README.md` are stripped; they are sidecars and never land inside the
+bundle.
 
-> ⚠️ **No READMEs or other human-facing files.** Because bundling is verbatim,
-> anything in the folder (other than the `metadata.*` sidecar) is packaged into
-> the agent-facing `.zip` and loaded as part of the skill. A `README.md`,
-> `CONTRIBUTING`, `CHANGELOG`, or any doc written for people just wastes the
-> agent's context. Ship **only agent-facing files** (`SKILL.md`, `scripts/`,
-> `references/`, `assets/`) and put contributor/human notes in your PR
-> description instead.
+> ℹ️ **Talking to a human? Use `README.md`.** A root-level `README.md` is the one
+> file meant for people, not the agent. It is **never bundled** and **never part
+> of `SKILL.md`** — and when present it **becomes the main content** on the detail
+> page (your own overview, setup steps, tips, and examples), with the exact
+> `SKILL.md` still offered as the download. Without one, the page falls back to
+> the skill's own instructions. It's optional and works for every entry type
+> (skill, plugin, automation, installer). Everything *else* in the folder is
+> agent-facing and ships verbatim, so don't add stray docs like `CHANGELOG` or
+> `CONTRIBUTING` next to your payload — they'd just waste the agent's context. Put
+> those in your PR description.
 
 ## Two descriptions — they are different on purpose
 
@@ -64,6 +70,17 @@ Turn the transcript into concise notes and action items…
 ```
 
 The human-friendly **display name** lives in `metadata.json` (`name`), not here.
+
+## `README.md` — an optional human-facing overview
+
+Want to tell the person adding your skill how to set it up, what to expect, or a
+few tips? Drop a `README.md` in the submission folder. It's **optional**, plain
+Markdown, and written for **people** — so it never ships in the download bundle
+and the agent never reads it. When present, it **becomes the main content** on
+the detail page (in your own words), while the exact `SKILL.md` stays available as
+the download. Leave it out and the page falls back to showing the skill's
+instructions. It works the same way for every entry type: skill, plugin,
+automation, and automation installer.
 
 ## `metadata.json` — catalog details
 

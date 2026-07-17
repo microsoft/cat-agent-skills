@@ -1,5 +1,10 @@
 # Scout automation installer template
 
+> **Heads up:** this README is contributor guidance for the template. If you keep
+> a `README.md` in your own submission it **becomes the main content** on the
+> gallery detail page — so replace this text with a human-facing overview of your
+> automation, or delete the file to fall back to the auto-generated page.
+
 Copy this folder to `submissions/<your-slug>/` to submit a **Scout automation
 installer** — a `.zip` that installs an automation via an `INSTALL.md` (install
 procedure + the automation prompt) plus one or more JSON config files the

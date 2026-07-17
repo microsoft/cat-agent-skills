@@ -38,6 +38,13 @@ const isInstaller = isAutomation && Boolean(d.bundle?.endsWith(".zip"));
 const noun = isPlugin ? "plugin" : isAutomation ? "automation" : "skill";
 const { Content } = await render(skill);
 
+// Optional human-facing overview (generated from a submission's
+// README.md, keyed by the same slug). When present it replaces the default
+// body as the detail page's main content.
+const guides = await getCollection("guides");
+const guide = guides.find((g) => g.id === skill.id);
+const GuideContent = guide ? (await render(guide)).Content : null;
+
 // For importable `.json` automations, parse the published file at build time so
 // we can render its trigger + prompt steps as structured UI instead of raw
 // markdown. Installer `.zip` automations have no schedule/steps — their
@@ -154,7 +161,11 @@ if (updated && updated !== created) meta.push(["Updated", updated]);
         <hr class="my-7 border-border" />
 
         {
-          isAutomation && automation ? (
+          GuideContent ? (
+            <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+              <GuideContent />
+            </article>
+          ) : isAutomation && automation ? (
             <div>
               <div class="mb-6">
                 <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-accent-text">

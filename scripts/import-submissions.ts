@@ -46,6 +46,7 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -69,12 +70,19 @@ import {
 const ROOT = join(import.meta.dirname, "..");
 const SUBMISSIONS_DIR = join(ROOT, "submissions");
 const CONTENT_DIR = join(ROOT, "src", "content", "skills");
+// Generated per-entry human-facing "guide" pages (from an optional
+// README.md in a submission). A separate collection dir so the `skills` glob
+// never picks them up.
+const GUIDES_DIR = join(ROOT, "src", "content", "guides");
 const BUNDLES_DIR = join(ROOT, "public", "bundles");
 
 // Instruction file match key. Compared against a lowercased basename, so it
 // matches the canonical `SKILL.md` (and a legacy lowercase `skill.md`). The
 // generated bundle always emits it as uppercase `SKILL.md`.
 const INSTRUCTIONS_NAME = "skill.md";
+// Optional, human-facing companion doc (never bundled, never seen by the agent).
+// When present it becomes the detail page's main content.
+const README_NAME = "readme.md";
 const METADATA_NAMES = ["metadata.json", "metadata.yaml", "metadata.yml"];
 // Canonical name emitted for the instruction file inside every download bundle.
 const BUNDLE_INSTRUCTIONS_NAME = "SKILL.md";
@@ -116,6 +124,12 @@ type Submission = {
   skillMd?: string;
   metaName?: string;
   metaText?: string;
+  /**
+   * Optional human-facing companion doc (the submission's `README.md`). When
+   * present it becomes the detail page's main content. Never bundled into a
+   * download and never part of the agent-facing `SKILL.md`.
+   */
+  readmeMd?: string;
   /** For an automation: the raw Scout automation `.json`, shipped verbatim. */
   automationJson?: string;
   automationJsonName?: string;
@@ -236,6 +250,25 @@ function writeIfChanged(path: string, content: string): void {
   writeFileSync(path, content, "utf8");
 }
 
+/**
+ * Publish (or remove) the optional human-facing overview for an entry.
+ * When the submission has a `README.md`, it is written verbatim to
+ * `src/content/guides/<slug>.md` (a separate collection the detail page renders
+ * as the main content). When it does not, any previously generated guide is
+ * deleted so removing a README restores the default body. No-op in `--check`
+ * mode.
+ */
+function writeGuide(slug: string, sub: Submission): void {
+  if (checkOnly) return;
+  const out = join(GUIDES_DIR, `${slug}.md`);
+  if (sub.readmeMd && sub.readmeMd.trim()) {
+    mkdirSync(GUIDES_DIR, { recursive: true });
+    writeIfChanged(out, `${sub.readmeMd.replace(/^\s+/, "").replace(/\s+$/, "")}\n`);
+  } else if (existsSync(out)) {
+    rmSync(out);
+  }
+}
+
 /** Recursively list every file under `dir`, with forward-slash relative paths. */
 function listFiles(dir: string, baseDir = dir): SubFile[] {
   const out: SubFile[] = [];
@@ -267,6 +300,10 @@ function classifyPayload(sub: Submission, files: SubFile[]): void {
     const isRoot = !file.path.includes("/");
     if (base === INSTRUCTIONS_NAME && isRoot && sub.skillMd === undefined) {
       sub.skillMd = file.data.toString("utf8");
+    } else if (base === README_NAME && isRoot) {
+      // Human-facing companion doc: adopt as the overview if not already
+      // provided alongside the payload, and never ship it in the bundle.
+      if (sub.readmeMd === undefined) sub.readmeMd = file.data.toString("utf8");
     } else if (METADATA_NAMES.includes(base)) {
       // Sidecar — never bundled. Adopt as catalog source only if not already set.
       if (sub.metaText === undefined) {
@@ -364,6 +401,7 @@ function processSubmission(sub: Submission): ImportProblem | null {
   if (!checkOnly) {
     mkdirSync(CONTENT_DIR, { recursive: true });
     writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, parsed.content));
+    writeGuide(slug, sub);
     if (hasBundle) {
       mkdirSync(BUNDLES_DIR, { recursive: true });
       // The bundle is the canonical Agent Skill: a root-level SKILL.md (what
@@ -511,6 +549,7 @@ function processPlugin(sub: Submission): ImportProblem | null {
     const body = buildPluginBody({ overview, skills: pv.skills, connectors: pv.connectors });
     mkdirSync(CONTENT_DIR, { recursive: true });
     writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, body));
+    writeGuide(slug, sub);
     mkdirSync(BUNDLES_DIR, { recursive: true });
     // Ship the M365 app package verbatim (deterministic order + fixed mtime).
     writeBundle(pluginFiles, join(BUNDLES_DIR, `${slug}.zip`));
@@ -654,6 +693,7 @@ function processAutomationInstaller(sub: Submission): ImportProblem | null {
     const body = buildInstallerBody(iv.install, slug);
     mkdirSync(CONTENT_DIR, { recursive: true });
     writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, body));
+    writeGuide(slug, sub);
     mkdirSync(BUNDLES_DIR, { recursive: true });
     // Ship the installer package verbatim (deterministic order + fixed mtime).
     writeBundle(files, join(BUNDLES_DIR, `${slug}.zip`));
@@ -759,6 +799,7 @@ function processAutomation(sub: Submission): ImportProblem | null {
     });
     mkdirSync(CONTENT_DIR, { recursive: true });
     writeIfChanged(join(CONTENT_DIR, `${slug}.md`), buildContent(meta, body));
+    writeGuide(slug, sub);
     mkdirSync(BUNDLES_DIR, { recursive: true });
     // Ship the automation `.json` verbatim so the gallery download equals the
     // exact file Scout imports.
@@ -792,6 +833,11 @@ function loadSubmission(dir: string): Submission {
     sub.metaName = metaFile.toLowerCase();
     sub.metaText = readFileSync(join(dir, metaFile), "utf8");
   }
+
+  // Optional human-facing companion doc (top-level, next to the payload). Works
+  // for every entry type; never bundled and never part of the agent payload.
+  const readmeFile = topFiles.find((n) => n.toLowerCase() === README_NAME);
+  if (readmeFile) sub.readmeMd = readFileSync(join(dir, readmeFile), "utf8");
 
   if (zips.length > 0 && hasRootSkill) {
     problems.push(
