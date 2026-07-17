@@ -6,6 +6,7 @@ platforms: [Copilot Studio]
 tags: [knowledge, routing, localization, location, grounding]
 author: Adi Leibowitz
 authorUrl: "https://microsoft.github.io/mcscatblog/"
+authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-06-23
 updatedAt: 2026-06-23

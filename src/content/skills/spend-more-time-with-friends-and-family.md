@@ -5,6 +5,7 @@ platforms: [Scout]
 type: automation
 tags: [scout, automation, teams, out-of-office, knowledge]
 author: Adi Leibowitz
+authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14
