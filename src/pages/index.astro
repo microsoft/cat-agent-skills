@@ -466,7 +466,7 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
     const s = params.get("sort") as SortMode | null;
     sortMode = s && SORTS.includes(s) ? s : "featured";
     sortSelect.value = sortMode;
-    if (query) search.value = query;
+    search.value = query;
     paintChips(tagChips, "tag", activeTag);
     paintChips(platformChips, "platform", activePlatform);
     paintChips(typeChips, "type", activeType);
@@ -483,6 +483,13 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
   }
 
   initFromUrl();
+
+  // Restore from the back/forward cache (bfcache) does not re-run this module,
+  // so filter state, the visible-count, and the infinite-scroll batch can be
+  // left frozen out of sync with the DOM. Reconcile on persisted pageshow.
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) initFromUrl();
+  });
 </script>
 
 <style>
