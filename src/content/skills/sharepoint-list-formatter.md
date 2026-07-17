@@ -6,6 +6,7 @@ platforms: [Cowork, Copilot Studio, Scout]
 tags: [sharepoint, microsoft-365, productivity, tables, data-formatting]
 author: Mathias Salomonsen
 authorUrl: "https://www.linkedin.com/in/mathias-salomonsen-331949201"
+authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-07-17
 updatedAt: 2026-07-17
