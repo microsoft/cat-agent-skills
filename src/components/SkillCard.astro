@@ -53,13 +53,28 @@ const wrapperProps = isInteractive
 <Wrapper class={wrapperClass} {...wrapperProps}>
   <!-- Header: monogram + name + platforms -->
   <div class="flex items-start gap-3">
-    <span
-      class="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-bold text-white shadow-sm"
-      style={`background-image:${gradient}`}
-      aria-hidden="true"
-    >
-      {mark}
-    </span>
+    <div class="relative shrink-0">
+      <span
+        class="grid h-11 w-11 place-items-center rounded-lg text-sm font-bold text-white shadow-sm"
+        style={`background-image:${gradient}`}
+        aria-hidden="true"
+      >
+        {mark}
+      </span>
+      {
+        featured && (
+          <span
+            class="absolute -right-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-white text-amber-500 shadow ring-1 ring-black/5"
+            title="Hand-picked featured skill"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" class="h-2.5 w-2.5">
+              <path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.5z" />
+            </svg>
+          </span>
+        )
+      }
+    </div>
     <div class="min-w-0 flex-1">
       <div class="flex items-start gap-1.5">
         <h3
@@ -68,25 +83,6 @@ const wrapperProps = isInteractive
         >
           {name}
         </h3>
-        {
-          featured && (
-            <span
-              class="flex shrink-0 items-center gap-1 rounded-full border border-amber-300/70 bg-gradient-to-b from-amber-100 to-amber-200 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800 shadow-sm dark:border-amber-400/30 dark:from-amber-400/25 dark:to-amber-500/15 dark:text-amber-300"
-              title="Featured skill"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="h-2.5 w-2.5"
-                aria-hidden="true"
-              >
-                <path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.5z" />
-              </svg>
-              Featured
-            </span>
-          )
-        }
         {
           isPlugin && (
             <span
