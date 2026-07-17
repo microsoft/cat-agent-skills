@@ -30,6 +30,11 @@ for (const skill of skills) {
 const allTags = [...tagCounts.entries()].sort(
   (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
 );
+// On mobile the full tag list pushes the gallery far down the page, so we show
+// only the most-used tags and collapse the rest behind a disclosure. Desktop
+// (>= sm) always shows them all.
+const COLLAPSED_TAGS = 8;
+const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
 ---
 
 <Layout>
@@ -118,7 +123,10 @@ const allTags = [...tagCounts.entries()].sort(
   <!-- Tag filters -->
   <section class="border-b border-border bg-bg">
     <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-      <div id="tag-filters" class="flex flex-wrap gap-2">
+      <div
+        id="tag-filters"
+        class="tags-collapsed flex flex-wrap items-center gap-2"
+      >
         <button
           type="button"
           data-tag=""
@@ -126,17 +134,33 @@ const allTags = [...tagCounts.entries()].sort(
           aria-pressed="true">All</button
         >
         {
-          allTags.map(([tag, count]) => (
+          allTags.map(([tag, count], i) => (
             <button
               type="button"
               data-tag={tag}
-              class="tag-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
+              class:list={[
+                "tag-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg",
+                i >= COLLAPSED_TAGS && "tag-overflow",
+              ]}
               aria-pressed="false"
             >
               {tag}
               <span class="ml-1 text-xs text-subtle">{count}</span>
             </button>
           ))
+        }
+        {
+          hiddenTagCount > 0 && (
+            <button
+              type="button"
+              id="tag-toggle"
+              class="rounded-full border border-dashed border-border px-3 py-1 text-sm font-medium text-accent-text transition hover:border-accent/60 sm:hidden"
+              aria-expanded="false"
+              aria-controls="tag-filters"
+            >
+              +{hiddenTagCount} more
+            </button>
+          )
         }
       </div>
     </div>
@@ -394,6 +418,22 @@ const allTags = [...tagCounts.entries()].sort(
     syncUrl();
     refilter();
   });
+
+  // Mobile tag disclosure: expand/collapse the overflow tags.
+  const tagFilters = document.getElementById("tag-filters")!;
+  const tagToggle = document.getElementById("tag-toggle");
+  function setTagsExpanded(expanded: boolean) {
+    tagFilters.classList.toggle("tags-collapsed", !expanded);
+    if (tagToggle) {
+      tagToggle.setAttribute("aria-expanded", String(expanded));
+      tagToggle.textContent = expanded
+        ? "Show fewer"
+        : `+${tagFilters.querySelectorAll(".tag-overflow").length} more`;
+    }
+  }
+  tagToggle?.addEventListener("click", () =>
+    setTagsExpanded(tagFilters.classList.contains("tags-collapsed"))
+  );
   const io = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting && shown < matched.length) {
@@ -430,8 +470,26 @@ const allTags = [...tagCounts.entries()].sort(
     paintChips(tagChips, "tag", activeTag);
     paintChips(platformChips, "platform", activePlatform);
     paintChips(typeChips, "type", activeType);
+    // If a filtered-on tag is hidden in the collapsed overflow, reveal it.
+    if (
+      activeTag &&
+      tagFilters
+        .querySelector<HTMLButtonElement>(`.tag-chip[data-tag="${CSS.escape(activeTag)}"]`)
+        ?.classList.contains("tag-overflow")
+    ) {
+      setTagsExpanded(true);
+    }
     refilter();
   }
 
   initFromUrl();
 </script>
+
+<style>
+  /* Only collapse the tag list on mobile; sm+ always shows every tag. */
+  @media (max-width: 639px) {
+    #tag-filters.tags-collapsed .tag-overflow {
+      display: none;
+    }
+  }
+</style>
