@@ -1,6 +1,6 @@
 ---
-name:  skill-authoring-coach
-description:  Use this skill when the user asks to create, improve, review, package, genericise, or submit an Agent Skill, SKILL.md file, skill metadata, or reusable agent instruction bundle.
+name: skill-authoring-coach
+description: Use this skill when the user asks to create, improve, review, package, genericise, or submit an Agent Skill, SKILL.md file, skill metadata, or reusable agent instruction bundle.
 ---
 
 # Skill Authoring Coach

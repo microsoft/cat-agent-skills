@@ -1,6 +1,6 @@
 ---
-name:  brand-voice-pass
-description:  Use this skill when the user asks to rewrite, humanise, de-AI, polish, localise, or align draft text to a brand voice, house style, named audience, or writing profile.
+name: brand-voice-pass
+description: Use this skill when the user asks to rewrite, humanise, de-AI, polish, localise, or align draft text to a brand voice, house style, named audience, or writing profile.
 ---
 
 # Brand Voice Pass

@@ -1,6 +1,6 @@
 ---
-name:  blog-content-auditor
-description:  Use this skill when the user asks to audit, review, score, rationalise, prioritise, refresh, or improve blog posts, article libraries, newsletters, or thought-leadership content.
+name: blog-content-auditor
+description: Use this skill when the user asks to audit, review, score, rationalise, prioritise, refresh, or improve blog posts, article libraries, newsletters, or thought-leadership content.
 ---
 
 # Blog Content Auditor

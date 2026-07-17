@@ -1,6 +1,6 @@
 ---
-name:  content-quality-auditor
-description:  Use this skill when the user asks to assess, audit, score, review, improve, prioritise, or quality-check content, documents, pages, posts, decks, or reusable artefacts.
+name: content-quality-auditor
+description: Use this skill when the user asks to assess, audit, score, review, improve, prioritise, or quality-check content, documents, pages, posts, decks, or reusable artefacts.
 ---
 
 # Content Quality Auditor

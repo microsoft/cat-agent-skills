@@ -1,6 +1,6 @@
 ---
-name:  linkedin-content-system
-description:  Use this skill when the user asks to create LinkedIn posts, promotional posts, thought-leadership posts, newsletter introductions, article intros, or long-form LinkedIn content from source notes, facts, or drafts.
+name: linkedin-content-system
+description: Use this skill when the user asks to create LinkedIn posts, promotional posts, thought-leadership posts, newsletter introductions, article intros, or long-form LinkedIn content from source notes, facts, or drafts.
 ---
 
 # LinkedIn Content System

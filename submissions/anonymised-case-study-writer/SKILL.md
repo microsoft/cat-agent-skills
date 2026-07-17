@@ -1,6 +1,6 @@
 ---
-name:  anonymised-case-study-writer
-description:  Use this skill when the user asks to create, improve, anonymise, structure, or publish a client case study, success story, engagement summary, or transformation story.
+name: anonymised-case-study-writer
+description: Use this skill when the user asks to create, improve, anonymise, structure, or publish a client case study, success story, engagement summary, or transformation story.
 ---
 
 # Anonymised Case Study Writer

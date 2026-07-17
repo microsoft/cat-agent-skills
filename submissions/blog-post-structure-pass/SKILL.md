@@ -1,6 +1,6 @@
 ---
-name:  blog-post-structure-pass
-description:  Use this skill when the user asks to restructure, reorganise, improve, rewrite, tighten, or strengthen a blog post, article, newsletter, essay, or thought-leadership draft.
+name: blog-post-structure-pass
+description: Use this skill when the user asks to restructure, reorganise, improve, rewrite, tighten, or strengthen a blog post, article, newsletter, essay, or thought-leadership draft.
 ---
 
 # Blog Post Structure Pass

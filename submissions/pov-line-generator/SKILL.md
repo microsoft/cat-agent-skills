@@ -1,6 +1,6 @@
 ---
-name:  pov-line-generator
-description:  Use this skill when the user asks for a point of view, punchy line, positioning sentence, provocative statement, headline angle, opinion line, or concise strategic stance.
+name: pov-line-generator
+description: Use this skill when the user asks for a point of view, punchy line, positioning sentence, provocative statement, headline angle, opinion line, or concise strategic stance.
 ---
 
 # POV Line Generator

@@ -1,6 +1,6 @@
 ---
-name:  conference-session-abstract-pack
-description:  Use this skill when the user asks to create a conference session proposal, talk abstract, CFP submission, session title, description, learning objectives, takeaways, or speaker bio.
+name: conference-session-abstract-pack
+description: Use this skill when the user asks to create a conference session proposal, talk abstract, CFP submission, session title, description, learning objectives, takeaways, or speaker bio.
 ---
 
 # Conference Session Abstract Pack
