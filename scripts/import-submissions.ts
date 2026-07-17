@@ -9,6 +9,8 @@
  *   ├── metadata.json  (or metadata.yaml) Catalog metadata for THIS gallery:
  *   │                  `description` (the human catalog/gallery summary),
  *   │                  `platforms`, `tags`, `author`, `authorUrl`, `version`…
+ *   │                  (`authorGithub`, the PR submitter's login, is stamped
+ *   │                  automatically by CI — see PR_AUTHOR below — not authored.)
  *   │                  It is a SIDECAR — never packaged into the download bundle.
  *   └── EITHER an unpacked canonical Agent Skill:
  *   │     ├── SKILL.md     frontmatter `name` + `description` (the AGENT-facing
@@ -91,6 +93,7 @@ const FIELD_ORDER = [
   "tags",
   "author",
   "authorUrl",
+  "authorGithub",
   "version",
   "createdAt",
   "updatedAt",
@@ -173,6 +176,41 @@ function serializeFrontmatter(meta: Record<string, unknown>): string {
 /** Build a content markdown file from metadata + an instructions body. */
 function buildContent(meta: Record<string, unknown>, body: string): string {
   return serializeFrontmatter(meta) + body.replace(/^\s+/, "");
+}
+
+/**
+ * Resolve the skill author's GitHub handle (the PR submitter's login), used by
+ * the "skillbot" to @-mention them on the first discussion comment. Set-once:
+ *   1. Keep an explicit `authorGithub` already in the metadata.
+ *   2. Otherwise preserve the value already stamped in the generated
+ *      `src/content/skills/<slug>.md` (so a later, unrelated PR can never
+ *      overwrite the original submitter).
+ *   3. Otherwise fall back to `PR_AUTHOR` (set by CI on same-repo PRs) — this is
+ *      a skill newly added in the current pull request.
+ *   4. Otherwise leave it unset (e.g. local imports, fork PRs).
+ * The result is mutated onto `meta` so every publish path stamps it uniformly.
+ */
+function resolveAuthorGithub(slug: string, meta: Record<string, unknown>): void {
+  if (typeof meta.authorGithub === "string" && meta.authorGithub.trim()) {
+    meta.authorGithub = meta.authorGithub.trim();
+    return;
+  }
+  const existingPath = join(CONTENT_DIR, `${slug}.md`);
+  if (existsSync(existingPath)) {
+    try {
+      const prior = matter(readFileSync(existingPath, "utf8")).data as {
+        authorGithub?: unknown;
+      };
+      if (typeof prior.authorGithub === "string" && prior.authorGithub.trim()) {
+        meta.authorGithub = prior.authorGithub.trim();
+        return;
+      }
+    } catch {
+      // Unparseable existing file: fall through to the PR-author fallback.
+    }
+  }
+  const prAuthor = process.env.PR_AUTHOR?.trim();
+  if (prAuthor) meta.authorGithub = prAuthor;
 }
 
 /** Parse a metadata file (JSON or YAML) into a plain object. */
@@ -318,6 +356,8 @@ function processSubmission(sub: Submission): ImportProblem | null {
   const hasBundle = sub.bundleFiles.length > 0;
   if (hasBundle) meta.bundle = `bundles/${slug}.zip`;
 
+  resolveAuthorGithub(slug, meta);
+
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };
 
@@ -457,6 +497,8 @@ function processPlugin(sub: Submission): ImportProblem | null {
     ...catalogRest,
     bundle: `bundles/${slug}.zip`,
   };
+
+  resolveAuthorGithub(slug, meta);
 
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };
@@ -603,6 +645,8 @@ function processAutomationInstaller(sub: Submission): ImportProblem | null {
     bundle: `bundles/${slug}.zip`,
   };
 
+  resolveAuthorGithub(slug, meta);
+
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };
 
@@ -701,6 +745,8 @@ function processAutomation(sub: Submission): ImportProblem | null {
     ...catalogRest,
     bundle: `bundles/${slug}.json`,
   };
+
+  resolveAuthorGithub(slug, meta);
 
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };

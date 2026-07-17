@@ -124,7 +124,10 @@ the download bundle):
 
 Optional: `author`, `authorUrl`, `version`, `createdAt`, `updatedAt`,
 `coverColor`, `featured`. (`bundle` is set automatically when your skill ships
-files beyond `SKILL.md`.)
+files beyond `SKILL.md`. `authorGithub` — your GitHub login as the PR
+submitter — is also filled in automatically by CI so the *skillbot* can
+@-mention you on the first comment of your skill's discussion; don't set it
+yourself.)
 
 ## Validate locally
 

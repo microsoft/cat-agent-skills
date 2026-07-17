@@ -1,0 +1,21 @@
+{
+  "name": "Anonymised Case Study Writer",
+  "description": "Turn engagement notes into anonymised, publishable case studies without exposing client-confidential details.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "writing",
+    "case-study",
+    "marketing",
+    "documents",
+    "content",
+    "privacy"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}

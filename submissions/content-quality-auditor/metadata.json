@@ -1,0 +1,21 @@
+{
+  "name": "Content Quality Auditor",
+  "description": "Score documents, pages, posts, or artefact libraries against a configurable quality rubric and recommend fixes.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "content",
+    "quality",
+    "audit",
+    "documents",
+    "productivity",
+    "governance"
+  ],
+  "author": "Simon Owen",
+  "version": "0.1.0",
+  "createdAt": "2026-07-17",
+  "updatedAt": "2026-07-17"
+}
