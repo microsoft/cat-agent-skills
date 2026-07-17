@@ -12,14 +12,16 @@ download bundle) for you.
 
 ## The submission shape
 
-Every submission is a `submissions/<slug>/` folder with a `metadata.json` gallery
-sidecar plus **exactly one** skill payload — either an unpacked skill or a
-pre-packaged zip:
+Every submission is a `submissions/<slug>/` folder: a `metadata.json` sidecar, an
+optional `README.md`, and **exactly one** payload. This section covers the most
+common payload — a **skill**, either an unpacked folder or a pre-packaged zip; the
+other entry types (plugins, automations, and installers) follow the same pattern
+and are covered just below.
 
 ```
 submissions/<slug>/
 ├── metadata.json     # OR metadata.yaml — catalog details (sidecar, not bundled)
-├── README.md         # optional human-facing note (not bundled; see below)
+├── README.md         # optional — becomes the page's main content (not bundled)
 └── EITHER an unpacked canonical Agent Skill…
     ├── SKILL.md      # frontmatter (name + agent description) + instructions
     ├── scripts/      # optional executable code
@@ -34,20 +36,14 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 `meeting-summarizer` → `/skills/meeting-summarizer`. See
 [`submissions/README.md`](submissions/README.md) for the full reference.
 
-> **Everything except `metadata.*` and `README.md` is bundled into the
-> agent-facing `.zip`, verbatim.** The download bundle *is* the skill the agent
-> loads, so it must contain **only agent-facing files** (`SKILL.md`, `scripts/`,
-> `references/`, `assets/`). Don't drop stray human-facing docs (CONTRIBUTING,
-> CHANGELOG, etc.) next to your payload — they'd be packaged into the bundle and
-> waste the agent's context; put those in your pull request description instead.
-
-> **Writing for a human? Add an optional `README.md`.** A root-level `README.md`
-> is the one human-facing companion the gallery understands: it's **never
-> bundled** and **never part of `SKILL.md`**. When you include one, it **becomes
-> the main content** on the detail page — your own overview, setup, and usage in
-> your words — while the exact `SKILL.md` (or `.json` / `.zip`) stays one click
-> away as the download. It's optional and works for every entry type; without it,
-> the page falls back to showing the skill's instructions.
+> **A submission holds two kinds of files: agent-facing and human-facing.**
+> Everything **agent-facing** is bundled into the download **verbatim** — the
+> bundle *is* the skill the agent loads — so keep it to `SKILL.md`, `scripts/`,
+> `references/`, and `assets/`. The two **human-facing** files are **never
+> bundled**: the `metadata.json` sidecar and an optional
+> [`README.md`](#what-visitors-see). Don't leave other docs (CHANGELOG, personal
+> notes) next to your payload — they'd ship to the agent and waste its context;
+> put those in your pull request description instead.
 
 ### Cowork plugins
 
@@ -94,14 +90,17 @@ to start and see the
 [Scout automation installers section](submissions/README.md#scout-automation-installers-advanced)
 of the submissions reference.
 
-## Two descriptions
+## What visitors see
 
-A skill carries **two** descriptions, on purpose:
+The `SKILL.md` frontmatter `description` is written for the **agent** — it's the
+trigger the model reads to decide when to invoke your skill, and nobody browsing
+the gallery ever sees it. People see two things you write for **them**:
 
-- **Agent description** — `SKILL.md`'s frontmatter `description`. The model reads
-  this to decide *when to invoke* the skill (write it as a precise trigger).
-- **Catalog description** — `metadata.json`'s `description`. The friendly
-  one-liner shown to people in the gallery.
+- The **catalog description** (`metadata.json`'s `description`) — the one-liner on
+  your gallery card.
+- Your optional **`README.md`** — drop one in the submission folder (any entry
+  type) and it becomes the main content on the detail page, in your own voice.
+  Without it, the page shows the `SKILL.md` instructions instead.
 
 ## `SKILL.md`
 
