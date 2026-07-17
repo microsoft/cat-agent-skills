@@ -36,6 +36,12 @@ jobs:
       - name: Import skill submissions
         if: github.event.pull_request.head.repo.full_name == github.repository
         run: npm run import:submissions
+        env:
+          # Stamp `authorGithub` on skills newly added in this PR with the
+          # submitter's login so the skillbot can @-mention the author on the
+          # first comment of the skill's discussion. Existing skills keep their
+          # already-stamped handle (set-once).
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
 
       - name: Commit extracted skills
         if: github.event.pull_request.head.repo.full_name == github.repository
