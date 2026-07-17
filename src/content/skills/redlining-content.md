@@ -6,6 +6,7 @@ platforms: [Cowork, Copilot Studio]
 tags: [documents, productivity]
 author: AndrewHessMSFT
 authorUrl: "https://github.com/AndrewHessMSFT"
+authorGithub: AndrewHessMSFT
 version: 1.0.0
 createdAt: 2026-07-08
 updatedAt: 2026-07-08

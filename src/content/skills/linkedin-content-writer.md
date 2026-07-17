@@ -6,6 +6,7 @@ platforms: [Copilot Studio]
 tags: [linkedin, social-media, writing, content]
 author: "Becky Still, Digital Boop Ltd"
 authorUrl: "https://digital-boop.co.uk/my-story"
+authorGithub: DigitalBoopLtd
 version: 1.0.0
 createdAt: 2026-07-14
 ---

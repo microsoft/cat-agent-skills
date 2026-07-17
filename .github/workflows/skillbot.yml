@@ -1,0 +1,212 @@
+name: Skillbot
+
+# When the FIRST comment lands on a skill's discussion, greet the thread and
+# @-mention the skill's author (the PR submitter, stamped into the generated
+# skill frontmatter as `authorGithub` by the import pipeline). The greeting line
+# is a short, skill-themed pun generated with GitHub Models — with a plain
+# static fallback whenever AI is unavailable. The whole job is best-effort: any
+# missing data or failed call results in a no-op or the fallback, never a red X.
+
+on:
+  discussion_comment:
+    types: [created]
+  # Manual test path: run the exact same greet logic against a chosen skill's
+  # discussion without waiting for (or faking) a real first comment. Used to
+  # validate the bot live; production still fires via discussion_comment.
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Skill slug to greet (its discussion title), e.g. doc-format-converter"
+        required: true
+        type: string
+
+permissions:
+  contents: read # read the generated skill frontmatter
+  discussions: write # post the greeting comment
+  models: read # GitHub Models inference for the pun (free tier)
+
+# One greeting per discussion is plenty; don't stack runs for a busy thread.
+concurrency:
+  group: skillbot-${{ github.event.discussion.number || inputs.slug }}
+  cancel-in-progress: false
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    # Fast gate for the automatic path: only the ratings/skill discussion
+    # category, only the very first comment (which also prevents the bot's own
+    # reply from re-triggering — it becomes comment #2), and never react to
+    # another bot. The manual workflow_dispatch path bypasses this gate.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.discussion.category.name == 'Announcements' &&
+       github.event.discussion.comments == 1 &&
+       github.event.comment.user.type != 'Bot')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          sparse-checkout: src/content/skills
+          sparse-checkout-cone-mode: false
+
+      - name: Greet the thread and mention the author
+        uses: actions/github-script@v7
+        env:
+          MODELS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+
+            const isDispatch = context.eventName === "workflow_dispatch";
+
+            // Resolve the target discussion + who commented. For the automatic
+            // path both come from the event payload. For the manual test path we
+            // look the discussion up by slug (its title) and treat it as if a
+            // non-author commented (so nothing is skipped by the self-guard).
+            let discussion;
+            let commenter;
+            if (isDispatch) {
+              const wantSlug = (context.payload.inputs.slug || "").trim();
+              const { repository } = await github.graphql(
+                `query ($owner: String!, $name: String!) {
+                   repository(owner: $owner, name: $name) {
+                     discussions(first: 100, orderBy: { field: CREATED_AT, direction: DESC }) {
+                       nodes { title node_id: id comments { totalCount } category { name } }
+                     }
+                   }
+                 }`,
+                { owner: context.repo.owner, name: context.repo.repo },
+              );
+              discussion = (repository.discussions.nodes || []).find(
+                (d) => (d.title || "").trim() === wantSlug,
+              );
+              if (!discussion) {
+                core.warning(`No discussion titled "${wantSlug}" found; nothing to do.`);
+                return;
+              }
+              commenter = "__manual-test__";
+            } else {
+              discussion = context.payload.discussion;
+              commenter = (context.payload.comment.user.login || "").toLowerCase();
+            }
+
+            // Each skill discussion is titled with the skill slug (giscus
+            // mapping="specific"). Anything else (welcome posts, real
+            // announcements) is not a skill — skip quietly.
+            const slug = (discussion.title || "").trim();
+            const SLUG_RE = /^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$/;
+            if (!SLUG_RE.test(slug)) {
+              core.info(`Discussion title "${slug}" is not a skill slug; nothing to do.`);
+              return;
+            }
+
+            const file = path.join("src", "content", "skills", `${slug}.md`);
+            if (!fs.existsSync(file)) {
+              core.info(`No published skill for slug "${slug}"; nothing to do.`);
+              return;
+            }
+
+            // Pull the fields we need straight out of the YAML frontmatter. The
+            // importer emits bare `authorGithub` (login is [A-Za-z0-9-] only) and
+            // JSON-quoted `name`/`description`.
+            const src = fs.readFileSync(file, "utf8");
+            const fm = (src.match(/^---\n([\s\S]*?)\n---/) || [])[1] || "";
+            const readField = (key) => {
+              const m = fm.match(new RegExp(`^${key}:\\s*(.+)$`, "m"));
+              if (!m) return "";
+              const raw = m[1].trim();
+              if (raw.startsWith('"') || raw.startsWith("'")) {
+                try { return JSON.parse(raw); } catch { return raw.replace(/^['"]|['"]$/g, ""); }
+              }
+              return raw;
+            };
+
+            const author = readField("authorGithub");
+            if (!author) {
+              core.info(`Skill "${slug}" has no authorGithub; nothing to mention.`);
+              return;
+            }
+            // Don't ping the author for their own first comment.
+            if (author.toLowerCase() === commenter) {
+              core.info("First comment is by the author; skipping self-mention.");
+              return;
+            }
+
+            const name = readField("name") || slug;
+            const description = readField("description") || "";
+
+            // --- Pun via GitHub Models (best-effort) ------------------------
+            // Grounded ONLY on the trusted skill name + description — never the
+            // untrusted comment body — so a commenter can't inject the model.
+            const fallback = `📣 Ping! **${name}** just got its first comment — and that's officially your problem now.`;
+            let punLine = fallback;
+            try {
+              const system =
+                "You write a single short, cheeky one-liner (a little snarky, but " +
+                "friendly and PG — never mean) that pokes fun while summoning a " +
+                "software tool's author to a new discussion comment, implying their " +
+                "attention is required. Max 140 characters. No hashtags, no emoji " +
+                "spam, no @-mentions, no quotes, plain text only.";
+              const user =
+                `The tool is called "${name}". It does: ${description}. ` +
+                `Someone just left the first comment on its discussion. Write one ` +
+                `snarky one-liner nudging the author that their attention is needed.`;
+              const res = await fetch("https://models.github.ai/inference/chat/completions", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${process.env.MODELS_TOKEN}`,
+                  "Content-Type": "application/json",
+                  Accept: "application/vnd.github+json",
+                },
+                body: JSON.stringify({
+                  model: "openai/gpt-4o-mini",
+                  temperature: 0.9,
+                  max_tokens: 80,
+                  messages: [
+                    { role: "system", content: system },
+                    { role: "user", content: user },
+                  ],
+                }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                let text = data?.choices?.[0]?.message?.content ?? "";
+                // Sanitize: single line, drop @-mentions/backticks, cap length.
+                text = String(text)
+                  .replace(/\s+/g, " ")
+                  .replace(/[`@]/g, "")
+                  .trim();
+                if (text.length > 0 && text.length <= 200) {
+                  punLine = `📣 ${text}`;
+                } else {
+                  core.info("Model output empty or too long; using fallback greeting.");
+                }
+              } else {
+                core.info(`Models API returned HTTP ${res.status}; using fallback greeting.`);
+              }
+            } catch (err) {
+              core.info(`Pun generation failed (${err.message}); using fallback greeting.`);
+            }
+
+            // The workflow — not the model — controls the real mention. Frame it
+            // as an attention-required alert (with a wink) for the skill author.
+            const body =
+              `${punLine}\n\n` +
+              `@${author} — you're the author of **${name}**, and someone just ` +
+              `poked your skill. 👀 Mind swinging by to take a look?`;
+
+            try {
+              await github.graphql(
+                `mutation ($discussionId: ID!, $body: String!) {
+                   addDiscussionComment(input: { discussionId: $discussionId, body: $body }) {
+                     comment { id }
+                   }
+                 }`,
+                { discussionId: discussion.node_id, body },
+              );
+              core.info(`Greeted discussion "${slug}" and mentioned @${author}.`);
+            } catch (err) {
+              core.warning(`Could not post greeting comment: ${err.message}`);
+            }

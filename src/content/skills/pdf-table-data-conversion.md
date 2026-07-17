@@ -6,6 +6,7 @@ platforms: [Copilot Studio]
 tags: [documents, extraction, pdf, csv, xlsx, tables, sharepoint]
 author: Lewis Baybutt
 authorUrl: "https://github.com/lewisdoesdev"
+authorGithub: lewisdoesdev
 version: 1.0.0
 createdAt: 2026-07-16
 updatedAt: 2026-07-16

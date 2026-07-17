@@ -67,6 +67,15 @@ jobs:
           # A GITHUB_TOKEN push does not retrigger workflows, so this run still
           # owns the deploy below; the commit only keeps tomorrow's diff stable.
           git push || echo "::warning::Could not push refreshed ratings; will retry next run."
+      # Regenerate every skill page + bundle from submissions/ before building.
+      # PR CI only commits generated content back to SAME-REPO PR branches; fork
+      # PRs are validate-only, so their src/content/skills/<slug>.md never lands
+      # on main and the skill would 404 / be missing from the gallery. Importing
+      # here makes the deployed site reflect submissions/ regardless of how a PR
+      # was merged. Idempotent: it rewrites the same files a same-repo PR did.
+      - name: Import skill submissions
+        if: steps.ratings.outputs.should_deploy == 'true'
+        run: npm run import:submissions
       - name: Build
         if: steps.ratings.outputs.should_deploy == 'true'
         run: npm run build

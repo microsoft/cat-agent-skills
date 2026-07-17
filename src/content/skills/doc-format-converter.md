@@ -6,6 +6,7 @@ platforms: [Copilot Studio]
 tags: [documents, conversion, markdown, pdf, office, scripts]
 author: Andreas Adner
 authorUrl: "https://github.com/adner"
+authorGithub: adner
 version: 1.0.0
 createdAt: 2026-07-16
 updatedAt: 2026-07-16

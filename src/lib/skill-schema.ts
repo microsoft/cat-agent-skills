@@ -31,6 +31,19 @@ export const skillSchema = z.object({
   // Optional URL to the author's website / profile, shown as a link on the
   // skill page when an `author` is also present.
   authorUrl: z.string().url().optional(),
+  // The GitHub login of the person who submitted the skill (the PR author),
+  // stored WITHOUT a leading `@`. Auto-populated by CI from the pull request
+  // submitter (never authored by hand) so the "skillbot" can @-mention the
+  // author on the first comment of the skill's discussion. A bare GitHub
+  // username: 1-39 chars, alphanumerics or single hyphens, no leading/trailing
+  // hyphen.
+  authorGithub: z
+    .string()
+    .regex(
+      /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i,
+      "must be a bare GitHub username (no leading @)",
+    )
+    .optional(),
   version: z.string().optional(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),

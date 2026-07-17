@@ -5,6 +5,7 @@ platforms: [Scout]
 type: automation
 tags: [scout, automation, email, teams, out-of-office]
 author: CAT Agent Skills
+authorGithub: GiorgioUghini
 version: 1.0.0
 createdAt: 2026-07-16
 updatedAt: 2026-07-16

@@ -6,6 +6,7 @@ platforms: [Copilot Studio, Cowork, Scout]
 tags: [diagnostics, runtime, python, capabilities, snapshots, scripts]
 author: Chris Garty and Andrew Hess
 authorUrl: "https://github.com/ChrisGarty"
+authorGithub: ChrisGarty
 version: 0.1.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14
