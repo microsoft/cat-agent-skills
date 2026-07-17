@@ -19,6 +19,7 @@ pre-packaged zip:
 ```
 submissions/<slug>/
 ├── metadata.json     # OR metadata.yaml — catalog details (sidecar, not bundled)
+├── README.md         # optional human-facing note (not bundled; see below)
 └── EITHER an unpacked canonical Agent Skill…
     ├── SKILL.md      # frontmatter (name + agent description) + instructions
     ├── scripts/      # optional executable code
@@ -33,14 +34,20 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 `meeting-summarizer` → `/skills/meeting-summarizer`. See
 [`submissions/README.md`](submissions/README.md) for the full reference.
 
-> **Everything except `metadata.*` is bundled into the agent-facing `.zip`,
-> verbatim.** The download bundle *is* the skill the agent loads, so it must
-> contain **only agent-facing files** (`SKILL.md`, `scripts/`, `references/`,
-> `assets/`). **Do not include a `README.md` or any other human-facing file**
-> (CONTRIBUTING, CHANGELOG, docs written for people, etc.) in your submission
-> folder — it will be packaged into the bundle and waste the agent's context.
-> Put contributor notes in your pull request description instead. Only
-> `metadata.json`/`metadata.yaml` is stripped out as a sidecar.
+> **Everything except `metadata.*` and `README.md` is bundled into the
+> agent-facing `.zip`, verbatim.** The download bundle *is* the skill the agent
+> loads, so it must contain **only agent-facing files** (`SKILL.md`, `scripts/`,
+> `references/`, `assets/`). Don't drop stray human-facing docs (CONTRIBUTING,
+> CHANGELOG, etc.) next to your payload — they'd be packaged into the bundle and
+> waste the agent's context; put those in your pull request description instead.
+
+> **Writing for a human? Add an optional `README.md`.** A root-level `README.md`
+> is the one human-facing companion the gallery understands: it's **never
+> bundled** and **never part of `SKILL.md`**. When you include one, it **becomes
+> the main content** on the detail page — your own overview, setup, and usage in
+> your words — while the exact `SKILL.md` (or `.json` / `.zip`) stays one click
+> away as the download. It's optional and works for every entry type; without it,
+> the page falls back to showing the skill's instructions.
 
 ### Cowork plugins
 
