@@ -97,6 +97,7 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 | `tags`        | `metadata.json` | yes      | Lowercase tags for search/filtering.                         |
 | `author`      | `metadata.json` |          | Person or team.                                              |
 | `authorUrl`   | `metadata.json` |          | Link to the author's website/profile.                        |
+| `authorGithub`| —               |          | Submitter's GitHub login. Set automatically by CI from the PR author — don't add it (see below).|
 | `version`     | `metadata.json` |          | Semantic version, e.g. `1.0.0`.                              |
 | `createdAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
 | `updatedAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
@@ -106,6 +107,16 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 
 A missing or invalid **required** field fails the PR with a message listing
 exactly what's wrong.
+
+### `authorGithub` (auto-populated)
+
+When you open a pull request, CI stamps the new skill's generated frontmatter
+with `authorGithub` — your GitHub login as the PR submitter. **You never write
+this field by hand.** Once set it stays put: editing another skill later won't
+overwrite it. It exists so the repo's *skillbot* can @-mention you on the first
+comment of your skill's discussion, so you hear about early feedback. (Skills
+contributed from a fork are stamped when a maintainer runs the importer, so the
+mention may be skipped until then.)
 
 ## Cowork plugins (advanced)
 
