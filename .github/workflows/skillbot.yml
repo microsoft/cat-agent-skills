@@ -27,9 +27,14 @@ jobs:
     # Fast gate: only the ratings/skill discussion category, only the very first
     # comment (also prevents the bot's own reply from re-triggering — it becomes
     # comment #2), and never react to another bot.
+    #
+    # TEMPORARY (one-off live test): the first-comment gate
+    #   github.event.discussion.comments == 1 &&
+    # is removed from the `if:` below so ANY new comment on a skill discussion
+    # fires the bot. Loop-safety still holds via the `!= 'Bot'` guard (the bot
+    # posts as github-actions[bot]). RESTORE that line before final merge.
     if: >-
       github.event.discussion.category.name == 'Announcements' &&
-      github.event.discussion.comments == 1 &&
       github.event.comment.user.type != 'Bot'
     steps:
       - name: Checkout
