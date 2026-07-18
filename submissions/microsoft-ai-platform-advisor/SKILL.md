@@ -161,7 +161,7 @@ If the code interpreter tool is available in the environment, invoke it with the
 - `{{COMPLEXITY_SCORE}}` → the integer 0–10 from Phase 3 sum
 - `{{RISK_SCORE}}` → the integer 0–10 from Phase 4 sum
 
-The script renders a 2×2 quadrant chart with the four quadrants labeled with planning guidance, plots the project as a labeled orange point, and saves the image as `effort_profile.png`. The full script is also included in this skill package at `scripts/effort_profile_chart.py`.
+The script renders a 2×2 quadrant chart with the four quadrants labeled with planning guidance, plots the project as a labeled orange point, and saves the image as `effort_profile.png`.
 
 ```python
 import matplotlib.pyplot as plt
@@ -217,12 +217,7 @@ plt.savefig("effort_profile.png", dpi=150, bbox_inches="tight")
 plt.show()
 ```
 
-**Copilot Studio setup notes for the maker:**
-
-- Code interpreter must be enabled at the **environment level** (Power Platform admin center → Environments → Settings → Product → Features → Copilot Studio code interpreter → On).
-- In the agent, add a **prompt tool** at the agent level (Tools → Add a tool → Prompt), then in prompt Settings turn on **Enable code interpreter**. Name the prompt something like `Generate Effort Chart`.
-- Code interpreter counts as **premium generative AI messages** — check the customer's licensing before recommending this path.
-- **Known limitation:** images created by code interpreter do NOT render in the Teams or Microsoft 365 Copilot channels. They render in the Copilot Studio test pane, the demo website, and custom web channels. For Teams delivery, fall back to the Mermaid chart from step 5a.
+**Channel rule (runtime):** images created by code interpreter do NOT render in the Teams or Microsoft 365 Copilot channels — they render in the Copilot Studio test pane, the demo website, and custom web channels. When delivering to Teams or Microsoft 365 Copilot, rely on the Mermaid chart from step 5a instead of the PNG.
 
 If code interpreter is not available, skip this step and rely on the Mermaid chart from step 5a alone. Do not fabricate a chart image.
 
