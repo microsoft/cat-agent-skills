@@ -14,7 +14,7 @@ The skill inventories solution artifacts, generates static metrics, and produces
 
 ## Portable workflow
 
-The bundled scripts run with Python 3.10+ and the standard library in the Linux-style execution environments used by Cowork, Copilot Studio, and Scout. The default outputs are a Markdown assessment and a JSON metrics file. Richer formats are optional and used only when the host provides a supported document-generation capability.
+The bundled scripts run with Python 3.10+ and the standard library in the Linux-style execution environments used by Cowork and Copilot Studio. The default outputs are a Markdown assessment and a JSON metrics file. Richer formats are optional and used only when the host provides a supported document-generation capability.
 
 The extraction workflow validates ZIP members before writing and rejects path traversal, excessive archive expansion, and unsafe output reuse. It does not print secret values or modify the supplied automation.
 

@@ -153,7 +153,7 @@ Use these signals to drive findings:
 - desktop flow binaries with UI/Web automation modules that require selector robustness and runtime diagnostics review;
 - generic names, misspellings, or artifacts named `OLD`, `TEST`, `Unknown`, or similar that indicate maintainability or ALM hygiene issues.
 
-## Runtime contract for Cowork, Copilot Studio, and Scout
+## Runtime contract for Cowork and Copilot Studio
 
 The required workflow targets the common execution model of all declared platforms:
 
