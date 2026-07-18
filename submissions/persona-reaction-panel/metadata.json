@@ -1,0 +1,8 @@
+{
+  "name": "Persona Reaction Panel",
+  "description": "Pre-test an internal launch, comms, or enablement artefact against your own role-based personas before it ships — surfaces blackspots, domain gaps, credible-detractor risks, and concrete edits. Bring your own personas file.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["communications", "change-management", "launch-readiness", "personas", "qa"],
+  "author": "Olivia Zhang",
+  "version": "1.0.0"
+}
