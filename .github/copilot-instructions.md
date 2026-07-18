@@ -35,13 +35,26 @@ Either the executable steps are made portable to the targeted runtime, or the
 
 ### Submission hygiene
 
+- **One concern per PR: submission content OR site/repo changes, never both.**
+  A pull request should either add/edit a `submissions/**` entry *or* change the
+  site/infrastructure (`.github/**`, `scripts/**`, `src/**` app code, Astro/root
+  config, etc.) — not both at once. This keeps a reviewer from accidentally
+  approving an infra change while signing off on a skill. CI enforces this via
+  the **Guard PR scope** check; the `allow-mixed-changes` label overrides it when
+  a mix is genuinely intended. (Generated artifacts CI commits back —
+  `src/content/skills/*`, `src/content/guides/*`, `public/bundles/*` — don't
+  count as site changes.)
 - Do **not** hand-commit generated artifacts: `src/content/skills/*` and
   `public/bundles/*` are produced by CI, never by the contributor.
 - The bundle ships **only agent-facing files** (`SKILL.md`, `scripts/`,
-  `references/`, `assets/`). No `README.md`, `CONTRIBUTING`, `CHANGELOG`, or
-  other human-facing docs in the submission folder — everything except the
-  `metadata.*` sidecar is packaged into the agent bundle and wastes context.
-  Human/contributor notes belong in the PR description.
+  `references/`, `assets/`). A root-level `README.md` is the one allowed
+  human-facing file: it is a sidecar (stripped alongside `metadata.*`), never
+  bundled and never read by the agent, and when present it becomes the main
+  content on the detail page. No other human-facing docs (`CONTRIBUTING`,
+  `CHANGELOG`, stray notes) belong in the submission folder — everything except
+  the `metadata.*` and `README.md` sidecars is packaged into the agent bundle
+  and wastes context. Ad-hoc contributor notes still belong in the PR
+  description.
 - `SKILL.md` is agent-only: no "Human setup instructions" / Overview / Quick
   start prose. Open straight into the agent instructions.
 - `references/`, `assets/`, and `scripts/` are **top-level siblings** inside the
