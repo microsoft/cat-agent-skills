@@ -33,6 +33,36 @@ the platforms it targets, for example:
 Either the executable steps are made portable to the targeted runtime, or the
 `platforms` list is narrowed to where the skill genuinely runs.
 
+### Human-facing vs. agent-facing content (README split)
+
+`SKILL.md` is read by the **agent at runtime**; the optional root-level
+`README.md` is read by a **human browsing the gallery**. They have different
+audiences, so onboarding/setup prose does not belong in `SKILL.md`.
+
+Actively flag a submission when human-facing content is embedded in `SKILL.md`
+instead of a `README.md`, for example:
+
+- **Setup / "before you start" guidance** — how to prepare inputs the skill
+  needs (e.g. "fill in your personas file", "create a config with these
+  fields", "8–12 personas is a good range"), installation/upload steps, or
+  "how to add this to your agent" instructions.
+- **Overview / marketing / "why use this" framing**, "at a glance" tables,
+  quick-start example prompts, tested-model notes, and limitations written for
+  a reader deciding whether to adopt the skill.
+- Any second-person "you"-addressed prose that tells the *user* what to do
+  before/around a run, rather than telling the *agent* how to execute one.
+
+When such content exists, ask the author to **move it into a `README.md`
+sidecar** and leave `SKILL.md` as the lean runtime SOP (activation, procedure,
+decision rules, output format). A skill that has meaningful setup or adoption
+guidance but **no `README.md`** should be flagged — that guidance has nowhere
+to live except wrongly inside `SKILL.md`, and the gallery page has no
+human-facing overview. (A `README.md` is optional only when there is genuinely
+no human-facing content to host.)
+
+The distinction to apply: *would the running agent ever need this sentence to
+do the task?* If no — it's documentation, and belongs in the `README.md`.
+
 ### Submission hygiene
 
 - **One concern per PR: submission content OR site/repo changes, never both.**
@@ -56,7 +86,8 @@ Either the executable steps are made portable to the targeted runtime, or the
   and wastes context. Ad-hoc contributor notes still belong in the PR
   description.
 - `SKILL.md` is agent-only: no "Human setup instructions" / Overview / Quick
-  start prose. Open straight into the agent instructions.
+  start / setup-prep prose (see **Human-facing vs. agent-facing content**
+  above). Open straight into the agent instructions.
 - `references/`, `assets/`, and `scripts/` are **top-level siblings** inside the
   submission (or the `.zip`), not nested under one another (e.g. not
   `scripts/references/`).
