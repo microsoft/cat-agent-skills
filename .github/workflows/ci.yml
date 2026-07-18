@@ -69,3 +69,60 @@ jobs:
       # tags, etc.), so a malformed or out-of-policy skill fails the PR.
       - name: Build site (validates skill content)
         run: npm run build
+
+  guard-scope:
+    name: Guard PR scope (site vs submissions)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      # Fail a PR that edits BOTH a submission (submissions/**) and the site /
+      # repo config (workflows, scripts, Astro app, root config, etc.) in one go.
+      # Submission content and infra/site changes must be reviewed and merged
+      # separately so a reviewer can't accidentally approve a site change while
+      # signing off on a skill (or vice versa). Add the `allow-mixed-changes`
+      # label to intentionally override. Generated artifacts that CI itself
+      # commits back to the branch (src/content/skills, src/content/guides,
+      # public/bundles, src/data/ratings.json) are ignored — they aren't
+      # hand-authored site changes.
+      - name: Detect mixed site + submission changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+          if printf '%s' "$LABELS" | grep -q '"allow-mixed-changes"'; then
+            echo "Label 'allow-mixed-changes' present — skipping scope guard."
+            exit 0
+          fi
+          FILES="$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')"
+          echo "Changed files:"; printf '%s\n' "$FILES"
+          SUBMISSION="$(printf '%s\n' "$FILES" | grep -E '^submissions/' || true)"
+          SITE="$(printf '%s\n' "$FILES" \
+            | grep -vE '^submissions/' \
+            | grep -vE '^src/content/skills/' \
+            | grep -vE '^src/content/guides/' \
+            | grep -vE '^public/bundles/' \
+            | grep -vE '^src/data/ratings\.json$' \
+            || true)"
+          if [ -n "$SUBMISSION" ] && [ -n "$SITE" ]; then
+            {
+              echo "### ❌ This PR mixes submission content with site/repo changes"
+              echo ""
+              echo "Split them into **separate PRs** — one for the submission, one"
+              echo "for the site/config change — so each can be reviewed on its own."
+              echo "(To override intentionally, add the \`allow-mixed-changes\` label.)"
+              echo ""
+              echo "**Submission files:**"
+              printf '%s\n' "$SUBMISSION" | sed 's/^/- `/; s/$/`/'
+              echo ""
+              echo "**Site / repo files:**"
+              printf '%s\n' "$SITE" | sed 's/^/- `/; s/$/`/'
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "::error::PR mixes submission content with site/repo changes — split into separate PRs or add the 'allow-mixed-changes' label."
+            exit 1
+          fi
+          echo "Scope guard passed: PR touches submissions or site, not both."
