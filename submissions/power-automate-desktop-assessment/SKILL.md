@@ -153,55 +153,100 @@ Use these signals to drive findings:
 - desktop flow binaries with UI/Web automation modules that require selector robustness and runtime diagnostics review;
 - generic names, misspellings, or artifacts named `OLD`, `TEST`, `Unknown`, or similar that indicate maintainability or ALM hygiene issues.
 
+## Runtime contract for Cowork, Copilot Studio, and Scout
+
+The required workflow targets the common execution model of all declared platforms:
+
+- Python 3.10+ in an isolated Linux-style runtime with a writable `/tmp` directory.
+- Python standard library only for extraction, metrics, and the canonical report.
+- Input and output through host-provided file or attachment capabilities, not a desktop filesystem or sync client.
+- No PowerShell, Windows paths, desktop Office automation, process termination, Node.js, or host-specific skill-loader paths.
+
+The skill includes four companion scripts under `scripts/`:
+
+- `extract_solution.py` safely extracts a solution ZIP and rejects path traversal and oversized archives.
+- `analyze_solution.py` generates static metrics without emitting configuration or secret values.
+- `render_report.py` produces the canonical Markdown report.
+- `run_assessment.py` runs the complete extraction, analysis, and report pipeline.
+
+If a host exposes Python through an action or tool rather than directly to the agent, configure that action to use the same command-line contract and pass host-managed input/output files to it.
+
 ## Recommended assessment automation workflow
 
-Use this workflow for solution ZIP assessments. Adapt paths to the user's workspace and requested output file.
+### 1. Stage the input
 
-### 1. Extract the solution ZIP
+Use the host's file or attachment capability to materialize the supplied solution ZIP as a read-only temporary file, for example:
 
-```powershell
-$zip = 'C:\path\to\solution.zip'
-$out = 'C:\path\to\workspace\solution_extract'
-if (Test-Path -LiteralPath $out) { Remove-Item -LiteralPath $out -Recurse -Force }
-New-Item -ItemType Directory -Path $out -Force | Out-Null
-Expand-Archive -LiteralPath $zip -DestinationPath $out -Force
-Get-ChildItem -LiteralPath $out -Recurse -File | Select-Object FullName, Length
+`/tmp/input/solution.zip`
+
+Do not assume that a user-provided local path is visible inside the execution runtime.
+
+### 2. Run the bundled Python workflow
+
+From the skill package root, run:
+
+```bash
+python3 scripts/run_assessment.py \
+  --zip /tmp/input/solution.zip \
+  --work-dir /tmp/pad-assessment
 ```
 
-### 2. Generate assessment metrics
+The command creates a unique run directory and prints the exact paths. It produces:
 
-Create or reuse an analysis script that:
+- `/tmp/pad-assessment/run-<id>/output/assessment_metrics.json`
+- `/tmp/pad-assessment/run-<id>/output/assessment_report.md`
 
+The workflow:
+
+- preserves the original ZIP;
+- validates archive members before writing, extracts into a new staging directory, and rejects path traversal, excessive member counts, oversized files, and excessive total expansion;
 - parses `solution.xml`;
 - reads `environmentvariabledefinitions/*/environmentvariabledefinition.xml`;
 - inspects `desktopflowbinaries/*/data/*.json`;
 - walks all `Workflows/*.json` recursively;
-- counts triggers, actions, action types, connectors, scopes, `Foreach`, maximum nested `Foreach` depth, `runAfter` non-success paths, retry policies, `Terminate`, HTTP actions, wait/delay actions, desktop/child-flow references, and sensitive keyword classes;
-- writes `assessment_metrics.json`.
+- counts triggers, actions, action types, connectors, scopes, `Foreach`, maximum nested `Foreach` depth, non-success `runAfter` paths, retry policies, `Terminate`, HTTP-like actions, wait/delay actions, and desktop/child-flow references;
+- records only sensitive keyword classes or presence indicators, never secret values;
+- keeps source filenames for traceability and uses friendly names in the report.
 
-Key parser behaviors:
+Individual scripts can also be invoked directly:
 
-- tolerate mixed JSON structures where `inputs`, `cases`, `else`, or `default` might be strings or objects;
-- never print secret values, only keyword classes or presence indicators;
-- keep file names for traceability but map them to friendly workflow names in the report.
+```bash
+python3 scripts/extract_solution.py \
+  /tmp/input/solution.zip \
+  /tmp/pad-assessment/solution_extract
 
-### 3. Create visual executive dashboard
+python3 scripts/analyze_solution.py \
+  --root /tmp/pad-assessment/solution_extract \
+  --output /tmp/pad-assessment/output/assessment_metrics.json
 
-Generate a PNG dashboard when the report format supports images. The dashboard should include:
+python3 scripts/render_report.py \
+  --metrics /tmp/pad-assessment/output/assessment_metrics.json \
+  --output /tmp/pad-assessment/output/assessment_report.md
+```
 
-- KPI cards: cloud flows, total actions, desktop artifacts, high-priority recommendations, nested-loop flows, ALM hygiene signals;
-- bar chart: top workflows by action count;
-- bar chart: recommendation hotspots by topic;
-- priority split: High / Medium / Low;
-- short interpretation bullets.
+### 3. Complete the evidence-based review
 
-Use an available charting or document-generation tool. If image generation is unavailable, use a compact table-based dashboard.
+Treat the generated report as a static-analysis draft. Verify its threshold-based findings against the extracted artifacts and add evidence from any supplied run history, action logs, selectors, machine configuration, DLP policies, test results, and operational documentation.
 
-### 4. Generate the assessment report
+Do not infer runtime behavior from package structure alone. Lower confidence and list missing evidence when runtime artifacts are unavailable.
 
-Create the report in the user's requested format. If no format is requested, use Markdown. The report should be in English by default and organized as:
+### 4. Create the executive dashboard
 
-1. Visual executive dashboard with KPI image and summary metrics.
+The portable default is a compact Markdown table using the metrics JSON. If the host provides a supported chart or image-generation capability, a PNG dashboard can also include:
+
+- KPI cards: cloud flows, total actions, desktop artifacts, high-priority recommendations, nested-loop flows, and ALM hygiene signals;
+- top workflows by action count;
+- recommendation hotspots by topic;
+- priority split;
+- short interpretation notes.
+
+Image generation is optional and must not block delivery of the Markdown report.
+
+### 5. Generate the assessment report
+
+Markdown is the canonical cross-platform output. The report should be in English by default and organized as:
+
+1. Executive dashboard or summary metrics table.
 2. Executive summary.
 3. Priority recommendations grouped by artifact type:
    - Cloud Flows
@@ -214,12 +259,10 @@ Create the report in the user's requested format. If no format is requested, use
 Report structure requirements:
 
 - The assessment body must be written in English unless the user explicitly requests another report language.
-- Section 2 must be organized by artifact type, not by raw file order.
-- Use friendly artifact names in headings, followed by the artifact type in brackets, for example `LA - Email Forwarder - Performer Main [Cloud Flow]`.
-- Do not use raw JSON filenames as recommendation titles. Keep raw names only in the **Technical source** row for traceability.
-- Include a visual executive dashboard near the beginning of the report. Prefer a generated PNG image with KPI cards and charts. If image generation is unavailable, use visually formatted Word tables as a fallback.
-- The dashboard should show at least: cloud flow count, total cloud actions, desktop artifacts, high-priority recommendations, nested-loop workflows, ALM hygiene signals, top workflows by action count, recommendation hotspots by topic, and priority split.
-- The detailed recommendation sections should be actionable and not purely inventory-based. Each recommendation must state what was observed, the expected target state, the remediation approach, and the expected impact.
+- Organize recommendations by artifact type, not raw file order.
+- Use friendly artifact names in headings, followed by the artifact type, for example `Invoice Dispatcher [Cloud Flow]`.
+- Do not use raw JSON filenames as recommendation titles. Keep raw names only in the **Technical source** field for traceability.
+- Each recommendation must state what was observed, the target state, the remediation approach, the expected impact, and the priority.
 
 For each recommendation, use professional headings:
 
@@ -231,37 +274,41 @@ For each recommendation, use professional headings:
 - **Expected business/operational impact**
 - **Priority**
 
-Avoid using raw JSON filenames as section titles. Use a friendly workflow name plus artifact type, and keep the raw filename only as **Technical source**.
+### 6. Optional richer document formats
 
-### 5. Validate the report
+Only create DOCX, PDF, or another rich format when the user requests it and the current host exposes a supported document-generation capability.
 
-Validate the generated file with an appropriate format-specific validator when one is available. Confirm that headings, tables, images, links, and page layout render correctly before delivery.
+- Use the host-native capability; do not require `docx-js`, Node.js, Microsoft Word, LibreOffice, a mounted OneDrive/SharePoint folder, or another platform's skill loader.
+- Treat the Markdown report and metrics JSON as the source of truth.
+- If the requested format is unavailable, deliver Markdown and state the limitation explicitly.
+- Validate an optional rich document with the host's supported validator or preview capability before delivery. Never claim validation that did not run.
 
-### 6. Output naming
+### 7. Publish outputs safely
 
-Use explicit report names:
+Use explicit names:
 
-- `*_Assessment_BestPractices.docx` for the concise best-practices version.
-- `*_Assessment_DetailedRecommendations_EN.docx` for the full English detailed version with visual dashboard and workflow-level recommendations.
+- `*_Assessment.md`
+- `*_Assessment_Metrics.json`
+- an equivalent extension only when an optional richer format was requested and generated.
 
-If the target file is locked by Word or OneDrive, create a new versioned filename rather than overwriting.
+Return or persist outputs with the host's file/attachment API. Do not assume a mounted cloud-drive path. Avoid in-place overwrite; when a destination already exists, use a new versioned name. Never terminate user applications or sync processes.
 
 ## Common myths and verified facts
 
 These are factually wrong claims that show up repeatedly in PAD assessments (and in partner-authored documents being reviewed). Always fact-check against current Microsoft Learn before accepting them as evidence — and call them out when they appear in the artifact under review.
 
-| Myth (frequently asserted) | Verified fact | Authoritative reference |
-|---|---|---|
-| "Automation Center captures error screenshots automatically" | False. AC stores run history, status, recommendations, and queue health, but does **not** capture screenshots on error. The supported pattern is an explicit `Take screenshot` action wrapped by `On block error` or by exception-handling subflows. | Learn: *Troubleshoot failed unattended runs using screenshots* |
-| "Use the Azure Application Insights connector ('Send to App Insights') for telemetry" | The Azure Application Insights connector is **deprecated and read-only** (it only ran Analytics queries; it never wrote telemetry). For Power Automate: enable App Insights integration at the **environment level** in Power Platform admin centre to capture cloud flows automatically; for desktop flow custom traces, use an HTTP action against the Application Insights ingestion endpoint. | Learn: *Set up Application Insights for an environment*; Connectors reference (deprecated marker) |
-| "PAD has a 'Get files in folder' action under the System group" | The action lives under **Folder** group, not System. | Learn: *Folder actions reference* |
-| "PAD has a 'Generate random text or number' action" | The native action is **`Create random text`** under the **Text** group. | Learn: *Text actions reference* |
-| "PAD has a 'Convert custom object to datatable' action" | Does **not exist**. Variables actions provide `Convert JSON to custom object`, `Convert custom object to JSON`, and `Convert data table to text`. To produce a datatable from JSON, iterate the parsed custom object and use `Insert row into data table`, or perform the conversion in cloud-flow expressions. | Learn: *Variables actions* |
-| "Unattended fails because Entra tokens expire" | Most reports of this symptom are actually the **`Connect with sign-in` option being interactive-only** — it cannot reconnect a machine after sign-out without a logged-in session. Move to a self-hosted Machine Group with a service principal as connection identity. The `Entra token expiry` framing leads to wrong remediation (forced re-login scripts) instead of the correct one (service principal). | Learn: *Set up machines for desktop flows*; *Run desktop flows from a cloud flow* |
-| "Logs V1 with custom retention is fine" | Logs V2 (Elastic Tables) supersedes V1. V2 provides **automatic data retention**, **near real-time updates**, and scales to GB of action logs per run. New environments default to V2; assessments should recommend V2 unless there is a hard incompatibility. | Learn: *Desktop flow action logs configuration* |
-| "Work Queues can be parallelised aggressively" | Learn-documented limit: keep dequeueing concurrency moderate — **up to five parallel dequeue operations per work queue is recommended**. For sub-second processing, Work Queues are not suitable; Learn explicitly recommends **Azure Service Bus Queues** as alternative. | Learn: *Work queues — Known limitations* |
-| "Cloud flow timeout caps desktop flow at 24 h / 4 h / pick a number" | The `Run a flow built with Power Automate Desktop` action accepts an ISO 8601 timeout (e.g., `PT10M`, `PT1H`); Learn does **not** publish a maximum value for the action timeout. The only documented hard envelope is the cloud flow run duration limit (**30 days**). | Learn: *Limits of automated, scheduled, and instant flows* |
-| "Custom assembly call counts and native action counts can be conflated" | Distinguish carefully when counting Work Queue usage: **native** calls use the `WORKQUEUES` module, while **custom assembly** calls use a project-specific namespace and method. A mix is common; report them in two separate columns ("native hits" vs "assembly hits"), never a single total. | Robin script convention; assembly source/manifest |
+| Myth (frequently asserted)                                                            | Verified fact                                                                                                                                                                                                                                                                                                                                                                                                 | Authoritative reference                                                                           |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| "Automation Center captures error screenshots automatically"                          | False. AC stores run history, status, recommendations, and queue health, but does **not** capture screenshots on error. The supported pattern is an explicit `Take screenshot` action wrapped by `On block error` or by exception-handling subflows.                                                                                                                                                          | Learn: _Troubleshoot failed unattended runs using screenshots_                                    |
+| "Use the Azure Application Insights connector ('Send to App Insights') for telemetry" | The Azure Application Insights connector is **deprecated and read-only** (it only ran Analytics queries; it never wrote telemetry). For Power Automate: enable App Insights integration at the **environment level** in Power Platform admin centre to capture cloud flows automatically; for desktop flow custom traces, use an HTTP action against the Application Insights ingestion endpoint.             | Learn: _Set up Application Insights for an environment_; Connectors reference (deprecated marker) |
+| "PAD has a 'Get files in folder' action under the System group"                       | The action lives under **Folder** group, not System.                                                                                                                                                                                                                                                                                                                                                          | Learn: _Folder actions reference_                                                                 |
+| "PAD has a 'Generate random text or number' action"                                   | The native action is **`Create random text`** under the **Text** group.                                                                                                                                                                                                                                                                                                                                       | Learn: _Text actions reference_                                                                   |
+| "PAD has a 'Convert custom object to datatable' action"                               | Does **not exist**. Variables actions provide `Convert JSON to custom object`, `Convert custom object to JSON`, and `Convert data table to text`. To produce a datatable from JSON, iterate the parsed custom object and use `Insert row into data table`, or perform the conversion in cloud-flow expressions.                                                                                               | Learn: _Variables actions_                                                                        |
+| "Unattended fails because Entra tokens expire"                                        | Most reports of this symptom are actually the **`Connect with sign-in` option being interactive-only** — it cannot reconnect a machine after sign-out without a logged-in session. Move to a self-hosted Machine Group with a service principal as connection identity. The `Entra token expiry` framing leads to wrong remediation (forced re-login scripts) instead of the correct one (service principal). | Learn: _Set up machines for desktop flows_; _Run desktop flows from a cloud flow_                 |
+| "Logs V1 with custom retention is fine"                                               | Logs V2 (Elastic Tables) supersedes V1. V2 provides **automatic data retention**, **near real-time updates**, and scales to GB of action logs per run. New environments default to V2; assessments should recommend V2 unless there is a hard incompatibility.                                                                                                                                                | Learn: _Desktop flow action logs configuration_                                                   |
+| "Work Queues can be parallelised aggressively"                                        | Learn-documented limit: keep dequeueing concurrency moderate — **up to five parallel dequeue operations per work queue is recommended**. For sub-second processing, Work Queues are not suitable; Learn explicitly recommends **Azure Service Bus Queues** as alternative.                                                                                                                                    | Learn: _Work queues — Known limitations_                                                          |
+| "Cloud flow timeout caps desktop flow at 24 h / 4 h / pick a number"                  | The `Run a flow built with Power Automate Desktop` action accepts an ISO 8601 timeout (e.g., `PT10M`, `PT1H`); Learn does **not** publish a maximum value for the action timeout. The only documented hard envelope is the cloud flow run duration limit (**30 days**).                                                                                                                                       | Learn: _Limits of automated, scheduled, and instant flows_                                        |
+| "Custom assembly call counts and native action counts can be conflated"               | Distinguish carefully when counting Work Queue usage: **native** calls use the `WORKQUEUES` module, while **custom assembly** calls use a project-specific namespace and method. A mix is common; report them in two separate columns ("native hits" vs "assembly hits"), never a single total.                                                                                                               | Robin script convention; assembly source/manifest                                                 |
 
 When the artifact under review claims any of the left-column statements, treat it as a finding (Medium severity by default) and cite the corrected fact in the report.
 
@@ -520,9 +567,9 @@ Severity guidance:
 
 ## Top risks
 
-| Priority | Severity | Area | Finding | Recommended action |
-|---|---|---|---|---|
-| 1 | High | Reliability | ... | ... |
+| Priority | Severity | Area        | Finding | Recommended action |
+| -------- | -------- | ----------- | ------- | ------------------ |
+| 1        | High     | Reliability | ...     | ...                |
 
 ## Detailed findings
 
@@ -531,12 +578,15 @@ Severity guidance:
 ## Remediation roadmap
 
 ### Quick wins (0-2 weeks)
+
 - ...
 
 ### Stabilization (2-6 weeks)
+
 - ...
 
 ### Structural improvements (6+ weeks)
+
 - ...
 
 ## Open questions and missing evidence
@@ -577,7 +627,7 @@ Use this checklist internally and include it when useful:
 ## Output style
 
 - Write formal assessment reports in English by default, even when the conversation is in another language, unless the user explicitly requests a different report language. Short chat explanations can still match the user's language.
-- Be concise but specific. Avoid generic best-practice filler.
+- Be detailed yet specific. Avoid generic best-practice filler.
 - When evidence is missing, say so clearly and lower confidence rather than guessing.
 - When using non-official/community sources, identify them as supplementary rather than authoritative.
 - If the user asks for an assessment report file, create the requested format only after confirming the intended deliverable type unless it is obvious from the request.
