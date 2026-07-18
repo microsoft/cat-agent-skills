@@ -6,27 +6,30 @@ scatter, histogram, or pie — with a single request.
 ## Why use this?
 
 Your agent can already make charts without any skill. When you ask for one, it
-quietly writes a little chart-drawing code on the spot and runs it. That works —
-but because it improvises every time, the results drift. Ask for "revenue by
+writes a fresh, one-off chart script on the spot and runs it. That works, but
+because it starts from scratch each time, the results vary. Ask for "revenue by
 region" twice and you might get two different color schemes, two different sizes,
-labels that overlap in one but not the other, or a chart that fails on messy data.
+or labels that overlap in one but not the other.
 
-Chart Builder replaces that improvisation with a **ready-made recipe**. Instead of
-inventing a chart from scratch each time, the agent fills in a proven template:
-you pick the chart and the data, and the skill handles the look and the details.
+Chart Builder swaps that ad hoc approach for a fixed, reusable set of chart
+functions. Instead of writing new plotting code for each request, the agent
+calls a function that's already built: you pick the chart and the data, and the
+skill handles the styling and the details.
 
-The payoff:
+The benefits:
 
-- **Consistent** — every chart uses the same tidy style and a color palette that's
-  friendly to colorblind viewers, so a set of charts looks like it belongs
-  together.
-- **Faster** — one step instead of writing and debugging fresh code for each chart.
-- **Dependable** — it quietly handles the fiddly bits: skipping blank rows,
-  angling labels when they'd overlap, widening the chart when there are lots of
-  categories, and keeping the legend out of the way.
+- **Usually faster** — calling a ready-made function skips the work of writing
+  and debugging new plotting code on each request.
+- **More consistent** — charts share the same tidy style and a color palette
+  that's friendly to colorblind viewers, so a set of charts looks like it
+  belongs together.
+- **Fewer rough edges** — the functions handle the fiddly bits: skipping blank
+  rows, angling labels when they'd overlap, widening the chart when there are
+  lots of categories, and keeping the legend out of the way.
 
-Think of it as guardrails, not a new trick: the agent *could* draw the chart
-free-hand, but this makes sure it does it well the same way every time.
+The best way to judge the difference is to try both on your own data: ask for a
+few charts the normal way, then with this skill, and compare the speed and the
+results.
 
 ## What you get
 
@@ -50,5 +53,5 @@ charts right away.
 
 ## Requirements
 
-Runs in the standard environment for Cowork, Copilot Studio, and Scout — nothing
-to install or set up.
+Runs in the standard Python environment for Cowork, Copilot Studio, and Scout,
+with matplotlib and pandas — nothing to install or set up.
