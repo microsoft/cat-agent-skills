@@ -10,6 +10,7 @@ authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14
+featured: true
 bundle: bundles/chart-builder.zip
 ---
 Generate charts from tabular data via the bundled `scripts/charts.py` toolkit.

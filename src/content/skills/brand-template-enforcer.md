@@ -5,9 +5,9 @@ agentDescription: "Applies bundled or SharePoint-hosted organization-approved Po
 platforms: [Copilot Studio]
 tags: [branding, powerpoint, word, templates, documents, presentations]
 authorGithub: SimonOwenDigital
-version: 1.1.0
+version: 1.2.0
 createdAt: 2026-07-16
-updatedAt: 2026-07-16
+updatedAt: 2026-07-18
 bundle: bundles/brand-template-enforcer.zip
 ---
 # Agent runtime instructions

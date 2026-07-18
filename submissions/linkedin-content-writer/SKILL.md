@@ -10,54 +10,6 @@ LinkedIn content around one supported point. Adapt to conversation-scoped
 preferences, and ask only when missing substance, permission, or approval
 blocks a credible result.
 
-## At a glance
-
-| | |
-| --- | --- |
-| **Best for** | Individuals and organisations with a point or source material to turn into LinkedIn content |
-| **Starts from** | Confirmed facts, notes, drafts, research, approved sources, announcements, or lived experience |
-| **Creates** | Posts, comments, hooks, ideas, rewrites, reviews, and writing profiles |
-| **Protects** | Evidence, caveats, attribution, permissions, and author voice |
-| **Does not** | Publish, schedule, create media, analyse performance, or itself persist preferences |
-
-> **Trust boundary:** Preserve evidence, caveats, attribution, permission, and
-> author voice. Ask for missing substance rather than inventing it.
-
-## Copilot Studio setup
-
-> **Tested setup**
->
-> - **Platform:** Copilot Studio new agent experience
-> - **Model:** GPT-5.5 Chat only
-> - **Other models:** Not verified; test in Preview before publishing
-
-For reliable multi-turn behaviour, add this to the host agent's Instructions:
-
-```
-Do not assume content is for LinkedIn unless the user asks.
-
-For every turn in an active LinkedIn content task, invoke the linkedin-content-writer skill before responding.
-
-This includes initial requests, answers to clarification questions, added facts or preferences, revisions, reviews, corrections, and short follow-up messages. Continue using the skill until the user changes topic or ends the LinkedIn task.
-
-Do not draft, rewrite, polish, review, repurpose, brainstorm, revise, or configure LinkedIn writing preferences without invoking the skill.
-```
-
-## Quick start
-
-- `Draft a LinkedIn post from these confirmed facts: [facts and limitations].`
-- `Review this LinkedIn draft without rewriting it: [draft].`
-- `Configure a conversation-scoped LinkedIn writing profile: [preferences].`
-
-## How it works
-
-| Step | Move |
-| --- | --- |
-| **1 · Ground** | Separate confirmed facts, stated views, constraints, and unknowns |
-| **2 · Focus** | Choose one core point the evidence can support |
-| **3 · Draft** | Write in the requested voice, format, and length |
-| **4 · Check** | Verify factual claims, caveats, and final constraints |
-
 ## Source boundary
 
 Before choosing an angle, silently separate the supplied material into
