@@ -11,11 +11,11 @@ your agent searches one big pile of knowledge, a user in Germany can easily get
 an answer meant for someone in the US.
 
 The clever part is that in Copilot Studio you don't need custom code to fix this
-— you can guide the agent, in plain instructions, on **where** to look. This
-skill is exactly that guidance: before the agent searches its knowledge, it first
-decides *which* source fits the user's region (Americas, EMEA, APAC, or a Global
-fallback) and searches only there. Same question, right answer for the right
-place.
+— you can guide the agent, in plain instructions, on **which of your configured
+knowledge sources** to search. This skill is exactly that guidance: before the
+agent searches its knowledge, it first decides *which* source fits the user's
+region (Americas, EMEA, APAC, or a Global fallback) and searches only there.
+Same question, right answer for the right place.
 
 ## What you provide
 
