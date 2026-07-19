@@ -3,7 +3,7 @@ name: Copilot Studio Test Planner
 description: "Reads an exported Copilot Studio agent and generates a graded, runnable test suite (happy-path, paraphrase, disambiguation, negative, knowledge-grounding, multilingual, and safety cases) plus a regression set, ready to run in the free Copilot Studio test panel."
 platforms: [Cowork]
 type: plugin
-tags: [copilot-studio, testing, eval, regression, qa, agent, cowork]
+tags: [qa, eval, regression, agent]
 author: Elliot Margot
 authorUrl: "https://e-margot.ch"
 authorGithub: adilei

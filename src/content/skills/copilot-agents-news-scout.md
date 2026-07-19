@@ -3,7 +3,7 @@ name: Copilot & Agents News Scout
 description: "A Monday-morning Scout automation that scans authoritative Microsoft sources for the past week's Copilot, Copilot Studio, and agent news and posts a concise, linked digest to Teams."
 platforms: [Scout]
 type: automation
-tags: [scout, news, copilot, copilot-studio, agents, digest, automation, weekly, teams]
+tags: [news, copilot, agent, digest, automation, weekly, teams]
 author: Elliot Margot
 authorUrl: "https://e-margot.ch"
 authorGithub: adilei

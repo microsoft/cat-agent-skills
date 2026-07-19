@@ -3,7 +3,7 @@ name: Microsoft AI Platform Advisor
 description: "Guides a customer through a discovery interview, recommends the right Microsoft AI platform (M365 Copilot, Agent Builder, Copilot Studio, Foundry, Foundry Agent Service, Windows AI Foundry, or Agent 365 as the governance layer), scores technical complexity and risk, and plots them on a 2x2 quadrant chart with planning guidance."
 agentDescription: "Use this skill when the user needs to choose the right Microsoft AI platform for a project, is comparing Microsoft 365 Copilot, Agent Builder, Copilot Studio, Microsoft Foundry, Foundry Agent Service, Windows AI Foundry, or Agent 365, needs to gather requirements for an AI or agent build, needs a solution architecture recommendation, needs to estimate effort as technical complexity and risk, or asks any variant of \"which platform should I use\", \"how do I choose\", \"help me scope this AI project\", or \"what's the right tool for this AI use case\"."
 platforms: [Copilot Studio]
-tags: [advisor, discovery, architecture, decision-guide, solution-design, requirements, risk-assessment, copilot-studio, microsoft-365-copilot, foundry, foundry-agent-service, agent-365, windows-ai-foundry]
+tags: [advisor, discovery, architecture, decision-making, requirements, risk-assessment, microsoft-365-copilot, foundry, foundry-agent-service, agent-365, windows-ai-foundry]
 author: Rafsan Huseynov
 authorUrl: "https://www.linkedin.com/in/rafsanhuseynov"
 authorGithub: adilei

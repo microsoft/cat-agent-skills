@@ -3,7 +3,7 @@ name: Copilot Studio Topic Blueprint
 description: "Turn a one-line use case into a build-ready Microsoft Copilot Studio agent blueprint: recommended agent type and orchestration, topics, tools, knowledge, variables, a welcome Adaptive Card, security and Copilot Credits notes, and a first test plan."
 agentDescription: "Use this skill whenever the user describes a Copilot Studio agent in a sentence or two and wants a build-ready blueprint, or asks how to design, scope, or structure an agent (its type, topics, tools, knowledge, or welcome experience). Trigger on requests like \"design a Copilot Studio agent that…\", \"turn this use case into an agent\", \"how should I structure this agent\", or a pasted one-line use case. Do NOT trigger for testing an existing agent (that is the test-planner skill) or for generic Power Platform flows unrelated to an agent."
 platforms: [Copilot Studio]
-tags: [copilot-studio, agent, blueprint, topics, design, power-platform, orchestration, adaptive-card]
+tags: [agent, blueprint, topics, design, power-platform, orchestration, adaptive-card]
 author: Elliot Margot
 authorUrl: "https://e-margot.ch"
 authorGithub: adilei

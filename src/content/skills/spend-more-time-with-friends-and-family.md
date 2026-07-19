@@ -3,7 +3,7 @@ name: Spend More Time With Friends & Family
 description: "While you're out of office, watches a group chat and answers questions from your local knowledge docs (clearly marked AI-generated), logs anything it can't answer for later, and pings you on Teams if its setup is incomplete."
 platforms: [Scout]
 type: automation
-tags: [scout, automation, teams, out-of-office, knowledge]
+tags: [automation, teams, out-of-office, knowledge]
 author: Adi Leibowitz
 authorUrl: "https://github.com/adilei"
 authorGithub: adilei

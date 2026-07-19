@@ -3,7 +3,7 @@ name: AI Use Case Assessment
 description: "Turn any AI/agentic use case idea (chat, uploaded doc, or attached file) into an evidence-grounded, rubric-scored assessment with a customer-branded HTML report. Guides the user question-by-question through intake, categorisation, strengthening, scoring, and reporting — grounded in the Agentic Use Case Assessment Rubric v2. Runs in Microsoft Scout and Microsoft 365 Copilot Cowork."
 agentDescription: "Use this skill whenever the user says \"assess this use case\", \"score my AI use case\", \"prioritise these agent ideas\", \"generate a use case assessment report\", or \"update my AI use case report\" — or when they attach a use-case document, SDR, or prior `*_AI_UseCase_Assessment_Report_*.html` and ask you to assess, strengthen, score, or refresh it. Invoke BEFORE writing any assessment content and BEFORE generating any report."
 platforms: [Scout, Cowork]
-tags: [assessment, ai, agentic, use-case, rubric, scoring, report, html, intake]
+tags: [assessment, ai, agent, use-case, scoring, report, html, intake]
 author: Alicja Gilderdale
 authorUrl: "https://www.linkedin.com/in/alicja-gilderdale/"
 authorGithub: adilei

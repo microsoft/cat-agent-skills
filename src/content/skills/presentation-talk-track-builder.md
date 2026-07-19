@@ -3,7 +3,7 @@ name: Presentation Talk Track Builder
 description: "Writes natural, first-person spoken presenter scripts for the slides in a deck. Treats existing speaker notes as authoritative when they contradict slide text. Calibrates length to a target duration and speaking pace and returns a timing table. Never modifies visible slide content."
 agentDescription: "Writes natural, first-person spoken presenter scripts (talk tracks) for the\nslides in a PowerPoint deck, from slide images, or from pasted slide text.\nTreats existing speaker notes as AUTHORITATIVE when they contradict slide\ntext. Produces one spoken script per slide with delivery cues, calibrated to\na target duration and speaking pace, plus a timing table. Use when the user\nsays \"write a script for these slides\", \"I'm presenting slides X-Y, what\nshould I say\", \"create a presenter script\", \"turn my speaker notes into a\ntalk track\", or \"make a 6-minute script for these slides\". Do NOT use to\ncreate or edit the visible content of slides, to summarize a recorded\nmeeting or transcript, or for general document writing.\n"
 platforms: [Cowork, Copilot Studio, Scout]
-tags: [presentations, speaker-notes, pptx, writing, productivity]
+tags: [presentations, speaker-notes, powerpoint, writing, productivity]
 author: Jagmeet Chabra
 authorUrl: "https://github.com/jchha001"
 authorGithub: adilei

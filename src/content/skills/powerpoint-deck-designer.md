@@ -3,7 +3,7 @@ name: PowerPoint Deck Designer
 description: "Creates polished PowerPoint decks from a JSON specification using python-pptx. Designed as a Copilot Studio Skill that runs natively inside the agent's Python container (no Azure Function or custom connector required). Supports 8 layouts plus native charts (bar, column, line, pie, donut with stacked / 100% stacked variants)."
 agentDescription: Creates polished PowerPoint decks from a JSON specification using python-pptx. Designed as a Copilot Studio Skill that runs natively inside the agent container.
 platforms: [Copilot Studio]
-tags: [powerpoint, pptx, presentations, python, copilot-studio, charts]
+tags: [powerpoint, presentations, python, charts]
 author: Ferran Chopo
 authorUrl: "https://www.linkedin.com/in/fchopo"
 authorGithub: adilei
