@@ -2,7 +2,7 @@
   "name": "Presentation Talk Track Builder",
   "description": "Writes natural, first-person spoken presenter scripts for the slides in a deck. Treats existing speaker notes as authoritative when they contradict slide text. Calibrates length to a target duration and speaking pace and returns a timing table. Never modifies visible slide content.",
   "platforms": ["Cowork", "Copilot Studio", "Scout"],
-  "tags": ["presentations", "speaker-notes", "pptx", "writing", "productivity"],
+  "tags": ["presentations", "speaker-notes", "powerpoint", "writing", "productivity"],
   "author": "Jagmeet Chabra",
   "authorUrl": "https://github.com/jchha001",
   "version": "1.0.0",

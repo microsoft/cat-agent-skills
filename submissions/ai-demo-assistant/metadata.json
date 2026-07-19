@@ -2,7 +2,7 @@
   "name": "AI Demo Assistant",
   "description": "Turns a customer name, line of business, and personas into a ready-to-seed Microsoft 365 Copilot demo — fictional Word/PowerPoint/Excel example files plus a full delivery and provisioning plan, with optional one-click seeding to OneDrive and Teams.",
   "platforms": ["Cowork"],
-  "tags": ["demo", "copilot", "microsoft-365", "sales-enablement", "content-generation", "productivity"],
+  "tags": ["demo", "copilot", "microsoft-365", "sales-enablement", "content", "productivity"],
   "author": "Doak Moore",
   "version": "1.0.0"
 }
