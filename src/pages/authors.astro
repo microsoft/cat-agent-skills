@@ -337,11 +337,15 @@ const allowManualEntry =
     }
 
     /* ---- Directory grid + author cards (template elements → scoped) ---- */
+    /* Even grid: every card in a row shares the tallest card's height so there
+       are no ragged gaps between rows, while the left-to-right "sorted by
+       skills shipped" order is preserved. Cards are flex columns so the footer
+       pins to the bottom edge (see .author-foot). */
     .author-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 0.85rem;
-      align-items: start;
+      align-items: stretch;
     }
     @media (min-width: 640px) {
       .author-grid {
@@ -354,6 +358,8 @@ const allowManualEntry =
       }
     }
     .author-card {
+      display: flex;
+      flex-direction: column;
       border: 1px solid var(--border);
       border-radius: 0.9rem;
       background: var(--surface);
@@ -419,6 +425,11 @@ const allowManualEntry =
       gap: 0.375rem;
       margin-top: 0.85rem;
     }
+    /* Keep breathing room above the pinned footer even when a card's content
+       fills the (stretched) height, where the footer's auto top-margin is 0. */
+    .skill-chips:has(+ .author-foot) {
+      margin-bottom: 0.85rem;
+    }
     .chip {
       display: inline-flex;
       align-items: center;
@@ -461,7 +472,7 @@ const allowManualEntry =
       display: flex;
       flex-wrap: wrap;
       gap: 0.85rem;
-      margin-top: 0.85rem;
+      margin-top: auto;
       padding-top: 0.7rem;
       border-top: 1px solid var(--border);
       font-size: 0.75rem;
