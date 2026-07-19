@@ -94,7 +94,7 @@ do the task?* If no — it's documentation, and belongs in the `README.md`.
 - Canonical instruction filename is uppercase `SKILL.md` (legacy lowercase
   `skill.md` still imports, but prefer `SKILL.md`).
 - `metadata.json` should carry the documented fields only
-  (`name`, `description`, `platforms`, `tags`, and the optional `author`,
+  (`name`, `description`, `platforms`, `tags`, `author`, and the optional
   `authorUrl`, `version`, `createdAt`, `updatedAt`, `coverColor`, `featured`).
   Unknown keys are silently stripped by the schema — flag them as noise.
 - Never set `authorGithub` or `bundle` by hand; CI populates them.
