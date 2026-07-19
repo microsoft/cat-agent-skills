@@ -5,6 +5,7 @@ agentDescription: "Use this skill when the user asks to create LinkedIn posts, p
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [linkedin, social-media, writing, marketing, content]
 author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 0.1.0
 createdAt: 2026-07-17

@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Topic Blueprint",
+  "description": "Turn a one-line use case into a build-ready Microsoft Copilot Studio agent blueprint: recommended agent type and orchestration, topics, tools, knowledge, variables, a welcome Adaptive Card, security and Copilot Credits notes, and a first test plan.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["copilot-studio", "agent", "blueprint", "topics", "design", "power-platform", "orchestration", "adaptive-card"],
+  "author": "Elliot Margot",
+  "authorUrl": "https://e-margot.ch",
+  "version": "1.0.0",
+  "createdAt": "2026-07-18",
+  "updatedAt": "2026-07-18"
+}

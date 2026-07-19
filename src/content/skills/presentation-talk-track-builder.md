@@ -5,6 +5,7 @@ agentDescription: "Writes natural, first-person spoken presenter scripts (talk t
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [presentations, speaker-notes, pptx, writing, productivity]
 author: Jagmeet Chabra
+authorUrl: "https://github.com/jchha001"
 authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-07-16

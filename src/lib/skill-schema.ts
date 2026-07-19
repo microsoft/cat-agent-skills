@@ -27,7 +27,18 @@ export const skillSchema = z.object({
   // the importer, not authored; defaults keep existing skills unchanged.
   type: z.enum(["skill", "plugin", "automation"]).default("skill"),
   tags: z.array(z.string()).nonempty(),
-  author: z.string().optional(),
+  // Human-readable author (person or team) shown on the gallery card and detail
+  // page. Required: every submission must declare who authored it. Comes from
+  // metadata.json.
+  author: z
+    .string({
+      error: (issue) =>
+        issue.input === undefined
+          ? "author is required — add it to the submission's metadata.json"
+          : "author must be a string",
+    })
+    .trim()
+    .min(1, "author must not be empty"),
   // Optional URL to the author's website / profile, shown as a link on the
   // skill page when an `author` is also present.
   authorUrl: z.string().url().optional(),

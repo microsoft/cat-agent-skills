@@ -1,0 +1,28 @@
+{
+  "name": "Copilot & Agents News Scout",
+  "description": "Every Monday morning, scan authoritative Microsoft sources for the past week's Copilot, Copilot Studio, and agent news, then post a concise, linked digest to Teams so you start the week current.",
+  "triggerType": "schedule",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "every Monday at 8:00 AM",
+    "days": [1],
+    "time": { "hour": 8, "minute": 0 },
+    "hour": 8,
+    "minute": 0
+  },
+  "steps": [
+    {
+      "label": "Gather the week's updates",
+      "prompt": "Search authoritative Microsoft sources published or updated in the last 7 days for news about Microsoft 365 Copilot, Copilot Studio, Copilot agents, and Microsoft Scout. Prioritize: the Microsoft 365 and Copilot blogs (microsoft.com/blog), Microsoft Learn 'what's new' and release pages, the Message Center and Microsoft 365 roadmap, and the Power Platform / Copilot Studio release plans. For each item, capture the title, the canonical URL, the publish or update date, and a one-sentence summary in your own words. Collect everything relevant now; do not filter yet."
+    },
+    {
+      "label": "Filter to what matters",
+      "prompt": "From the items gathered, keep only material changes a Copilot Studio maker or M365 admin would act on: general availability, public preview, deprecations and breaking changes, pricing or Copilot Credits changes, new connectors or capabilities, and roadmap dates. Drop marketing recaps, opinion pieces, and anything older than 7 days. Deduplicate items that cover the same announcement, keeping the most authoritative source. If nothing material shipped this week, note that plainly rather than padding the list."
+    },
+    {
+      "label": "Write and post the Teams digest",
+      "prompt": "Write a concise digest titled 'Copilot & Agents - week of <date>'. Group items under headings: Microsoft 365 Copilot, Copilot Studio, Agents & Scout, and Governance & Admin (omit any empty group). For each item give the title as a link, the date, and a one-line 'why it matters'. Keep the whole digest scannable in under two minutes. Post it to Teams. Do not invent items, dates, or links; include only what the previous step verified. Do not use the em dash character."
+    }
+  ],
+  "teamsNotify": "auto"
+}

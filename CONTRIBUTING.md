@@ -127,8 +127,9 @@ the download bundle):
 | `description` | yes      | Catalog summary shown in the gallery.               |
 | `platforms`   | yes      | One or more of `Cowork`, `Copilot Studio`, `Scout`. |
 | `tags`        | yes      | Lowercase tags for search/filtering.                |
+| `author`      | yes      | Person or team who wrote the skill.                 |
 
-Optional: `author`, `authorUrl`, `version`, `createdAt`, `updatedAt`,
+Optional: `authorUrl`, `version`, `createdAt`, `updatedAt`,
 `coverColor`, `featured`. (`bundle` is set automatically when your skill ships
 files beyond `SKILL.md`. `authorGithub` — your GitHub login as the PR
 submitter — is also filled in automatically by CI so the *skillbot* can

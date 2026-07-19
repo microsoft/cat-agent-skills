@@ -4,6 +4,8 @@ description: Ensure every generated PowerPoint deck or Word document starts from
 agentDescription: "Applies bundled or SharePoint-hosted organization-approved PowerPoint and Word templates whenever the agent is about to create, generate, export, or substantially rebuild a presentation, slide deck, report, proposal, brief, memo, letter, or other .pptx, .docx, or .dotx deliverable. Use before any file-generation tool or document-creation skill so the output starts from the appropriate brand template instead of a blank file. Do not use for read-only analysis or minor edits that do not create a new Office file."
 platforms: [Copilot Studio]
 tags: [branding, powerpoint, word, templates, documents, presentations]
+author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 1.2.0
 createdAt: 2026-07-16

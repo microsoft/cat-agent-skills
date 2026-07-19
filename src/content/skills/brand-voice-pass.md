@@ -5,6 +5,7 @@ agentDescription: "Use this skill when the user asks to rewrite, humanise, de-AI
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [writing, content, voice, style, editing, productivity]
 author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 0.1.0
 createdAt: 2026-07-17

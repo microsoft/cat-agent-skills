@@ -5,6 +5,7 @@ agentDescription: "Use this skill when the user asks for a point of view, punchy
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [writing, positioning, marketing, content, social-media]
 author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 0.1.0
 createdAt: 2026-07-17
