@@ -77,9 +77,9 @@ export const BADGES: Record<BadgeId, BadgeMeta> = {
 
 /** Assignment order — first matching rule wins. */
 export const BADGE_ORDER: BadgeId[] = [
-  "top-rated",
   "skill-factory",
   "teachers-pet",
+  "top-rated",
   "house-cat",
 ];
 
@@ -250,11 +250,11 @@ export function buildContext(skills: BadgeSkill[]): BadgeContext {
 
 /** Assign a badge from stats. Ordered, first match wins. */
 export function pickBadge(stats: ContributorStats, ctx: BadgeContext): BadgeMeta {
-  if (stats.totalRating > 0 && ctx.ratingLeaders.has(stats.login))
-    return BADGES["top-rated"];
   if (stats.skillCount >= ctx.factoryThreshold) return BADGES["skill-factory"];
   if (stats.featuredCount > 0 && ctx.featuredLeaders.has(stats.login))
     return BADGES["teachers-pet"];
+  if (stats.totalRating > 0 && ctx.ratingLeaders.has(stats.login))
+    return BADGES["top-rated"];
   return BADGES["house-cat"];
 }
 
