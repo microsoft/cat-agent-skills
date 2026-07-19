@@ -19,12 +19,16 @@
     "astro": "^7.0.7"
   },
   "devDependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.4",
     "@types/adm-zip": "^0.5.8",
     "adm-zip": "^0.5.17",
     "croner": "^9.1.0",
     "gray-matter": "^4.0.3",
+    "satori": "^0.26.0",
     "tailwindcss": "^4.1.4",
     "tsx": "^4.22.4"
   }

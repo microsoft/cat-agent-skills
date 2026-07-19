@@ -1,0 +1,436 @@
+---
+import "../../styles/global.css";
+import { withBase } from "../../lib/url";
+import {
+  allAuthors,
+  resolveBadge,
+  posterTiles,
+  type PosterTile,
+} from "../../lib/badges";
+import { loadBadgeSkills } from "../../lib/badge-data";
+
+export async function getStaticPaths() {
+  const skills = await loadBadgeSkills();
+  return allAuthors(skills)
+    .map((stats) => {
+      const resolved = resolveBadge(stats.login, skills);
+      if (!resolved) return null;
+      return {
+        params: { login: stats.login },
+        props: {
+          login: stats.login,
+          title: resolved.badge.title,
+          image: resolved.badge.image,
+          meaning: resolved.badge.meaning,
+          caption: resolved.caption,
+          tiles: posterTiles(resolved.badge, resolved.stats),
+        },
+      };
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== null);
+}
+
+interface Props {
+  login: string;
+  title: string;
+  image: string;
+  meaning: string;
+  caption: string;
+  tiles: PosterTile[];
+}
+
+const { login, title, image, meaning, caption, tiles } = Astro.props as Props;
+
+const pngPath = withBase(`/badge/${login}.png`);
+const pagePath = withBase(`/badge/${login}/`);
+const galleryPath = withBase("/");
+const authorsPath = withBase("/authors");
+const badgePng = withBase(`/badges/${image}.png`);
+const badgeSvg = withBase(`/badges/${image}.svg`);
+
+// Absolute URLs for social unfurl + share intents (fall back to prod origin).
+const origin = Astro.site ?? new URL("https://microsoft.github.io");
+const ogImage = new URL(pngPath, origin).href;
+const pageUrl = new URL(pagePath, origin).href;
+const siteLabel = `${origin.host}${import.meta.env.BASE_URL.replace(/\/$/, "")}`;
+
+const pageTitle = `${title} — @${login} · CAT Agent Skills`;
+const ogDescription = `${caption} — @${login}'s contributor badge on CAT Agent Skills.`;
+const shareText = `I earned the “${title}” contributor badge on CAT Agent Skills.`;
+
+const shareX = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+  shareText,
+)}&url=${encodeURIComponent(pageUrl)}`;
+const shareLinkedIn = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+  pageUrl,
+)}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={ogDescription} />
+    <link rel="icon" type="image/png" href={withBase("/paw.png")} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${title} badge issued to @${login}`} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={ogImage} />
+  </head>
+
+  <body class="poster">
+    <main class="stage">
+      <article class="card">
+        <div class="glow" aria-hidden="true"></div>
+
+        <div class="card-main">
+          <div class="medallion">
+            <img
+              src={badgePng}
+              alt={`${title} badge`}
+              width="320"
+              height="320"
+              onerror={`this.onerror=null;this.src='${badgeSvg}'`}
+            />
+          </div>
+
+          <div class="details">
+            <p class="eyebrow">Issued to @{login}</p>
+            <h1 class="title">{title}</h1>
+            <p class="quote">&ldquo;{caption}&rdquo;</p>
+
+            <ul class="tiles">
+              {
+                tiles.map((t) => (
+                  <li class="tile">
+                    <span class="tile-num">{t.num}</span>
+                    <span class="tile-label">{t.label}</span>
+                  </li>
+                ))
+              }
+            </ul>
+
+            <p class="meaning">{meaning}</p>
+          </div>
+        </div>
+
+        <footer class="brand">
+          <span class="wordmark"><span class="cat">CAT</span> Agent Skills</span>
+          <span class="site">{siteLabel}</span>
+        </footer>
+      </article>
+
+      <nav class="actions" aria-label="Share and explore">
+        <a class="btn btn-primary" href={galleryPath}>Explore the gallery</a>
+        <a class="btn" href={pngPath} download={`cat-badge-${login}.png`}
+          >Download image</a
+        >
+        <a class="btn" href={shareX} target="_blank" rel="noopener">
+          Share on X
+        </a>
+        <a class="btn" href={shareLinkedIn} target="_blank" rel="noopener">
+          Share on LinkedIn
+        </a>
+      </nav>
+
+      <a class="back" href={authorsPath}>‹ All contributors</a>
+    </main>
+
+    <style>
+      .poster {
+        /* Self-contained navy showcase — theme-independent on purpose, so the
+           page always matches the medallion art and the shared unfurl card. */
+        overflow-x: hidden;
+        --p-navy: #0d1836;
+        --p-navy-deep: #080f28;
+        --p-cream: #f5efe0;
+        --p-cream-muted: #c3cbe0;
+        --p-gold: #e8b64a;
+        --p-hair: rgba(245, 239, 224, 0.14);
+        --p-tile: rgba(255, 255, 255, 0.05);
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            1100px 520px at 12% -8%,
+            rgba(232, 182, 74, 0.16),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 500px at 108% 118%,
+            rgba(59, 84, 135, 0.4),
+            transparent 55%
+          ),
+          var(--p-navy);
+        color: var(--p-cream);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .stage {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.75rem;
+        padding: clamp(1.25rem, 4vw, 3.5rem);
+      }
+
+      .card {
+        position: relative;
+        width: min(920px, 100%);
+        border: 1px solid var(--p-hair);
+        border-radius: 24px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 40%),
+          var(--p-navy);
+        box-shadow:
+          0 40px 90px -40px rgba(0, 0, 0, 0.7),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+        animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      .glow {
+        position: absolute;
+        top: -180px;
+        left: -120px;
+        width: 560px;
+        height: 560px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(232, 182, 74, 0.22),
+          transparent 68%
+        );
+        pointer-events: none;
+      }
+
+      .card-main {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: clamp(1.5rem, 4vw, 3.25rem);
+        padding: clamp(1.75rem, 4vw, 3rem);
+      }
+
+      .medallion {
+        flex-shrink: 0;
+      }
+      .medallion img {
+        display: block;
+        width: clamp(180px, 26vw, 300px);
+        height: auto;
+        filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.45));
+      }
+
+      .details {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--p-gold);
+      }
+
+      .title {
+        margin: 0.4rem 0 0;
+        font-size: clamp(2rem, 5vw, 3.25rem);
+        font-weight: 700;
+        line-height: 1.04;
+        letter-spacing: -0.01em;
+        color: var(--p-cream);
+      }
+
+      .quote {
+        margin: 0.85rem 0 0;
+        font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+        line-height: 1.4;
+        font-style: italic;
+        color: var(--p-cream-muted);
+        max-width: 40ch;
+      }
+
+      .tiles {
+        list-style: none;
+        margin: 1.5rem 0 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .tile {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.7rem 1.05rem;
+        background: var(--p-tile);
+        border: 1px solid var(--p-hair);
+        border-radius: 14px;
+      }
+      .tile-num {
+        font-size: 1.55rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--p-cream);
+      }
+      .tile-label {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--p-cream-muted);
+      }
+
+      .meaning {
+        margin: 1.4rem 0 0;
+        font-size: 0.9rem;
+        color: var(--p-cream-muted);
+        opacity: 0.85;
+      }
+
+      .brand {
+        position: relative;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem clamp(1.75rem, 4vw, 3rem);
+        border-top: 1px solid var(--p-hair);
+        background: var(--p-navy-deep);
+      }
+      .wordmark {
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+      .wordmark .cat {
+        color: var(--p-gold);
+      }
+      .site {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.85rem;
+        color: var(--p-cream-muted);
+        overflow-wrap: anywhere;
+      }
+
+      .actions {
+        width: min(920px, 100%);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.7rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.15rem;
+        border-radius: 999px;
+        border: 1px solid var(--p-hair);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--p-cream);
+        font-size: 0.92rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.15s ease;
+      }
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(245, 239, 224, 0.3);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn-primary {
+        background: var(--p-gold);
+        border-color: var(--p-gold);
+        color: #2a1c04;
+      }
+      .btn-primary:hover {
+        background: #f0c463;
+        border-color: #f0c463;
+      }
+      .btn:focus-visible,
+      .back:focus-visible {
+        outline: 2px solid var(--p-gold);
+        outline-offset: 3px;
+      }
+
+      .back {
+        color: var(--p-cream-muted);
+        font-size: 0.88rem;
+        text-decoration: none;
+        opacity: 0.85;
+      }
+      .back:hover {
+        opacity: 1;
+        color: var(--p-cream);
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .card-main {
+          flex-direction: column;
+          text-align: center;
+        }
+        .details {
+          width: 100%;
+        }
+        .quote {
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .tiles {
+          justify-content: center;
+        }
+        .brand {
+          flex-direction: column;
+          align-items: center;
+          gap: 0.4rem;
+          text-align: center;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card {
+          animation: none;
+        }
+      }
+    </style>
+  </body>
+</html>

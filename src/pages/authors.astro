@@ -1,28 +1,17 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { getCollection } from "astro:content";
-import { getRating } from "../lib/ratings";
 import { withBase } from "../lib/url";
 import { formatDate } from "../lib/skills";
-import { allAuthors, type BadgeSkill } from "../lib/badges";
+import { allAuthors } from "../lib/badges";
+import { loadBadgeSkills } from "../lib/badge-data";
 
 // Build the public contribution ledger from the baked skills. Everything here is
 // public (author, github login, featured, dates); the snarky badge is layered on
-// client-side when a visitor looks up their own handle.
-const skills = await getCollection("skills");
-const badgeSkills: BadgeSkill[] = skills.map((s) => ({
-  slug: s.id,
-  name: s.data.name,
-  author: s.data.author,
-  authorGithub: s.data.authorGithub ?? null,
-  featured: s.data.featured,
-  rating: getRating(s.id),
-  createdAt: s.data.createdAt ?? null,
-  platforms: s.data.platforms,
-}));
-
+// client-side when a visitor looks up their own handle. The same loader feeds the
+// poster page + OG image, so the directory and the shared posters never disagree.
+const badgeSkills = await loadBadgeSkills();
 const authors = allAuthors(badgeSkills);
-const totalSkills = skills.length;
+const totalSkills = badgeSkills.length;
 const featuredTotal = badgeSkills.filter((s) => s.featured).length;
 
 // How many skill chips to show per author card before collapsing to "+N more".
@@ -577,6 +566,31 @@ const MAX_CHIPS = 8;
       font-size: 0.75rem;
       color: var(--muted);
     }
+    #you-result .award-share {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 1.15rem;
+      padding: 0.5rem 0.95rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--accent-text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+    }
+    #you-result .award-share:hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    #you-result .award-share:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
     #you-result .badge-empty {
       display: flex;
       align-items: center;
@@ -624,6 +638,9 @@ const MAX_CHIPS = 8;
       #you-result .award-note {
         animation: riseIn 0.5s ease 0.42s both;
       }
+      #you-result .award-share {
+        animation: riseIn 0.5s ease 0.48s both;
+      }
     }
     @keyframes badgeIn {
       from {
@@ -660,6 +677,7 @@ const MAX_CHIPS = 8;
       computeStats,
       resolveBadge,
       captionFor,
+      posterTiles,
       BADGES,
       type BadgeId,
     } from "../lib/badges";
@@ -692,14 +710,6 @@ const MAX_CHIPS = 8;
       );
     }
 
-    const dateFmt = new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-    function fmtLatest(ms: number | null) {
-      return ms ? dateFmt.format(new Date(ms)) : null;
-    }
-
     function show(html: string) {
       if (!result) return;
       result.innerHTML = html;
@@ -719,53 +729,26 @@ const MAX_CHIPS = 8;
       )}</span><span class="stat-label">${esc(label)}</span></div>`;
     }
 
-    // Evidence tiles, ordered so each badge leads with the stat that earned it
-    // (crowd favorites lead with votes, the factory with volume, and so on).
-    // Capped at three so the row stays tidy.
+    // Evidence tiles come from the shared `posterTiles` helper so the on-site
+    // reveal, the poster page, and the OG image always render identical stats.
     function tilesFor(badge: any, stats: any) {
-      const latest = fmtLatest(stats.newestCreatedAtMs);
-      const t = {
-        skills: statTile(
-          String(stats.skillCount),
-          stats.skillCount === 1 ? "skill" : "skills",
-        ),
-        featured:
-          stats.featuredCount > 0
-            ? statTile(String(stats.featuredCount), "featured")
-            : "",
-        votes:
-          stats.totalRating > 0
-            ? statTile(
-                String(stats.totalRating),
-                stats.totalRating === 1 ? "upvote" : "upvotes",
-              )
-            : "",
-        platforms:
-          stats.platforms && stats.platforms.length
-            ? statTile(
-                String(stats.platforms.length),
-                stats.platforms.length === 1 ? "platform" : "platforms",
-              )
-            : "",
-        latest: latest ? statTile(latest, "latest") : "",
-      };
-      const order =
-        badge.id === "top-rated"
-          ? [t.votes, t.skills, t.featured]
-          : badge.id === "teachers-pet"
-            ? [t.featured, t.skills, t.latest]
-            : badge.id === "skill-factory"
-              ? [t.skills, t.featured, t.latest]
-              : [t.skills, t.platforms, t.latest];
-      return order.filter(Boolean).slice(0, 3).join("");
+      return posterTiles(badge, stats)
+        .map((t) => statTile(t.num, t.label))
+        .join("");
     }
 
     function cardHtml(login: string, stats: any, badge: any, caption: string) {
       const tiles = tilesFor(badge, stats);
-      const who =
-        login && login !== "preview"
-          ? `Issued to @${esc(login)}`
-          : "Badge preview";
+      const real = login && login !== "preview";
+      const who = real ? `Issued to @${esc(login)}` : "Badge preview";
+      // Only offer the share link when a poster page actually exists for this
+      // login (i.e. they're a real contributor), so the link never 404s.
+      const shareable = real && !!resolveBadge(login, data);
+      const share = shareable
+        ? `<a class="award-share" href="${BASE}/badge/${encodeURIComponent(
+            login,
+          )}/">Share your badge <span aria-hidden="true">↗</span></a>`
+        : "";
       return `
         <div class="award">
           <div class="award-stage">
@@ -781,6 +764,7 @@ const MAX_CHIPS = 8;
             <p class="award-quote">&ldquo;${esc(caption)}&rdquo;</p>
             <div class="award-stats">${tiles}</div>
             <p class="award-note">${esc(badge.meaning || "")}</p>
+            ${share}
           </div>
         </div>`;
     }

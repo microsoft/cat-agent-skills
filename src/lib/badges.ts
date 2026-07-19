@@ -277,3 +277,65 @@ export function resolveBadge(login: string, skills: BadgeSkill[]): ResolvedBadge
   const badge = pickBadge(stats, buildContext(skills));
   return { badge, caption: captionFor(badge, stats.login), stats };
 }
+
+/** A single evidence tile: a big number/label pair under a revealed badge. */
+export interface PosterTile {
+  num: string;
+  label: string;
+}
+
+const TILE_DATE_FMT = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
+/** Format a timestamp as the compact "latest" tile value (UTC, so build + client agree). */
+export function formatTileDate(ms: number | null): string | null {
+  return ms ? TILE_DATE_FMT.format(new Date(ms)) : null;
+}
+
+/**
+ * The evidence tiles for a revealed badge, ordered so each badge leads with the
+ * stat that earned it (crowd favorites lead with votes, the factory with volume,
+ * and so on). Capped at three so the row stays tidy. Single source of truth for
+ * the on-site reveal, the poster page, and the composed OG image — so they never
+ * drift.
+ */
+export function posterTiles(badge: BadgeMeta, stats: ContributorStats): PosterTile[] {
+  const latest = formatTileDate(stats.newestCreatedAtMs);
+  const t: Record<string, PosterTile | null> = {
+    skills: {
+      num: String(stats.skillCount),
+      label: stats.skillCount === 1 ? "skill" : "skills",
+    },
+    featured:
+      stats.featuredCount > 0
+        ? { num: String(stats.featuredCount), label: "featured" }
+        : null,
+    votes:
+      stats.totalRating > 0
+        ? {
+            num: String(stats.totalRating),
+            label: stats.totalRating === 1 ? "upvote" : "upvotes",
+          }
+        : null,
+    platforms:
+      stats.platforms.length > 0
+        ? {
+            num: String(stats.platforms.length),
+            label: stats.platforms.length === 1 ? "platform" : "platforms",
+          }
+        : null,
+    latest: latest ? { num: latest, label: "latest" } : null,
+  };
+  const order =
+    badge.id === "top-rated"
+      ? [t.votes, t.skills, t.featured]
+      : badge.id === "teachers-pet"
+        ? [t.featured, t.skills, t.latest]
+        : badge.id === "skill-factory"
+          ? [t.skills, t.featured, t.latest]
+          : [t.skills, t.platforms, t.latest];
+  return order.filter((x): x is PosterTile => Boolean(x)).slice(0, 3);
+}
