@@ -149,28 +149,27 @@ const popularTags = allTags.slice(0, 8);
             </button>
           ))
         }
-        {
-          allTags.length > popularTags.length && (
-            <button
-              type="button"
-              id="tag-more"
-              class="shrink-0 rounded-full border border-dashed border-border px-3 py-1 text-sm font-medium text-accent-text transition hover:border-accent/60"
-              aria-expanded="false"
-              aria-haspopup="true"
-            >
-              More tags ▾
-            </button>
-          )
-        }
         <div
           id="tag-backdrop"
           class="fixed inset-0 z-30 hidden bg-black/40 sm:hidden"
           aria-hidden="true"
         ></div>
-        <div
-          id="tag-panel"
-          class="fixed inset-x-0 bottom-0 z-40 hidden max-h-[70vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-surface p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:z-30 sm:mt-2 sm:max-h-none sm:w-80 sm:rounded-xl sm:shadow-lg"
-        >
+        {
+          allTags.length > popularTags.length && (
+            <div class="relative shrink-0">
+              <button
+                type="button"
+                id="tag-more"
+                class="rounded-full border border-dashed border-border px-3 py-1 text-sm font-medium text-accent-text transition hover:border-accent/60"
+                aria-expanded="false"
+                aria-haspopup="true"
+              >
+                More tags ▾
+              </button>
+              <div
+                id="tag-panel"
+                class="fixed inset-x-0 bottom-0 z-40 hidden max-h-[70vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-surface p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:z-30 sm:mt-2 sm:max-h-none sm:w-80 sm:rounded-xl sm:shadow-lg"
+              >
           <div class="mb-2 flex items-center justify-between sm:hidden">
             <span class="text-sm font-semibold text-fg">Filter by tag</span>
             <button
@@ -206,7 +205,10 @@ const popularTags = allTags.slice(0, 8);
               ))
             }
           </div>
-        </div>
+              </div>
+            </div>
+            )
+          }
       </div>
       <div id="tag-chips" class="mt-2 flex flex-wrap gap-2 empty:mt-0"></div>
     </div>
