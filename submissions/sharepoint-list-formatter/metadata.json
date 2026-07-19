@@ -2,9 +2,10 @@
   "name": "SharePoint List Formatter",
   "description": "Turns any SharePoint list data into a clean, consistent markdown table. Dynamic columns based on list type and query, plus a one-click Open link for every row.",
   "platforms": ["Cowork", "Copilot Studio", "Scout"],
-  "tags": ["sharepoint", "microsoft-365", "productivity", "tables", "data-formatting"],
+  "tags": ["sharepoint", "microsoft-365", "productivity", "tables", "data"],
   "author": "Mathias Salomonsen",
   "authorUrl": "https://www.linkedin.com/in/mathias-salomonsen-331949201",
+  "authorGithub": "m-salomonsen",
   "version": "1.0.0",
   "createdAt": "2026-07-17",
   "updatedAt": "2026-07-17"

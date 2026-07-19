@@ -33,15 +33,12 @@ jobs:
       # Same-repo PRs get a write token: extract submission zips into the site
       # (writes src/content/skills/*.md + public/bundles/*.zip) and commit the
       # result back to the PR branch. Hard-fails on missing/invalid metadata.
+      # `authorGithub` is resolved purely from each submission's own metadata
+      # (an explicit handle, or a github.com/<login> authorUrl) — never the
+      # PR/merger login — so attribution is stable no matter who lands the skill.
       - name: Import skill submissions
         if: github.event.pull_request.head.repo.full_name == github.repository
         run: npm run import:submissions
-        env:
-          # Stamp `authorGithub` on skills newly added in this PR with the
-          # submitter's login so the skillbot can @-mention the author on the
-          # first comment of the skill's discussion. Existing skills keep their
-          # already-stamped handle (set-once).
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
 
       - name: Commit extracted skills
         if: github.event.pull_request.head.repo.full_name == github.repository

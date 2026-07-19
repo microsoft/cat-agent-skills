@@ -2,9 +2,10 @@
   "name": "AI Use Case Assessment",
   "description": "Turn any AI/agentic use case idea (chat, uploaded doc, or attached file) into an evidence-grounded, rubric-scored assessment with a customer-branded HTML report. Guides the user question-by-question through intake, categorisation, strengthening, scoring, and reporting — grounded in the Agentic Use Case Assessment Rubric v2. Runs in Microsoft Scout and Microsoft 365 Copilot Cowork.",
   "platforms": ["Scout", "Cowork"],
-  "tags": ["assessment", "ai", "agentic", "use-case", "rubric", "scoring", "report", "html", "intake"],
+  "tags": ["assessment", "ai", "agent", "use-case", "scoring", "report", "html", "intake"],
   "author": "Alicja Gilderdale",
   "authorUrl": "https://www.linkedin.com/in/alicja-gilderdale/",
+  "authorGithub": "alicja-gilderdale",
   "version": "1.0.0",
   "createdAt": "2026-07-17",
   "updatedAt": "2026-07-17"

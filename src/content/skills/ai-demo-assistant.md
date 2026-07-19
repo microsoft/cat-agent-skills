@@ -3,8 +3,9 @@ name: AI Demo Assistant
 description: "Turns a customer name, line of business, and personas into a ready-to-seed Microsoft 365 Copilot demo — fictional Word/PowerPoint/Excel example files plus a full delivery and provisioning plan, with optional one-click seeding to OneDrive and Teams."
 agentDescription: "Builds a scenario-driven content pack for a Microsoft 365 Copilot customer demo. From a customer name, line of business, and target personas, it proposes demo scenarios for operator approval, then generates fictional Word/PowerPoint/Excel example files plus an AI Demo Delivery Plan (persona roster with tenant-account mapping, email and Teams chat scripts, calendar meetings with agendas, a meeting transcript, and app-tagged Copilot prompt workflows grounded in the generated content). After approval it can OPTIONALLY seed the Office files into a customer-named OneDrive folder and optionally post the Teams chat scripts live; email, calendar, and recordings are drafted for manual loading. Use when the user asks to \"set up a Copilot demo\", \"build demo content for a customer\", \"seed a demo tenant\", \"create a demo delivery plan\", \"fill a demo tenant with realistic content\", or \"generate demo scenarios and sample files\". Do NOT use for sending real email, booking real calendar events, or production-tenant data.\n"
 platforms: [Cowork]
-tags: [demo, copilot, microsoft-365, sales-enablement, content-generation, productivity]
+tags: [demo, copilot, microsoft-365, sales-enablement, content, productivity]
 author: Doak Moore
+authorGithub: doakm
 version: 1.0.0
 ---
 # AI Demo Assistant

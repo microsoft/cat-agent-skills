@@ -9,8 +9,9 @@
  *   ├── metadata.json  (or metadata.yaml) Catalog metadata for THIS gallery:
  *   │                  `description` (the human catalog/gallery summary),
  *   │                  `platforms`, `tags`, `author`, `authorUrl`, `version`…
- *   │                  (`authorGithub`, the PR submitter's login, is stamped
- *   │                  automatically by CI — see PR_AUTHOR below — not authored.)
+ *   │                  (`authorGithub` is derived from a `github.com/<login>`
+ *   │                  `authorUrl`, or set explicitly for attribution — see
+ *   │                  resolveAuthorGithub. It is never the PR/merger login.)
  *   │                  It is a SIDECAR — never packaged into the download bundle.
  *   └── EITHER an unpacked canonical Agent Skill:
  *   │     ├── SKILL.md     frontmatter `name` + `description` (the AGENT-facing
@@ -192,39 +193,56 @@ function buildContent(meta: Record<string, unknown>, body: string): string {
   return serializeFrontmatter(meta) + body.replace(/^\s+/, "");
 }
 
+// A bare GitHub username: 1-39 chars, alphanumerics or single (non-leading,
+// non-trailing) hyphens. Mirrors the rule enforced by the skill schema.
+const GITHUB_USERNAME = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
+
 /**
- * Resolve the skill author's GitHub handle (the PR submitter's login), used by
- * the "skillbot" to @-mention them on the first discussion comment. Set-once:
- *   1. Keep an explicit `authorGithub` already in the metadata.
- *   2. Otherwise preserve the value already stamped in the generated
- *      `src/content/skills/<slug>.md` (so a later, unrelated PR can never
- *      overwrite the original submitter).
- *   3. Otherwise fall back to `PR_AUTHOR` (set by CI on same-repo PRs) — this is
- *      a skill newly added in the current pull request.
- *   4. Otherwise leave it unset (e.g. local imports, fork PRs).
- * The result is mutated onto `meta` so every publish path stamps it uniformly.
+ * Derive a GitHub login from an author URL, but ONLY when it is a canonical
+ * GitHub *user* profile URL — `https://github.com/<login>` with exactly one
+ * path segment. Returns `undefined` for anything else, so org/repo URLs
+ * (`github.com/microsoft/cat-agent-skills`), Pages sites (`*.github.io`),
+ * LinkedIn, and personal domains never resolve to a handle. Case is preserved.
  */
-function resolveAuthorGithub(slug: string, meta: Record<string, unknown>): void {
+function githubLoginFromUrl(url: unknown): string | undefined {
+  if (typeof url !== "string" || !url.trim()) return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(url.trim());
+  } catch {
+    return undefined;
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  if (host !== "github.com") return undefined;
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  if (segments.length !== 1) return undefined;
+  const login = segments[0];
+  return GITHUB_USERNAME.test(login) ? login : undefined;
+}
+
+/**
+ * Resolve the skill author's GitHub handle — the persisted attribution shown in
+ * the gallery and used by the "skillbot" to @-mention the author on the first
+ * discussion comment. It is a PURE function of the submission's own metadata, so
+ * re-importing is idempotent and the result never depends on who merged the PR:
+ *   1. An explicit `authorGithub` in the submission metadata wins (use this when
+ *      the author's only link is not a GitHub profile, e.g. LinkedIn).
+ *   2. Otherwise derive it from a canonical `github.com/<login>` `authorUrl`.
+ *   3. Otherwise leave it UNSET — never stamp the merging maintainer.
+ * The result is mutated onto `meta` (set or deleted) so every publish path
+ * resolves it uniformly.
+ */
+function resolveAuthorGithub(meta: Record<string, unknown>): void {
   if (typeof meta.authorGithub === "string" && meta.authorGithub.trim()) {
     meta.authorGithub = meta.authorGithub.trim();
     return;
   }
-  const existingPath = join(CONTENT_DIR, `${slug}.md`);
-  if (existsSync(existingPath)) {
-    try {
-      const prior = matter(readFileSync(existingPath, "utf8")).data as {
-        authorGithub?: unknown;
-      };
-      if (typeof prior.authorGithub === "string" && prior.authorGithub.trim()) {
-        meta.authorGithub = prior.authorGithub.trim();
-        return;
-      }
-    } catch {
-      // Unparseable existing file: fall through to the PR-author fallback.
-    }
+  const login = githubLoginFromUrl(meta.authorUrl);
+  if (login) {
+    meta.authorGithub = login;
+    return;
   }
-  const prAuthor = process.env.PR_AUTHOR?.trim();
-  if (prAuthor) meta.authorGithub = prAuthor;
+  delete meta.authorGithub;
 }
 
 /** Parse a metadata file (JSON or YAML) into a plain object. */
@@ -393,7 +411,7 @@ function processSubmission(sub: Submission): ImportProblem | null {
   const hasBundle = sub.bundleFiles.length > 0;
   if (hasBundle) meta.bundle = `bundles/${slug}.zip`;
 
-  resolveAuthorGithub(slug, meta);
+  resolveAuthorGithub(meta);
 
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };
@@ -536,7 +554,7 @@ function processPlugin(sub: Submission): ImportProblem | null {
     bundle: `bundles/${slug}.zip`,
   };
 
-  resolveAuthorGithub(slug, meta);
+  resolveAuthorGithub(meta);
 
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };
@@ -684,7 +702,7 @@ function processAutomationInstaller(sub: Submission): ImportProblem | null {
     bundle: `bundles/${slug}.zip`,
   };
 
-  resolveAuthorGithub(slug, meta);
+  resolveAuthorGithub(meta);
 
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };
@@ -786,7 +804,7 @@ function processAutomation(sub: Submission): ImportProblem | null {
     bundle: `bundles/${slug}.json`,
   };
 
-  resolveAuthorGithub(slug, meta);
+  resolveAuthorGithub(meta);
 
   const result = validateSkillData(meta, label);
   if (!result.ok) return { source: label, problems: result.problems };

@@ -3,10 +3,9 @@ name: Chart Builder
 description: "Generate clean, consistently-styled matplotlib charts (bar, line, scatter, histogram, pie) from a DataFrame or CSV with one call."
 agentDescription: "Use this skill whenever the user asks to visualize, chart, plot, or graph data (bar, line, scatter, histogram, pie) from a CSV, table, or DataFrame. It gives the agent prebuilt, parameterized matplotlib functions so charts are produced faster and more reliably — with consistent styling and sane defaults — instead of hand-writing matplotlib each time."
 platforms: [Cowork, Copilot Studio, Scout]
-tags: [data, visualization, charts, matplotlib, scripts]
+tags: [data, charts, matplotlib, scripts]
 author: CAT Agent Skills
 authorUrl: "https://github.com/microsoft/cat-agent-skills"
-authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14

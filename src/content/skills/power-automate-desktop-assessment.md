@@ -6,7 +6,7 @@ platforms: [Cowork, Copilot Studio]
 tags: [power-automate, desktop-flows, automation, assessment, governance]
 author: Ricardo Calejo
 authorUrl: "https://github.com/dvsRCalejo"
-authorGithub: adilei
+authorGithub: dvsRCalejo
 version: 1.1.0
 createdAt: 2026-07-17
 updatedAt: 2026-07-18

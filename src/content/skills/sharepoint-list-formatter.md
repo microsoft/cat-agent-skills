@@ -3,10 +3,10 @@ name: SharePoint List Formatter
 description: "Turns any SharePoint list data into a clean, consistent markdown table. Dynamic columns based on list type and query, plus a one-click Open link for every row."
 agentDescription: "Use this skill any time SharePoint list is being fetched, searched, or shown to the user — whether it comes from a SharePoint/Microsoft 365 connector, a search result, a pasted export, or a fetched SharePoint URL. Apply it instead of dumping raw JSON or an ad hoc table whenever the user asks to \"pull,\" \"check,\" \"look up,\" \"find,\" or \"show\" anything from a SharePoint list, even if they never say the word \"format.\"."
 platforms: [Cowork, Copilot Studio, Scout]
-tags: [sharepoint, microsoft-365, productivity, tables, data-formatting]
+tags: [sharepoint, microsoft-365, productivity, tables, data]
 author: Mathias Salomonsen
 authorUrl: "https://www.linkedin.com/in/mathias-salomonsen-331949201"
-authorGithub: adilei
+authorGithub: m-salomonsen
 version: 1.0.0
 createdAt: 2026-07-17
 updatedAt: 2026-07-17

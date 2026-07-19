@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "author": "Ferran Chopo",
   "authorUrl": "https://www.linkedin.com/in/fchopo",
+  "authorGithub": "fchopo",
   "description": "Creates polished PowerPoint decks from a JSON specification using python-pptx. Designed as a Copilot Studio Skill that runs natively inside the agent's Python container (no Azure Function or custom connector required). Supports 8 layouts plus native charts (bar, column, line, pie, donut with stacked / 100% stacked variants).",
   "license": "MIT",
   "platforms": ["Copilot Studio"],
@@ -23,10 +24,8 @@
   ],
   "tags": [
     "powerpoint",
-    "pptx",
     "presentations",
     "python",
-    "copilot-studio",
     "charts"
   ]
 }

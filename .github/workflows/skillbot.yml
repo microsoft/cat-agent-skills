@@ -1,11 +1,12 @@
 name: Skillbot
 
 # When the FIRST comment lands on a skill's discussion, greet the thread and
-# @-mention the skill's author (the PR submitter, stamped into the generated
-# skill frontmatter as `authorGithub` by the import pipeline). The greeting line
-# is a short, skill-themed pun generated with GitHub Models — with a plain
-# static fallback whenever AI is unavailable. The whole job is best-effort: any
-# missing data or failed call results in a no-op or the fallback, never a red X.
+# @-mention the skill's author (their `authorGithub` — resolved from the
+# submission metadata and stored in the generated skill frontmatter by the
+# import pipeline). The greeting line is a short, skill-themed pun generated
+# with GitHub Models — with a plain static fallback whenever AI is unavailable.
+# The whole job is best-effort: any missing data or failed call results in a
+# no-op or the fallback, never a red X.
 
 on:
   discussion_comment:

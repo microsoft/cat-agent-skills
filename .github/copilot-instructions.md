@@ -95,8 +95,11 @@ do the task?* If no — it's documentation, and belongs in the `README.md`.
   `skill.md` still imports, but prefer `SKILL.md`).
 - `metadata.json` should carry the documented fields only
   (`name`, `description`, `platforms`, `tags`, `author`, and the optional
-  `authorUrl`, `version`, `createdAt`, `updatedAt`, `coverColor`, `featured`).
-  Unknown keys are silently stripped by the schema — flag them as noise.
-- Never set `authorGithub` or `bundle` by hand; CI populates them.
+  `authorUrl`, `authorGithub`, `version`, `createdAt`, `updatedAt`, `coverColor`,
+  `featured`). Unknown keys are silently stripped by the schema — flag them as noise.
+- `authorGithub` is normally derived from a `github.com/<login>` `authorUrl`; set
+  it explicitly only to attribute an author whose link isn't a GitHub profile
+  (e.g. LinkedIn), or leave it unset. It is never the PR/merger login. Never set
+  `bundle` by hand; CI populates it.
 - The `SKILL.md` frontmatter `name` must be a lowercase-hyphenated slug that
   matches the submission folder name.
