@@ -30,11 +30,10 @@ for (const skill of skills) {
 const allTags = [...tagCounts.entries()].sort(
   (a, b) => b[1] - a[1] || a[0].localeCompare(b[0])
 );
-// On mobile the full tag list pushes the gallery far down the page, so we show
-// only the most-used tags and collapse the rest behind a disclosure. Desktop
-// (>= sm) always shows them all.
-const COLLAPSED_TAGS = 8;
-const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
+// The full tag list (100+) would bury the gallery, so the bar shows only the
+// most-used tags inline — 3 on mobile, 8 on desktop — and moves the long tail
+// into a searchable "More tags" popover. Multi-select combines tags (match any).
+const popularTags = allTags.slice(0, 8);
 ---
 
 <Layout>
@@ -124,23 +123,24 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
   <section class="border-b border-border bg-bg">
     <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6">
       <div
-        id="tag-filters"
-        class="tags-collapsed flex flex-wrap items-center gap-2"
+        id="tag-row"
+        class="relative flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0"
       >
         <button
           type="button"
-          data-tag=""
-          class="tag-chip rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition"
+          data-tag-all
+          class="shrink-0 rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition"
           aria-pressed="true">All</button
         >
         {
-          allTags.map(([tag, count], i) => (
+          popularTags.map(([tag, count], i) => (
             <button
               type="button"
+              data-tag-inline
               data-tag={tag}
               class:list={[
-                "tag-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg",
-                i >= COLLAPSED_TAGS && "tag-overflow",
+                "shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg",
+                i >= 3 && "hidden sm:inline-flex",
               ]}
               aria-pressed="false"
             >
@@ -150,19 +150,65 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
           ))
         }
         {
-          hiddenTagCount > 0 && (
+          allTags.length > popularTags.length && (
             <button
               type="button"
-              id="tag-toggle"
-              class="rounded-full border border-dashed border-border px-3 py-1 text-sm font-medium text-accent-text transition hover:border-accent/60 sm:hidden"
+              id="tag-more"
+              class="shrink-0 rounded-full border border-dashed border-border px-3 py-1 text-sm font-medium text-accent-text transition hover:border-accent/60"
               aria-expanded="false"
-              aria-controls="tag-filters"
+              aria-haspopup="true"
             >
-              +{hiddenTagCount} more
+              More tags ▾
             </button>
           )
         }
+        <div
+          id="tag-backdrop"
+          class="fixed inset-0 z-30 hidden bg-black/40 sm:hidden"
+          aria-hidden="true"
+        ></div>
+        <div
+          id="tag-panel"
+          class="fixed inset-x-0 bottom-0 z-40 hidden max-h-[70vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-surface p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:z-30 sm:mt-2 sm:max-h-none sm:w-80 sm:rounded-xl sm:shadow-lg"
+        >
+          <div class="mb-2 flex items-center justify-between sm:hidden">
+            <span class="text-sm font-semibold text-fg">Filter by tag</span>
+            <button
+              type="button"
+              id="tag-sheet-close"
+              class="px-2 text-lg leading-none text-muted"
+              aria-label="Close tag filter">✕</button
+            >
+          </div>
+          <label for="tag-search" class="sr-only">Search tags</label>
+          <input
+            id="tag-search"
+            type="search"
+            placeholder="Search tags…"
+            autocomplete="off"
+            class="w-full rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-fg outline-none focus:border-accent"
+          />
+          <div
+            id="tag-list"
+            class="mt-2 flex max-h-[50vh] flex-wrap gap-2 overflow-y-auto sm:max-h-64"
+          >
+            {
+              allTags.map(([tag, count]) => (
+                <button
+                  type="button"
+                  data-tag-list
+                  data-tag={tag}
+                  class="rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
+                >
+                  {tag}
+                  <span class="ml-1 text-xs text-subtle">{count}</span>
+                </button>
+              ))
+            }
+          </div>
+        </div>
       </div>
+      <div id="tag-chips" class="mt-2 flex flex-wrap gap-2 empty:mt-0"></div>
     </div>
   </section>
 
@@ -273,9 +319,20 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
     gallery.querySelectorAll<HTMLElement>(".skill-item")
   );
   const search = document.getElementById("skill-search") as HTMLInputElement;
-  const tagChips = Array.from(
-    document.querySelectorAll<HTMLButtonElement>(".tag-chip")
+  const tagRow = document.getElementById("tag-row")!;
+  const tagAllBtn = tagRow.querySelector<HTMLButtonElement>("[data-tag-all]")!;
+  const tagInlineBtns = Array.from(
+    tagRow.querySelectorAll<HTMLButtonElement>("[data-tag-inline]")
   );
+  const tagListBtns = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("#tag-list [data-tag-list]")
+  );
+  const tagChipsBox = document.getElementById("tag-chips")!;
+  const tagMore = document.getElementById("tag-more");
+  const tagPanel = document.getElementById("tag-panel");
+  const tagSearch = document.getElementById("tag-search") as HTMLInputElement | null;
+  const tagSheetClose = document.getElementById("tag-sheet-close");
+  const tagBackdrop = document.getElementById("tag-backdrop");
   const platformChips = Array.from(
     document.querySelectorAll<HTMLButtonElement>(".platform-chip")
   );
@@ -291,7 +348,7 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
   type SortMode = (typeof SORTS)[number];
 
   let query = "";
-  let activeTag = "";
+  const activeTags = new Set<string>();
   let activePlatform = "";
   let activeType = "";
   let sortMode: SortMode = "featured";
@@ -304,7 +361,8 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
     return items.filter((el) => {
       const tags = (el.dataset.tags ?? "").split(",");
       const platforms = (el.dataset.platforms ?? "").split(",");
-      const tagOk = !activeTag || tags.includes(activeTag);
+      const tagOk =
+        activeTags.size === 0 || tags.some((t) => activeTags.has(t));
       const platformOk = !activePlatform || platforms.includes(activePlatform);
       const typeOk = !activeType || (el.dataset.type ?? "skill") === activeType;
       const text = `${el.dataset.name} ${el.dataset.desc} ${el.dataset.tags}`;
@@ -382,14 +440,120 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
     });
   }
 
-  // Tag chips
-  tagChips.forEach((chip) => {
-    chip.addEventListener("click", () => {
-      activeTag = chip.dataset.tag ?? "";
-      paintChips(tagChips, "tag", activeTag);
-      syncUrl();
-      refilter();
-    });
+  // Tag filter: multi-select popular pills inline + searchable "More tags"
+  // popover (match ANY selected tag). Long-tail picks show as removable chips.
+  function paintTagBtn(btn: HTMLButtonElement, on: boolean) {
+    btn.setAttribute("aria-pressed", String(on));
+    btn.classList.toggle("border-accent", on);
+    btn.classList.toggle("bg-accent-soft", on);
+    btn.classList.toggle("text-accent-text", on);
+    btn.classList.toggle("border-border", !on);
+    btn.classList.toggle("bg-surface-2", !on);
+    btn.classList.toggle("text-muted", !on);
+    btn.classList.toggle("hover:border-accent/40", !on);
+    btn.classList.toggle("hover:text-fg", !on);
+  }
+
+  const tagPillFor = (tag: string) =>
+    tagInlineBtns.find((b) => b.dataset.tag === tag);
+  // A selected tag only needs a removable chip when it has no visible inline
+  // pill (long-tail tags, or popular tags hidden on the mobile 3-tag row).
+  const tagHasVisiblePill = (tag: string) => {
+    const p = tagPillFor(tag);
+    return !!p && p.offsetParent !== null;
+  };
+
+  function paintTags() {
+    const has = activeTags.size > 0;
+    paintTagBtn(tagAllBtn, !has);
+    tagInlineBtns.forEach((b) =>
+      paintTagBtn(b, activeTags.has(b.dataset.tag ?? ""))
+    );
+    tagListBtns.forEach((b) =>
+      paintTagBtn(b, activeTags.has(b.dataset.tag ?? ""))
+    );
+
+    tagChipsBox.innerHTML = "";
+    [...activeTags]
+      .filter((tag) => !tagHasVisiblePill(tag))
+      .forEach((tag) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className =
+          "inline-flex items-center gap-1 rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition";
+        chip.setAttribute("aria-label", `Remove ${tag} filter`);
+        chip.append(tag);
+        const x = document.createElement("span");
+        x.className = "text-sm leading-none";
+        x.textContent = "×";
+        chip.append(x);
+        chip.addEventListener("click", () => toggleTag(tag));
+        tagChipsBox.appendChild(chip);
+      });
+  }
+
+  function toggleTag(tag: string) {
+    if (!tag) return;
+    if (activeTags.has(tag)) activeTags.delete(tag);
+    else activeTags.add(tag);
+    paintTags();
+    syncUrl();
+    refilter();
+  }
+
+  tagAllBtn.addEventListener("click", () => {
+    if (activeTags.size === 0) return;
+    activeTags.clear();
+    paintTags();
+    syncUrl();
+    refilter();
+  });
+  tagInlineBtns.forEach((b) =>
+    b.addEventListener("click", () => toggleTag(b.dataset.tag ?? ""))
+  );
+  tagListBtns.forEach((b) =>
+    b.addEventListener("click", () => toggleTag(b.dataset.tag ?? ""))
+  );
+
+  // "More tags" popover: dropdown on desktop, bottom sheet on mobile.
+  function setTagPanel(open: boolean) {
+    if (!tagPanel || !tagMore) return;
+    tagPanel.classList.toggle("hidden", !open);
+    tagBackdrop?.classList.toggle("hidden", !open);
+    tagMore.setAttribute("aria-expanded", String(open));
+    if (open && tagSearch && window.matchMedia("(min-width: 640px)").matches) {
+      tagSearch.focus();
+    }
+  }
+  tagMore?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setTagPanel(tagPanel?.classList.contains("hidden") ?? false);
+  });
+  tagSheetClose?.addEventListener("click", () => setTagPanel(false));
+  tagBackdrop?.addEventListener("click", () => setTagPanel(false));
+  document.addEventListener("click", (e) => {
+    if (!tagPanel || tagPanel.classList.contains("hidden")) return;
+    const target = e.target as Node;
+    if (!tagPanel.contains(target) && !tagMore?.contains(target)) {
+      setTagPanel(false);
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      tagPanel &&
+      !tagPanel.classList.contains("hidden")
+    ) {
+      setTagPanel(false);
+    }
+  });
+  // Chip-vs-inline-pill depends on the breakpoint, so repaint on resize.
+  window.addEventListener("resize", paintTags);
+  tagSearch?.addEventListener("input", () => {
+    const q = tagSearch.value.trim().toLowerCase();
+    tagListBtns.forEach((el) =>
+      el.classList.toggle("hidden", !(el.dataset.tag ?? "").includes(q))
+    );
   });
 
   // Platform chips
@@ -420,21 +584,7 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
     refilter();
   });
 
-  // Mobile tag disclosure: expand/collapse the overflow tags.
-  const tagFilters = document.getElementById("tag-filters")!;
-  const tagToggle = document.getElementById("tag-toggle");
-  function setTagsExpanded(expanded: boolean) {
-    tagFilters.classList.toggle("tags-collapsed", !expanded);
-    if (tagToggle) {
-      tagToggle.setAttribute("aria-expanded", String(expanded));
-      tagToggle.textContent = expanded
-        ? "Show fewer"
-        : `+${tagFilters.querySelectorAll(".tag-overflow").length} more`;
-    }
-  }
-  tagToggle?.addEventListener("click", () =>
-    setTagsExpanded(tagFilters.classList.contains("tags-collapsed"))
-  );
+  // Infinite scroll: reveal the next batch as the sentinel nears the viewport.
   const io = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting && shown < matched.length) {
@@ -450,7 +600,7 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
   function syncUrl() {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    if (activeTag) params.set("tag", activeTag);
+    if (activeTags.size) params.set("tag", [...activeTags].join(","));
     if (activePlatform) params.set("platform", activePlatform);
     if (activeType) params.set("type", activeType);
     if (sortMode !== "featured") params.set("sort", sortMode);
@@ -461,25 +611,21 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
   function initFromUrl() {
     const params = new URLSearchParams(location.search);
     query = (params.get("q") ?? "").toLowerCase();
-    activeTag = params.get("tag") ?? "";
+    activeTags.clear();
+    (params.get("tag") ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .forEach((t) => activeTags.add(t));
     activePlatform = params.get("platform") ?? "";
     activeType = params.get("type") ?? "";
     const s = params.get("sort") as SortMode | null;
     sortMode = s && SORTS.includes(s) ? s : "featured";
     sortSelect.value = sortMode;
     search.value = query;
-    paintChips(tagChips, "tag", activeTag);
+    paintTags();
     paintChips(platformChips, "platform", activePlatform);
     paintChips(typeChips, "type", activeType);
-    // If a filtered-on tag is hidden in the collapsed overflow, reveal it.
-    if (
-      activeTag &&
-      tagFilters
-        .querySelector<HTMLButtonElement>(`.tag-chip[data-tag="${CSS.escape(activeTag)}"]`)
-        ?.classList.contains("tag-overflow")
-    ) {
-      setTagsExpanded(true);
-    }
     refilter();
   }
 
@@ -492,12 +638,3 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
     if (event.persisted) initFromUrl();
   });
 </script>
-
-<style>
-  /* Only collapse the tag list on mobile; sm+ always shows every tag. */
-  @media (max-width: 639px) {
-    #tag-filters.tags-collapsed .tag-overflow {
-      display: none;
-    }
-  }
-</style>
