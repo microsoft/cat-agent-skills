@@ -4,5 +4,6 @@
   "platforms": ["Cowork"],
   "tags": ["demo", "copilot", "microsoft-365", "sales-enablement", "content", "productivity"],
   "author": "Doak Moore",
+  "authorGithub": "doakm",
   "version": "1.0.0"
 }

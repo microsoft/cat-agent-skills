@@ -114,7 +114,7 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 | `tags`        | `metadata.json` | yes      | Lowercase tags for search/filtering.                         |
 | `author`      | `metadata.json` |          | Person or team.                                              |
 | `authorUrl`   | `metadata.json` |          | Link to the author's website/profile.                        |
-| `authorGithub`| —               |          | Submitter's GitHub login. Set automatically by CI from the PR author — don't add it (see below).|
+| `authorGithub`| `metadata.json` |          | Author's GitHub login. Normally derived from a `github.com/<login>` `authorUrl`; set it explicitly only when the author's link isn't a GitHub profile (see below).|
 | `version`     | `metadata.json` |          | Semantic version, e.g. `1.0.0`.                              |
 | `createdAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
 | `updatedAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
@@ -125,15 +125,22 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 A missing or invalid **required** field fails the PR with a message listing
 exactly what's wrong.
 
-### `authorGithub` (auto-populated)
+### `authorGithub` (attribution)
 
-When you open a pull request, CI stamps the new skill's generated frontmatter
-with `authorGithub` — your GitHub login as the PR submitter. **You never write
-this field by hand.** Once set it stays put: editing another skill later won't
-overwrite it. It exists so the repo's *skillbot* can @-mention you on the first
-comment of your skill's discussion, so you hear about early feedback. (Skills
-contributed from a fork are stamped when a maintainer runs the importer, so the
-mention may be skipped until then.)
+`authorGithub` is the author's GitHub login, stored WITHOUT a leading `@`. The
+importer resolves it purely from your submission — never from whoever merges the
+PR — so attribution is stable no matter who lands the skill:
+
+1. an explicit `authorGithub` in `metadata.json` wins; otherwise
+2. it is derived from `authorUrl` when that points to a GitHub profile
+   (`https://github.com/<login>`); otherwise
+3. it is left unset.
+
+It exists so the repo's *skillbot* can @-mention the author on the first comment
+of the skill's discussion, so they hear about early feedback. **Most contributors
+don't need to set it** — just make `authorUrl` your GitHub profile. Set it
+explicitly only when your only link isn't a GitHub profile (e.g. LinkedIn), or
+leave it blank to opt out of the mention.
 
 ## Cowork plugins (advanced)
 

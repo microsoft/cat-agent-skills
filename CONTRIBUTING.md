@@ -129,12 +129,13 @@ the download bundle):
 | `tags`        | yes      | Lowercase tags for search/filtering.                |
 | `author`      | yes      | Person or team who wrote the skill.                 |
 
-Optional: `authorUrl`, `version`, `createdAt`, `updatedAt`,
+Optional: `authorUrl`, `authorGithub`, `version`, `createdAt`, `updatedAt`,
 `coverColor`, `featured`. (`bundle` is set automatically when your skill ships
-files beyond `SKILL.md`. `authorGithub` — your GitHub login as the PR
-submitter — is also filled in automatically by CI so the *skillbot* can
-@-mention you on the first comment of your skill's discussion; don't set it
-yourself.)
+files beyond `SKILL.md`. `authorGithub` — the author's GitHub login — is
+normally derived from an `authorUrl` that points to a GitHub profile
+(`https://github.com/<login>`); the *skillbot* uses it to @-mention the author
+on the first comment of the skill's discussion. Set it explicitly only when your
+only link isn't a GitHub profile, e.g. LinkedIn.)
 
 ## Validate locally
 
