@@ -5,6 +5,7 @@ agentDescription: "Use this skill when the user asks to restructure, reorganise,
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [blog, writing, editing, content, structure, productivity]
 author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 0.1.0
 createdAt: 2026-07-17

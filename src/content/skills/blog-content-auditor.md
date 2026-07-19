@@ -5,6 +5,7 @@ agentDescription: "Use this skill when the user asks to audit, review, score, ra
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [blog, content, audit, writing, seo, productivity]
 author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 0.1.0
 createdAt: 2026-07-17

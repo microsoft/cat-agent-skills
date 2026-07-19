@@ -5,6 +5,7 @@ agentDescription: "Use this skill when the user asks to create a conference sess
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [writing, conference, abstract, speaking, content, productivity]
 author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 0.1.0
 createdAt: 2026-07-17
