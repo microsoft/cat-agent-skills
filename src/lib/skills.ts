@@ -86,6 +86,8 @@ export type SkillSummary = {
   type: SkillType;
   tags: string[];
   author?: string;
+  authorGithub?: string | null;
+  createdAt?: string | null;
   version?: string;
   hasBundle: boolean;
   featured: boolean;

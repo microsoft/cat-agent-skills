@@ -1,0 +1,1044 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+import { getRating } from "../lib/ratings";
+import { withBase } from "../lib/url";
+import { formatDate } from "../lib/skills";
+import { allAuthors, type BadgeSkill } from "../lib/badges";
+import { deviceFlowEnabled } from "../lib/github-auth";
+
+// Build the public contribution ledger from the baked skills. Everything here is
+// public (author, github login, featured, dates); the snarky badge is layered on
+// client-side and only for the signed-in visitor's own card.
+const skills = await getCollection("skills");
+const badgeSkills: BadgeSkill[] = skills.map((s) => ({
+  slug: s.id,
+  name: s.data.name,
+  author: s.data.author,
+  authorGithub: s.data.authorGithub ?? null,
+  featured: s.data.featured,
+  rating: getRating(s.id),
+  createdAt: s.data.createdAt ?? null,
+  platforms: s.data.platforms,
+}));
+
+const authors = allAuthors(badgeSkills);
+const totalSkills = skills.length;
+const featuredTotal = badgeSkills.filter((s) => s.featured).length;
+
+// How many skill chips to show per author card before collapsing to "+N more".
+const MAX_CHIPS = 8;
+
+// Identity model:
+//  • Real path (production): "Sign in with GitHub" (device flow). It turns on
+//    automatically once PUBLIC_GH_CLIENT_ID is set. That verified login is what
+//    makes the badge honestly "only yours" — without it, anyone could look up
+//    anyone else's badge by typing their handle.
+//  • Dev shim: a free-text username box so badges are previewable locally with
+//    no OAuth. It is DEV-ONLY and never ships to a production build. Set
+//    PUBLIC_ALLOW_MANUAL_BADGE=1 to force it on for a deliberate no-auth demo.
+const allowManualEntry =
+  import.meta.env.DEV || import.meta.env.PUBLIC_ALLOW_MANUAL_BADGE === "1";
+---
+
+<Layout
+  title="Contributors"
+  description="Everyone who has shipped a skill to the CAT Agent Skills gallery — sign in to reveal your own personal contributor badge."
+>
+  <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
+        Contributors
+      </h1>
+      <p class="mt-2 max-w-2xl text-muted">
+        Everyone who has shipped a skill to the gallery. Sign in with GitHub to
+        reveal your own <strong class="text-fg">personal badge</strong> — a
+        little tongue-in-cheek, and visible only to you.
+      </p>
+      <p class="mt-1 text-sm text-muted">
+        {authors.length} contributors · {totalSkills} skills · {featuredTotal} featured
+      </p>
+    </header>
+
+    {/* ── The "You" panel: private snark, revealed client-side ── */}
+    <section id="you-panel" class="you-panel mb-14">
+      <div class="you-head">
+        <h2 class="you-title">Your contributor badge</h2>
+
+        <div class="you-tools">
+          {
+            deviceFlowEnabled && (
+              <button id="gh-signin" type="button" class="you-submit gh-mark">
+                <svg viewBox="0 0 16 16" aria-hidden="true" class="gh-glyph">
+                  <path
+                    fill="currentColor"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+                  />
+                </svg>
+                Sign in with GitHub
+              </button>
+            )
+          }
+          {
+            allowManualEntry && (
+              <form id="you-form" class="you-devform" title="Dev-only badge preview">
+                <span class="you-devtag">dev</span>
+                <div class="you-input">
+                  <span aria-hidden="true" class="text-muted">
+                    @
+                  </span>
+                  <input
+                    id="gh-login"
+                    type="text"
+                    autocomplete="username"
+                    spellcheck="false"
+                    placeholder="github-username"
+                    aria-label="Preview a contributor's badge (dev only)"
+                  />
+                </div>
+                <button type="submit" class="you-devbtn">
+                  Preview
+                </button>
+              </form>
+            )
+          }
+          {
+            !deviceFlowEnabled && !allowManualEntry && (
+              <p class="text-sm text-muted">
+                Sign-in isn't set up on this deployment yet.
+              </p>
+            )
+          }
+          {
+            deviceFlowEnabled && (
+              <div id="gh-account" class="gh-account hidden">
+                <span class="gh-who" id="gh-who" />
+                <button id="gh-signout" type="button" class="you-devbtn">
+                  Sign out
+                </button>
+              </div>
+            )
+          }
+        </div>
+      </div>
+
+      <p id="gh-status" class="mt-3 hidden text-sm text-muted"></p>
+      <div id="you-result" class="hidden" aria-live="polite"></div>
+    </section>
+
+    {/* ── Public directory: neutral, no snark for others ── */}
+    <div class="mb-4 flex items-baseline justify-between gap-3">
+      <h2 class="text-lg font-semibold">All contributors</h2>
+      <span class="hidden text-sm text-muted sm:inline">
+        sorted by skills shipped
+      </span>
+    </div>
+    <ul class="author-grid" role="list">
+      {
+        authors.map((a) => {
+          const shown = a.skills.slice(0, MAX_CHIPS);
+          const extra = a.skillCount - shown.length;
+          return (
+            <li class="author-card" data-login={a.login}>
+              <div class="author-top">
+                <img
+                  src={`https://github.com/${a.login}.png?size=96`}
+                  alt=""
+                  width="44"
+                  height="44"
+                  loading="lazy"
+                  class="author-avatar"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <a
+                      href={`https://github.com/${a.login}`}
+                      target="_blank"
+                      rel="noopener"
+                      class="truncate font-medium hover:text-accent-text"
+                    >
+                      {a.displayName}
+                    </a>
+                    <span class="you-flag hidden">you</span>
+                  </div>
+                  <div class="truncate text-sm text-muted">@{a.login}</div>
+                </div>
+                <div class="author-count">
+                  <span class="author-count-num">{a.skillCount}</span>
+                  <span class="author-count-label">
+                    skill{a.skillCount === 1 ? "" : "s"}
+                  </span>
+                </div>
+              </div>
+
+              <ul class="skill-chips" role="list">
+                {shown.map((s) => (
+                  <li>
+                    <a class="chip" href={withBase(`/skills/${s.slug}`)} title={s.name}>
+                      {s.featured && (
+                        <svg
+                          class="chip-star"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.5z" />
+                        </svg>
+                      )}
+                      <span class="chip-name">{s.name}</span>
+                    </a>
+                  </li>
+                ))}
+                {extra > 0 && <li class="chip-more">+{extra} more</li>}
+              </ul>
+
+              {(a.featuredCount > 0 || a.newestCreatedAtMs) && (
+                <div class="author-foot">
+                  {a.featuredCount > 0 && (
+                    <span class="foot-item">
+                      <svg class="chip-star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.5z" />
+                      </svg>
+                      {a.featuredCount} featured
+                    </span>
+                  )}
+                  {a.newestCreatedAtMs && (
+                    <span class="foot-item">
+                      latest {formatDate(new Date(a.newestCreatedAtMs))}
+                    </span>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })
+      }
+    </ul>
+  </section>
+
+  <style>
+    /* ---- "You" panel + form (template elements → scoped) ---- */
+    .you-panel {
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      background: var(--surface);
+      padding: 1.25rem;
+    }
+    @media (min-width: 640px) {
+      .you-panel {
+        padding: 1.5rem 1.75rem;
+      }
+    }
+    .you-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem 1rem;
+    }
+    .you-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .you-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .you-devform {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .you-devtag {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      padding: 0.12rem 0.4rem;
+    }
+    .you-devform .you-input input {
+      width: 8.5rem;
+      font-size: 0.8rem;
+      padding: 0.42rem 0.3rem;
+    }
+    .you-devbtn {
+      border-radius: 0.55rem;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--fg);
+      padding: 0.42rem 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: border-color 0.15s;
+    }
+    .you-devbtn:hover {
+      border-color: var(--accent);
+    }
+    .you-input {
+      display: flex;
+      align-items: center;
+      gap: 0.125rem;
+      padding: 0 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 0.625rem;
+      background: var(--bg);
+      transition: border-color 0.15s;
+    }
+    .you-input:focus-within {
+      border-color: var(--accent);
+    }
+    .you-input input {
+      width: 13rem;
+      background: transparent;
+      border: 0;
+      outline: none;
+      padding: 0.55rem 0.35rem;
+      font-size: 0.875rem;
+      color: var(--fg);
+    }
+    .you-submit {
+      border-radius: 0.625rem;
+      background: var(--accent);
+      color: var(--accent-fg);
+      padding: 0.55rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    .you-submit:hover {
+      opacity: 0.9;
+    }
+    .gh-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .gh-glyph {
+      width: 1.05rem;
+      height: 1.05rem;
+    }
+    .gh-account {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .gh-account.hidden {
+      display: none;
+    }
+    .gh-who {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    /* ---- Directory grid + author cards (template elements → scoped) ---- */
+    .author-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+      align-items: start;
+    }
+    @media (min-width: 640px) {
+      .author-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (min-width: 1120px) {
+      .author-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    .author-card {
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+      background: var(--surface);
+      padding: 1rem;
+      transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+    }
+    .author-card:hover {
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    }
+    .author-card.is-you {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .author-card.is-you .you-flag {
+      display: inline-block;
+    }
+    .you-flag {
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-fg);
+      padding: 0.05rem 0.5rem;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .author-top {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .author-avatar {
+      width: 2.75rem;
+      height: 2.75rem;
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: var(--surface-2);
+    }
+    .author-count {
+      flex-shrink: 0;
+      text-align: center;
+      line-height: 1;
+    }
+    .author-count-num {
+      display: block;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--fg);
+    }
+    .author-count-label {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--subtle);
+    }
+    .skill-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-top: 0.85rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      max-width: 100%;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid transparent;
+      font-size: 0.75rem;
+      color: var(--fg);
+      transition:
+        border-color 0.15s,
+        color 0.15s;
+    }
+    .chip:hover {
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      color: var(--accent-text);
+    }
+    .chip-name {
+      max-width: 12rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .chip-star {
+      width: 0.7rem;
+      height: 0.7rem;
+      flex-shrink: 0;
+      color: #e0a92e;
+    }
+    .chip-more {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .author-foot {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      margin-top: 0.85rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .foot-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+  </style>
+
+  {/* Award reveal is injected via innerHTML, so its styles must be GLOBAL
+      (Astro scoped styles never reach dynamically-inserted nodes). Namespaced
+      under #you-result so nothing leaks to the rest of the site. */}
+  <style is:global>
+    /* Device-flow prompt (injected into #gh-status at runtime, so styles must
+       be global — the injected nodes carry no scoped attribute). */
+    #gh-status .gh-device {
+      margin-top: 0.85rem;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      background: var(--surface-2);
+      display: grid;
+      gap: 0.65rem;
+      max-width: 34rem;
+    }
+    #gh-status .gh-device-step {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--fg);
+    }
+    #gh-status .gh-device-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    #gh-status .gh-code {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      padding: 0.4rem 0.55rem 0.4rem 0.85rem;
+      border: 1px dashed var(--accent);
+      border-radius: 0.6rem;
+      background: var(--bg);
+      color: var(--fg);
+      cursor: pointer;
+      user-select: all;
+    }
+    #gh-status .gh-copied {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+    #gh-status .gh-open {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 0.55rem;
+      padding: 0.45rem 0.7rem;
+      transition: border-color 0.15s;
+    }
+    #gh-status .gh-open:hover {
+      border-color: var(--accent);
+    }
+    #gh-status .gh-device-wait {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    #gh-status .gh-device-note {
+      margin: 0;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 0.6rem;
+    }
+    #gh-status .gh-device-note strong {
+      color: var(--fg);
+      font-weight: 600;
+    }
+    #gh-status .gh-spinner {
+      width: 0.8rem;
+      height: 0.8rem;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+      animation: ghspin 0.8s linear infinite;
+    }
+    @keyframes ghspin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    #you-result {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    #you-result .award {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2.75rem;
+      align-items: center;
+    }
+    @media (max-width: 640px) {
+      #you-result .award {
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+        justify-items: center;
+        text-align: center;
+      }
+      #you-result .award-badge {
+        width: 200px;
+      }
+      #you-result .award-glow {
+        width: 240px;
+        height: 240px;
+      }
+      #you-result .award-title {
+        font-size: 1.7rem;
+      }
+      #you-result .award-quote {
+        font-size: 1.08rem;
+        margin-inline: auto;
+      }
+      #you-result .award-stats {
+        justify-content: center;
+      }
+    }
+    #you-result .award-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 0.5rem;
+    }
+    #you-result .award-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      border-radius: 999px;
+      background: radial-gradient(circle, var(--glow) 0%, transparent 68%);
+    }
+    #you-result .award-badge {
+      position: relative;
+      width: 248px;
+      height: auto;
+      filter: drop-shadow(0 16px 26px rgb(0 0 0 / 0.24));
+    }
+    #you-result .award-eyebrow {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.6875rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-text);
+    }
+    #you-result .award-title {
+      margin-top: 0.5rem;
+      font-size: 2.05rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.08;
+      color: var(--fg);
+    }
+    #you-result .award-quote {
+      margin-top: 0.7rem;
+      max-width: 54ch;
+      font-size: 1.2rem;
+      font-style: italic;
+      line-height: 1.5;
+      color: var(--fg);
+    }
+    #you-result .award-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.1rem;
+    }
+    #you-result .stat {
+      min-width: 5.2rem;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 0.7rem;
+      background: var(--surface-2);
+    }
+    #you-result .stat-num {
+      display: block;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-weight: 700;
+      font-size: 1.2rem;
+      line-height: 1;
+      color: var(--fg);
+    }
+    #you-result .stat-label {
+      display: block;
+      margin-top: 0.3rem;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.625rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    #you-result .award-note {
+      margin-top: 1.1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    #you-result .badge-empty {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border: 1px dashed var(--border);
+      border-radius: 0.85rem;
+      background: var(--surface);
+      padding: 1rem 1.15rem;
+      color: var(--muted);
+    }
+    #you-result .badge-empty svg {
+      width: 1.4rem;
+      height: 1.4rem;
+      flex-shrink: 0;
+      color: var(--subtle);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      #you-result .award-badge {
+        animation: badgeIn 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      #you-result .award-glow {
+        animation: glowIn 0.9s ease both;
+      }
+      #you-result .award-eyebrow {
+        animation: riseIn 0.5s ease 0.05s both;
+      }
+      #you-result .award-title {
+        animation: riseIn 0.5s ease 0.12s both;
+      }
+      #you-result .award-quote {
+        animation: riseIn 0.5s ease 0.18s both;
+      }
+      #you-result .stat {
+        animation: riseIn 0.5s ease both;
+      }
+      #you-result .stat:nth-child(1) {
+        animation-delay: 0.24s;
+      }
+      #you-result .stat:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+      #you-result .stat:nth-child(3) {
+        animation-delay: 0.36s;
+      }
+      #you-result .award-note {
+        animation: riseIn 0.5s ease 0.42s both;
+      }
+    }
+    @keyframes badgeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.92);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+    @keyframes riseIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+    @keyframes glowIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+
+  <script>
+    import {
+      computeStats,
+      resolveBadge,
+      captionFor,
+      BADGES,
+      type BadgeId,
+    } from "../lib/badges";
+    import {
+      requestDeviceCode,
+      pollForToken,
+      fetchViewerLogin,
+    } from "../lib/github-auth";
+
+    const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+    const LS_KEY = "cat-badge-login";
+    const png = (img: string) => `${BASE}/badges/${img}.png`;
+    const svg = (img: string) => `${BASE}/badges/${img}.svg`;
+
+    const form = document.getElementById("you-form") as HTMLFormElement | null;
+    const input = document.getElementById("gh-login") as HTMLInputElement | null;
+    const result = document.getElementById("you-result");
+    const statusEl = document.getElementById("gh-status");
+    const signinBtn = document.getElementById("gh-signin");
+    const accountEl = document.getElementById("gh-account");
+    const whoEl = document.getElementById("gh-who");
+    const signoutBtn = document.getElementById("gh-signout");
+
+    let data: any[] = [];
+    async function loadData() {
+      if (data.length) return data;
+      const res = await fetch(`${BASE}/skills.json`);
+      data = await res.json();
+      return data;
+    }
+
+    function esc(s: string) {
+      return s.replace(
+        /[&<>"]/g,
+        (c) =>
+          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] || c,
+      );
+    }
+
+    const dateFmt = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    function fmtLatest(ms: number | null) {
+      return ms ? dateFmt.format(new Date(ms)) : null;
+    }
+
+    function show(html: string) {
+      if (!result) return;
+      result.innerHTML = html;
+      result.classList.remove("hidden");
+      result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    function highlight(login: string) {
+      document.querySelectorAll<HTMLElement>(".author-card").forEach((el) => {
+        el.classList.toggle("is-you", el.dataset.login === login);
+      });
+    }
+
+    function statTile(num: string, label: string) {
+      return `<div class="stat"><span class="stat-num">${esc(
+        num,
+      )}</span><span class="stat-label">${esc(label)}</span></div>`;
+    }
+
+    // Evidence tiles, ordered so each badge leads with the stat that earned it
+    // (crowd favorites lead with votes, the factory with volume, and so on).
+    // Capped at three so the row stays tidy.
+    function tilesFor(badge: any, stats: any) {
+      const latest = fmtLatest(stats.newestCreatedAtMs);
+      const t = {
+        skills: statTile(
+          String(stats.skillCount),
+          stats.skillCount === 1 ? "skill" : "skills",
+        ),
+        featured:
+          stats.featuredCount > 0
+            ? statTile(String(stats.featuredCount), "featured")
+            : "",
+        votes:
+          stats.totalRating > 0
+            ? statTile(
+                String(stats.totalRating),
+                stats.totalRating === 1 ? "upvote" : "upvotes",
+              )
+            : "",
+        platforms:
+          stats.platforms && stats.platforms.length
+            ? statTile(
+                String(stats.platforms.length),
+                stats.platforms.length === 1 ? "platform" : "platforms",
+              )
+            : "",
+        latest: latest ? statTile(latest, "latest") : "",
+      };
+      const order =
+        badge.id === "top-rated"
+          ? [t.votes, t.skills, t.featured]
+          : badge.id === "teachers-pet"
+            ? [t.featured, t.skills, t.latest]
+            : badge.id === "skill-factory"
+              ? [t.skills, t.featured, t.latest]
+              : [t.skills, t.platforms, t.latest];
+      return order.filter(Boolean).slice(0, 3).join("");
+    }
+
+    function cardHtml(login: string, stats: any, badge: any, caption: string) {
+      const tiles = tilesFor(badge, stats);
+      const who =
+        login && login !== "preview"
+          ? `Issued to @${esc(login)}`
+          : "Badge preview";
+      return `
+        <div class="award">
+          <div class="award-stage">
+            <div class="award-glow" aria-hidden="true"></div>
+            <img class="award-badge" src="${png(badge.image)}" alt="${esc(
+              badge.title,
+            )} badge" width="200" height="220"
+                 onerror="this.onerror=null;this.src='${svg(badge.image)}'">
+          </div>
+          <div class="award-body">
+            <p class="award-eyebrow">${who}</p>
+            <h3 class="award-title">${esc(badge.title)}</h3>
+            <p class="award-quote">&ldquo;${esc(caption)}&rdquo;</p>
+            <div class="award-stats">${tiles}</div>
+            <p class="award-note">${esc(badge.meaning || "")}</p>
+          </div>
+        </div>`;
+    }
+
+    function emptyHtml(login: string) {
+      return `
+        <div class="badge-empty">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.5z"/></svg>
+          <p>No skills yet under <strong>@${esc(
+            login,
+          )}</strong> — no badge to show. Ship one and check back. 🐱</p>
+        </div>`;
+    }
+
+    async function renderFor(login: string, forced?: BadgeId) {
+      const norm = login.trim().replace(/^@/, "").toLowerCase();
+      if (!norm && !forced) return;
+      await loadData();
+      let stats = computeStats(norm, data);
+      let badge: any;
+      let caption: string;
+      if (forced && (BADGES as any)[forced]) {
+        badge = (BADGES as any)[forced];
+        caption = captionFor(badge, norm || forced);
+        // Dev preview only: ratings.json is empty locally, so seed a
+        // representative vote count so the Crowd Favorite tile isn't blank.
+        if (forced === "top-rated" && !stats.totalRating) {
+          stats = { ...stats, totalRating: 128 };
+        }
+      } else {
+        const r = resolveBadge(norm, data);
+        if (!r) {
+          show(emptyHtml(norm));
+          highlight("");
+          return;
+        }
+        badge = r.badge;
+        caption = r.caption;
+      }
+      if (input) input.value = norm;
+      show(cardHtml(norm || "preview", stats, badge, caption));
+      highlight(norm);
+    }
+
+    // Persist / clear the signed-in identity. Only a real GitHub sign-in (or a
+    // remembered one) calls setSignedIn — previews never persist, so a badge
+    // auto-appears on return ONLY if you actually signed in on this browser.
+    function setSignedIn(login: string) {
+      const norm = login.trim().replace(/^@/, "").toLowerCase();
+      if (!norm) return;
+      try {
+        localStorage.setItem(LS_KEY, norm);
+      } catch {}
+      if (whoEl) whoEl.textContent = "@" + norm;
+      // Inline display beats the scoped .gh-mark/.you-devform rules, which carry
+      // Astro's [data-astro-cid] attribute and would otherwise win over a class.
+      if (accountEl) accountEl.style.display = "inline-flex";
+      if (signinBtn) signinBtn.style.display = "none";
+      if (form) form.style.display = "none";
+    }
+
+    function signOut() {
+      try {
+        localStorage.removeItem(LS_KEY);
+      } catch {}
+      if (accountEl) accountEl.style.display = "none";
+      if (signinBtn) signinBtn.style.display = "";
+      if (form) form.style.display = "";
+      statusEl?.classList.add("hidden");
+      result?.classList.add("hidden");
+      if (result) result.innerHTML = "";
+      if (input) input.value = "";
+      highlight("");
+    }
+
+    signoutBtn?.addEventListener("click", signOut);
+
+    form?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (input) renderFor(input.value);
+    });
+
+    // GitHub device-flow sign-in (only rendered when PUBLIC_GH_CLIENT_ID is set).
+    signinBtn?.addEventListener("click", async () => {
+      if (!statusEl) return;
+      statusEl.classList.remove("hidden");
+      try {
+        statusEl.textContent = "Requesting a device code…";
+        const dc = await requestDeviceCode();
+        statusEl.innerHTML = `
+          <div class="gh-device">
+            <div class="gh-device-step">Enter this code at GitHub to finish signing in:</div>
+            <div class="gh-device-row">
+              <code class="gh-code" id="gh-usercode" title="Click to copy">${esc(dc.user_code)}</code>
+              <span class="gh-copied" id="gh-copied" hidden>Copied</span>
+              <a class="gh-open" href="${dc.verification_uri}" target="_blank" rel="noopener">Open github.com/login/device ↗</a>
+            </div>
+            <div class="gh-device-wait"><span class="gh-spinner" aria-hidden="true"></span> Waiting for you to authorize…</div>
+            <p class="gh-device-note">Once you authorize, your GitHub handle is stored locally on this device (so your badge shows on return) until you click <strong>Sign out</strong>. Nothing is sent to or stored on any server.</p>
+          </div>`;
+        const codeEl = document.getElementById("gh-usercode");
+        const copiedEl = document.getElementById("gh-copied");
+        const copyCode = async () => {
+          try {
+            await navigator.clipboard.writeText(dc.user_code);
+            copiedEl?.removeAttribute("hidden");
+            setTimeout(() => copiedEl?.setAttribute("hidden", ""), 1600);
+          } catch {}
+        };
+        codeEl?.addEventListener("click", copyCode);
+        void copyCode();
+        const token = await pollForToken(dc);
+        statusEl.textContent = "Signed in — loading your badge…";
+        const login = await fetchViewerLogin(token);
+        statusEl.classList.add("hidden");
+        setSignedIn(login);
+        renderFor(login);
+      } catch (err: any) {
+        statusEl.textContent = "Sign-in failed: " + (err?.message || err);
+      }
+    });
+
+    // Init. The ?as=/&badge= preview is a DEV-ONLY affordance (same spoof class
+    // as the manual box), so it is ignored in a production build. A remembered
+    // login (from a real sign-in) still reveals the badge with no box present.
+    const ALLOW_PREVIEW =
+      import.meta.env.DEV ||
+      import.meta.env.PUBLIC_ALLOW_MANUAL_BADGE === "1";
+    const params = new URLSearchParams(location.search);
+    const asLogin = ALLOW_PREVIEW ? params.get("as") : null;
+    const forced = ALLOW_PREVIEW
+      ? (params.get("badge") as BadgeId | null) || undefined
+      : undefined;
+    if (asLogin) {
+      renderFor(asLogin, forced);
+    } else if (forced) {
+      renderFor("", forced);
+    } else {
+      let saved = "";
+      try {
+        saved = localStorage.getItem(LS_KEY) || "";
+      } catch {}
+      if (saved) {
+        setSignedIn(saved);
+        renderFor(saved);
+      }
+    }
+  </script>
+</Layout>
