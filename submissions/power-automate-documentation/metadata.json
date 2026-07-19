@@ -1,0 +1,12 @@
+{
+  "name": "Power Automate Documentation",
+  "description": "Turns a Power Automate solution .zip into a clean markdown reference for every flow inside it: trigger, plain-English process, connection references, and a read/write/delete table for everything it touches. Maps which flows call each other and unresolved connections automatically.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["power-automate", "documentation", "audit", "governance"],
+  "author": "Mathias Salomonsen",
+  "authorUrl": "https://www.linkedin.com/in/mathias-salomonsen-331949201",
+  "authorGithub": "m-salomonsen",
+  "version": "1.0.0",
+  "createdAt": "2026-07-19",
+  "updatedAt": "2026-07-19"
+}
