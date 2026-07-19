@@ -6,7 +6,7 @@ platforms: [Copilot Studio]
 tags: [powerpoint, presentations, python, charts]
 author: Ferran Chopo
 authorUrl: "https://www.linkedin.com/in/fchopo"
-authorGithub: adilei
+authorGithub: fchopo
 version: 1.0.0
 bundle: bundles/powerpoint-deck-designer.zip
 slug: powerpoint-deck-designer

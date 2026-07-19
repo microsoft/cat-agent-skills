@@ -6,7 +6,7 @@ platforms: [Copilot Studio]
 tags: [agent, blueprint, topics, design, power-platform, orchestration, adaptive-card]
 author: Elliot Margot
 authorUrl: "https://e-margot.ch"
-authorGithub: adilei
+authorGithub: OwnOptic
 version: 1.0.0
 createdAt: 2026-07-18
 updatedAt: 2026-07-18

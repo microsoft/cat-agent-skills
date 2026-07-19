@@ -5,7 +5,7 @@ agentDescription: "Builds a scenario-driven content pack for a Microsoft 365 Cop
 platforms: [Cowork]
 tags: [demo, copilot, microsoft-365, sales-enablement, content, productivity]
 author: Doak Moore
-authorGithub: adilei
+authorGithub: doakm
 version: 1.0.0
 ---
 # AI Demo Assistant

@@ -6,7 +6,7 @@ platforms: [Copilot Studio]
 tags: [advisor, discovery, architecture, decision-making, requirements, risk-assessment, microsoft-365-copilot, foundry, foundry-agent-service, agent-365, windows-ai-foundry]
 author: Rafsan Huseynov
 authorUrl: "https://www.linkedin.com/in/rafsanhuseynov"
-authorGithub: adilei
+authorGithub: rafsan-huseynov
 version: 1.0.0
 createdAt: 2026-07-18
 updatedAt: 2026-07-18

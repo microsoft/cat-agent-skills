@@ -6,7 +6,7 @@ platforms: [Cowork, Copilot Studio, Scout]
 tags: [presentations, speaker-notes, powerpoint, writing, productivity]
 author: Jagmeet Chabra
 authorUrl: "https://github.com/jchha001"
-authorGithub: adilei
+authorGithub: jchha001
 version: 1.0.0
 createdAt: 2026-07-16
 updatedAt: 2026-07-17

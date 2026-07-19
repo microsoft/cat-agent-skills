@@ -6,7 +6,7 @@ platforms: [Copilot Studio]
 tags: [productivity, planning, decision-making, refinement, brainstorming]
 author: Mathias Salomonsen
 authorUrl: "https://www.linkedin.com/in/mathias-salomonsen-331949201"
-authorGithub: adilei
+authorGithub: m-salomonsen
 version: 1.0.0
 createdAt: 2026-07-18
 updatedAt: 2026-07-18

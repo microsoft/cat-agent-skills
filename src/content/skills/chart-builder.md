@@ -6,7 +6,6 @@ platforms: [Cowork, Copilot Studio, Scout]
 tags: [data, charts, matplotlib, scripts]
 author: CAT Agent Skills
 authorUrl: "https://github.com/microsoft/cat-agent-skills"
-authorGithub: adilei
 version: 1.0.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14
