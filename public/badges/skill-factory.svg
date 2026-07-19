@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 264" width="240" height="264" role="img" aria-label="SKILL FACTORY placeholder badge">
+  <!--
+    Shared shield placeholder for the CAT Agent Skills contributor badges.
+    Rendered until the real illustrated PNG (same basename) is dropped in.
+    Per-badge copies swap only the scene emoji + ribbon title.
+  -->
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3a5c"/>
+      <stop offset="1" stop-color="#16233f"/>
+    </linearGradient>
+  </defs>
+  <path d="M120 12 L222 52 L222 150 Q222 210 120 252 Q18 210 18 150 L18 52 Z" fill="url(#shield)"/>
+  <path d="M120 26 L208 62 L208 148 Q208 200 120 236 Q32 200 32 148 L32 62 Z" fill="#f5f0e6" stroke="#4f74b0" stroke-width="4"/>
+  <rect x="60" y="6" width="120" height="26" rx="6" fill="#16233f"/>
+  <text x="120" y="23" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#f5f0e6" letter-spacing="0.5">🐾 CAT AGENT SKILLS</text>
+  <text x="120" y="148" text-anchor="middle" font-size="62">🏭🐱</text>
+  <rect x="20" y="182" width="200" height="34" rx="5" fill="#16233f"/>
+  <text x="120" y="205" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="800" fill="#f5f0e6" letter-spacing="0.5">SKILL FACTORY</text>
+  <rect x="92" y="210" width="56" height="3" rx="1.5" fill="#e8b23a"/>
+  <circle cx="120" cy="236" r="13" fill="#16233f" stroke="#4f74b0" stroke-width="3"/>
+  <text x="120" y="241" text-anchor="middle" font-size="13" fill="#f5f0e6">✓</text>
+</svg>
