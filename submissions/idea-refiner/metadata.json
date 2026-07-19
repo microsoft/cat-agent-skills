@@ -1,0 +1,11 @@
+{
+  "name": "Idea Refiner",
+  "description": "Refines an existing plan, decision, or draft through relentless, branch-by-branch questioning. Grouped in batches of 2-5 with recommended answers, pulling facts from Work IQ where possible, until every part has been fully thought through.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["productivity", "planning", "decision-making", "refinement", "brainstorming"],
+  "author": "Mathias Salomonsen",
+  "authorUrl": "https://www.linkedin.com/in/mathias-salomonsen-331949201",
+  "version": "1.0.0",
+  "createdAt": "2026-07-18",
+  "updatedAt": "2026-07-18"
+}
