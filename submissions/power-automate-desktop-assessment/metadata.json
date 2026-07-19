@@ -3,6 +3,8 @@
   "description": "Assess Power Automate Desktop and hybrid automation projects with evidence-based findings and prioritized remediation guidance.",
   "platforms": ["Cowork", "Copilot Studio"],
   "tags": ["power-automate", "desktop-flows", "automation", "assessment", "governance"],
+  "author": "Ricardo Calejo",
+  "authorUrl": "https://github.com/dvsRCalejo",
   "version": "1.1.0",
   "createdAt": "2026-07-17",
   "updatedAt": "2026-07-18"

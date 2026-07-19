@@ -5,6 +5,7 @@ agentDescription: "Use this skill when the user asks to create, improve, anonymi
 platforms: [Cowork, Copilot Studio, Scout]
 tags: [writing, case-study, marketing, documents, content, privacy]
 author: Simon Owen
+authorUrl: "https://github.com/SimonOwenDigital"
 authorGithub: SimonOwenDigital
 version: 0.1.0
 createdAt: 2026-07-17

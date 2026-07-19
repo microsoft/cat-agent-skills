@@ -4,6 +4,8 @@ description: Assess Power Automate Desktop and hybrid automation projects with e
 agentDescription: "Assess Power Automate Desktop and hybrid cloud/desktop automation projects for maintainability, reliability, security, performance, troubleshooting readiness, scaling, and governance using current Microsoft guidance and evidence-based review practices."
 platforms: [Cowork, Copilot Studio]
 tags: [power-automate, desktop-flows, automation, assessment, governance]
+author: Ricardo Calejo
+authorUrl: "https://github.com/dvsRCalejo"
 authorGithub: adilei
 version: 1.1.0
 createdAt: 2026-07-17

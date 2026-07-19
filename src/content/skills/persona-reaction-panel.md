@@ -5,6 +5,7 @@ agentDescription: "Pre-simulate how a defined set of role-based personas will re
 platforms: [Cowork, Copilot Studio]
 tags: [communications, change-management, launch-readiness, personas, qa]
 author: Olivia Zhang
+authorUrl: "https://github.com/Olivia2327"
 authorGithub: adilei
 version: 1.0.0
 bundle: bundles/persona-reaction-panel.zip
