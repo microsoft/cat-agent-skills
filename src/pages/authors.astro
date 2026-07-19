@@ -5,11 +5,10 @@ import { getRating } from "../lib/ratings";
 import { withBase } from "../lib/url";
 import { formatDate } from "../lib/skills";
 import { allAuthors, type BadgeSkill } from "../lib/badges";
-import { deviceFlowEnabled } from "../lib/github-auth";
 
 // Build the public contribution ledger from the baked skills. Everything here is
 // public (author, github login, featured, dates); the snarky badge is layered on
-// client-side and only for the signed-in visitor's own card.
+// client-side when a visitor looks up their own handle.
 const skills = await getCollection("skills");
 const badgeSkills: BadgeSkill[] = skills.map((s) => ({
   slug: s.id,
@@ -28,22 +27,11 @@ const featuredTotal = badgeSkills.filter((s) => s.featured).length;
 
 // How many skill chips to show per author card before collapsing to "+N more".
 const MAX_CHIPS = 8;
-
-// Identity model:
-//  • Real path (production): "Sign in with GitHub" (device flow). It turns on
-//    automatically once PUBLIC_GH_CLIENT_ID is set. That verified login is what
-//    makes the badge honestly "only yours" — without it, anyone could look up
-//    anyone else's badge by typing their handle.
-//  • Dev shim: a free-text username box so badges are previewable locally with
-//    no OAuth. It is DEV-ONLY and never ships to a production build. Set
-//    PUBLIC_ALLOW_MANUAL_BADGE=1 to force it on for a deliberate no-auth demo.
-const allowManualEntry =
-  import.meta.env.DEV || import.meta.env.PUBLIC_ALLOW_MANUAL_BADGE === "1";
 ---
 
 <Layout
   title="Contributors"
-  description="Everyone who has shipped a skill to the CAT Agent Skills gallery — sign in to reveal your own personal contributor badge."
+  description="Everyone who has shipped a skill to the CAT Agent Skills gallery — look up your handle to reveal your own personal contributor badge."
 >
   <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6">
     <header class="mb-8">
@@ -51,9 +39,8 @@ const allowManualEntry =
         Contributors
       </h1>
       <p class="mt-2 max-w-2xl text-muted">
-        Everyone who has shipped a skill to the gallery. Sign in with GitHub to
-        reveal your own <strong class="text-fg">personal badge</strong> — a
-        little tongue-in-cheek, and visible only to you.
+        Everyone who has shipped a skill to the gallery — each with a{" "}
+        <strong class="text-fg">personal badge</strong> waiting to be claimed.
       </p>
       <p class="mt-1 text-sm text-muted">
         {authors.length} contributors · {totalSkills} skills · {featuredTotal} featured
@@ -63,66 +50,37 @@ const allowManualEntry =
     {/* ── The "You" panel: private snark, revealed client-side ── */}
     <section id="you-panel" class="you-panel mb-14">
       <div class="you-head">
-        <h2 class="you-title">Your contributor badge</h2>
+        <div class="you-headings">
+          <h2 class="you-title">Your contributor badge</h2>
+          <p class="you-sub">
+            Enter your GitHub handle to reveal the badge you’ve earned —
+            computed live from your public contributions, and a little
+            tongue-in-cheek.
+          </p>
+        </div>
 
         <div class="you-tools">
-          {
-            deviceFlowEnabled && (
-              <button id="gh-signin" type="button" class="you-submit gh-mark">
-                <svg viewBox="0 0 16 16" aria-hidden="true" class="gh-glyph">
-                  <path
-                    fill="currentColor"
-                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
-                  />
-                </svg>
-                Sign in with GitHub
-              </button>
-            )
-          }
-          {
-            allowManualEntry && (
-              <form id="you-form" class="you-devform" title="Dev-only badge preview">
-                <span class="you-devtag">dev</span>
-                <div class="you-input">
-                  <span aria-hidden="true" class="text-muted">
-                    @
-                  </span>
-                  <input
-                    id="gh-login"
-                    type="text"
-                    autocomplete="username"
-                    spellcheck="false"
-                    placeholder="github-username"
-                    aria-label="Preview a contributor's badge (dev only)"
-                  />
-                </div>
-                <button type="submit" class="you-devbtn">
-                  Preview
-                </button>
-              </form>
-            )
-          }
-          {
-            !deviceFlowEnabled && !allowManualEntry && (
-              <p class="text-sm text-muted">
-                Sign-in isn't set up on this deployment yet.
-              </p>
-            )
-          }
-          {
-            deviceFlowEnabled && (
-              <div id="gh-account" class="gh-account hidden">
-                <span class="gh-who" id="gh-who" />
-                <button id="gh-signout" type="button" class="you-devbtn">
-                  Sign out
-                </button>
-              </div>
-            )
-          }
+          <form id="you-form" class="you-field" role="search">
+            <span class="you-at" aria-hidden="true">@</span>
+            <input
+              id="gh-login"
+              type="text"
+              autocomplete="username"
+              spellcheck="false"
+              placeholder="your-github-handle"
+              aria-label="Your GitHub handle"
+            />
+            <button type="submit" class="you-submit">Show my badge</button>
+          </form>
+          <div id="you-saved" class="you-saved">
+            <span class="you-who" id="you-who" />
+            <button id="you-forget" type="button" class="you-remove">
+              Remove handle
+            </button>
+          </div>
         </div>
       </div>
 
-      <p id="gh-status" class="mt-3 hidden text-sm text-muted"></p>
       <div id="you-result" class="hidden" aria-live="polite"></div>
     </section>
 
@@ -231,108 +189,122 @@ const allowManualEntry =
     }
     .you-head {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.6rem 1rem;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .you-headings {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-width: 34rem;
     }
     .you-title {
-      font-size: 1.125rem;
-      font-weight: 600;
+      font-size: 1.25rem;
+      font-weight: 650;
+      letter-spacing: -0.01em;
       color: var(--fg);
+    }
+    .you-sub {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--muted);
     }
     .you-tools {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.6rem;
+      flex: none;
     }
-    .you-devform {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
+    @media (min-width: 720px) {
+      .you-head {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2.5rem;
+      }
+      .you-tools {
+        align-items: flex-end;
+      }
     }
-    .you-devtag {
-      font-family: "JetBrains Mono", ui-monospace, monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      border-radius: 0.4rem;
-      padding: 0.12rem 0.4rem;
-    }
-    .you-devform .you-input input {
-      width: 8.5rem;
-      font-size: 0.8rem;
-      padding: 0.42rem 0.3rem;
-    }
-    .you-devbtn {
-      border-radius: 0.55rem;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--fg);
-      padding: 0.42rem 0.7rem;
-      font-size: 0.8rem;
-      font-weight: 500;
-      transition: border-color 0.15s;
-    }
-    .you-devbtn:hover {
-      border-color: var(--accent);
-    }
-    .you-input {
+    .you-field {
       display: flex;
       align-items: center;
-      gap: 0.125rem;
-      padding: 0 0.75rem;
+      gap: 0.3rem;
+      width: 100%;
+      max-width: 24rem;
+      padding: 0.32rem 0.32rem 0.32rem 0.85rem;
       border: 1px solid var(--border);
-      border-radius: 0.625rem;
+      border-radius: 0.85rem;
       background: var(--bg);
-      transition: border-color 0.15s;
+      transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
     }
-    .you-input:focus-within {
+    @media (min-width: 720px) {
+      .you-field {
+        width: 22rem;
+      }
+    }
+    .you-field:focus-within {
       border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
     }
-    .you-input input {
-      width: 13rem;
+    .you-at {
+      color: var(--muted);
+      font-size: 0.95rem;
+      user-select: none;
+    }
+    .you-field input {
+      flex: 1;
+      min-width: 0;
       background: transparent;
       border: 0;
       outline: none;
-      padding: 0.55rem 0.35rem;
-      font-size: 0.875rem;
+      padding: 0.5rem 0.1rem;
+      font-size: 0.95rem;
       color: var(--fg);
     }
     .you-submit {
-      border-radius: 0.625rem;
+      flex: none;
+      border-radius: 0.62rem;
       background: var(--accent);
       color: var(--accent-fg);
-      padding: 0.55rem 1rem;
+      padding: 0.55rem 1.05rem;
       font-size: 0.875rem;
       font-weight: 600;
+      white-space: nowrap;
       transition: opacity 0.15s;
     }
     .you-submit:hover {
       opacity: 0.9;
     }
-    .gh-mark {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .gh-glyph {
-      width: 1.05rem;
-      height: 1.05rem;
-    }
-    .gh-account {
-      display: inline-flex;
+    /* Remembered-handle chip (shown after a lookup; toggled via inline display
+       so it beats the scoped [data-astro-cid] attribute selector). */
+    .you-saved {
+      display: none;
       align-items: center;
       gap: 0.6rem;
     }
-    .gh-account.hidden {
-      display: none;
-    }
-    .gh-who {
-      font-size: 0.85rem;
+    .you-who {
+      font-size: 0.9rem;
       font-weight: 600;
+      color: var(--fg);
+    }
+    .you-remove {
+      border-radius: 0.6rem;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--muted);
+      padding: 0.42rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition:
+        border-color 0.15s,
+        color 0.15s;
+    }
+    .you-remove:hover {
+      border-color: var(--accent);
       color: var(--fg);
     }
 
@@ -489,94 +461,6 @@ const allowManualEntry =
       (Astro scoped styles never reach dynamically-inserted nodes). Namespaced
       under #you-result so nothing leaks to the rest of the site. */}
   <style is:global>
-    /* Device-flow prompt (injected into #gh-status at runtime, so styles must
-       be global — the injected nodes carry no scoped attribute). */
-    #gh-status .gh-device {
-      margin-top: 0.85rem;
-      padding: 0.9rem 1rem;
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      background: var(--surface-2);
-      display: grid;
-      gap: 0.65rem;
-      max-width: 34rem;
-    }
-    #gh-status .gh-device-step {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--fg);
-    }
-    #gh-status .gh-device-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-    #gh-status .gh-code {
-      font-family: "JetBrains Mono", ui-monospace, monospace;
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: 0.3em;
-      padding: 0.4rem 0.55rem 0.4rem 0.85rem;
-      border: 1px dashed var(--accent);
-      border-radius: 0.6rem;
-      background: var(--bg);
-      color: var(--fg);
-      cursor: pointer;
-      user-select: all;
-    }
-    #gh-status .gh-copied {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--accent);
-    }
-    #gh-status .gh-open {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--accent);
-      text-decoration: none;
-      border: 1px solid var(--border);
-      border-radius: 0.55rem;
-      padding: 0.45rem 0.7rem;
-      transition: border-color 0.15s;
-    }
-    #gh-status .gh-open:hover {
-      border-color: var(--accent);
-    }
-    #gh-status .gh-device-wait {
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-    #gh-status .gh-device-note {
-      margin: 0;
-      font-size: 0.72rem;
-      line-height: 1.45;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
-      padding-top: 0.6rem;
-    }
-    #gh-status .gh-device-note strong {
-      color: var(--fg);
-      font-weight: 600;
-    }
-    #gh-status .gh-spinner {
-      width: 0.8rem;
-      height: 0.8rem;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      display: inline-block;
-      animation: ghspin 0.8s linear infinite;
-    }
-    @keyframes ghspin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
     #you-result {
       margin-top: 1.5rem;
       padding-top: 1.5rem;
@@ -779,11 +663,6 @@ const allowManualEntry =
       BADGES,
       type BadgeId,
     } from "../lib/badges";
-    import {
-      requestDeviceCode,
-      pollForToken,
-      fetchViewerLogin,
-    } from "../lib/github-auth";
 
     const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
     const LS_KEY = "cat-badge-login";
@@ -793,11 +672,9 @@ const allowManualEntry =
     const form = document.getElementById("you-form") as HTMLFormElement | null;
     const input = document.getElementById("gh-login") as HTMLInputElement | null;
     const result = document.getElementById("you-result");
-    const statusEl = document.getElementById("gh-status");
-    const signinBtn = document.getElementById("gh-signin");
-    const accountEl = document.getElementById("gh-account");
-    const whoEl = document.getElementById("gh-who");
-    const signoutBtn = document.getElementById("gh-signout");
+    const savedEl = document.getElementById("you-saved");
+    const whoEl = document.getElementById("you-who");
+    const forgetBtn = document.getElementById("you-forget");
 
     let data: any[] = [];
     async function loadData() {
@@ -918,9 +795,12 @@ const allowManualEntry =
         </div>`;
     }
 
-    async function renderFor(login: string, forced?: BadgeId) {
+    async function renderFor(
+      login: string,
+      forced?: BadgeId,
+    ): Promise<boolean> {
       const norm = login.trim().replace(/^@/, "").toLowerCase();
-      if (!norm && !forced) return;
+      if (!norm && !forced) return false;
       await loadData();
       let stats = computeStats(norm, data);
       let badge: any;
@@ -928,8 +808,9 @@ const allowManualEntry =
       if (forced && (BADGES as any)[forced]) {
         badge = (BADGES as any)[forced];
         caption = captionFor(badge, norm || forced);
-        // Dev preview only: ratings.json is empty locally, so seed a
-        // representative vote count so the Crowd Favorite tile isn't blank.
+        // When a badge is forced via ?badge= but no live votes exist (e.g. a
+        // shared preview link, or empty local ratings), seed a representative
+        // count so the Crowd Favorite tile isn't blank.
         if (forced === "top-rated" && !stats.totalRating) {
           stats = { ...stats, totalRating: 128 };
         }
@@ -938,7 +819,7 @@ const allowManualEntry =
         if (!r) {
           show(emptyHtml(norm));
           highlight("");
-          return;
+          return false;
         }
         badge = r.badge;
         caption = r.caption;
@@ -946,97 +827,51 @@ const allowManualEntry =
       if (input) input.value = norm;
       show(cardHtml(norm || "preview", stats, badge, caption));
       highlight(norm);
+      return true;
     }
 
-    // Persist / clear the signed-in identity. Only a real GitHub sign-in (or a
-    // remembered one) calls setSignedIn — previews never persist, so a badge
-    // auto-appears on return ONLY if you actually signed in on this browser.
-    function setSignedIn(login: string) {
+    // Remember the looked-up handle in this browser so the badge reappears on
+    // return. Nothing leaves the device; "Remove handle" clears it. Inline
+    // display beats the scoped rules (which carry Astro's [data-astro-cid]
+    // attribute and would otherwise win over a class).
+    function rememberHandle(login: string) {
       const norm = login.trim().replace(/^@/, "").toLowerCase();
       if (!norm) return;
       try {
         localStorage.setItem(LS_KEY, norm);
       } catch {}
       if (whoEl) whoEl.textContent = "@" + norm;
-      // Inline display beats the scoped .gh-mark/.you-devform rules, which carry
-      // Astro's [data-astro-cid] attribute and would otherwise win over a class.
-      if (accountEl) accountEl.style.display = "inline-flex";
-      if (signinBtn) signinBtn.style.display = "none";
+      if (savedEl) savedEl.style.display = "inline-flex";
       if (form) form.style.display = "none";
     }
 
-    function signOut() {
+    function forgetHandle() {
       try {
         localStorage.removeItem(LS_KEY);
       } catch {}
-      if (accountEl) accountEl.style.display = "none";
-      if (signinBtn) signinBtn.style.display = "";
+      if (savedEl) savedEl.style.display = "none";
       if (form) form.style.display = "";
-      statusEl?.classList.add("hidden");
       result?.classList.add("hidden");
       if (result) result.innerHTML = "";
       if (input) input.value = "";
       highlight("");
     }
 
-    signoutBtn?.addEventListener("click", signOut);
+    forgetBtn?.addEventListener("click", forgetHandle);
 
-    form?.addEventListener("submit", (e) => {
+    form?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (input) renderFor(input.value);
+      if (!input) return;
+      const ok = await renderFor(input.value);
+      if (ok) rememberHandle(input.value);
     });
 
-    // GitHub device-flow sign-in (only rendered when PUBLIC_GH_CLIENT_ID is set).
-    signinBtn?.addEventListener("click", async () => {
-      if (!statusEl) return;
-      statusEl.classList.remove("hidden");
-      try {
-        statusEl.textContent = "Requesting a device code…";
-        const dc = await requestDeviceCode();
-        statusEl.innerHTML = `
-          <div class="gh-device">
-            <div class="gh-device-step">Enter this code at GitHub to finish signing in:</div>
-            <div class="gh-device-row">
-              <code class="gh-code" id="gh-usercode" title="Click to copy">${esc(dc.user_code)}</code>
-              <span class="gh-copied" id="gh-copied" hidden>Copied</span>
-              <a class="gh-open" href="${dc.verification_uri}" target="_blank" rel="noopener">Open github.com/login/device ↗</a>
-            </div>
-            <div class="gh-device-wait"><span class="gh-spinner" aria-hidden="true"></span> Waiting for you to authorize…</div>
-            <p class="gh-device-note">Once you authorize, your GitHub handle is stored locally on this device (so your badge shows on return) until you click <strong>Sign out</strong>. Nothing is sent to or stored on any server.</p>
-          </div>`;
-        const codeEl = document.getElementById("gh-usercode");
-        const copiedEl = document.getElementById("gh-copied");
-        const copyCode = async () => {
-          try {
-            await navigator.clipboard.writeText(dc.user_code);
-            copiedEl?.removeAttribute("hidden");
-            setTimeout(() => copiedEl?.setAttribute("hidden", ""), 1600);
-          } catch {}
-        };
-        codeEl?.addEventListener("click", copyCode);
-        void copyCode();
-        const token = await pollForToken(dc);
-        statusEl.textContent = "Signed in — loading your badge…";
-        const login = await fetchViewerLogin(token);
-        statusEl.classList.add("hidden");
-        setSignedIn(login);
-        renderFor(login);
-      } catch (err: any) {
-        statusEl.textContent = "Sign-in failed: " + (err?.message || err);
-      }
-    });
-
-    // Init. The ?as=/&badge= preview is a DEV-ONLY affordance (same spoof class
-    // as the manual box), so it is ignored in a production build. A remembered
-    // login (from a real sign-in) still reveals the badge with no box present.
-    const ALLOW_PREVIEW =
-      import.meta.env.DEV ||
-      import.meta.env.PUBLIC_ALLOW_MANUAL_BADGE === "1";
+    // Init. ?as=<handle>&badge=<id> reveals a specific badge via a shareable
+    // URL; otherwise a handle remembered in this browser auto-reveals (and is
+    // dropped if it no longer maps to a badge).
     const params = new URLSearchParams(location.search);
-    const asLogin = ALLOW_PREVIEW ? params.get("as") : null;
-    const forced = ALLOW_PREVIEW
-      ? (params.get("badge") as BadgeId | null) || undefined
-      : undefined;
+    const asLogin = params.get("as");
+    const forced = (params.get("badge") as BadgeId | null) || undefined;
     if (asLogin) {
       renderFor(asLogin, forced);
     } else if (forced) {
@@ -1047,8 +882,10 @@ const allowManualEntry =
         saved = localStorage.getItem(LS_KEY) || "";
       } catch {}
       if (saved) {
-        setSignedIn(saved);
-        renderFor(saved);
+        rememberHandle(saved);
+        renderFor(saved).then((ok) => {
+          if (!ok) forgetHandle();
+        });
       }
     }
   </script>
