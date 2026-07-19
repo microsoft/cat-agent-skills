@@ -76,7 +76,7 @@ const fullTitle =
             data-clarity-event="report_issue"
             data-clarity-report-scope="site"
             title="Report an issue or share feedback"
-            class="inline-flex items-center gap-1.5 hover:text-fg transition-colors"
+            class="inline-flex items-center whitespace-nowrap hover:text-fg transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -86,7 +86,7 @@ const fullTitle =
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              class="h-4 w-4 shrink-0"
+              class="h-4 w-4 shrink-0 sm:hidden"
               aria-hidden="true"
             >
               <circle cx="12" cy="12" r="9"></circle>
@@ -94,7 +94,12 @@ const fullTitle =
               <path d="M12 16h.01"></path>
             </svg>
             <span class="hidden sm:inline">Report an issue</span>
-            <span class="sr-only sm:hidden">Report an issue</span>
+          </a>
+          <a
+            href={withBase("/authors")}
+            class="hidden whitespace-nowrap hover:text-fg transition-colors sm:inline"
+          >
+            Contributors
           </a>
           <a
             href="https://github.com/microsoft/cat-agent-skills/blob/main/CONTRIBUTING.md"

@@ -1,0 +1,24 @@
+{
+  "name": "Lab Column Mapper",
+  "description": "When a health system's lab results ingestion pipeline hits an unknown column header, this skill semantically matches the source column against the canonical clinical schema (LOINC-anchored), scoped by lab and clinical domain, and writes a suggested mapping to a Dataverse review queue for a clinical informatics steward to approve.",
+  "platforms": ["Copilot Studio"],
+  "tags": [
+    "healthcare",
+    "clinical-data",
+    "lab-results",
+    "schema-drift",
+    "column-mapping",
+    "data-ingestion",
+    "loinc",
+    "azure-ai-search",
+    "azure-data-factory",
+    "dataverse",
+    "power-automate",
+    "human-in-the-loop"
+  ],
+  "author": "Rafsan Huseynov",
+  "authorUrl": "https://www.linkedin.com/in/rafsanhuseynov",
+  "version": "1.0.0",
+  "createdAt": "2026-07-18",
+  "updatedAt": "2026-07-18"
+}

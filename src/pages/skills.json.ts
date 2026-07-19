@@ -17,6 +17,8 @@ export const GET: APIRoute = async () => {
         type: d.type,
         tags: d.tags,
         author: d.author,
+        authorGithub: d.authorGithub ?? null,
+        createdAt: d.createdAt ? d.createdAt.toISOString() : null,
         version: d.version,
         hasBundle: Boolean(d.bundle),
         featured: d.featured,
