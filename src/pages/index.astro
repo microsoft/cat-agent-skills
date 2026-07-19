@@ -483,13 +483,63 @@ const hiddenTagCount = Math.max(0, allTags.length - COLLAPSED_TAGS);
     refilter();
   }
 
-  initFromUrl();
+  // Remember scroll position + how many cards were revealed, so opening a skill
+  // and pressing Back drops the visitor right where they left off. Otherwise the
+  // module re-runs (or bfcache reconciles) with the infinite-scroll batch reset
+  // to the first 12 cards, leaving the page too short to sit at the old offset —
+  // so the browser dumps them at the top. We take control of restoration, save
+  // on the way out, and re-expand the batch before jumping back on return.
+  const SCROLL_KEY = "gallery-scroll";
+  history.scrollRestoration = "manual";
 
-  // Restore from the back/forward cache (bfcache) does not re-run this module,
-  // so filter state, the visible-count, and the infinite-scroll batch can be
-  // left frozen out of sync with the DOM. Reconcile on persisted pageshow.
+  function saveScroll() {
+    try {
+      sessionStorage.setItem(
+        SCROLL_KEY,
+        JSON.stringify({ href: location.href, y: window.scrollY, shown })
+      );
+    } catch {}
+  }
+
+  function restoreScroll() {
+    let saved: { href: string; y: number; shown: number } | null = null;
+    try {
+      saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) ?? "null");
+    } catch {}
+    if (!saved || saved.href !== location.href) return;
+    // Reveal at least as many cards as before so the page is tall enough to
+    // hold the saved offset, then restore it.
+    shown = Math.min(Math.max(shown, saved.shown), matched.length);
+    render();
+    window.scrollTo(0, saved.y);
+  }
+
+  const navType = (
+    performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined
+  )?.type;
+
+  initFromUrl();
+  // A fresh module run restores only on history navigation (Back/forward) or a
+  // reload; a brand-new visit starts at the top.
+  if (navType === "back_forward" || navType === "reload") restoreScroll();
+
+  // A back/forward-cache restore does not re-run this module, so filter state,
+  // the visible-count, and the infinite-scroll batch can be left frozen out of
+  // sync with the DOM. Reconcile from the URL on persisted pageshow, then
+  // re-expand the batch and restore the offset.
   window.addEventListener("pageshow", (event) => {
-    if (event.persisted) initFromUrl();
+    if (!event.persisted) return;
+    initFromUrl();
+    restoreScroll();
+  });
+
+  // Capture the offset on the way out. pagehide covers navigation + bfcache
+  // freeze; visibilitychange is the reliable fallback on mobile Safari.
+  window.addEventListener("pagehide", saveScroll);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") saveScroll();
   });
 </script>
 
