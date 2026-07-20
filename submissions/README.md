@@ -6,8 +6,8 @@ PR, CI validates your metadata and generates the published skill page (and any
 download bundle) for you.
 
 Every submission is a **`submissions/<slug>/` folder** containing a
-`metadata.json` gallery sidecar plus **exactly one** skill payload, in one of
-two shapes:
+`metadata.json` gallery sidecar plus **exactly one** skill payload — an
+**unpacked** canonical Agent Skill:
 
 ```
 submissions/<slug>/
@@ -15,23 +15,23 @@ submissions/<slug>/
 │                     # (a SIDECAR — never packaged into the download bundle)
 ├── README.md         # OPTIONAL — human-facing overview shown on the detail page
 │                     # (never bundled, never seen by the agent)
-└── EITHER an unpacked canonical Agent Skill…
+└── an unpacked canonical Agent Skill:
     ├── SKILL.md      # frontmatter (name + agent description) + instructions
     ├── scripts/      # optional executable code
     ├── references/   # optional docs the agent reads on demand
     └── assets/       # optional templates / data files
-    …OR a single pre-packaged bundle:
-    └── <name>.zip    # a canonical Agent Skill (root SKILL.md + files)
 ```
+
+`.zip` payloads are **no longer accepted** — submit your skill unpacked. (Scout
+submissions can instead be a single automation `.json`; see below.)
 
 The `<slug>` is the folder name — use lowercase, hyphenated names, e.g.
 `submissions/meeting-summarizer/` -> `/skills/meeting-summarizer`. Start by
 copying [`_template/`](./_template).
 
 Bundling is **verbatim** — whatever you put in `scripts/`/`references/`/`assets/`
-(or inside your `.zip`) ships exactly as authored. Only `metadata.*` and the
-optional `README.md` are stripped; they are sidecars and never land inside the
-bundle.
+ships exactly as authored. Only `metadata.*` and the optional `README.md` are
+stripped; they are sidecars and never land inside the bundle.
 
 > ℹ️ **Talking to a human? Use `README.md`.** A root-level `README.md` is the one
 > file meant for people, not the agent. It is **never bundled** and **never part
@@ -39,7 +39,7 @@ bundle.
 > page (your own overview, setup steps, tips, and examples), with the exact
 > `SKILL.md` still offered as the download. Without one, the page falls back to
 > the skill's own instructions. It's optional and works for every entry type
-> (skill, plugin, automation, installer). Everything *else* in the folder is
+> (skill or automation). Everything *else* in the folder is
 > agent-facing and ships verbatim, so don't add stray docs like `CHANGELOG` or
 > `CONTRIBUTING` next to your payload — they'd just waste the agent's context. Put
 > those in your PR description.
@@ -79,8 +79,7 @@ Markdown, and written for **people** — so it never ships in the download bundl
 and the agent never reads it. When present, it **becomes the main content** on
 the detail page (in your own words), while the exact `SKILL.md` stays available as
 the download. Leave it out and the page falls back to showing the skill's
-instructions. It works the same way for every entry type: skill, plugin,
-automation, and automation installer.
+instructions. It works the same way for a skill or a Scout automation.
 
 ## `metadata.json` — catalog details
 
@@ -142,48 +141,14 @@ don't need to set it** — just make `authorUrl` your GitHub profile. Set it
 explicitly only when your only link isn't a GitHub profile (e.g. LinkedIn), or
 leave it blank to opt out of the mention.
 
-## Cowork plugins (advanced)
+## Cowork plugins (no longer accepted)
 
-Besides single cross-platform skills, the gallery also hosts **Cowork plugins** —
-Microsoft 365 app packages that bundle one or more skills (plus optional MCP
-connectors) and run **only** in Copilot Cowork. See the
-[Cowork plugin development guide](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development).
-
-A plugin submission is a `submissions/<slug>/` folder with a `metadata.json`
-sidecar plus a **single pre-built `.zip` M365 package**. It's auto-detected as a
-plugin (rather than a single skill) because the `.zip` has a **root
-`manifest.json`** instead of a root `SKILL.md`:
-
-```
-submissions/<slug>/
-├── metadata.json         # catalog sidecar (name/description/tags optional —
-│                         #  they fall back to the manifest)
-└── <name>.zip
-    ├── manifest.json     # M365 app manifest (manifestVersion "devPreview" or "1.28")
-    ├── color.png         # 192×192 color icon (referenced by the manifest)
-    ├── outline.png       # 32×32 outline icon (referenced by the manifest)
-    └── skills/
-        ├── <skill-a>/
-        │   └── SKILL.md  # frontmatter name must match the folder name
-        └── <skill-b>/
-            └── SKILL.md
-```
-
-The importer forces `platforms: ["Cowork"]` and `type: "plugin"`, publishes the
-`.zip` verbatim as the download package, and synthesizes the detail page
-(overview, the skills it contains, any connectors, and install steps). Plugins
-show a **Plugin** badge on their card and are filterable on the homepage.
-
-Validation is thorough and will fail the PR with an itemized list if anything is
-off: the manifest must be valid JSON with a `manifestVersion` of `"devPreview"`
-or `"1.28"` (real-world plugins and Microsoft's conversion script emit
-`"devPreview"`; the docs reference `"1.28"`), a GUID `id`,
-non-empty `name.short`/`description.short`, and `icons.color`/`icons.outline`
-that reference real PNGs of the exact required dimensions; there must be at least
-one `agentSkills` entry (or connector); and every `agentSkills[].folder` must
-exist with a `SKILL.md` whose frontmatter `name` is kebab-case and matches the
-folder. See [`legal-toolkit/`](./legal-toolkit) for a complete example, and copy
-[`_template-plugin/`](./_template-plugin) to start.
+Earlier, the gallery also accepted **Cowork plugins** — Microsoft 365 app
+packages (a `.zip` with a root `manifest.json`) that bundle one or more skills
+(plus optional MCP connectors) and run **only** in Copilot Cowork. Because the
+gallery no longer accepts `.zip` payloads, **new plugin submissions are no longer
+accepted**. Existing plugin submissions (e.g. [`legal-toolkit/`](./legal-toolkit))
+stay published.
 
 ## Scout automations (advanced)
 
@@ -192,8 +157,8 @@ The gallery also hosts **Scout automations** — a scheduled/triggered `.json`
 
 An automation submission is a `submissions/<slug>/` folder with a `metadata.json`
 sidecar plus a **single `.json` automation export**. It's auto-detected as an
-automation because the one non-sidecar top-level file is a `.json` (not a `.zip`,
-not a `SKILL.md`):
+automation because the one non-sidecar top-level file is a `.json` (not a
+`SKILL.md`):
 
 ```
 submissions/<slug>/
@@ -228,50 +193,22 @@ actually fire, and a `cron` expression is valid and fireable. Copy
 [`spend-more-time-with-friends-and-family/`](./spend-more-time-with-friends-and-family)
 for a complete example.
 
-## Scout automation installers (advanced)
+## Scout automation installers (no longer accepted)
 
-Not every automation is a directly-importable `.json`. Some are **installers**: a
-`.zip` you download, unzip, and follow to set the automation up — typically an
-agent reads the instructions, collects your settings into a personal config, and
-calls `m_create_automation`. This suits automations that need per-user
-configuration or a guided setup rather than a one-click import.
-
-An installer submission is a `submissions/<slug>/` folder with a `metadata.json`
-sidecar plus a **single `.zip`** containing an `INSTALL.md` and one or more JSON
-config files. It's auto-detected as an automation installer because the `.zip`
-holds an `INSTALL.md` and at least one JSON file (and no root `SKILL.md` or
-`manifest.json`):
-
-```
-submissions/<slug>/
-├── metadata.json          # catalog sidecar (name/description/tags optional —
-│                          #  they fall back to the automation's own fields)
-└── <name>.zip
-    ├── INSTALL.md         # required: install procedure + the automation prompt
-    └── config.example.json   # required: one or more JSON config file(s)
-```
-
-The importer forces `platforms: ["Scout"]` and `type: "automation"`, publishes
-the `.zip` **verbatim** as the download (offered as a `.zip`), and renders your
-`INSTALL.md` as the detail page. Installers show the same **Automation** badge as
-importable automations and are filterable on the homepage; the download chip
-reads `.zip` instead of `.json`.
-
-Validation is intentionally **minimal**
-(`scripts/validate-automation.ts`) and will fail the PR only if the package is
-missing its `INSTALL.md` (or it's empty) or has no JSON config file. The JSON
-config files are **not** parsed or schema-validated — because the `.zip` ships
-verbatim, strip any personal paths or secrets first and include only files the
-installing agent needs. Copy
-[`_template-automation-installer/`](./_template-automation-installer) to start,
-and see [`vacation-urgent-forwarder/`](./vacation-urgent-forwarder) for a
-complete example.
+Some automations aren't a directly-importable `.json` but an **installer**: a
+`.zip` you download, unzip, and follow to set the automation up (an agent reads
+the instructions, collects your settings into a personal config, and calls
+`m_create_automation`). Because the gallery no longer accepts `.zip` payloads,
+**new installer submissions are no longer accepted** — submit a Scout automation
+as a single importable `.json` (above) instead. Existing installer submissions
+(e.g. [`vacation-urgent-forwarder/`](./vacation-urgent-forwarder)) stay
+published.
 
 ## Updating an existing skill
 
-Same path: edit the files in your `submissions/<slug>/` folder (or replace the
-`<name>.zip` payload) and open a PR. The slug is the identity — same slug updates
-the existing skill, a new slug creates a new one.
+Same path: edit the files in your `submissions/<slug>/` folder and open a PR. The
+slug is the identity — same slug updates the existing skill, a new slug creates a
+new one.
 
 ## Try it locally before opening a PR
 
