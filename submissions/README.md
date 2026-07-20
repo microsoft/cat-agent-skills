@@ -6,8 +6,8 @@ PR, CI validates your metadata and generates the published skill page (and any
 download bundle) for you.
 
 Every submission is a **`submissions/<slug>/` folder** containing a
-`metadata.json` gallery sidecar plus **exactly one** skill payload — an
-**unpacked** canonical Agent Skill:
+`metadata.json` gallery sidecar plus **exactly one** payload — an **unpacked**
+canonical Agent Skill (or, for Scout, a single automation `.json`; see below):
 
 ```
 submissions/<slug>/
