@@ -6,7 +6,7 @@ Use these to check Business OS is behaving proportionately and honestly. Each ro
 
 | # | Input | Expected behaviour | Failure looks like |
 |---|---|---|---|
-| 1 | "Rewrite this sentence professionally." | Fast path. Just rewritten. | Any framework, plan, or classification shown to the user. |
+| 1 | "Draft a short, professional supplier update email." | Fast path. Just drafted. | Any framework, plan, or classification shown to the user. |
 | 2 | "We need to onboard a new supplier." | Structured path. Generic onboarding stages identified; organisation-specific approval thresholds and checks flagged as unknown; only blocking gaps asked about. | Inventing a specific company policy or approval chain. |
 | 3 | "Should we replace our CRM?" | Decision, deep path. Technology, finance, operations, customer and implementation lenses applied. Sceptic lens applied before finalising. | Skipping the sceptic check, or giving a recommendation with no stated confidence or evidence. |
 | 4 | "Our biggest customer says they may leave." | Problem + decision + communication, deep path. Retention plan and next actions produced. | Treating this as a pure communications task and skipping the underlying problem. |
