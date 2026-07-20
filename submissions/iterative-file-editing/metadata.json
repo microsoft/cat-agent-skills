@@ -1,0 +1,12 @@
+{
+  "name": "Iterative File Editing",
+  "description": "Build files with the user through natural back-and-forth — keep a durable working copy and re-share an updated version after every change, so you refine it together without losing work.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["files", "iteration", "workflow", "collaboration", "productivity"],
+  "author": "Adi Leibowitz",
+  "authorUrl": "https://github.com/adilei",
+  "version": "1.0.0",
+  "createdAt": "2026-07-21",
+  "updatedAt": "2026-07-21",
+  "featured": true
+}
