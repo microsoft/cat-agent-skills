@@ -196,16 +196,24 @@
 
 <script>
 (function () {
-  var data;
-  try {
-    data = JSON.parse(document.getElementById('plan-data').textContent);
-  } catch (e) {
+  function showFatalError(text) {
     document.body.textContent = '';
     var msg = document.createElement('p');
     msg.style.padding = '24px';
     msg.style.fontFamily = '-apple-system, Segoe UI, Roboto, Arial, sans-serif';
-    msg.textContent = 'This file is a template. Replace {{PLAN_DATA_JSON}} with real plan data JSON before opening.';
+    msg.textContent = text;
     document.body.appendChild(msg);
+  }
+
+  var data;
+  try {
+    data = JSON.parse(document.getElementById('plan-data').textContent);
+  } catch (e) {
+    showFatalError('This file is a template. Replace {{PLAN_DATA_JSON}} with real plan data JSON before opening.');
+    return;
+  }
+  if (!data || !Array.isArray(data.topics) || !Array.isArray(data.sessions)) {
+    showFatalError('Invalid plan data: expected "topics" and "sessions" arrays in the embedded JSON.');
     return;
   }
   var validConf = { low: 1, medium: 1, high: 1 };
