@@ -86,7 +86,7 @@ inferring.
 
 ## Step 4 — Uncover the hidden layer
 
-This is the heart of the skill. Read `reference/hidden-insights-guide.md` for the full
+This is the heart of the skill. Read `references/hidden-insights-guide.md` for the full
 technique catalog before writing this section. Systematically look for:
 
 - **The unsaid**: topics conspicuously avoided, questions asked and never answered,
@@ -111,7 +111,7 @@ that meeting and will immediately distrust an analysis that overclaims. A well-c
 
 ## Step 5 — Deliver the report
 
-Use the template in `asset/report-template.md` as the output structure. It flows from a
+Use the template in `assets/report-template.md` as the output structure. It flows from a
 brief executive summary → explicit layer → personas → hidden insights → recommended next
 actions. Follow the section order but adapt depth to the material: a 15-minute stand-up
 does not need the depth of a 2-hour negotiation.
