@@ -18,28 +18,40 @@ runtime its executable steps actually assume. The runtimes are **not** the same,
 so the same snippet can be fine on one platform and broken on another:
 
 - **Cowork** and **Copilot Studio** execute code in a **Python/Linux
-  container** — no Windows shell, no drive letters, no desktop apps.
+  container** — no Windows shell, no drive letters, no desktop apps. **Python**
+  (with POSIX shell) is the safe choice for any executable step.
 - **Scout** runs on the **user's own device**, so it is **cross-OS**: the same
-  automation may run on Windows, macOS, or Linux. Windows PowerShell and
-  `$PWD.Path` are legitimate there — a Scout step that branches on the OS (e.g.
-  `pwd` on macOS/Linux, `$PWD.Path` on Windows) is doing the *right* thing and
-  must **not** be flagged as a "won't run" error.
+  automation may run on Windows, macOS, or Linux. Executable steps must be
+  **platform-agnostic** — either written in a runtime that behaves the same on
+  every OS (**Python** or **Node** are fine as-is), or explicitly **branched per
+  OS** so each one runs a command it actually has (e.g. `pwd` on macOS/Linux,
+  `$PWD.Path` on Windows). A per-OS branch like that is doing the *right* thing
+  and must **not** be flagged as a "won't run" error.
 
-Flag a submission when its runnable code or filesystem assumptions don't match
-the platforms it targets, for example:
+Flag a submission when its runnable code, **runtime dependency**, or filesystem
+assumptions don't match the platforms it targets, for example:
 
-- **Windows PowerShell** snippets (`Expand-Archive`, `Get-ChildItem`,
-  `C:\...` paths) in a skill tagged **Cowork or Copilot Studio** — these won't
-  run in the Linux container as authored. Ask the author to rewrite the step(s)
-  in **Python** with Linux-style paths, or mark the code as illustrative-only.
-  This does **not** apply to Scout.
-- **Non-portable code in a Scout automation** — because Scout runs on whatever
-  machine the user is on, its steps must be **OS-portable**: handle both Windows
-  and macOS/Linux, resolve paths at runtime relative to the workspace, and never
-  hardcode an absolute path, drive letter, or a specific username. Flag a Scout
-  payload that assumes a **single** OS (e.g. Linux-only paths with no Windows
-  branch, or vice versa) or bakes in a personal path — but not one that already
-  handles multiple OSes.
+- **Windows dependencies in a Cowork / Copilot Studio skill** — Windows
+  PowerShell or `.ps1` scripts, Windows-only cmdlets (`Expand-Archive`,
+  `Get-ChildItem`), `.exe` / .NET-Framework calls, drive letters, or `C:\...`
+  paths. None of these run in the Linux container as authored. Ask the author to
+  rewrite the step(s) in **Python** with POSIX paths, or mark the code as
+  illustrative-only. This does **not** apply to Scout.
+- **A non-portable runtime dependency in a Scout skill / automation** — because
+  Scout runs on whatever machine the user is on, an executable step that
+  hard-depends on a **single-OS runtime or shell** is not portable: an
+  unconditional **PowerShell** step (macOS/Linux may not have it installed), a
+  `bash`-only assumption on Windows, or a Windows-only cmdlet / `.exe`. Ask the
+  author to move the logic into a **cross-OS runtime (Python or Node)** or to
+  **branch per OS** so each path uses a natively-available command. **Python and
+  Node are fine; a bare PowerShell/`.ps1` dependency is not.** Do **not** flag a
+  payload that is already agnostic this way (e.g. the `pwd` / `$PWD.Path` branch
+  above).
+- **Non-portable filesystem assumptions in a Scout skill / automation** — a
+  step that assumes a **single** OS's paths (Linux-only paths with no Windows
+  branch, or vice versa) or bakes in an absolute path, drive letter, or a
+  specific username. Paths must resolve at runtime relative to the workspace.
+  Again, do **not** flag one that already handles multiple OSes.
 - Desktop/Office-host assumptions (`.docx` output, "if the file is locked by
   Word or OneDrive", GUI automation) on a **container** platform that has no
   such host.
