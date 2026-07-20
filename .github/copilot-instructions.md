@@ -22,11 +22,14 @@ so the same snippet can be fine on one platform and broken on another:
   (with POSIX shell) is the safe choice for any executable step.
 - **Scout** runs on the **user's own device**, so it is **cross-OS**: the same
   automation may run on Windows, macOS, or Linux. Executable steps must be
-  **platform-agnostic** — either written in a runtime that behaves the same on
-  every OS (**Python** or **Node** are fine as-is), or explicitly **branched per
-  OS** so each one runs a command it actually has (e.g. `pwd` on macOS/Linux,
-  `$PWD.Path` on Windows). A per-OS branch like that is doing the *right* thing
-  and must **not** be flagged as a "won't run" error.
+  **platform-agnostic** — ideally written in a runtime that behaves the same on
+  every OS (**Python** or **Node** are fine as-is). Scout also uses **whatever
+  shell the device has** (POSIX `sh`, `cmd.exe`, or PowerShell — you **cannot**
+  assume which), so read environment info such as the working directory from the
+  runtime (`os.getcwd()` / `process.cwd()`) or the agent's workspace tools rather
+  than shelling out for it. A per-OS **branch** is acceptable only when each
+  branch calls a command that OS's shell genuinely has; a branch like that is
+  doing the *right* thing and must **not** be flagged as a "won't run" error.
 
 Flag a submission when its runnable code, **runtime dependency**, or filesystem
 assumptions don't match the platforms it targets, for example:
@@ -41,12 +44,15 @@ assumptions don't match the platforms it targets, for example:
   Scout runs on whatever machine the user is on, an executable step that
   hard-depends on a **single-OS runtime or shell** is not portable: an
   unconditional **PowerShell** step (macOS/Linux may not have it installed), a
-  `bash`-only assumption on Windows, or a Windows-only cmdlet / `.exe`. Ask the
-  author to move the logic into a **cross-OS runtime (Python or Node)** or to
-  **branch per OS** so each path uses a natively-available command. **Python and
+  `bash`-only assumption on Windows, or a Windows-only cmdlet / `.exe`. This
+  includes a per-OS branch that **bets on a shell that isn't guaranteed** — e.g.
+  `$PWD.Path` assumes PowerShell, but on Windows Scout often spawns `cmd.exe`
+  where it fails. Ask the author to move the logic into a **cross-OS runtime
+  (Python or Node)**, or read the value from the runtime / workspace tools (e.g.
+  `os.getcwd()` / `process.cwd()` instead of `pwd` / `$PWD.Path`). **Python and
   Node are fine; a bare PowerShell/`.ps1` dependency is not.** Do **not** flag a
-  payload that is already agnostic this way (e.g. the `pwd` / `$PWD.Path` branch
-  above).
+  genuinely agnostic payload — a cross-OS runtime, or a branch that calls only
+  commands each OS's shell actually has.
 - **Non-portable filesystem assumptions in a Scout skill / automation** — a
   step that assumes a **single** OS's paths (Linux-only paths with no Windows
   branch, or vice versa) or bakes in an absolute path, drive letter, or a
