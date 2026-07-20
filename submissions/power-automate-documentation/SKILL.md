@@ -149,8 +149,10 @@ The output should be one Markdown document per solution zip. Solution-level over
 ### Interacts with other flows
 - **Calls:** {resolved child-flow / flow-management names, or "None."}
 - **Called by:** {flow names found across the solution(s) provided, or "None found in this solution — it may still be run manually, from Power Apps, or from a flow outside the zip(s) provided."}
+```
 
 All 4 inventory lines are accounted for: 2 in Process only (Compose_Forecast is data-shaping, HTTP_Get_Weather also appears in External HTTP — folded into Data access here since it's the flow's only HTTP call), 1 trigger described, 1 in Data access. Nothing was dropped.
+
 
 ## Workflow
 
