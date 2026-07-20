@@ -14,20 +14,54 @@ When reviewing a pull request, check the following in addition to CI:
 ### Platform fit vs. executable code
 
 A skill's `platforms` (`Cowork`, `Copilot Studio`, `Scout`) must match the
-runtime its executable steps actually assume. **All three platforms execute code
-in a Python/Linux container — none of them run Windows PowerShell.**
+runtime its executable steps actually assume. The runtimes are **not** the same,
+so the same snippet can be fine on one platform and broken on another:
 
-Flag a submission when its runnable code or filesystem assumptions don't match
-the platforms it targets, for example:
+- **Cowork** and **Copilot Studio** execute code in a **Python/Linux
+  container** — no Windows shell, no drive letters, no desktop apps. **Python**
+  (with POSIX shell) is the safe choice for any executable step.
+- **Scout** runs on the **user's own device**, so it is **cross-OS**: the same
+  automation may run on Windows, macOS, or Linux. Executable steps must be
+  **platform-agnostic** — ideally written in a runtime that behaves the same on
+  every OS (**Python** or **Node** are fine as-is). Scout also uses **whatever
+  shell the device has** (POSIX `sh`, `cmd.exe`, or PowerShell — you **cannot**
+  assume which), so read environment info such as the working directory from the
+  runtime (`os.getcwd()` / `process.cwd()`) or the agent's workspace tools rather
+  than shelling out for it. A per-OS **branch** is acceptable only when each
+  branch calls a command that OS's shell genuinely has; a branch like that is
+  doing the *right* thing and must **not** be flagged as a "won't run" error.
 
-- **Windows PowerShell** snippets (`Expand-Archive`, `Get-ChildItem`,
-  `C:\...` paths) in a skill tagged for Cowork / Copilot Studio / Scout — these
-  won't run as authored. Ask the author to rewrite the step(s) in **Python**
-  with Linux-style paths, or mark the code as illustrative-only.
+Flag a submission when its runnable code, **runtime dependency**, or filesystem
+assumptions don't match the platforms it targets, for example:
+
+- **Windows dependencies in a Cowork / Copilot Studio skill** — Windows
+  PowerShell or `.ps1` scripts, Windows-only cmdlets (`Expand-Archive`,
+  `Get-ChildItem`), `.exe` / .NET-Framework calls, drive letters, or `C:\...`
+  paths. None of these run in the Linux container as authored. Ask the author to
+  rewrite the step(s) in **Python** with POSIX paths, or mark the code as
+  illustrative-only. This does **not** apply to Scout.
+- **A non-portable runtime dependency in a Scout skill / automation** — because
+  Scout runs on whatever machine the user is on, an executable step that
+  hard-depends on a **single-OS runtime or shell** is not portable: an
+  unconditional **PowerShell** step (macOS/Linux may not have it installed), a
+  `bash`-only assumption on Windows, or a Windows-only cmdlet / `.exe`. This
+  includes a per-OS branch that **bets on a shell that isn't guaranteed** — e.g.
+  `$PWD.Path` assumes PowerShell, but on Windows Scout often spawns `cmd.exe`
+  where it fails. Ask the author to move the logic into a **cross-OS runtime
+  (Python or Node)**, or read the value from the runtime / workspace tools (e.g.
+  `os.getcwd()` / `process.cwd()` instead of `pwd` / `$PWD.Path`). **Python and
+  Node are fine; a bare PowerShell/`.ps1` dependency is not.** Do **not** flag a
+  genuinely agnostic payload — a cross-OS runtime, or a branch that calls only
+  commands each OS's shell actually has.
+- **Non-portable filesystem assumptions in a Scout skill / automation** — a
+  step that assumes a **single** OS's paths (Linux-only paths with no Windows
+  branch, or vice versa) or bakes in an absolute path, drive letter, or a
+  specific username. Paths must resolve at runtime relative to the workspace.
+  Again, do **not** flag one that already handles multiple OSes.
 - Desktop/Office-host assumptions (`.docx` output, "if the file is locked by
-  Word or OneDrive", local drive letters, GUI automation) on a platform that has
-  no such host.
-- Any executable payload whose language/OS doesn't match the container it will
+  Word or OneDrive", GUI automation) on a **container** platform that has no
+  such host.
+- Any executable payload whose language/OS doesn't match the runtime it will
   run in.
 
 Either the executable steps are made portable to the targeted runtime, or the
