@@ -2,9 +2,9 @@
 
 Short, illustrative walk-throughs. These show the reasoning pattern, not a script to copy word for word.
 
-## Fast path: "Rewrite this paragraph professionally"
+## Fast path: "Draft a short, professional supplier update email"
 
-No classification step is shown to the user, no plan, no references loaded. The paragraph is rewritten and returned. That's the whole interaction.
+No classification step is shown to the user, no plan, no references loaded. The email is drafted and returned. That's the whole interaction.
 
 ## Structured path: "We need to onboard a new supplier"
 
