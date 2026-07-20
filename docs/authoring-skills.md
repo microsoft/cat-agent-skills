@@ -2,7 +2,7 @@
 
 A **skill** is a reusable instruction set for an AI agent — targeting one or more
 of **Cowork**, **Copilot Studio**, and **Scout** — published in this gallery
-with an optional `.zip` of helper scripts.
+with optional helper `scripts/` (and `references/` / `assets/`).
 
 You contribute every skill the same way: **add a submission to the
 [`../submissions/`](../submissions/) folder and open a PR.** CI validates the
@@ -11,11 +11,10 @@ edit `src/content/skills/` by hand.
 
 ## 1. The submission shape
 
-Every submission is a self-contained unit with the same layout, whether you add
-it as a folder or as a zip of that folder:
+Every submission is a self-contained **unpacked** folder with the same layout:
 
 ```
-submissions/<slug>/            (or submissions/<slug>.zip containing the same)
+submissions/<slug>/
 ├── skill.md          # the agent skill — frontmatter (name + agent description) + instructions
 ├── metadata.json     # OR metadata.yaml — catalog details for this gallery
 └── scripts/          # optional helper files (bundled for download)
@@ -99,7 +98,7 @@ npm run dev                  # open the site and confirm your skill looks right
 
 ## 6. Open a pull request
 
-Submit a PR with your `submissions/<slug>/` folder (or `<slug>.zip`). CI validates
+Submit a PR with your `submissions/<slug>/` folder. CI validates
 the metadata, generates the skill page, and (for same-repo PRs) commits the
 generated files back to your branch. Once merged to `main`, the site redeploys
 automatically.
