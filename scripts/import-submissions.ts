@@ -2,8 +2,7 @@
  * Import skill submissions into the site content.
  *
  * Every skill is contributed as a `submissions/<slug>/` folder holding a
- * `metadata.json` gallery sidecar plus EXACTLY ONE skill payload, in one of two
- * shapes:
+ * `metadata.json` gallery sidecar plus EXACTLY ONE unpacked skill payload:
  *
  *   submissions/<slug>/
  *   ├── metadata.json  (or metadata.yaml) Catalog metadata for THIS gallery:
@@ -13,15 +12,21 @@
  *   │                  `authorUrl`, or set explicitly for attribution — see
  *   │                  resolveAuthorGithub. It is never the PR/merger login.)
  *   │                  It is a SIDECAR — never packaged into the download bundle.
- *   └── EITHER an unpacked canonical Agent Skill:
- *   │     ├── SKILL.md     frontmatter `name` + `description` (the AGENT-facing
- *   │     │                description the model reads to decide when to invoke
- *   │     │                the skill), followed by the instructions body.
- *   │     ├── scripts/     optional executable code
- *   │     ├── references/  optional docs
- *   │     └── assets/      optional templates / data files
- *   │   OR a pre-packaged bundle:
- *         └── <name>.zip   a canonical Agent Skill (root SKILL.md + files).
+ *   └── an unpacked canonical Agent Skill:
+ *         ├── SKILL.md     frontmatter `name` + `description` (the AGENT-facing
+ *         │                description the model reads to decide when to invoke
+ *         │                the skill), followed by the instructions body.
+ *         ├── scripts/     optional executable code
+ *         ├── references/  optional docs
+ *         └── assets/      optional templates / data files
+ *
+ * (A Scout submission may instead ship a single automation `<name>.json`.)
+ *
+ * `.zip` payloads are NO LONGER ACCEPTED for new submissions — a packed bundle
+ * hides its `SKILL.md` and code from review. A handful of pre-existing zip
+ * submissions are grandfathered via LEGACY_ZIP_SLUGS so the build keeps
+ * passing; no new ones may be added. Plugin (`manifest.json`) packages and
+ * automation-installer (`INSTALL.md`) zips are covered by the same ban.
  *
  * The two descriptions are deliberately separate:
  *   - SKILL.md frontmatter `description`  → `agentDescription` (what the agent reads)
@@ -34,9 +39,10 @@
  * `public/bundles/<slug>.zip`, with `bundle:` injected into the frontmatter.
  *
  * Bundling is VERBATIM — no file classification logic. An unpacked skill is
- * zipped exactly as authored (minus the metadata sidecar); a packed submission
- * is exploded, its root SKILL.md validated, then re-bundled deterministically
- * from the exploded contents (so the output can never contain metadata.json).
+ * zipped exactly as authored (minus the metadata sidecar); a grandfathered
+ * (legacy) packed submission is exploded, its root SKILL.md validated, then
+ * re-bundled deterministically from the exploded contents (so the output can
+ * never contain metadata.json).
  *
  * Usage:
  *   tsx scripts/import-submissions.ts            # import everything
@@ -92,6 +98,16 @@ const BUNDLE_INSTRUCTIONS_NAME = "SKILL.md";
 // be built from local components (not a UTC instant) to stay identical across
 // timezones (e.g. a contributor's machine vs. CI running in UTC).
 const FIXED_ZIP_DATE = new Date(2000, 0, 1, 0, 0, 0);
+// Zip payloads are no longer accepted (they hide SKILL.md + code from review).
+// These slugs predate the ban and are grandfathered so the whole-tree build
+// keeps passing; NO new zip submissions (skills, plugins, or automation
+// installers) may be added. See loadSubmission() for enforcement.
+const LEGACY_ZIP_SLUGS = new Set([
+  "copilot-studio-test-planner",
+  "phi-deidentifier",
+  "powerpoint-deck-designer",
+  "vacation-urgent-forwarder",
+]);
 // Order in which frontmatter keys are emitted for generated content files.
 const FIELD_ORDER = [
   "name",
@@ -832,8 +848,9 @@ function processAutomation(sub: Submission): ImportProblem | null {
 
 /**
  * Load a `submissions/<slug>/` folder: a `metadata.json` sidecar plus exactly
- * one skill payload — either an unpacked canonical skill (root `SKILL.md` +
- * optional dirs) or a single pre-packaged `<name>.zip`.
+ * one skill payload — an unpacked canonical skill (root `SKILL.md` + optional
+ * dirs) or, for Scout, a single automation `<name>.json`. `.zip` payloads are
+ * no longer accepted (only the grandfathered LEGACY_ZIP_SLUGS still load).
  */
 function loadSubmission(dir: string): Submission {
   const slug = basename(dir);
@@ -860,7 +877,7 @@ function loadSubmission(dir: string): Submission {
   if (zips.length > 0 && hasRootSkill) {
     problems.push(
       "submission has BOTH an unpacked SKILL.md and a .zip payload \u2014 " +
-        "provide exactly one",
+        "remove the `.zip` (zip payloads are no longer accepted)",
     );
   } else if (zips.length > 1) {
     problems.push(
@@ -868,29 +885,44 @@ function loadSubmission(dir: string): Submission {
         "packed payload",
     );
   } else if (zips.length === 1) {
-    // Packed payload: explode the zip. A root-level `manifest.json` marks a
-    // Cowork plugin (an M365 app package); otherwise it's a canonical Agent
-    // Skill (root `SKILL.md`), re-bundled from its exploded contents.
-    const files = new AdmZip(join(dir, zips[0]))
-      .getEntries()
-      .filter((e) => !e.isDirectory)
-      .map((e) => ({ path: e.entryName.split("\\").join("/"), data: e.getData() }));
-    if (isPluginPackage(files)) {
-      sub.kind = "plugin";
-      // Ship the package verbatim, minus any stray metadata sidecar.
-      sub.pluginFiles = files.filter(
-        (f) => !METADATA_NAMES.includes(basename(f.path).toLowerCase()),
-      );
-    } else if (isAutomationInstaller(files)) {
-      // An automation installer: an `INSTALL.md` + JSON config file(s). Shipped
-      // verbatim as the download; the INSTALL.md becomes the detail-page body.
-      sub.kind = "automation";
-      sub.installer = true;
-      sub.installerFiles = files.filter(
-        (f) => !METADATA_NAMES.includes(basename(f.path).toLowerCase()),
+    if (!LEGACY_ZIP_SLUGS.has(slug)) {
+      // Zip payloads are no longer accepted for new submissions — a packed
+      // bundle hides its SKILL.md and code from review. Only the grandfathered
+      // legacy slugs above still explode; everything new must be unpacked.
+      problems.push(
+        "`.zip` payloads are no longer accepted \u2014 submit the skill UNPACKED " +
+          "(a root `SKILL.md` plus optional `scripts/`, `references/`, `assets/`), " +
+          "or, for Scout, a single automation `<name>.json`. Pre-packaged Cowork " +
+          "plugin and Scout automation-installer `.zip`s are no longer accepted " +
+          "either.",
       );
     } else {
-      classifyPayload(sub, files);
+      // Grandfathered legacy payload: explode the zip. A root-level
+      // `manifest.json` marks a Cowork plugin (an M365 app package); otherwise
+      // it's a canonical Agent Skill (root `SKILL.md`), re-bundled from its
+      // exploded contents.
+      const files = new AdmZip(join(dir, zips[0]))
+        .getEntries()
+        .filter((e) => !e.isDirectory)
+        .map((e) => ({ path: e.entryName.split("\\").join("/"), data: e.getData() }));
+      if (isPluginPackage(files)) {
+        sub.kind = "plugin";
+        // Ship the package verbatim, minus any stray metadata sidecar.
+        sub.pluginFiles = files.filter(
+          (f) => !METADATA_NAMES.includes(basename(f.path).toLowerCase()),
+        );
+      } else if (isAutomationInstaller(files)) {
+        // An automation installer: an `INSTALL.md` + JSON config file(s).
+        // Shipped verbatim as the download; the INSTALL.md becomes the
+        // detail-page body.
+        sub.kind = "automation";
+        sub.installer = true;
+        sub.installerFiles = files.filter(
+          (f) => !METADATA_NAMES.includes(basename(f.path).toLowerCase()),
+        );
+      } else {
+        classifyPayload(sub, files);
+      }
     }
   } else if (hasRootSkill) {
     // Unpacked: bundle the folder contents verbatim (minus the metadata sidecar).
@@ -915,8 +947,8 @@ function loadSubmission(dir: string): Submission {
     } else {
       problems.push(
         "submission has no payload \u2014 add a root `SKILL.md` (with optional " +
-          "`scripts/`, `references/`, `assets/`), a single `<name>.zip`, or a " +
-          "single Scout automation `<name>.json`",
+          "`scripts/`, `references/`, `assets/`), or a single Scout automation " +
+          "`<name>.json`",
       );
     }
   }
@@ -935,8 +967,8 @@ function main() {
   for (const name of readdirSync(SUBMISSIONS_DIR)) {
     if (name.startsWith(".") || name.startsWith("_")) continue; // _template, etc.
     const full = join(SUBMISSIONS_DIR, name);
-    // Submissions are folders. A skill is packaged as a `<name>.zip` *inside* its
-    // submission folder, not as a top-level zip in submissions/.
+    // Submissions are folders. Each holds an unpacked skill (root `SKILL.md` +
+    // optional dirs) or, for Scout, a single automation `<name>.json`.
     if (statSync(full).isDirectory()) {
       submissions.push(loadSubmission(full));
     }
@@ -963,8 +995,9 @@ function main() {
       "\nEach submission is a `submissions/<slug>/` folder with a `metadata.*` " +
         "sidecar (catalog `description`, `platforms`, `tags`) plus exactly one " +
         "payload: an unpacked `SKILL.md` (frontmatter `name` + agent-facing " +
-        "`description`, then instructions), a single `<name>.zip`, or a single " +
-        "Scout automation `<name>.json`. Fix the items above and retry.",
+        "`description`, then instructions), or a single Scout automation " +
+        "`<name>.json`. `.zip` payloads are no longer accepted. Fix the items " +
+        "above and retry.",
     );
     process.exit(1);
   }
