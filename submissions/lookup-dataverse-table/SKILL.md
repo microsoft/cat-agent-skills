@@ -80,7 +80,6 @@ Example detail view:
 | **Phone** | 555-0100 |
 | **City** | Seattle |
 | **State** | WA |
-
 ## Remembering preferred fields
 
 - If the user requests a different set of fields (add, remove, or replace),
