@@ -103,7 +103,6 @@ The skill works with **any** Dataverse table. Common examples:
 | Invoices | invoice |
 | Activities | activitypointer |
 | Users | systemuser |
-
 Use `describe('tables/')` to discover all available tables in the environment.
 
 ## Guardrails
