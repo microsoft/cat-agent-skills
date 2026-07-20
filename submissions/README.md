@@ -210,6 +210,11 @@ Same path: edit the files in your `submissions/<slug>/` folder and open a PR. Th
 slug is the identity — same slug updates the existing skill, a new slug creates a
 new one.
 
+The handful of **grandfathered legacy `.zip` submissions** (e.g.
+`vacation-urgent-forwarder/`) are the one exception: update them by replacing
+their existing `.zip` payload in the same folder. New submissions can't be zips,
+but these pre-existing ones are still maintained that way.
+
 ## Try it locally before opening a PR
 
 ```bash
