@@ -1,0 +1,9 @@
+{
+  "name": "Web Change Monitor (Automation)",
+  "description": "A scheduled Scout automation that watches your chosen web pages for real content changes and pings you only when something changes — release notes, deprecations/changelogs, service-health status flips, and runbooks. Config-driven and portable; edit its config.json to add the pages you care about.",
+  "platforms": ["Scout"],
+  "tags": ["automation", "monitoring", "browser", "alerts", "productivity"],
+  "author": "Alex Hudish",
+  "authorUrl": "https://github.com/hudish",
+  "version": "1.0.0"
+}
