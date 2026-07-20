@@ -497,7 +497,8 @@
       }
       var nowStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
       lines.push('BEGIN:VEVENT');
-      lines.push(fold('UID:' + s.date + '-' + s.topicId + '-' + idx + '@examprep'));
+      var uid = String(s.date + '-' + s.topicId + '-' + idx + '@examprep').replace(/[^A-Za-z0-9\-@.]/g, '-');
+      lines.push(fold('UID:' + uid));
       lines.push('DTSTAMP:' + nowStamp);
       lines.push('DTSTART:' + stamp(d));
       lines.push('DTEND:' + stamp(endD));
