@@ -2,8 +2,8 @@
 
 Thanks for helping grow the **CAT Agent Skills** gallery! A *skill* is a reusable
 instruction set for an AI agent — targeting one or more of **Cowork**,
-**Copilot Studio**, and **Scout** — published here with an optional `.zip` of
-helper scripts.
+**Copilot Studio**, and **Scout** — published here with optional helper
+`scripts/`, `references/`, and `assets/`.
 
 You contribute by adding **one submission to the [`submissions/`](submissions/)
 folder** and opening a pull request. You never edit `src/content/skills/`
@@ -13,22 +13,20 @@ download bundle) for you.
 ## The submission shape
 
 Every submission is a `submissions/<slug>/` folder: a `metadata.json` sidecar, an
-optional `README.md`, and **exactly one** payload. This section covers the most
-common payload — a **skill**, either an unpacked folder or a pre-packaged zip; the
-other entry types (plugins, automations, and installers) follow the same pattern
-and are covered just below.
+optional `README.md`, and **exactly one** payload. This section covers the common
+payload — a **skill**, as an **unpacked** folder. Scout submissions can instead
+ship a single automation `.json` (covered just below). `.zip` payloads are **no
+longer accepted** — submit your skill unpacked.
 
 ```
 submissions/<slug>/
 ├── metadata.json     # OR metadata.yaml — catalog details (sidecar, not bundled)
 ├── README.md         # optional — becomes the page's main content (not bundled)
-└── EITHER an unpacked canonical Agent Skill…
+└── an unpacked canonical Agent Skill:
     ├── SKILL.md      # frontmatter (name + agent description) + instructions
     ├── scripts/      # optional executable code
     ├── references/   # optional docs
     └── assets/       # optional templates / data files
-    …OR a single pre-packaged bundle:
-    └── <name>.zip    # a canonical Agent Skill (root SKILL.md + files)
 ```
 
 Copy [`submissions/_template/`](submissions/_template) to get started. The
@@ -45,17 +43,12 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 > notes) next to your payload — they'd ship to the agent and waste its context;
 > put those in your pull request description instead.
 
-### Cowork plugins
+### Cowork plugins (no longer accepted)
 
-You can also submit a **Cowork plugin** — a Microsoft 365 app package that
-bundles one or more skills (plus optional MCP connectors) and runs **only** in
-Copilot Cowork. A plugin submission is a `submissions/<slug>/` folder with a
-`metadata.json` sidecar plus a single pre-built `.zip` whose **root
-`manifest.json`** (instead of a root `SKILL.md`) marks it as a plugin. Copy
-[`submissions/_template-plugin/`](submissions/_template-plugin) to start and see
-the [Cowork plugins section](submissions/README.md#cowork-plugins-advanced) of
-the submissions reference for the required package contents and validation
-rules.
+Cowork **plugin** packages — an M365 app `.zip` with a root `manifest.json`
+bundling one or more skills (plus optional MCP connectors) — are **no longer
+accepted** as new submissions, because the gallery no longer takes `.zip`
+payloads. Existing plugin submissions stay published.
 
 ### Scout automations
 
@@ -63,32 +56,21 @@ You can also submit a **Scout automation** — a scheduled/triggered `.json`
 (a schedule plus an ordered list of prompt steps) that runs **only** in Scout.
 An automation submission is a `submissions/<slug>/` folder with a `metadata.json`
 sidecar plus a single `.json` automation export; the fact that the one
-non-sidecar top-level file is a `.json` (instead of a `.zip` or a `SKILL.md`)
-marks it as an automation. The `.json` is published verbatim as the download and
-re-imports directly into Scout. Copy
+non-sidecar top-level file is a `.json` (instead of a `SKILL.md`) marks it as an
+automation. The `.json` is published verbatim as the download and re-imports
+directly into Scout. Copy
 [`submissions/_template-automation/`](submissions/_template-automation) to start
 and see the
 [Scout automations section](submissions/README.md#scout-automations-advanced) of
 the submissions reference for the required shape and validation rules.
 
-### Scout automation installers
+### Scout automation installers (no longer accepted)
 
-Some automations aren't a directly-importable `.json` but an **installer**: a
-`.zip` you download, unzip, and follow to set the automation up (for example, an
-agent reads the instructions, gathers your settings, and calls
-`m_create_automation`). Submit one as a `submissions/<slug>/` folder with a
-`metadata.json` sidecar plus a single `.zip` containing an **`INSTALL.md`**
-(the install procedure + the automation prompt) and one or more **JSON config
-files** the automation consumes. It's auto-detected as an automation installer
-because the `.zip` holds an `INSTALL.md` + JSON (and no root `SKILL.md` or
-`manifest.json`). The `.zip` is published **verbatim** and offered as a `.zip`
-download; the detail page renders your `INSTALL.md`. Validation is minimal —
-just that the `INSTALL.md` and at least one JSON file are present (the config
-JSON is **not** schema-checked). Copy
-[`submissions/_template-automation-installer/`](submissions/_template-automation-installer)
-to start and see the
-[Scout automation installers section](submissions/README.md#scout-automation-installers-advanced)
-of the submissions reference.
+Scout automation **installers** — a `.zip` you download, unzip, and follow to
+set an automation up — are **no longer accepted** as new submissions, because
+the gallery no longer takes `.zip` payloads. Submit a Scout automation as a
+single importable `.json` (above) instead. Existing installer submissions stay
+published.
 
 ## What visitors see
 
