@@ -1,0 +1,7 @@
+{
+  "name": "Meeting Analyzer",
+  "description": "Analyzes meeting content pasted as text or provided as audio/video transcripts. Delivers a structured intelligence report: explicit decisions and action items, participant persona profiles, and — most importantly — hidden insights: unspoken tensions, implicit risks, unresolved topics, and signals that were not made explicit during the meeting but are critical to the context.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["meetings", "analysis", "insights", "personas", "transcription", "productivity", "communication"],
+  "author": "Michael Ferro Pereira"
+}
