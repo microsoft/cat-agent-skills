@@ -2,7 +2,7 @@
 name: power-automate-documentation
 description: >
   Trigger whenever the user
-  uploads or references a Power Automate / Power Apps solution .zip and asks to
+  uploads or references a Power Automate solution .zip and asks to
   document, explain, audit, or map a flow's process, data access, connection
   references, or dependencies on other flows — phrasing like "document this flow",
   "what does this flow read/write/touch", "map the connection references", "audit
