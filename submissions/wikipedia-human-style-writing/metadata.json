@@ -1,0 +1,22 @@
+{
+  "name": "Wikipedia Human Style Writing",
+  "description": "Rewrite or draft prose so it avoids the tell-tale signs of AI writing, using Wikipedia's 'Signs of AI writing' field guide.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "writing",
+    "content",
+    "editing",
+    "style",
+    "humanize",
+    "ai-detection",
+    "wikipedia"
+  ],
+  "author": "Chris Garty",
+  "version": "0.1.0",
+  "createdAt": "2026-07-20",
+  "updatedAt": "2026-07-20"
+}
