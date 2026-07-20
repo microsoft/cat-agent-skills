@@ -1,10 +1,13 @@
 ---
 name: exam-prep-learning-plan-builder
 description: Build a personalized, day-by-day study plan for an upcoming exam, certification, or test. Use this skill whenever someone mentions studying for an exam, prepping for a certification, needs a study schedule, is trying to pass a test by a certain date, or asks for help organizing exam prep, even if they don't use the word "plan" explicitly (e.g. "I have my PMP in 6 weeks and don't know where to start", "help me study for the bar", "I need to prep for the AZ-900"). Also use when someone wants to revise or adjust an existing study plan because their timeline changed, they fell behind, or their confidence in a topic shifted.
-compatibility: For Copilot Studio, the app output requires Code Interpreter enabled on the agent (Settings > Generative AI > "Create documents, charts, and code"), since it needs to read the bundled assets/plan-app-template.html and return a populated copy as a downloadable file. Without it, present the plan as formatted chat text instead.
 ---
 
 # Exam Prep Learning Plan Builder
+
+## Compatibility
+
+If Code Interpreter is available, populate `assets/plan-app-template.html` with the plan JSON and return it as a downloadable `.html` file. If Code Interpreter isn't available, present the plan as formatted chat text instead.
 
 ## Step 1: Gather the inputs
 
