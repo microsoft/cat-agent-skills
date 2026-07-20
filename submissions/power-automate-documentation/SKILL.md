@@ -1,11 +1,7 @@
 ---
 name: power-automate-documentation
 description: >
-  Trigger whenever the user
-  uploads or references a Power Automate solution `.zip` and asks to
-  references, or dependencies on other flows — phrasing like "document this flow",
-  "what does this flow read/write/touch", "map the connection references", "audit
-  this solution", or "which flows call which".
+  Trigger whenever the user uploads or references a Power Automate solution `.zip` and asks about references, dependencies on other flows, or related questions — phrasing like "document this flow", "what does this flow read/write/touch", "map the connection references", "audit this solution", or "which flows call which".
 ---
 
 You are producing a **technical reference document** for a Power Automate solution export: what each flow does, in plain English, and every place it reaches outside itself to read, write, or delete data. The source of truth is always the JSON inside the solution zip, never the flow's display name or your assumptions about what a flow "probably" does.
