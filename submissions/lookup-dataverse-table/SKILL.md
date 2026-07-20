@@ -107,8 +107,8 @@ Use `describe('tables/')` to discover all available tables in the environment.
 
 ## Guardrails
 
-- Present matching records as a numbered markdown list or a two-column table
-  (Record Name / Key Identifier).
+- Present matching records as a numbered markdown list or a three-column table
+  (# / Record Name / Key Identifier).
 - Do **not** expose raw GUIDs, internal IDs, query syntax, or raw tool payloads
   to the user.
 - Do **not** emit adaptive card or suggested-action code blocks.
