@@ -55,10 +55,10 @@ submissions/<slug>/
 ├── metadata.json  # OR metadata.yaml — catalog details (sidecar, not bundled)
 ├── README.md      # OPTIONAL human-facing note (not bundled) — shown on the page
 └── an unpacked skill:
-    ├── SKILL.md   # name + agent description + instructions
-    ├── scripts/   # optional executable code
-    ├── references/# optional docs
-    └── assets/    # optional templates / data files
+    ├── SKILL.md    # name + agent description + instructions
+    ├── scripts/    # optional executable code
+    ├── references/ # optional docs
+    └── assets/     # optional templates / data files
 ```
 
 A skill carries **two** descriptions: the **agent** description in `SKILL.md`
