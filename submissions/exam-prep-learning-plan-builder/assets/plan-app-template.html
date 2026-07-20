@@ -212,8 +212,16 @@
     showFatalError('This file is a template. Replace {{PLAN_DATA_JSON}} with real plan data JSON before opening.');
     return;
   }
-  if (!data || !Array.isArray(data.topics) || !Array.isArray(data.sessions)) {
-    showFatalError('Invalid plan data: expected "topics" and "sessions" arrays in the embedded JSON.');
+  var ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+  if (
+    !data ||
+    !Array.isArray(data.topics) ||
+    !Array.isArray(data.sessions) ||
+    typeof data.examName !== 'string' || !data.examName.trim() ||
+    typeof data.examDate !== 'string' || !ISO_DATE.test(data.examDate) ||
+    typeof data.startDate !== 'string' || !ISO_DATE.test(data.startDate)
+  ) {
+    showFatalError('Invalid plan data: expected "topics" and "sessions" arrays, plus examName, examDate, and startDate (YYYY-MM-DD) in the embedded JSON.');
     return;
   }
   var validConf = { low: 1, medium: 1, high: 1 };
@@ -492,11 +500,14 @@
       .replace(/;/g, '\\;');
   }
   function buildICS() {
-    var pt = (data.preferredTime || '19:00').split(':');
+    var ptRaw = String(data.preferredTime || '19:00').trim();
+    var m = /^(\d{1,2}):(\d{2})$/.exec(ptRaw);
+    var ptH = m ? Math.min(23, Math.max(0, +m[1])) : 19;
+    var ptM = m ? Math.min(59, Math.max(0, +m[2])) : 0;
     var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Exam Prep Learning Plan Builder//EN', 'CALSCALE:GREGORIAN'];
     sessions.forEach(function (s, idx) {
       var d = parseDate(s.date);
-      d.setHours(+pt[0], +pt[1] || 0, 0, 0);
+      d.setHours(ptH, ptM, 0, 0);
       var dur = s.durationMinutes || (s.type === 'checkpoint' ? 105 : 60);
       var endD = new Date(d.getTime() + dur * 60000);
       function stamp(dt) {
