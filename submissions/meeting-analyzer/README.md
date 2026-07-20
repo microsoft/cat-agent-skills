@@ -56,10 +56,10 @@ meeting-analyzer/
 ├── metadata.json                      # Catalog metadata
 ├── SKILL.md                           # Agent-facing runtime instructions
 ├── README.md                          # This file (human-facing documentation)
-├── reference/
+├── references/
 │   ├── persona-framework.md           # Persona dimensions + behavioral archetypes
 │   └── hidden-insights-guide.md       # Technique catalog for the hidden layer
-└── asset/
+└── assets/
     └── report-template.md             # Output structure for the final report
 ```
 
