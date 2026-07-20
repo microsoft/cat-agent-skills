@@ -1,0 +1,8 @@
+{
+  "name": "Exam Prep Learning Plan Builder",
+  "description": "Build a personalized study plan app for an exam or certification: overview timeline, day-by-day schedule with a calendar picker, domain breakdown, one-click .ics download, and a notes tab to track confidence over time.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["planning", "productivity", "learning"],
+  "author": "Michael Heath",
+  "version": "2.0.0"
+}
