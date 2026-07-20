@@ -55,13 +55,12 @@ Store the primary key GUID **internally** — never display it to the user.
    and prompt the user to narrow the search.
 4. If a field has no value, show `(none)`.
 
-Present results as a numbered markdown list or a two-column table:
+Present results as a numbered markdown list or a three-column table:
 
 | # | Record Name | Key Identifier |
 |---|-------------|----------------|
 | 1 | Example Corp | account@example.com |
 | 2 | Another Record | 555-0100 |
-
 ### Step 4 — Select a record
 
 When the user selects a record (by number, name, or identifier):
