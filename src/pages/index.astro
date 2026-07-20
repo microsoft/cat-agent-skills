@@ -39,7 +39,7 @@ const popularTags = allTags.slice(0, 8);
 <Layout>
   <!-- Hero -->
   <section class="border-b border-border bg-surface/40">
-    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10">
       <h1
         class="text-2xl font-bold tracking-tight text-fg sm:text-3xl"
       >
@@ -84,7 +84,7 @@ const popularTags = allTags.slice(0, 8);
   <!-- Platform filters -->
   <section class="border-b border-border bg-bg">
     <div
-      class="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6"
+      class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6"
     >
       <span class="text-xs font-semibold uppercase tracking-wider text-subtle"
         >Platform</span
@@ -121,7 +121,7 @@ const popularTags = allTags.slice(0, 8);
 
   <!-- Tag filters -->
   <section class="border-b border-border bg-bg">
-    <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+    <div class="mx-auto max-w-8xl px-4 py-4 sm:px-6">
       <div
         id="tag-row"
         class="relative flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0"
@@ -215,7 +215,7 @@ const popularTags = allTags.slice(0, 8);
   </section>
 
   <!-- Gallery -->
-  <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+  <section class="mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-lg font-semibold text-fg">
         Skills <span id="result-count" class="text-muted"
@@ -266,7 +266,7 @@ const popularTags = allTags.slice(0, 8);
 
     <div
       id="gallery"
-      class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+      class="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(17rem,1fr))]"
     >
       {
         skills.map((skill) => (
