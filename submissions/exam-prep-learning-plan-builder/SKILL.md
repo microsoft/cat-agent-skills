@@ -6,13 +6,9 @@ compatibility: For Copilot Studio, the app output requires Code Interpreter enab
 
 # Exam Prep Learning Plan Builder
 
-## Why this skill exists
-
-Most study plans fail for one of two reasons: they treat every topic as equal effort ("read chapter 1 on day 1, chapter 2 on day 2...") or they front-load motivation and ignore memory. People forget what they studied on day 1 by day 10 because they never revisit it. A good plan is built around two ideas instead: spend more time where the person is actually weak, and bring topics back around more than once instead of covering them exactly once and moving on.
-
 ## Step 1: Gather the inputs
 
-Before building anything, get these four things. If the person hasn't given them, ask (use a lightweight elicitation tool if one is available, otherwise just ask directly in plain language):
+Before building anything, get these four things (plus preferred study time if they want calendar events). If the person hasn't given them, ask (use a lightweight elicitation tool if one is available, otherwise just ask directly in plain language):
 
 1. **Exam date** — this sets the total runway and whether the plan needs to be in triage mode (see below).
 2. **Syllabus or topic list** — the domains or chapters the exam covers. If the person doesn't have an official breakdown, help them reconstruct one from the exam's public objectives (search if you have the ability to) or ask them to list what they remember the exam covering.
@@ -82,8 +78,13 @@ A few things that matter for the data to render correctly:
 Using Code Interpreter:
 
 1. Read `assets/plan-app-template.html`.
-2. Replace the placeholder token `{{PLAN_DATA_JSON}}` (inside the `<script type="application/json" id="plan-data">` tag) with the JSON object from Step 3, compact or pretty-printed, either works since it's just parsed by the page's own JavaScript.
-3. Save and return the completed file as a downloadable `.html`, named after the exam (e.g. `az-900-study-plan.html`).
+2. Serialize the JSON object from Step 3, then escape it for safe embedding: replace every `</` with `<\/` in the serialized string. This matters because the JSON gets embedded inside a literal `<script>` tag, if any topic name, title, or description happens to contain the literal characters `</script`, the browser's HTML parser will close that tag early before your JSON is even parsed, breaking the page (or worse, opening a second injection path upstream of the DOM-building code). The escape is safe: `\/` is a valid JSON escape for `/`, so it round-trips through `JSON.parse` correctly.
+   ```python
+   import json
+   json_str = json.dumps(plan_data).replace("</", "<\\/")
+   ```
+3. Replace the placeholder token `{{PLAN_DATA_JSON}}` (inside the `<script type="application/json" id="plan-data">` tag) with the escaped string from step 2.
+4. Save and return the completed file as a downloadable `.html`, named after the exam (e.g. `az-900-study-plan.html`).
 
 Do this through Code Interpreter so it comes back as an actual file with a download link, not as raw markup printed into the chat, printing `<html>` as plain generative text won't render, the platform just shows the literal tags, same issue as trying to force an Adaptive Card to appear from text alone. If Code Interpreter isn't enabled on the agent, fall back to presenting the plan as clearly formatted chat text (day by day, grouped by week) instead of the app.
 

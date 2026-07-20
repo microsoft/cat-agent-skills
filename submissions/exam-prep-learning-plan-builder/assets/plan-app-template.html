@@ -280,10 +280,15 @@
   // ---------- overview: confidence chips ----------
   (function renderConfidence() {
     var el = document.getElementById('confidence-grid');
+    var validConf = { low: 1, medium: 1, high: 1 };
     data.topics.forEach(function (t) {
+      var conf = validConf[t.confidence] ? t.confidence : 'medium';
       var chip = document.createElement('div');
       chip.className = 'confidence-chip';
-      chip.innerHTML = '<span class="dot ' + t.confidence + '"></span>' + t.name;
+      var dot = document.createElement('span');
+      dot.className = 'dot ' + conf;
+      chip.appendChild(dot);
+      chip.appendChild(document.createTextNode(t.name));
       el.appendChild(chip);
     });
   })();
@@ -318,11 +323,27 @@
         var day = document.createElement('div');
         day.className = 'day' + (s.type === 'checkpoint' ? ' checkpoint' : '');
         day.id = 'day-' + s.date + '-' + s.topicId;
-        var topic = topicsById[s.topicId];
-        day.innerHTML =
-          '<div class="day-tag">' + fmtShort(parseDate(s.date)) + '</div>' +
-          '<div class="day-header">' + s.title + ' <span style="font-weight:400;color:#6b7280;">(' + sessionLabel(s) + ')</span></div>' +
-          '<div class="day-desc">' + s.description + '</div>';
+
+        var tag = document.createElement('div');
+        tag.className = 'day-tag';
+        tag.textContent = fmtShort(parseDate(s.date));
+
+        var head = document.createElement('div');
+        head.className = 'day-header';
+        head.appendChild(document.createTextNode(s.title + ' '));
+        var typeSpan = document.createElement('span');
+        typeSpan.style.fontWeight = '400';
+        typeSpan.style.color = '#6b7280';
+        typeSpan.textContent = '(' + sessionLabel(s) + ')';
+        head.appendChild(typeSpan);
+
+        var desc = document.createElement('div');
+        desc.className = 'day-desc';
+        desc.textContent = s.description;
+
+        day.appendChild(tag);
+        day.appendChild(head);
+        day.appendChild(desc);
         body.appendChild(day);
       });
       block.appendChild(header);
@@ -398,15 +419,39 @@
       var domain = (topicsById[s.topicId] || {}).domain || 'Other';
       byDomain[domain] = (byDomain[domain] || 0) + (s.durationMinutes || 60);
     });
-    var maxMinutes = Math.max.apply(null, Object.values(byDomain));
-    Object.keys(byDomain).sort(function (a, b) { return byDomain[b] - byDomain[a]; }).forEach(function (domain) {
+    var domainKeys = Object.keys(byDomain);
+    if (domainKeys.length === 0) {
+      var empty = document.createElement('p');
+      empty.style.color = '#6b7280';
+      empty.textContent = 'No session data available yet.';
+      container.appendChild(empty);
+      return;
+    }
+    var maxMinutes = Math.max.apply(null, domainKeys.map(function (k) { return byDomain[k]; }));
+    domainKeys.sort(function (a, b) { return byDomain[b] - byDomain[a]; }).forEach(function (domain) {
       var minutes = byDomain[domain];
       var hours = (minutes / 60).toFixed(1);
       var row = document.createElement('div');
       row.className = 'domain-row';
-      row.innerHTML =
-        '<div class="domain-label"><span>' + domain + '</span><span>' + hours + ' hrs</span></div>' +
-        '<div class="domain-bar-track"><div class="domain-bar-fill" style="width:' + (100 * minutes / maxMinutes) + '%"></div></div>';
+
+      var labelRow = document.createElement('div');
+      labelRow.className = 'domain-label';
+      var nameSpan = document.createElement('span');
+      nameSpan.textContent = domain;
+      var hoursSpan = document.createElement('span');
+      hoursSpan.textContent = hours + ' hrs';
+      labelRow.appendChild(nameSpan);
+      labelRow.appendChild(hoursSpan);
+
+      var track = document.createElement('div');
+      track.className = 'domain-bar-track';
+      var fill = document.createElement('div');
+      fill.className = 'domain-bar-fill';
+      fill.style.width = maxMinutes > 0 ? (100 * minutes / maxMinutes) + '%' : '0%';
+      track.appendChild(fill);
+
+      row.appendChild(labelRow);
+      row.appendChild(track);
       container.appendChild(row);
     });
   })();
@@ -457,23 +502,47 @@
   });
 
   // ---------- notes tab ----------
+  var notesRefs = {};
   (function renderNotes() {
     var container = document.getElementById('notes-container');
+    var validConf = { low: 1, medium: 1, high: 1 };
     data.topics.forEach(function (t) {
+      var conf = validConf[t.confidence] ? t.confidence : 'medium';
       var item = document.createElement('div');
       item.className = 'notes-item';
-      item.innerHTML =
-        '<div class="notes-item-title">' + t.name + '</div>' +
-        '<div class="notes-row">' +
-          '<label>Updated confidence:</label>' +
-          '<select class="confidence-select" data-topic="' + t.id + '">' +
-            '<option value="low"' + (t.confidence === 'low' ? ' selected' : '') + '>Low</option>' +
-            '<option value="medium"' + (t.confidence === 'medium' ? ' selected' : '') + '>Medium</option>' +
-            '<option value="high"' + (t.confidence === 'high' ? ' selected' : '') + '>High</option>' +
-          '</select>' +
-        '</div>' +
-        '<textarea class="notes-text" data-topic="' + t.id + '" placeholder="How is this topic going? Anything you fell behind on or want to flag?"></textarea>';
+
+      var title = document.createElement('div');
+      title.className = 'notes-item-title';
+      title.textContent = t.name;
+
+      var row = document.createElement('div');
+      row.className = 'notes-row';
+      var label = document.createElement('label');
+      label.textContent = 'Updated confidence:';
+      var select = document.createElement('select');
+      select.className = 'confidence-select';
+      select.setAttribute('data-topic', t.id);
+      [['low', 'Low'], ['medium', 'Medium'], ['high', 'High']].forEach(function (pair) {
+        var opt = document.createElement('option');
+        opt.value = pair[0];
+        opt.textContent = pair[1];
+        if (pair[0] === conf) opt.selected = true;
+        select.appendChild(opt);
+      });
+      row.appendChild(label);
+      row.appendChild(select);
+
+      var textarea = document.createElement('textarea');
+      textarea.className = 'notes-text';
+      textarea.setAttribute('data-topic', t.id);
+      textarea.placeholder = 'How is this topic going? Anything you fell behind on or want to flag?';
+
+      item.appendChild(title);
+      item.appendChild(row);
+      item.appendChild(textarea);
       container.appendChild(item);
+
+      notesRefs[t.id] = { select: select, textarea: textarea };
     });
   })();
 
@@ -481,10 +550,10 @@
     var lines = ['Study plan update for ' + data.examName + ':'];
     var changed = false;
     data.topics.forEach(function (t) {
-      var sel = document.querySelector('select.confidence-select[data-topic="' + t.id + '"]');
-      var txt = document.querySelector('textarea.notes-text[data-topic="' + t.id + '"]');
-      var newConf = sel.value;
-      var note = txt.value.trim();
+      var refs = notesRefs[t.id];
+      if (!refs) return;
+      var newConf = refs.select.value;
+      var note = refs.textarea.value.trim();
       if (newConf !== t.confidence || note) {
         changed = true;
         lines.push('- ' + t.name + ': confidence ' + t.confidence + ' -> ' + newConf + (note ? ' | notes: ' + note : ''));
