@@ -464,7 +464,12 @@
     return parts.join('\r\n');
   }
   function icsEscape(text) {
-    return String(text).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+    return String(text)
+      .replace(/\r\n?/g, '\n')
+      .replace(/\\/g, '\\\\')
+      .replace(/\n/g, '\\n')
+      .replace(/,/g, '\\,')
+      .replace(/;/g, '\\;');
   }
   function buildICS() {
     var pt = (data.preferredTime || '19:00').split(':');
@@ -493,12 +498,14 @@
   }
   document.getElementById('download-ics-btn').addEventListener('click', function () {
     var blob = new Blob([buildICS()], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = data.examName.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-study-plan.ics';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   });
 
   // ---------- notes tab ----------
