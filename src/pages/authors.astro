@@ -22,7 +22,7 @@ const MAX_CHIPS = 8;
   title="Contributors"
   description="Everyone who has shipped a skill to the CAT Agent Skills gallery — look up your handle to reveal your own personal contributor badge."
 >
-  <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+  <section class="mx-auto max-w-8xl px-4 py-10 sm:px-6">
     <header class="mb-8">
       <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
         Contributors
@@ -314,8 +314,10 @@ const MAX_CHIPS = 8;
       }
     }
     @media (min-width: 1120px) {
+      /* Fluid past 3 columns so wide screens fill with a 4th/5th card instead
+         of stretching three cards across the whole row. */
       .author-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
       }
     }
     .author-card {

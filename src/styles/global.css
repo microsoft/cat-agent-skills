@@ -26,6 +26,11 @@
 
   --font-sans: "DM Sans", "Segoe UI", system-ui, -apple-system,
     BlinkMacSystemFont, sans-serif;
+
+  /* Shared page container width. Wider than Tailwind's default 7xl (80rem)
+     so wide screens aren't wasted: the gallery gains a 6th column instead of
+     squeezing 5 into a 1280px column with large empty margins on either side. */
+  --container-8xl: 110rem;
 }
 
 /* Enable `dark:` utilities based on the theme attribute (not OS prefs). */
