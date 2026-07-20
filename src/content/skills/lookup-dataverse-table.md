@@ -83,7 +83,6 @@ Example detail view:
 | **Phone** | 555-0100 |
 | **City** | Seattle |
 | **State** | WA |
-
 ## Remembering preferred fields
 
 - If the user requests a different set of fields (add, remove, or replace),
@@ -107,13 +106,12 @@ The skill works with **any** Dataverse table. Common examples:
 | Invoices | invoice |
 | Activities | activitypointer |
 | Users | systemuser |
-
 Use `describe('tables/')` to discover all available tables in the environment.
 
 ## Guardrails
 
-- Present matching records as a numbered markdown list or a two-column table
-  (Record Name / Key Identifier).
+- Present matching records as a numbered markdown list or a three-column table
+  (# / Record Name / Key Identifier).
 - Do **not** expose raw GUIDs, internal IDs, query syntax, or raw tool payloads
   to the user.
 - Do **not** emit adaptive card or suggested-action code blocks.
