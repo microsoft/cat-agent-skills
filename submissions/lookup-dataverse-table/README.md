@@ -6,16 +6,16 @@ the Dataverse MCP Server.
 
 ## Genesis
 
-Agents are prone to *hallucinating* business data: asked about a CRM record, an LLM
-will happily invent a plausible-looking account or contact. For Dataverse-backed
-scenarios that's unacceptable — the answer has to come from the system of record.
+A conversational agent is great at exchanging information, but when a choice must be
+specific and exact, the user needs an authoritative list of options to select from.
+That list has to come from the system of record.
 
 This skill wraps a disciplined, schema-aware lookup workflow around the Dataverse
-MCP Server so the agent always queries live and never fabricates: identify the
+MCP Server so the agent provides simple and dependable lookups: identify the
 table, discover its schema (primary name + key fields), query for matches, then
 drill into a selected record. GUIDs and internal identifiers stay hidden, results
-are capped and paginated by prompting, and the agent remembers the user's preferred
-field set across conversations.
+are capped, and the agent prompts you to narrow the search rather than paging
+silently. It also remembers your preferred field set across conversations.
 
 ## What it does
 
@@ -29,20 +29,15 @@ field set across conversations.
 ## Why a numbered list?
 
 The numbered-list pattern isn't just a stylistic choice — it's a deliberate design
-decision that came out of discussions in Teams with Adi Leibowitz and others. In
-**enhanced orchestrator agents**, the richer UI affordances you might reach for
-simply aren't available:
+decision. In **enhanced orchestrator agents**, the richer UI affordances often used in classic/standard agents are not available:
 
 - **Suggested actions** are not supported.
 - **Adaptive cards** are not supported.
-- **Custom entities** are not supported — so backing the experience with a standard
-  **Dataverse table** is a great way to get structured, queryable data instead.
+- **Custom entities** are not supported.
 
 Given those constraints, a plain numbered list is a simple and effective way to
 present options to the user: it renders reliably as text, needs no special UI
-components, and lets the user pick an option quickly just by replying with a number.
-It turns a lookup-and-select interaction into something that works well within the
-capabilities the enhanced orchestrator actually offers.
+components, and lets the user pick an option quickly by replying with a number.
 
 ## Guardrails
 
