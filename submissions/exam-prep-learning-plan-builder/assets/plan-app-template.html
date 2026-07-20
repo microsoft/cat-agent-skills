@@ -196,7 +196,20 @@
 
 <script>
 (function () {
-  var data = JSON.parse(document.getElementById('plan-data').textContent);
+  var data;
+  try {
+    data = JSON.parse(document.getElementById('plan-data').textContent);
+  } catch (e) {
+    document.body.textContent = '';
+    var msg = document.createElement('p');
+    msg.style.padding = '24px';
+    msg.style.fontFamily = '-apple-system, Segoe UI, Roboto, Arial, sans-serif';
+    msg.textContent = 'This file is a template. Replace {{PLAN_DATA_JSON}} with real plan data JSON before opening.';
+    document.body.appendChild(msg);
+    return;
+  }
+  var validConf = { low: 1, medium: 1, high: 1 };
+  data.topics.forEach(function (t) { t.confidence = validConf[t.confidence] ? t.confidence : 'medium'; });
   var topicsById = {};
   data.topics.forEach(function (t) { topicsById[t.id] = t; });
 
@@ -281,13 +294,11 @@
   // ---------- overview: confidence chips ----------
   (function renderConfidence() {
     var el = document.getElementById('confidence-grid');
-    var validConf = { low: 1, medium: 1, high: 1 };
     data.topics.forEach(function (t) {
-      var conf = validConf[t.confidence] ? t.confidence : 'medium';
       var chip = document.createElement('div');
       chip.className = 'confidence-chip';
       var dot = document.createElement('span');
-      dot.className = 'dot ' + conf;
+      dot.className = 'dot ' + t.confidence;
       chip.appendChild(dot);
       chip.appendChild(document.createTextNode(t.name));
       el.appendChild(chip);
@@ -513,9 +524,7 @@
   var notesRefs = {};
   (function renderNotes() {
     var container = document.getElementById('notes-container');
-    var validConf = { low: 1, medium: 1, high: 1 };
     data.topics.forEach(function (t) {
-      var conf = validConf[t.confidence] ? t.confidence : 'medium';
       var item = document.createElement('div');
       item.className = 'notes-item';
 
@@ -534,7 +543,7 @@
         var opt = document.createElement('option');
         opt.value = pair[0];
         opt.textContent = pair[1];
-        if (pair[0] === conf) opt.selected = true;
+        if (pair[0] === t.confidence) opt.selected = true;
         select.appendChild(opt);
       });
       row.appendChild(label);
