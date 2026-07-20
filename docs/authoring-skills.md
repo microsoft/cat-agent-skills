@@ -23,9 +23,9 @@ submissions/<slug>/
 
 Copy [`../submissions/_template/`](../submissions/_template) to start. The
 `<slug>` is the folder name (lowercase, hyphenated), e.g.
-`meeting-summarizer` → `/skills/meeting-summarizer`. Anything other than
-`SKILL.md`/`metadata.*` is packaged into the downloadable bundle, and the detail
-page shows a **Download bundle** button.
+`meeting-summarizer` → `/skills/meeting-summarizer`. Everything except the
+`metadata.*` and optional `README.md` sidecars is packaged into the downloadable
+bundle, and the detail page shows a **Download bundle** button.
 
 ## 2. Two descriptions (catalog vs. agent)
 
