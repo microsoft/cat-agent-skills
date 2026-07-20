@@ -205,7 +205,8 @@
   function fmtShort(d) { return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }); }
   function fmtLong(d) { return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }); }
   function isoDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-  function weekOf(d, start) { return Math.floor((d - start) / (7 * 86400000)); }
+  function dayNum(d) { return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000; }
+  function weekOf(d, start) { return Math.floor((dayNum(d) - dayNum(start)) / 7); }
 
   var examDate = parseDate(data.examDate);
   var startDate = parseDate(data.startDate);
