@@ -10,4 +10,4 @@ Turns a solution `.zip` with Power Automate workflows into a readable Markdown r
 ## What you get back
 - One Markdown file per solution zip.
 - Per flow: a plain-English purpose and walkthrough, its trigger, the connection references it uses, a read/write/delete table of every external system it touches, and which flows it calls or is called by.
-- Defaults to Markdown; ask for a Word doc if you want one instead.`
+- Defaults to Markdown.
