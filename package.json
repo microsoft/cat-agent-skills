@@ -13,6 +13,7 @@
     "validate:skills": "tsx scripts/validate-skill.ts src/content/skills/*.md",
     "import:submissions": "tsx scripts/import-submissions.ts",
     "check:submissions": "tsx scripts/import-submissions.ts --check",
+    "test": "node --import tsx --test scripts/import-submissions.test.ts",
     "ratings:fetch": "tsx scripts/fetch-ratings.ts"
   },
   "dependencies": {

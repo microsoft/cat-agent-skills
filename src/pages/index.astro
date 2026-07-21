@@ -407,11 +407,32 @@ const popularTags = allTags.slice(0, 8);
     emptyEl.classList.toggle("hidden", matched.length > 0);
   }
 
+  // The infinite-scroll IntersectionObserver below only reacts to *changes* in
+  // the sentinel's visibility. After a filter reset shrinks `shown` back to
+  // BATCH, a sentinel that was already parked in view stays in view and never
+  // re-fires — so `shown` would stay stuck at 12 even when many more cards
+  // match (e.g. switching from a small tag to a larger one, which showed the
+  // right "(N)" count but only the first 12 cards). Top up manually until the
+  // sentinel is pushed past the preload zone, or everything is shown.
+  const PRELOAD = 400;
+  function sentinelInView() {
+    const rect = sentinel.getBoundingClientRect();
+    return rect.top <= window.innerHeight + PRELOAD && rect.bottom >= -PRELOAD;
+  }
+  function fill() {
+    let guard = 0;
+    while (shown < matched.length && sentinelInView() && guard++ < 500) {
+      shown = Math.min(shown + BATCH, matched.length);
+      render();
+    }
+  }
+
   function refilter() {
     matched = applySort(computeMatched());
     shown = BATCH;
     reorderDom();
     render();
+    fill();
   }
 
   // Search (debounced)
@@ -594,7 +615,7 @@ const popularTags = allTags.slice(0, 8);
         render();
       }
     },
-    { rootMargin: "400px" }
+    { rootMargin: `${PRELOAD}px` }
   );
   io.observe(sentinel);
 
