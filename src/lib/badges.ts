@@ -12,6 +12,7 @@
  */
 
 export type BadgeId =
+  | "deep-cat"
   | "top-rated"
   | "skill-factory"
   | "teachers-pet"
@@ -29,6 +30,17 @@ export interface BadgeMeta {
 }
 
 export const BADGES: Record<BadgeId, BadgeMeta> = {
+  "deep-cat": {
+    id: "deep-cat",
+    title: "Deep Cat",
+    image: "deep-cat",
+    meaning: "More than three Scout automations shipped.",
+    captions: [
+      "Certified bottom-dweller. The automations run themselves down here.",
+      "More claws than paws at these depths.",
+      "You went so deep the crabs started reporting to you.",
+    ],
+  },
   "top-rated": {
     id: "top-rated",
     title: "Crowd Favorite",
@@ -77,6 +89,7 @@ export const BADGES: Record<BadgeId, BadgeMeta> = {
 
 /** Assignment order — first matching rule wins. */
 export const BADGE_ORDER: BadgeId[] = [
+  "deep-cat",
   "skill-factory",
   "teachers-pet",
   "top-rated",
@@ -93,6 +106,7 @@ export interface BadgeSkill {
   rating?: number;
   createdAt?: string | number | Date | null;
   platforms?: string[];
+  type?: "skill" | "plugin" | "automation";
 }
 
 export interface ContributorStats {
@@ -100,6 +114,7 @@ export interface ContributorStats {
   displayName: string;
   skillCount: number;
   featuredCount: number;
+  automationCount: number;
   totalRating: number;
   avgRating: number;
   zeroRatedCount: number;
@@ -113,6 +128,8 @@ export interface BadgeContext {
   ratingLeaders: Set<string>;
   /** Logins that rank in the top-N by featured-skill count. */
   featuredLeaders: Set<string>;
+  /** A contributor needs strictly MORE Scout automations than this to earn "Deep Cat". */
+  automationThreshold: number;
   factoryThreshold: number;
 }
 
@@ -148,6 +165,7 @@ export function computeStats(login: string, skills: BadgeSkill[]): ContributorSt
       : skills.filter((s) => normalizeLogin(s.authorGithub) === norm);
 
   let featuredCount = 0;
+  let automationCount = 0;
   let totalRating = 0;
   let zeroRatedCount = 0;
   let newest: number | null = null;
@@ -157,6 +175,8 @@ export function computeStats(login: string, skills: BadgeSkill[]): ContributorSt
 
   for (const s of mine) {
     if (s.featured) featuredCount++;
+    if (s.type === "automation" && (s.platforms ?? []).includes("Scout"))
+      automationCount++;
     const r = typeof s.rating === "number" && Number.isFinite(s.rating) ? s.rating : 0;
     totalRating += r;
     if (r <= 0) zeroRatedCount++;
@@ -176,6 +196,7 @@ export function computeStats(login: string, skills: BadgeSkill[]): ContributorSt
     displayName: displayName || login,
     skillCount,
     featuredCount,
+    automationCount,
     totalRating,
     avgRating: skillCount ? totalRating / skillCount : 0,
     zeroRatedCount,
@@ -244,12 +265,14 @@ export function buildContext(skills: BadgeSkill[]): BadgeContext {
   return {
     ratingLeaders: ratingLeaderLogins(skills, 3),
     featuredLeaders: featuredLeaderLogins(skills, 3),
+    automationThreshold: 3,
     factoryThreshold: 5,
   };
 }
 
 /** Assign a badge from stats. Ordered, first match wins. */
 export function pickBadge(stats: ContributorStats, ctx: BadgeContext): BadgeMeta {
+  if (stats.automationCount > ctx.automationThreshold) return BADGES["deep-cat"];
   if (stats.skillCount >= ctx.factoryThreshold) return BADGES["skill-factory"];
   if (stats.featuredCount > 0 && ctx.featuredLeaders.has(stats.login))
     return BADGES["teachers-pet"];
@@ -309,6 +332,13 @@ export function posterTiles(badge: BadgeMeta, stats: ContributorStats): PosterTi
       num: String(stats.skillCount),
       label: stats.skillCount === 1 ? "skill" : "skills",
     },
+    automations:
+      stats.automationCount > 0
+        ? {
+            num: String(stats.automationCount),
+            label: stats.automationCount === 1 ? "automation" : "automations",
+          }
+        : null,
     featured:
       stats.featuredCount > 0
         ? { num: String(stats.featuredCount), label: "featured" }
@@ -336,6 +366,8 @@ export function posterTiles(badge: BadgeMeta, stats: ContributorStats): PosterTi
         ? [t.featured, t.skills, t.latest]
         : badge.id === "skill-factory"
           ? [t.skills, t.featured, t.latest]
-          : [t.skills, t.platforms, t.latest];
+          : badge.id === "deep-cat"
+            ? [t.automations, t.skills, t.latest]
+            : [t.skills, t.platforms, t.latest];
   return order.filter((x): x is PosterTile => Boolean(x)).slice(0, 3);
 }
