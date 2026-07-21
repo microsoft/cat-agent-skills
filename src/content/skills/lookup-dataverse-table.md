@@ -33,8 +33,7 @@ Server tool.
   that table.
 - If the user is ambiguous, ask: *"Which table would you like to search? For
   example: contacts, accounts, opportunities, leads, etc."*
-- Use the `search` or `describe('tables/')` tool to resolve the table's logical
-  name if needed.
+- Use `describe('tables/')` to resolve the table's logical name if needed.
 
 ### Step 2 — Discover the schema
 
@@ -58,7 +57,8 @@ Store the primary key GUID **internally** — never display it to the user.
    and prompt the user to narrow the search.
 4. If a field has no value, show `(none)`.
 
-Present results as a numbered markdown list or a two-column table:
+Present results as a numbered markdown list, or a table with a leading number
+column so the user can select by number:
 
 | # | Record Name | Key Identifier |
 |---|-------------|----------------|
@@ -113,8 +113,8 @@ Use `describe('tables/')` to discover all available tables in the environment.
 
 ## Guardrails
 
-- Present matching records as a numbered markdown list or a two-column table
-  (Record Name / Key Identifier).
+- Present matching records as a numbered markdown list, or a table with a leading
+  number column (# / Record Name / Key Identifier).
 - Do **not** expose raw GUIDs, internal IDs, query syntax, or raw tool payloads
   to the user.
 - Do **not** emit adaptive card or suggested-action code blocks.
