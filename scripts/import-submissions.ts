@@ -58,6 +58,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, join, posix, relative, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import AdmZip from "adm-zip";
 import matter from "gray-matter";
 import { validateSkillData } from "./validate-skill.ts";
@@ -207,6 +208,54 @@ function serializeFrontmatter(meta: Record<string, unknown>): string {
 /** Build a content markdown file from metadata + an instructions body. */
 function buildContent(meta: Record<string, unknown>, body: string): string {
   return serializeFrontmatter(meta) + body.replace(/^\s+/, "");
+}
+
+/**
+ * Documented, human-authored catalog fields that may flow from a submission's
+ * `metadata.*` sidecar into the generated frontmatter as-authored. This is an
+ * ALLOWLIST: any catalog key not listed here — undocumented noise, or a
+ * canonical field the importer owns — is dropped, so it can neither leak into
+ * the output nor override a derived value. The canonical/derived fields
+ * (`name`, `description`, `agentDescription`, `type`, `bundle`) are deliberately
+ * absent because the processor is their single source of truth. `platforms` IS
+ * here because skills author it in metadata; plugins and automations pass it as
+ * a derived field instead, which wins. Keep in sync with src/lib/skill-schema.ts.
+ */
+export const CATALOG_PASSTHROUGH = [
+  "platforms",
+  "tags",
+  "author",
+  "authorUrl",
+  "authorGithub",
+  "version",
+  "createdAt",
+  "updatedAt",
+  "coverColor",
+  "featured",
+] as const;
+
+/**
+ * Merge derived/canonical frontmatter with catalog metadata under one policy
+ * shared by every processor, so the "silent override" bug class cannot recur:
+ *   1. Only `CATALOG_PASSTHROUGH` fields are copied from `catalog` (allowlist —
+ *      undocumented or protected keys are dropped, failing safe).
+ *   2. `derived` fields are applied AFTER, so a computed/canonical value always
+ *      wins over a same-named catalog key and can never be forgotten.
+ * `undefined` derived values are skipped so callers can pass optional fields
+ * (e.g. `bundle`, `agentDescription`) uniformly without emitting empty keys.
+ */
+export function buildMeta(
+  derived: Record<string, unknown>,
+  catalog: Record<string, unknown>,
+): Record<string, unknown> {
+  const meta: Record<string, unknown> = {};
+  for (const key of CATALOG_PASSTHROUGH) {
+    if (catalog[key] !== undefined) meta[key] = catalog[key];
+  }
+  for (const [key, value] of Object.entries(derived)) {
+    if (value !== undefined) meta[key] = value;
+  }
+  return meta;
 }
 
 // A bare GitHub username: 1-39 chars, alphanumerics or single (non-leading,
@@ -413,19 +462,22 @@ function processSubmission(sub: Submission): ImportProblem | null {
   }
   if (problems.length) return { source: label, problems };
 
-  // Merge into the canonical frontmatter. The gallery `name` is the human display
-  // name from metadata; the slug (SKILL.md `name`) is the file id used for the
-  // route and the downloadable SKILL.md. The agent description gets its own key.
-  const { name: displayName, description: catalogDescription, ...catalogRest } = catalog;
-  const meta: Record<string, unknown> = {
-    name: displayName,
-    description: catalogDescription,
-    agentDescription,
-    ...catalogRest,
-  };
-
+  // Merge into the canonical frontmatter via the shared allowlist policy. The
+  // gallery `name` is the human display name from metadata; the slug (SKILL.md
+  // `name`) is the file id used for the route and the downloadable SKILL.md. The
+  // agent-facing description gets its own key and can never be overridden by the
+  // sidecar; documented catalog fields (`platforms`, `tags`, `author`, …) pass
+  // through.
   const hasBundle = sub.bundleFiles.length > 0;
-  if (hasBundle) meta.bundle = `bundles/${slug}.zip`;
+  const meta = buildMeta(
+    {
+      name: catalog.name,
+      description: catalog.description,
+      agentDescription,
+      bundle: hasBundle ? `bundles/${slug}.zip` : undefined,
+    },
+    catalog,
+  );
 
   resolveAuthorGithub(meta);
 
@@ -552,23 +604,19 @@ function processPlugin(sub: Submission): ImportProblem | null {
   }
   if (problems.length) return { source: label, problems };
 
-  // A plugin is Cowork-only; drop any name/description/platforms/type from the
-  // sidecar so they can't override the derived values.
-  const {
-    name: _n,
-    description: _d,
-    platforms: _p,
-    type: _t,
-    ...catalogRest
-  } = catalog;
-  const meta: Record<string, unknown> = {
-    name: displayName,
-    description: catalogDescription,
-    platforms: ["Cowork"],
-    type: "plugin",
-    ...catalogRest,
-    bundle: `bundles/${slug}.zip`,
-  };
+  // A plugin is Cowork-only. The shared allowlist keeps name/description/
+  // platforms/type/bundle authoritative (derived) so the sidecar can't override
+  // them; documented catalog fields (tags, author, …) still pass through.
+  const meta = buildMeta(
+    {
+      name: displayName,
+      description: catalogDescription,
+      platforms: ["Cowork"],
+      type: "plugin",
+      bundle: `bundles/${slug}.zip`,
+    },
+    catalog,
+  );
 
   resolveAuthorGithub(meta);
 
@@ -699,24 +747,19 @@ function processAutomationInstaller(sub: Submission): ImportProblem | null {
   }
   if (problems.length) return { source: label, problems };
 
-  // An installer is a Scout automation; drop any name/description/platforms/type
-  // from the sidecar so they can't override the derived values.
-  const {
-    name: displayName,
-    description: catalogDescription,
-    platforms: _p,
-    type: _t,
-    ...catalogRest
-  } = catalog;
-  const meta: Record<string, unknown> = {
-    name: displayName,
-    description: catalogDescription,
-    platforms: ["Scout"],
-    type: "automation",
-    ...catalogRest,
-    // A `.zip` bundle (vs a `.json`) is what marks this automation as an installer.
-    bundle: `bundles/${slug}.zip`,
-  };
+  // An installer is a Scout automation. The shared allowlist keeps name/
+  // description/platforms/type/bundle authoritative (derived); documented catalog
+  // fields still pass through. A `.zip` bundle (vs a `.json`) marks it an installer.
+  const meta = buildMeta(
+    {
+      name: catalog.name,
+      description: catalog.description,
+      platforms: ["Scout"],
+      type: "automation",
+      bundle: `bundles/${slug}.zip`,
+    },
+    catalog,
+  );
 
   resolveAuthorGithub(meta);
 
@@ -802,23 +845,19 @@ function processAutomation(sub: Submission): ImportProblem | null {
   }
   if (problems.length) return { source: label, problems };
 
-  // An automation is Scout-only; drop any name/description/platforms/type from
-  // the sidecar so they can't override the derived values.
-  const {
-    name: _n,
-    description: _d,
-    platforms: _p,
-    type: _t,
-    ...catalogRest
-  } = catalog;
-  const meta: Record<string, unknown> = {
-    name: displayName,
-    description: catalogDescription,
-    platforms: ["Scout"],
-    type: "automation",
-    ...catalogRest,
-    bundle: `bundles/${slug}.json`,
-  };
+  // An automation is Scout-only. The shared allowlist keeps name/description/
+  // platforms/type/bundle authoritative (derived); documented catalog fields
+  // still pass through.
+  const meta = buildMeta(
+    {
+      name: displayName,
+      description: catalogDescription,
+      platforms: ["Scout"],
+      type: "automation",
+      bundle: `bundles/${slug}.json`,
+    },
+    catalog,
+  );
 
   resolveAuthorGithub(meta);
 
@@ -1009,4 +1048,7 @@ function main() {
   );
 }
 
-main();
+// Only run the CLI when executed directly (not when imported by tests).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}
