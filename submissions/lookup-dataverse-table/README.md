@@ -21,8 +21,8 @@ silently. It also remembers your preferred field set across conversations.
 
 - **Search** any Dataverse table by name, keyword, status, date range, or related
   record.
-- **Browse** matches as a clean numbered list / two-column table (record name + key
-  identifier).
+- **Browse** matches as a clean numbered list (or a table with a leading number
+  column) showing record name + key identifier.
 - **Drill in** to a selected record's most useful fields, omitting empties.
 - **Remembers** preferred fields so detail views match how you like to work.
 
