@@ -19,5 +19,6 @@ export async function loadBadgeSkills(): Promise<BadgeSkill[]> {
     rating: getRating(s.id),
     createdAt: s.data.createdAt ?? null,
     platforms: s.data.platforms,
+    type: s.data.type,
   }));
 }
