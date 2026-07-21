@@ -29,7 +29,7 @@ silently. It also remembers your preferred field set across conversations.
 ## Why a numbered list?
 
 The numbered-list pattern isn't just a stylistic choice — it's a deliberate design
-decision. In **enhanced orchestrator agents**, the richer UI affordances often used in classic/standard agents are not available:
+decision. In **the new Copilot Studio experience**, the richer UI affordances often used in classic/standard agents are not available:
 
 - **Suggested actions** are not supported.
 - **Adaptive cards** are not supported.
