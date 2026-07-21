@@ -9,6 +9,7 @@ authorUrl: "https://github.com/remidyon"
 authorGithub: remidyon
 version: 1.0.0
 createdAt: 2026-07-21
+featured: true
 ---
 # EU Greenwashing Analysis
 

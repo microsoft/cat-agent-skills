@@ -6,5 +6,6 @@
   "author": "Remi Dyon",
   "authorUrl": "https://github.com/remidyon",
   "version": "1.0.0",
-  "createdAt": "2026-07-21"
+  "createdAt": "2026-07-21",
+  "featured": true
 }
