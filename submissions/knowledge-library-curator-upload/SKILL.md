@@ -68,24 +68,21 @@ An explicit statement such as "this is the final batch," "that is everything,"
 or "analyze these now" satisfies the gate. Never infer completion from silence,
 an upload count, filenames, or elapsed time.
 
-Do not immediately follow the final-batch question with a second question asking
-whether the files represent the whole library or a subset. "Complete corpus"
-means the user has finished uploading the files they want analyzed; it does not
-prove whole-library coverage. Unless the user independently states that the
-upload is the entire library, proceed without another scope question and report
-the result as `Complete for uploaded corpus`, with whole-library coverage not
-established.
+After the user confirms the final batch, ask these mandatory intake questions
+one at a time before staging or analysis. Do not combine them into one message:
 
-Ask for any missing scope decision one question at a time:
+1. "Thanks - the upload is complete. For reporting scope, does this corpus
+   represent the whole intended library or a subset?"
+2. "Should drafts, archived files, and historical versions be included, or
+   should I analyze current content only?"
+3. "What freshness threshold should I use to flag stale-content candidates?
+   The default is 365 days."
 
-1. Whether drafts, archives, or historical versions should be included, but only
-   when those files are present or the requested review depends on that choice.
-2. Whether the user wants a freshness threshold other than 365 days, but only
-   when the user requests stale-content analysis or challenges the default.
-
-Do not ask questions whose answers are not required to begin analysis. Use the
-conservative scope and default settings, disclose them in the final report, and
-allow the user to refine them later.
+The final-batch question establishes that uploading is finished. The first
+intake question separately establishes reporting coverage, so make that
+distinction explicit. Ask each question exactly once. If the user already
+provided an answer in the current conversation, record it and do not ask again.
+Do not begin staging or analysis until all three answers are known.
 
 ### 2. Prepare the uploaded corpus
 
@@ -125,12 +122,14 @@ Run:
 python scripts/curate_library.py \
   --input /app/workspace/knowledge-library \
   --output /app/created/knowledge-curation \
-  --config assets/default-config.json
+  --config assets/default-config.json \
+  --corpus-scope <whole-library|subset> \
+  --content-scope <current-only|include-drafts-and-history> \
+  --stale-after-days <number>
 ```
 
 Add `--metadata <file.json>` when the user supplied metadata. Add
-`--stale-after-days <number>` only for a user-selected threshold. Add `--ocr`
-when scanned PDFs or images are in scope.
+`--ocr` when scanned PDFs or images are in scope.
 
 The sandbox does not support `pip install`. Do not install packages. Surface all
 warnings about extraction, OCR, unavailable embeddings, file types, or corpus

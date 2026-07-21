@@ -98,6 +98,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", type=Path, help="Configuration JSON")
     parser.add_argument("--metadata", type=Path, help="Optional source metadata JSON")
     parser.add_argument("--stale-after-days", type=int, help="Override stale threshold")
+    parser.add_argument(
+        "--corpus-scope",
+        choices=("whole-library", "subset"),
+        help="User-confirmed coverage of the uploaded corpus",
+    )
+    parser.add_argument(
+        "--content-scope",
+        choices=("current-only", "include-drafts-and-history"),
+        help="User-confirmed treatment of drafts, archives, and historical versions",
+    )
     parser.add_argument("--ocr", action="store_true", help="OCR images and scanned PDFs")
     parser.add_argument(
         "--no-embeddings", action="store_true", help="Disable local embedding analysis"
@@ -1046,6 +1056,8 @@ def write_workbook(
     analysis_methods: list[str],
     warnings: list[str],
     metadata_supplied: bool,
+    corpus_scope: str | None,
+    content_scope: str | None,
 ) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
@@ -1058,7 +1070,12 @@ def write_workbook(
         "Summary": [["Metric", "Value"], *[[key, value] for key, value in summary.items()]],
         "Document Inventory": records_to_rows(documents),
         "Curation Settings": curation_settings_rows(
-            config, analysis_methods, warnings, metadata_supplied
+            config,
+            analysis_methods,
+            warnings,
+            metadata_supplied,
+            corpus_scope,
+            content_scope,
         ),
     }
     for name, rows in sheets.items():
@@ -1104,7 +1121,37 @@ def curation_settings_rows(
     analysis_methods: list[str],
     warnings: list[str],
     metadata_supplied: bool,
+    corpus_scope: str | None,
+    content_scope: str | None,
 ) -> list[list[Any]]:
+    scope_interpretation = {
+        "whole-library": (
+            "The user identified the upload as the whole intended library. "
+            "Completion is still stated as Complete for uploaded corpus because "
+            "SharePoint coverage was not independently verified."
+        ),
+        "subset": (
+            "The user identified the upload as a subset of the library. Findings "
+            "and completion apply only to the uploaded corpus."
+        ),
+    }.get(
+        corpus_scope,
+        "Library coverage was not stated. Findings and completion apply only to "
+        "the uploaded corpus.",
+    )
+    content_scope_interpretation = {
+        "current-only": (
+            "Current content only; drafts, archives, and historical versions were "
+            "excluded at the user's direction."
+        ),
+        "include-drafts-and-history": (
+            "Drafts, archives, and historical versions were included at the "
+            "user's direction."
+        ),
+    }.get(
+        content_scope,
+        "Treatment of drafts, archives, and historical versions was not stated.",
+    )
     freshness_basis = (
         "Metadata manifest supplied; freshness uses manifest modified dates when "
         "available."
@@ -1115,11 +1162,8 @@ def curation_settings_rows(
     )
     rows = [
         ["Area", "Setting / interpretation"],
-        [
-            "Scope",
-            "Complete for uploaded corpus; whole-library coverage was not "
-            "independently verified.",
-        ],
+        ["Scope", scope_interpretation],
+        ["Content versions", content_scope_interpretation],
         [
             "Freshness",
             f"Stale threshold: {config['staleAfterDays']} days. {freshness_basis}",
@@ -1352,6 +1396,8 @@ def main() -> int:
         methods,
         warnings,
         args.metadata is not None,
+        args.corpus_scope,
+        args.content_scope,
     )
     write_html_report(html_path, summary, backlog, warnings)
     print(

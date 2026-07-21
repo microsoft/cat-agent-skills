@@ -48,10 +48,14 @@ coverage is incomplete.
 4. The agent stages all batches together, analyzes the combined corpus, validates
    the highest-risk findings, and returns the report files.
 
-Confirming the final batch starts the analysis. The agent does not ask a second,
-redundant question about whether the upload represents the whole SharePoint
-library. Unless you explicitly confirm whole-library coverage, the report
-conservatively states that it is **Complete for uploaded corpus**.
+After you confirm the final batch, the agent asks three short setup questions,
+one at a time:
+
+1. Whether the upload represents the whole intended library or a subset.
+2. Whether to include drafts, archived files, and historical versions.
+3. Which freshness threshold in days to use; the default is 365 days.
+
+These answers are recorded in the `Curation Settings` worksheet.
 
 ## What it finds
 

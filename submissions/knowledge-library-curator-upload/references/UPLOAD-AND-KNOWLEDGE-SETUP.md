@@ -47,10 +47,12 @@ agent waits without extracting or analyzing files. Staging starts only after the
 user explicitly confirms the final batch.
 
 Confirmation that the corpus is complete is sufficient to start analysis. The
-agent should not then ask whether the upload is the whole SharePoint library or
-a subset. Unless the user explicitly confirms whole-library coverage, results
-use `Complete for uploaded corpus` and state that whole-library coverage was not
-established.
+agent then asks three distinct setup questions, one at a time: whether the
+corpus is the whole intended library or a subset; whether drafts, archives, and
+historical versions are included; and which freshness threshold in days to use.
+Upload completion and library coverage are different concepts, so the agent
+briefly explains that distinction rather than treating the questions as
+duplicates. It does not begin staging until all three answers are known.
 
 ## Cross-batch comparison
 
@@ -96,6 +98,10 @@ compression ratios, and prevents cross-batch filename collisions.
 
 The returned `batch-manifest.json` maps each combined-corpus path to its source
 ZIP. Write all reports under `/app/created/knowledge-curation/`.
+
+Pass the user's intake answers to `curate_library.py` using `--corpus-scope`,
+`--content-scope`, and `--stale-after-days`. These values appear in the
+`Curation Settings` worksheet.
 
 ## Validation model
 
