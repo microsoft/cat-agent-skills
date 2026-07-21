@@ -1,0 +1,10 @@
+{
+  "name": "EU Greenwashing Analysis",
+  "description": "Detect greenwashing in product descriptions, marketing copy, and catalog entries against EU Directive 2024/825 and the Green Claims Directive. Returns a structured per-claim findings report with risk levels, regulation references, and recommended corrections.",
+  "platforms": ["Copilot Studio", "Cowork", "Scout"],
+  "tags": ["compliance", "sustainability", "greenwashing", "eu-regulation", "marketing-review", "esg"],
+  "author": "Remi Dyon",
+  "authorUrl": "https://github.com/remidyon",
+  "version": "1.0.0",
+  "createdAt": "2026-07-21"
+}
