@@ -1,8 +1,8 @@
 ---
 name: Scrollytelling Data
-description: "Turns any uploaded dataset into a self-contained, scroll-driven HTML data story with animated Plotly charts, counting stat cards, and narrative chapters."
+description: Turns data into a scroll-driven HTML story.
 agentDescription: "Turns an uploaded dataset (.xlsx, .csv, .json, or PDF tables) into a self-contained, scroll-driven HTML data story with animated Plotly charts, counting stat cards, and narrative chapters. Use when the user asks for a data story, scrollytelling report, or an interactive narrative write-up of a dataset. If the user asks for a demo or example with no dataset of their own, build the story from the bundled sample workbook at assets/demo-agent-data.xlsx."
-platforms: [Cowork, Copilot Studio, Scout]
+platforms: [Copilot Studio]
 tags: [data, visualization, storytelling, reporting]
 author: AndrewHessMSFT
 authorUrl: "https://github.com/AndrewHessMSFT"
