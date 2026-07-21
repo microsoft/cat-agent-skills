@@ -43,7 +43,9 @@ Before querying, call `describe('tables/{tablename}')` to retrieve:
 - The table's **primary key field** (used internally for record lookup).
 - Available columns and their logical names and types.
 
-Store the primary key GUID **internally** — never display it to the user.
+Note the **primary key field name** (e.g. `accountid`) so you can request its
+value when querying. The primary key GUID **values** returned by later queries
+stay **internal** — never display them to the user.
 
 ### Step 3 — Find records
 
