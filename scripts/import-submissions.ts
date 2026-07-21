@@ -416,7 +416,12 @@ function processSubmission(sub: Submission): ImportProblem | null {
   // Merge into the canonical frontmatter. The gallery `name` is the human display
   // name from metadata; the slug (SKILL.md `name`) is the file id used for the
   // route and the downloadable SKILL.md. The agent description gets its own key.
-  const { name: displayName, description: catalogDescription, ...catalogRest } = catalog;
+  const {
+    name: displayName,
+    description: catalogDescription,
+    agentDescription: _catalogAgentDescription,
+    ...catalogRest
+  } = catalog;
   const meta: Record<string, unknown> = {
     name: displayName,
     description: catalogDescription,
