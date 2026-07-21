@@ -29,16 +29,21 @@ edition intentionally avoids tool-based bulk file retrieval.
 If the user has not attached the library export, ask them to upload either:
 
 - One ZIP containing the files, preferably preserving SharePoint folders.
-- Multiple independent ZIP batches. Copilot Studio currently allows files up to
-  200 MB each; target 190 MB or less per ZIP to leave practical headroom.
+- Multiple independent ZIP batches. Copilot Studio currently allows each file
+  to be up to 50 MB and all files uploaded in one chat session to total up to
+  200 MB. Target 45 MB or less per ZIP to leave practical headroom.
 - A smaller set of individual files for a scoped review.
 
 Tell the user not to include files they are not authorized to process. For large
 libraries, recommend separate ZIP files by business area, document type, or
 folder. Each batch must be a complete, independently readable `.zip` file, not a
-split or multi-volume archive such as `.zip.001`. If any ZIP exceeds 200 MB, ask
-the user to divide it into smaller logical batches before continuing. Do not
-begin a library-wide audit from agent-knowledge search results.
+split or multi-volume archive such as `.zip.001`. If any ZIP exceeds 50 MB, ask
+the user to divide it into smaller logical batches. If all intended uploads
+exceed 200 MB in total, ask the user to reduce the scope or run separate corpora
+in separate chat sessions. Explain that results from separate sessions are not
+automatically combined and cross-session duplicate, similarity, and conflict
+coverage is incomplete. Do not begin a library-wide audit from agent-knowledge
+search results.
 
 Ask the user to upload every batch in the same active conversation and tell you
 when the final batch has been attached. Do not analyze batches independently.

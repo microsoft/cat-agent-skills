@@ -20,12 +20,19 @@ analysis corpus.
 Package the export as one or more independent ZIP files while preserving the
 SharePoint folder structure when possible.
 
-- Copilot Studio currently allows chat file uploads up to **200 MB per file**.
-- Target **190 MB or less per ZIP** to leave practical headroom.
+- Each uploaded ZIP can be up to **50 MB**.
+- The combined size of all files uploaded in one chat session can be up to
+  **200 MB**.
+- Target **45 MB or less per ZIP** to leave practical headroom.
 - Use logical batches such as business area, policy family, document type, or
   top-level SharePoint folder.
 - Keep each document in only one batch.
 - Do not use split archives such as `.zip.001`; every ZIP must open independently.
+
+If the intended corpus exceeds 200 MB, reduce the scope or analyze separate
+corpora in separate chat sessions. Results from separate sessions are not
+automatically combined, so cross-session duplicate, similarity, and conflict
+coverage is incomplete.
 
 ## How to use it
 

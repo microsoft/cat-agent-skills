@@ -16,8 +16,9 @@ for SharePoint metadata.
 
 The user should download the target library or folder from SharePoint and upload
 it as one or more ZIP batches. Preserve the folder structure when possible and
-keep every ZIP within the Copilot Studio chat file upload limit of 200 MB.
-Target 190 MB or less per ZIP to leave practical headroom.
+keep every ZIP within the Copilot Studio chat file upload limit of 50 MB. The
+combined size of all files uploaded in one chat session can be up to 200 MB.
+Target 45 MB or less per ZIP to leave practical headroom.
 
 For large libraries, create multiple logical ZIPs instead of one oversized
 archive. Good batch boundaries include:
@@ -29,8 +30,13 @@ archive. Good batch boundaries include:
 
 Create independent `.zip` files that can each be opened on their own. Do not use
 multi-volume archives such as `.zip.001`, because each uploaded batch must be
-independently extractable. If a ZIP is larger than 200 MB, divide its contents
+independently extractable. If a ZIP is larger than 50 MB, divide its contents
 into additional logical batches.
+
+If the intended corpus exceeds the 200 MB per-session total, reduce the scope or
+analyze separate corpora in separate chat sessions. Separate-session results are
+not automatically combined, so cross-session duplicate, near-duplicate,
+related-content, and potential-conflict comparison is incomplete.
 
 Keep each document in only one batch. Upload all batches in the same active
 conversation and identify the final batch before analysis starts.
