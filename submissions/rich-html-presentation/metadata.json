@@ -1,0 +1,12 @@
+{
+  "name": "Rich HTML Presentation",
+  "description": "Create polished, self-contained HTML slide decks with keynote-style visuals, keyboard navigation, themes, animations, and reusable presentation components.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["presentations", "html", "design", "productivity", "writing"],
+  "author": "Henry Jammes",
+  "authorUrl": "https://www.linkedin.com/in/henryjammes/",
+  "authorGithub": "HenryJammes",
+  "version": "1.0.0",
+  "createdAt": "2026-07-21",
+  "updatedAt": "2026-07-21"
+}
