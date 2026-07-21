@@ -5,6 +5,9 @@ overlapping, or potentially conflicting content without changing the source
 files. The skill combines all uploaded batches into one corpus and returns an
 Excel review backlog, an HTML summary, JSON results, and a batch manifest.
 
+The Excel backlog consistently contains four tabs: `Review Backlog`, `Summary`,
+`Document Inventory`, and `Curation Settings`.
+
 ## Before you start
 
 - Download the SharePoint library or folders you want reviewed.
@@ -64,6 +67,10 @@ Potential conflicts and duplicate findings include the related filenames,
 locations, excerpts, and PDF page numbers where available. Recommendations are
 review actions only; the skill never deletes, moves, renames, publishes,
 archives, or overwrites source content.
+
+Confidence values are deterministic numeric detection scores where available.
+Blank confidence means the analyzer did not produce a score; it never means a
+finding was human validated.
 
 ## Good to know
 

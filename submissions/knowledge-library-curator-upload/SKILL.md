@@ -143,11 +143,34 @@ The script must produce:
 - `knowledge-curation-backlog.xlsx`
 - `knowledge-curation-report.html`
 
+The Excel workbook MUST contain exactly these four worksheets in this order:
+
+1. `Review Backlog`
+2. `Summary`
+3. `Document Inventory`
+4. `Curation Settings`
+
+Do not add, remove, or rename worksheets. `Curation Settings` contains the
+analysis scope, freshness basis, thresholds, methods, warnings, and other
+limitations or interpretation guidance. Never name this worksheet
+`Limitations`.
+
 All user-facing worksheets, backlog rows, JSON records, and HTML tables MUST use
 the actual filename. Internal values such as `doc-0001`, numeric indexes, and
 hash-only references must never appear as document labels. Preserve the full
 relative path in a separate location column when users need to distinguish files
 with the same name.
+
+The `confidence` field is a deterministic numeric score from 0 through 1 where
+the analyzer produces one; otherwise leave it blank. Never replace it with
+prose, validation status, or claims such as `Human validated`. The agent is not
+a human reviewer. Knowledge-source validation may add evidence or context, but
+it must not be represented as human validation.
+
+Treat the workbook produced by `curate_library.py` as the canonical workbook.
+Do not recreate it from scratch or change its worksheet contract. If validation
+adds context, update the existing `Review Backlog` or `Curation Settings` cells
+without changing deterministic scores or asserting human review.
 
 Every Potential conflict, Duplicate, and Near duplicate backlog row must include:
 

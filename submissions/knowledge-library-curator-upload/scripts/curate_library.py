@@ -1040,12 +1040,12 @@ def display_stale(
 def write_workbook(
     output: Path,
     documents: list[dict[str, Any]],
-    duplicate_groups: list[dict[str, Any]],
-    similarities: list[dict[str, Any]],
-    conflicts: list[dict[str, Any]],
-    stale: list[dict[str, Any]],
     backlog: list[dict[str, Any]],
     summary: dict[str, Any],
+    config: dict[str, Any],
+    analysis_methods: list[str],
+    warnings: list[str],
+    metadata_supplied: bool,
 ) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
@@ -1054,13 +1054,12 @@ def write_workbook(
     workbook = Workbook()
     workbook.remove(workbook.active)
     sheets = {
+        "Review Backlog": records_to_rows(backlog),
         "Summary": [["Metric", "Value"], *[[key, value] for key, value in summary.items()]],
-        "Backlog": records_to_rows(backlog),
-        "Documents": records_to_rows(documents),
-        "Duplicates": records_to_rows(duplicate_groups),
-        "Similarity": records_to_rows(similarities),
-        "Conflicts": records_to_rows(conflicts),
-        "Stale": records_to_rows(stale),
+        "Document Inventory": records_to_rows(documents),
+        "Curation Settings": curation_settings_rows(
+            config, analysis_methods, warnings, metadata_supplied
+        ),
     }
     for name, rows in sheets.items():
         sheet = workbook.create_sheet(name)
@@ -1085,7 +1084,73 @@ def write_workbook(
                 for cell in row:
                     cell.font = Font(name="Arial", size=10)
                     cell.alignment = Alignment(vertical="top", wrap_text=True)
+            if name == "Review Backlog":
+                confidence_column = next(
+                    (
+                        cell.column
+                        for cell in sheet[1]
+                        if str(cell.value).strip().lower() == "confidence"
+                    ),
+                    None,
+                )
+                if confidence_column:
+                    for row in range(2, sheet.max_row + 1):
+                        sheet.cell(row, confidence_column).number_format = "0.0%"
     workbook.save(output)
+
+
+def curation_settings_rows(
+    config: dict[str, Any],
+    analysis_methods: list[str],
+    warnings: list[str],
+    metadata_supplied: bool,
+) -> list[list[Any]]:
+    freshness_basis = (
+        "Metadata manifest supplied; freshness uses manifest modified dates when "
+        "available."
+        if metadata_supplied
+        else "No metadata manifest supplied. Downloaded or staged timestamps can "
+        "replace original SharePoint modified dates, so freshness findings are "
+        "provisional."
+    )
+    rows = [
+        ["Area", "Setting / interpretation"],
+        [
+            "Scope",
+            "Complete for uploaded corpus; whole-library coverage was not "
+            "independently verified.",
+        ],
+        [
+            "Freshness",
+            f"Stale threshold: {config['staleAfterDays']} days. {freshness_basis}",
+        ],
+        [
+            "Similarity",
+            "Methods: "
+            + (", ".join(analysis_methods) if analysis_methods else "none")
+            + ". Similarity is a candidate-generation signal, not proof.",
+        ],
+        [
+            "Thresholds",
+            f"Near duplicate: {config['nearDuplicateThreshold']}; related content: "
+            f"{config['relatedContentThreshold']}; potential conflict: "
+            f"{config['conflictCandidateThreshold']}.",
+        ],
+        [
+            "Pairwise analysis",
+            f"Maximum documents: {config['maximumPairwiseDocuments']}.",
+        ],
+        [
+            "Curation",
+            "No source file was changed, deleted, moved, renamed, archived, or "
+            "published. Every action is a human-review recommendation.",
+        ],
+    ]
+    rows.extend(
+        [["Warning", warning] for warning in warnings]
+        or [["Warnings", "No deterministic analysis warnings."]]
+    )
+    return rows
 
 
 def serialize_cell(value: Any) -> Any:
@@ -1281,12 +1346,12 @@ def main() -> int:
     write_workbook(
         workbook_path,
         output_documents,
-        output_duplicate_groups,
-        output_similarities,
-        output_conflicts,
-        output_stale,
         backlog,
         summary,
+        config,
+        methods,
+        warnings,
+        args.metadata is not None,
     )
     write_html_report(html_path, summary, backlog, warnings)
     print(

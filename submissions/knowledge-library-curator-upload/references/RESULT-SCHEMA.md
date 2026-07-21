@@ -30,7 +30,7 @@ The bundled script writes `curation-results.json` with these top-level fields:
 | `relatedPath` | Relative location of the comparison document |
 | `relatedPage` | One-based PDF page containing the comparison excerpt |
 | `relatedExcerpt` | Comparison passage showing the evidence |
-| `confidence` | Deterministic score where available |
+| `confidence` | Deterministic numeric score from 0 through 1 where available; otherwise blank. Never a human-validation status. |
 | `reason` | Evidence supporting the recommendation |
 | `sourceUrl` | Source location when supplied through the metadata manifest |
 | `owner` | Content owner when supplied through the metadata manifest |
@@ -38,6 +38,20 @@ The bundled script writes `curation-results.json` with these top-level fields:
 Document fields use filenames. Internal processing IDs are never included in
 the workbook, JSON result, or HTML report. For formats without stable page
 boundaries, page fields remain blank rather than using an invented page number.
+
+## Excel workbook
+
+`knowledge-curation-backlog.xlsx` always contains exactly four worksheets in
+this order:
+
+1. `Review Backlog`
+2. `Summary`
+3. `Document Inventory`
+4. `Curation Settings`
+
+`Curation Settings` records scope, freshness basis, thresholds, analysis
+methods, warnings, and interpretation guidance. The workbook never labels an
+agent-generated finding as `Human validated`.
 
 ## Metadata manifest
 
