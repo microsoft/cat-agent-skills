@@ -1,6 +1,6 @@
 {
   "name": "Iterative File Editing",
-  "description": "In Copilot Studio, re-sending an edited file under the same name fails to deliver it — the change is made but never reaches the user. This skill gives each iteration a new version-numbered filename (report_v2, report_v3…) so every update actually lands in the chat as its own attachment.",
+  "description": "In Copilot Studio, re-sending an edited file under the same name fails to deliver it — the change is made but never reaches the user. This skill gives each iteration a new version-numbered filename (report_v1.docx, report_v2.docx…) so every update actually lands in the chat as its own attachment.",
   "platforms": ["Copilot Studio"],
   "tags": ["files", "iteration", "workflow", "collaboration", "productivity"],
   "author": "Adi Leibowitz",
