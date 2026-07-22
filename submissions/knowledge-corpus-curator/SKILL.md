@@ -336,6 +336,8 @@ the upload contained every file in scope.
   candidate detection, and Excel/HTML/JSON generation.
 - `scripts/prepare_batches.py`: safe ZIP staging and combined-corpus manifest.
 - `assets/default-config.json`: analysis thresholds and runtime settings.
+- `assets/example-outputs/`: gallery screenshots showing the HTML report and
+  Excel backlog.
 - `references/UPLOAD-AND-KNOWLEDGE-SETUP.md`: human-assisted export, upload, and
   knowledge-validation workflow.
 - `references/RESULT-SCHEMA.md`: result and optional metadata schemas.

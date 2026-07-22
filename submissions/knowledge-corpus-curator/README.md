@@ -71,9 +71,10 @@ coverage is incomplete.
 ## How to use it
 
 1. Add the skill to your Copilot Studio agent.
-2. Attach one or more ZIP files in the same chat message. Each ZIP can be up to
-   50 MB, provided the combined size of all files attached in the chat session
-   remains under 200 MB.
+2. Attach one or more ZIP files. Multiple ZIPs can be attached to the same
+   message, and additional batches can be sent in later messages in the same
+   conversation. Each ZIP can be up to 50 MB, provided the combined size of all
+   files attached in the chat session remains under 200 MB.
 3. If the agent asks whether more files are coming, confirm that the upload is
    complete or attach another batch. No specific confirmation phrase is
    required.
@@ -117,11 +118,11 @@ the source ZIP filename or filenames appear directly below the title.
 
 ### HTML curation report
 
-![Knowledge Corpus Curator HTML report showing summary metrics and the priority backlog](https://github.com/CATDAB/cat-agent-skills/releases/download/knowledge-corpus-curator-examples/knowledge-corpus-curation-report.png)
+![Knowledge Corpus Curator HTML report showing summary metrics and the priority backlog](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/knowledge-corpus-curator/assets/example-outputs/knowledge-corpus-curation-report.png)
 
 ### Excel review backlog
 
-![Knowledge Corpus Curator Excel review backlog showing prioritized findings and document evidence](https://github.com/CATDAB/cat-agent-skills/releases/download/knowledge-corpus-curator-examples/knowledge-corpus-curation-backlog.png)
+![Knowledge Corpus Curator Excel review backlog showing prioritized findings and document evidence](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/knowledge-corpus-curator/assets/example-outputs/knowledge-corpus-curation-backlog.png)
 
 ## Good to know
 
