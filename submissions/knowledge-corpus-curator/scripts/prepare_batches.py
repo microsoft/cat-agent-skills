@@ -100,6 +100,19 @@ def extract_batch(
     return used_entries, used_bytes, extracted
 
 
+def abort_staging(output: Path, message: str, cause: BaseException | None = None) -> None:
+    try:
+        shutil.rmtree(output)
+    except OSError as cleanup_exc:
+        raise SystemExit(
+            f"{message} Also could not remove partial combined corpus "
+            f"{output}: {cleanup_exc}"
+        ) from cleanup_exc
+    if cause is None:
+        raise SystemExit(message)
+    raise SystemExit(message) from cause
+
+
 def main() -> int:
     args = parse_args()
     if not args.uploads.is_dir():
@@ -115,15 +128,23 @@ def main() -> int:
             )
     args.output.mkdir(parents=True, exist_ok=True)
 
+    upload_paths = sorted(args.uploads.iterdir())
+    symlinks = [path.name for path in upload_paths if path.is_symlink()]
+    if symlinks:
+        raise SystemExit(
+            "Symbolic link uploads are unsupported: " + ", ".join(symlinks)
+        )
     archives = sorted(
-        path for path in args.uploads.iterdir() if path.is_file() and path.suffix.lower() == ".zip"
+        path
+        for path in upload_paths
+        if path.is_file() and path.suffix.lower() == ".zip"
     )
     metadata_path = args.metadata.resolve() if args.metadata else None
     if metadata_path and not metadata_path.is_file():
         raise SystemExit(f"Metadata file does not exist: {args.metadata}")
     loose_files = sorted(
         path
-        for path in args.uploads.iterdir()
+        for path in upload_paths
         if path.is_file()
         and path.suffix.lower() != ".zip"
         and path.resolve() != metadata_path
@@ -145,8 +166,8 @@ def main() -> int:
     for index, archive in enumerate(archives, start=1):
         batch_name = f"batch-{index:03d}-{safe_name(archive.stem)}"
         destination = args.output / batch_name
-        destination.mkdir()
         try:
+            destination.mkdir()
             entries, extracted_bytes, extracted = extract_batch(
                 archive,
                 destination,
@@ -154,16 +175,19 @@ def main() -> int:
                 args.max_extracted_bytes - total_bytes,
                 args.max_compression_ratio,
             )
-        except (OSError, ValueError, zipfile.BadZipFile) as exc:
-            try:
-                shutil.rmtree(destination)
-            except OSError as cleanup_exc:
-                raise SystemExit(
-                    f"Cannot prepare {archive.name}: {exc}. "
-                    f"Also could not remove partial batch directory "
-                    f"{destination}: {cleanup_exc}"
-                ) from cleanup_exc
-            raise SystemExit(f"Cannot prepare {archive.name}: {exc}") from exc
+        except (
+            EOFError,
+            NotImplementedError,
+            OSError,
+            RuntimeError,
+            ValueError,
+            zipfile.BadZipFile,
+        ) as exc:
+            abort_staging(
+                args.output,
+                f"Cannot prepare {archive.name}: {exc}.",
+                exc,
+            )
         total_entries += entries
         total_bytes += extracted_bytes
         manifest["batches"].append(
@@ -178,29 +202,38 @@ def main() -> int:
 
     if loose_files:
         loose_entries = len(loose_files)
-        loose_bytes = sum(path.stat().st_size for path in loose_files)
+        try:
+            loose_bytes = sum(path.stat().st_size for path in loose_files)
+        except OSError as exc:
+            abort_staging(
+                args.output,
+                f"Cannot inspect loose uploads: {exc}.",
+                exc,
+            )
         if total_entries + loose_entries > args.max_entries:
-            raise SystemExit("Uploaded files exceed the maximum entry count.")
+            abort_staging(
+                args.output,
+                "Uploaded files exceed the maximum entry count.",
+            )
         if total_bytes + loose_bytes > args.max_extracted_bytes:
-            raise SystemExit("Uploaded files exceed the maximum staged size.")
+            abort_staging(
+                args.output,
+                "Uploaded files exceed the maximum staged size.",
+            )
         destination = args.output / "loose-files"
-        destination.mkdir()
         copied: list[str] = []
         try:
+            destination.mkdir()
             for source in loose_files:
                 target = destination / source.name
                 shutil.copy2(source, target)
                 copied.append(source.name)
         except OSError as exc:
-            try:
-                shutil.rmtree(destination)
-            except OSError as cleanup_exc:
-                raise SystemExit(
-                    f"Cannot stage loose upload {source.name}: {exc}. "
-                    f"Also could not remove partial loose-file directory "
-                    f"{destination}: {cleanup_exc}"
-                ) from cleanup_exc
-            raise SystemExit(f"Cannot stage loose upload {source.name}: {exc}") from exc
+            abort_staging(
+                args.output,
+                f"Cannot stage loose upload {source.name}: {exc}.",
+                exc,
+            )
         total_entries += loose_entries
         total_bytes += loose_bytes
         manifest["batches"].append(
@@ -215,11 +248,18 @@ def main() -> int:
 
     manifest["totalFiles"] = total_entries
     manifest["totalExtractedBytes"] = total_bytes
-    args.manifest.parent.mkdir(parents=True, exist_ok=True)
-    args.manifest.write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    try:
+        args.manifest.parent.mkdir(parents=True, exist_ok=True)
+        args.manifest.write_text(
+            json.dumps(manifest, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        abort_staging(
+            args.output,
+            f"Cannot write batch manifest {args.manifest}: {exc}.",
+            exc,
+        )
     print(
         json.dumps(
             {

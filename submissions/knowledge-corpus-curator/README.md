@@ -76,14 +76,16 @@ coverage is incomplete.
 
    > That is the final batch. Analyze these now.
 
-4. The agent stages all batches together, analyzes the combined corpus, validates
-   the highest-risk findings, and returns the report files.
+4. The agent collects the three setup answers below, stages all batches together,
+   analyzes the combined corpus, validates the highest-risk findings, and returns
+   the report files.
 
 After you confirm the final batch, the agent asks three short setup questions,
 one at a time:
 
 1. Whether the upload represents the whole intended library or a subset.
-2. Whether to include drafts, archived files, and historical versions.
+2. Whether the uploaded corpus contains current content only or also includes
+   drafts, archived files, or historical versions.
 3. Which freshness threshold in days to use; the default is 365 days.
 
 These answers are recorded in the `Curation Settings` worksheet.

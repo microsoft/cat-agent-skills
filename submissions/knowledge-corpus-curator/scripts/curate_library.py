@@ -11,8 +11,10 @@ import json
 import math
 import re
 import sys
+import zipfile
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -173,7 +175,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--content-scope",
         choices=("current-only", "include-drafts-and-history"),
-        help="User-confirmed treatment of drafts, archives, and historical versions",
+        help="User-confirmed composition of the uploaded corpus",
     )
     parser.add_argument("--ocr", action="store_true", help="OCR images and scanned PDFs")
     parser.add_argument(
@@ -247,8 +249,12 @@ def find_metadata(
     return {}
 
 
-def sha256_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def normalize_text(text: str) -> str:
@@ -325,6 +331,7 @@ def extract_pdf(path: Path, use_ocr: bool) -> tuple[str, str, list[str]]:
     return "\n".join(ocr_pages), "ocr", ocr_pages
 
 
+@lru_cache(maxsize=1)
 def get_ocr_engine():
     import numpy as np
     from rapidocr_onnxruntime import RapidOCR
@@ -336,7 +343,9 @@ def ocr_image(path: Path) -> str:
     from PIL import Image
 
     engine, np = get_ocr_engine()
-    result, _ = engine(np.asarray(Image.open(path).convert("RGB")))
+    with Image.open(path) as image:
+        pixels = np.asarray(image.convert("RGB"))
+    result, _ = engine(pixels)
     return "\n".join(item[1] for item in (result or []))
 
 
@@ -371,6 +380,42 @@ def extract_csv(path: Path) -> str:
         for row in csv.reader(handle):
             parts.append(" | ".join(row))
     return "\n".join(parts)
+
+
+def validate_office_archive(
+    path: Path,
+    maximum_entries: int,
+    maximum_expanded_bytes: int,
+    maximum_compression_ratio: float,
+) -> None:
+    total_expanded_bytes = 0
+    with zipfile.ZipFile(path) as archive:
+        entries = archive.infolist()
+        if len(entries) > maximum_entries:
+            raise ValueError(
+                f"Office package contains {len(entries)} entries; limit is "
+                f"{maximum_entries}."
+            )
+        for info in entries:
+            total_expanded_bytes += info.file_size
+            if total_expanded_bytes > maximum_expanded_bytes:
+                raise ValueError(
+                    "Office package expanded size exceeds "
+                    f"{maximum_expanded_bytes} bytes."
+                )
+            if info.file_size and not info.compress_size:
+                raise ValueError(
+                    f"Office package entry has an invalid compressed size: "
+                    f"{info.filename}"
+                )
+            if (
+                info.compress_size
+                and info.file_size / info.compress_size > maximum_compression_ratio
+            ):
+                raise ValueError(
+                    "Office package entry compression ratio exceeds "
+                    f"{maximum_compression_ratio}: {info.filename}"
+                )
 
 
 def extract_text(
@@ -443,6 +488,11 @@ def inventory(
     input_root: Path,
     metadata: dict[str, dict[str, Any]],
     minimum_chars: int,
+    maximum_file_bytes: int,
+    maximum_retained_text_characters: int,
+    maximum_office_entries: int,
+    maximum_office_expanded_bytes: int,
+    maximum_office_compression_ratio: float,
     use_ocr: bool,
 ) -> tuple[
     list[dict[str, Any]], dict[str, str], dict[str, list[str]], list[str]
@@ -452,13 +502,23 @@ def inventory(
     page_texts: dict[str, list[str]] = {}
     warnings: list[str] = []
     detector = create_file_type_detector(warnings)
+    retained_text_characters = 0
     for path in sorted(input_root.rglob("*")):
+        if path.is_symlink():
+            warnings.append(f"{path.name}: symbolic links are not analyzed.")
+            continue
         if not path.is_file():
             continue
         relative = normalize_relative_path(str(path.relative_to(input_root)))
         source = find_metadata(metadata, relative)
-        raw = path.read_bytes()
-        detected_type, detected_mime_type = detect_file_type(path, detector, warnings)
+        file_stat = path.stat()
+        file_size = file_stat.st_size
+        is_too_large = file_size > maximum_file_bytes
+        detected_type, detected_mime_type = (
+            ("", "")
+            if is_too_large
+            else detect_file_type(path, detector, warnings)
+        )
         filename_extension = path.suffix.lower()
         detected_extension = DETECTED_TYPE_TO_EXTENSION.get(detected_type, "")
         effective_extension = detected_extension or filename_extension
@@ -470,7 +530,7 @@ def inventory(
                 detected_extension == ".jpg" and filename_extension == ".jpeg"
             )
         )
-        filesystem_modified = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+        filesystem_modified = datetime.fromtimestamp(file_stat.st_mtime, timezone.utc)
         modified = parse_datetime(source.get("modifiedAt"), filesystem_modified)
         record: dict[str, Any] = {
             "id": f"doc-{len(documents) + 1:04d}",
@@ -481,13 +541,13 @@ def inventory(
             "detectedMimeType": detected_mime_type,
             "effectiveExtension": effective_extension,
             "fileTypeMismatch": mismatch,
-            "bytes": len(raw),
+            "bytes": file_size,
             "modifiedAt": modified.isoformat(),
             "sourceUrl": source.get("sourceUrl", ""),
             "owner": source.get("owner", ""),
             "title": source.get("title", path.stem),
             "contentType": source.get("contentType", ""),
-            "sha256": sha256_bytes(raw),
+            "sha256": sha256_file(path),
             "normalizedSha256": "",
             "characters": 0,
             "words": 0,
@@ -496,6 +556,16 @@ def inventory(
             "extractionMethod": "",
             "error": "",
         }
+        if is_too_large:
+            record["extractionStatus"] = "too_large"
+            record["error"] = (
+                f"File exceeds maximumFileBytes ({file_size} > "
+                f"{maximum_file_bytes}); hash inventory completed but content "
+                "extraction was skipped."
+            )
+            warnings.append(f"{relative}: {record['error']}")
+            documents.append(record)
+            continue
         if effective_extension not in SUPPORTED_EXTENSIONS:
             record["extractionStatus"] = "unsupported"
             record["error"] = (
@@ -510,6 +580,13 @@ def inventory(
                 f"match detected content type {detected_type}."
             )
         try:
+            if effective_extension in {".docx", ".pptx", ".xlsx"}:
+                validate_office_archive(
+                    path,
+                    maximum_office_entries,
+                    maximum_office_expanded_bytes,
+                    maximum_office_compression_ratio,
+                )
             text, method, pages = extract_text(path, use_ocr, effective_extension)
             normalized = normalize_text(text)
             record["characters"] = len(text)
@@ -529,9 +606,20 @@ def inventory(
                 warnings.append(
                     f"{relative}: extracted only {len(normalized)} normalized characters."
                 )
+            elif (
+                retained_text_characters + len(text)
+                > maximum_retained_text_characters
+            ):
+                record["extractionStatus"] = "analysis_limit"
+                record["error"] = (
+                    "Corpus-wide retained-text limit reached; hashing and inventory "
+                    "completed but this file was excluded from content comparison."
+                )
+                warnings.append(f"{relative}: {record['error']}")
             else:
                 record["extractionStatus"] = "ok"
                 extracted[record["id"]] = text
+                retained_text_characters += len(text)
                 if pages:
                     page_texts[record["id"]] = pages
         except Exception as exc:
@@ -569,6 +657,46 @@ def exact_duplicate_groups(
             }
         )
     return results
+
+
+def collapse_normalized_duplicate_groups(
+    normalized_groups: list[dict[str, Any]],
+    exact_groups: list[dict[str, Any]],
+    documents: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    by_id = {document["id"]: document for document in documents}
+    exact_membership = {
+        member: frozenset(group["documents"])
+        for group in exact_groups
+        for member in group["documents"]
+    }
+    collapsed: list[dict[str, Any]] = []
+    for group in normalized_groups:
+        group_members = set(group["documents"])
+        buckets: dict[frozenset[str], list[str]] = {}
+        for member in group["documents"]:
+            bucket = exact_membership.get(member, frozenset({member}))
+            buckets.setdefault(bucket, []).append(member)
+        representatives = [
+            max(
+                (member for member in members if member in group_members),
+                key=lambda member: by_id[member]["modifiedAt"],
+            )
+            for members in buckets.values()
+        ]
+        if len(representatives) < 2:
+            continue
+        collapsed.append(
+            {
+                **group,
+                "documents": representatives,
+                "suggestedPrimary": max(
+                    representatives,
+                    key=lambda member: by_id[member]["modifiedAt"],
+                ),
+            }
+        )
+    return collapsed
 
 
 def cosine(left: Iterable[float], right: Iterable[float]) -> float:
@@ -756,10 +884,6 @@ def directive_polarity(sentence: str) -> str:
     if any(term in lowered for term in POSITIVE_DIRECTIVES):
         return "positive"
     return "neutral"
-
-
-def directive_topic_tokens(sentence: str) -> set[str]:
-    return topic_tokens(sentence)
 
 
 def similarity_analysis(
@@ -1002,6 +1126,11 @@ def build_backlog(
     for group in duplicate_groups:
         for document_id in group["documents"]:
             if document_id == group["suggestedPrimary"]:
+                continue
+            if (
+                document_id not in extracted
+                or group["suggestedPrimary"] not in extracted
+            ):
                 continue
             add(
                 "High",
@@ -1264,12 +1393,12 @@ def curation_settings_rows(
     )
     content_scope_interpretation = {
         "current-only": (
-            "Current content only; drafts, archives, and historical versions were "
-            "excluded at the user's direction."
+            "The user identified the uploaded corpus as current content only. "
+            "The analyzer does not infer document lifecycle state."
         ),
         "include-drafts-and-history": (
-            "Drafts, archives, and historical versions were included at the "
-            "user's direction."
+            "The user identified the uploaded corpus as including drafts, archives, "
+            "or historical versions. Findings include those files."
         ),
     }.get(
         content_scope,
@@ -1312,6 +1441,23 @@ def curation_settings_rows(
             f"Maximum documents: {config['maximumPairwiseDocuments']}.",
         ],
         [
+            "Per-file analysis",
+            f"Maximum bytes for content extraction: {config['maximumFileBytes']}. "
+            "Larger files are hashed and inventoried but not content-extracted.",
+        ],
+        [
+            "Corpus text analysis",
+            "Maximum retained characters for content comparison: "
+            f"{config['maximumRetainedTextCharacters']}. Hash inventory remains "
+            "corpus-wide after this limit is reached.",
+        ],
+        [
+            "Office package analysis",
+            f"Maximum entries: {config['maximumOfficeEntries']}; maximum expanded "
+            f"bytes: {config['maximumOfficeExpandedBytes']}; maximum entry "
+            f"compression ratio: {config['maximumOfficeCompressionRatio']}.",
+        ],
+        [
             "Curation",
             "No source file was changed, deleted, moved, renamed, archived, or "
             "published. Every action is a human-review recommendation.",
@@ -1329,7 +1475,7 @@ def serialize_cell(value: Any) -> Any:
         value = json.dumps(value, ensure_ascii=False)
     if value is None:
         return ""
-    if isinstance(value, str) and value.startswith(("=", "+", "-", "@")):
+    if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@")):
         return f"'{value}"
     return value
 
@@ -1411,6 +1557,11 @@ def main() -> int:
         "relatedContentThreshold": 0.68,
         "conflictCandidateThreshold": 0.72,
         "minimumExtractedCharacters": 80,
+        "maximumFileBytes": 100_000_000,
+        "maximumRetainedTextCharacters": 5_000_000,
+        "maximumOfficeEntries": 10_000,
+        "maximumOfficeExpandedBytes": 100_000_000,
+        "maximumOfficeCompressionRatio": 200.0,
         "maximumEmbeddingCharacters": 12000,
         "maximumPairwiseDocuments": 500,
         "useEmbeddings": True,
@@ -1440,6 +1591,11 @@ def main() -> int:
         args.input,
         metadata,
         int(config["minimumExtractedCharacters"]),
+        int(config["maximumFileBytes"]),
+        int(config["maximumRetainedTextCharacters"]),
+        int(config["maximumOfficeEntries"]),
+        int(config["maximumOfficeExpandedBytes"]),
+        float(config["maximumOfficeCompressionRatio"]),
         args.ocr,
     )
     duplicates = exact_duplicate_groups(documents, "sha256", "exact")
@@ -1448,14 +1604,11 @@ def main() -> int:
         "normalizedSha256",
         "normalized_text",
     )
-    known_exact_members = {
-        document_id for group in duplicates for document_id in group["documents"]
-    }
-    normalized_groups = [
-        group
-        for group in normalized_groups
-        if not set(group["documents"]).issubset(known_exact_members)
-    ]
+    normalized_groups = collapse_normalized_duplicate_groups(
+        normalized_groups,
+        duplicates,
+        documents,
+    )
     duplicate_groups = duplicates + normalized_groups
     similarities, conflicts, methods = similarity_analysis(
         documents, extracted, page_texts, config, warnings
@@ -1545,7 +1698,7 @@ def main() -> int:
                 "html": str(html_path),
                 "summary": summary,
                 "analysisMode": methods,
-                "warnings": warnings,
+                "warningCount": len(warnings),
             },
             ensure_ascii=False,
         )

@@ -43,13 +43,14 @@ present or whether another batch is coming. If another batch is coming, the
 agent waits without extracting or analyzing files. Staging starts only after the
 user explicitly confirms the final batch.
 
-Confirmation that the corpus is complete is sufficient to start analysis. The
-agent then asks three distinct setup questions, one at a time: whether the
-corpus is the whole intended library or a subset; whether drafts, archives, and
-historical versions are included; and which freshness threshold in days to use.
-Upload completion and library coverage are different concepts, so the agent
-briefly explains that distinction rather than treating the questions as
-duplicates. It does not begin staging until all three answers are known.
+Confirmation that the corpus is complete is sufficient to proceed to the final
+intake questions. The agent asks them one at a time: whether the corpus is the
+whole intended library or a subset; whether the uploaded corpus contains
+current content only or also includes drafts, archives, and historical versions;
+and which freshness threshold in days to use. Upload
+completion and library coverage are different concepts, so the agent briefly
+explains that distinction rather than treating the questions as duplicates. It
+does not begin staging or analysis until all three answers are known.
 
 ## Cross-batch comparison
 

@@ -73,8 +73,8 @@ one at a time before staging or analysis. Do not combine them into one message:
 
 1. "Thanks - the upload is complete. For reporting scope, does this corpus
    represent the whole intended library or a subset?"
-2. "Should drafts, archived files, and historical versions be included, or
-   should I analyze current content only?"
+2. "Does this uploaded corpus contain current content only, or does it also
+   include drafts, archived files, or historical versions?"
 3. "What freshness threshold should I use to flag stale-content candidates?
    The default is 365 days."
 
@@ -138,7 +138,12 @@ Add `--metadata <file.json>` when the user supplied metadata. Add
 
 The sandbox does not support `pip install`. Do not install packages. Surface all
 warnings about extraction, OCR, unavailable embeddings, file types, or corpus
-size.
+size. Files larger than the configured `maximumFileBytes` are hash-inventoried
+but not content-extracted; treat them as extraction gaps. Office packages are
+also checked for excessive entry counts, expanded size, and compression ratios
+before extraction. The configured `maximumRetainedTextCharacters` bounds text
+held for corpus-wide content comparison; hashing and inventory continue after
+that limit is reached, and excluded files are reported as extraction gaps.
 
 The script must produce:
 
