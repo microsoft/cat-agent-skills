@@ -46,8 +46,15 @@ def cmd_list(pdf_path: str):
             "value": f.get("/V"),
         }
         # Dropdown / choice options, if present
-        if f.get("/Opt"):
-            entry["options"] = [str(o) for o in f.get("/Opt")]
+        opt = f.get("/Opt")
+        if opt:
+            options = []
+            for o in opt:
+                if isinstance(o, (list, tuple)) and not isinstance(o, (str, bytes)) and len(o) == 2:
+                    options.append(str(o[0]))
+                else:
+                    options.append(str(o))
+            entry["options"] = options
         # Checkbox / radio "on" state, if discoverable
         states = f.get("/_States_")
         if states:
