@@ -30,6 +30,9 @@ def _record(root: Path, path: Path, origin: str, license_expression: str) -> dic
     if relative.startswith("scripts/runtime/adventure/"):
         copyright_notice = "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain"
         modified = relative == "scripts/runtime/adventure/tests/__init__.py"
+    elif relative == "references/licenses/Apache-2.0.txt":
+        copyright_notice = "The Apache Software Foundation"
+        modified = False
     else:
         copyright_notice = "Copyright (c) Microsoft Corporation and contributors"
         modified = None

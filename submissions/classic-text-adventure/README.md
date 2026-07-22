@@ -19,7 +19,7 @@ The native command `save <filename>` deliberately returns Adventure's `GAME SAVE
 Ask the installed agent to “run the Classic Text Adventure smoke test,” or invoke it directly:
 
 ```text
-python scripts/smoke_test.py --state-root <private-root> --report <unique-output>/classic-adventure-smoke-report.json --json-summary
+python scripts/smoke_test.py --state-root <private-root> --report <unique-output>/classic-adventure-smoke-report.json
 ```
 
 The eight offline cases use a new temporary session and do not inspect, advance, reset, or expose an active game. Exit `0` means all selected cases passed, `1` reports product failures, and `2` reports a harness failure. The JSON report's stable `issues` entries are intended to be fed back to maintainers for resolution. Use repeated `--case CTA-SMOKE-...` arguments to run a requested subset from `scripts/smoke_cases.json`.

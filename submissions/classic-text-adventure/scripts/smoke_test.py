@@ -132,7 +132,9 @@ def case_startup_gameplay(_: Path, case: dict[str, Any]) -> dict[str, Any]:
     return {"output_sha256": actual}
 
 
-def _invoke_runner(root: Path, request: dict[str, Any]) -> dict[str, Any]:
+def _invoke_runner(
+    root: Path, request: dict[str, Any], timeout_seconds: float = 10.0
+) -> dict[str, Any]:
     environment = dict(os.environ)
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     completed = subprocess.run(
@@ -140,7 +142,7 @@ def _invoke_runner(root: Path, request: dict[str, Any]) -> dict[str, Any]:
         input=json.dumps(request),
         text=True,
         capture_output=True,
-        timeout=5,
+        timeout=timeout_seconds,
         env=environment,
         check=False,
     )
@@ -395,7 +397,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--case", action="append", dest="cases", help="run only this case id (repeatable)")
     parser.add_argument("--keep-temp", action="store_true")
     parser.add_argument("--timeout", type=float, default=30.0)
-    parser.add_argument("--json-summary", action="store_true", help="emit the compact JSON summary (default behavior)")
     args = parser.parse_args(argv)
     try:
         definition = load_cases()

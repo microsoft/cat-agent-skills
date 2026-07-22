@@ -16,9 +16,9 @@
     },
     {
       "bytes": 11358,
-      "copyright": "Copyright (c) Microsoft Corporation and contributors",
+      "copyright": "The Apache Software Foundation",
       "license": "Apache-2.0",
-      "modified": null,
+      "modified": false,
       "origin": "Apache Software Foundation license text",
       "path": "references/licenses/Apache-2.0.txt",
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
@@ -51,22 +51,22 @@
       "sha256": "40dc12e9b1df7e1ed5418edb7c85b58b6d77297271ad0bbc6d268f973032b1dd"
     },
     {
-      "bytes": 5048,
+      "bytes": 5061,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/checkpoint.py",
-      "sha256": "dc211ee4c1b3345c1eed4b32dbab0434608214fe963b509ce0f7befabf0a8df8"
+      "sha256": "bf47717f20ab37e3788895ec7a63b2da93b9403274d11850dea7612db31f2c5d"
     },
     {
-      "bytes": 4302,
+      "bytes": 4446,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/generate_license_manifest.py",
-      "sha256": "b958a29bec2eb4447b7a78e758ee66897a039ac97827595a8c71d2d1f4550542"
+      "sha256": "11fdac7916c35cb6a96e5e8b25319fcd7dd9dbe87f7ce146f3022f6a8155b6de"
     },
     {
       "bytes": 11689,
@@ -258,22 +258,22 @@
       "sha256": "cb8cb761c79a4815733c24afa407c3357ac9684e835d933e24c6343bac3c16a2"
     },
     {
-      "bytes": 19142,
+      "bytes": 19073,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/smoke_test.py",
-      "sha256": "0efcb06444adc29116e6856b9fa67c5a81af1eddfd9e1c147aaeb693fd7f3f0e"
+      "sha256": "119408f33902d7446599d998218a7811b826d21daef0864a5a9ff6d21a3c9c94"
     },
     {
-      "bytes": 1171,
+      "bytes": 1574,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/tests/test_checkpoint.py",
-      "sha256": "9f09254630b4ef7282934ed350e08669410f8241837bbdb26d4850157be3217c"
+      "sha256": "5b814e29fe95c806fe939907ee3a3a4bca3ba57b5cd7203c58f9782c6393ddfe"
     },
     {
       "bytes": 4223,
@@ -294,13 +294,13 @@
       "sha256": "1d1542d21a894ec48cdb5728c825ef75114e855e2779ce28318d6a3c98e039ff"
     },
     {
-      "bytes": 1700,
+      "bytes": 2655,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/tests/test_smoke_test.py",
-      "sha256": "647c17082917dcc3d28b08c129d5e635fa21d8aa01c10634dea00387aa6ee49d"
+      "sha256": "b66bb7ba44bfc21e0ea0688a563c00e8f775202a3a16e2322c90e0e51c53901c"
     },
     {
       "bytes": 4904,

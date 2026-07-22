@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -32,7 +33,15 @@ class CheckpointTests(unittest.TestCase):
             with checkpoint.session_lock(path):
                 pass
 
+    @unittest.skipUnless(os.name == "nt", "Windows byte-range lock behavior")
+    def test_windows_lock_file_does_not_grow(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / ".lock"
+            for _ in range(3):
+                with checkpoint.session_lock(path):
+                    pass
+            self.assertEqual(path.stat().st_size, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
-

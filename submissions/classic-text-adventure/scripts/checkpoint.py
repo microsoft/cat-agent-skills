@@ -129,7 +129,7 @@ def session_lock(path: Path, timeout_seconds: float = 10.0) -> Iterator[None]:
                 if os.name == "nt":
                     import msvcrt
 
-                    handle.seek(0)
+                    handle.seek(0, os.SEEK_END)
                     if handle.tell() == 0:
                         handle.write(b"0")
                         handle.flush()
