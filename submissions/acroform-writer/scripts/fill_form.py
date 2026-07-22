@@ -58,8 +58,15 @@ def cmd_list(pdf_path: str):
 
 
 def cmd_fill(pdf_path: str, data_path: str, out_path: str, flatten: bool):
-    data = json.loads(Path(data_path).read_text())
+    try:
+        data = json.loads(Path(data_path).read_text(encoding="utf-8"))
+    except OSError as e:
+        die(f"Failed to read data JSON file '{data_path}': {e}", code=2)
+    except json.JSONDecodeError as e:
+        die(f"Malformed JSON in '{data_path}': {e}", code=2)
 
+    if not isinstance(data, dict):
+        die("Data JSON must be an object mapping field names to values.", code=2)
     reader = PdfReader(pdf_path)
     if not reader.get_fields():
         die(
