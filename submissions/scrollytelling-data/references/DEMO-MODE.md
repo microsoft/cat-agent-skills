@@ -30,7 +30,7 @@ You still make every editorial decision (chapter selection, order, narrative cop
 
 ## `scripts/build_story.py` — a complete worked reference
 
-`scripts/build_story.py` (runtime path `/app/skills/scrollytelling-data/scripts/build_story.py`) is a full, end-to-end example generator: it loads a workbook, joins multiple sheets in SQLite, detects schema (entity / metric / time / geo / category), runs the standard aggregations, and assembles a complete Dark-Fire scrollytelling page.
+`scripts/build_story.py` (runtime path `/app/skills/scrollytelling-data/scripts/build_story.py`) is a full, end-to-end example generator: it loads a workbook, performs a pragmatic cross-sheet merge in pandas when keys overlap, writes the joined result to SQLite for aggregations, detects schema (entity / metric / time / geo / category), and assembles a complete Dark-Fire scrollytelling page.
 
 **Use it as a reference, not as the thing you ship — and never run it as a shortcut for the demo.** Building the demo means authoring your own story exactly like a real upload (Phases 1–5). Do **not** execute `build_story.py` to produce the deliverable; its templated output is only a code example to read. Read `build_story.py` when you want a concrete, known-good example of how a piece fits together end to end — especially the parts that are fiddly to get right from prose alone:
 

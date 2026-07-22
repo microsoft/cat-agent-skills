@@ -17,7 +17,7 @@ Auto-detects:
 Chapters rendered depend on what is detected:
   Always:    Hero · Stats · Top-N bar · Hall of Fame · Top-5 records · Takeaways · Epilogue
   If geo:    Choropleth map (world ISO-3 / country names, or US states)
-  If cat:    Category distribution (donut chart)
+  If cat:    Category distribution chapter (chart type chosen by data)
   If time:   Trend over time (dual-axis line chart)
   If scatter: Entity volume vs secondary metric (bubble chart)
 
@@ -172,14 +172,16 @@ def detect_schema(df):
         vals = [str(v).strip() for v in df[col].dropna().unique()[:25] if v]
         if not vals:
             continue
+        sample = vals[:10]
+        sample_upper = [v.upper() for v in sample]
         # ISO-3 (e.g. BRA, VNM)
-        if all(re.match(r'^[A-Z]{3}$', v) for v in vals[:10]):
+        if all(re.match(r'^[A-Z]{3}$', v) for v in sample_upper):
             s['geo_col'] = col; s['geo_type'] = 'iso3'; break
         # US 2-letter state codes
-        if all(len(v) == 2 and v in US_STATES for v in vals[:10]):
+        if all(len(v) == 2 and v in US_STATES for v in sample_upper):
             s['geo_col'] = col; s['geo_type'] = 'us_state'; break
         # Full US state names (e.g. Alabama, California) → converted to codes later
-        if all(v.strip().lower() in US_STATE_NAMES for v in vals[:10]):
+        if all(v.strip().lower() in US_STATE_NAMES for v in sample):
             s['geo_col'] = col; s['geo_type'] = 'us_state'
             s['geo_name_to_code'] = True; break
         # Country names
@@ -352,7 +354,7 @@ def stat_counter_attrs(value):
     if av >= 1e9:   return pre, int(round(value / 1e9)),  'B'
     if av >= 1e6:   return pre, int(round(value / 1e6)),  'M'
     if av >= 1e3:   return pre, int(round(value / 1e3)),  'k'
-    return '', int(round(value)), ''
+    return pre, int(round(value)), ''
 
 def s_card(value, label, delay=0.0, wide=False, raw_target=None,
            raw_prefix='', raw_suffix=''):
@@ -394,6 +396,7 @@ def js_esc(s):
 metric_lbl_js = js_esc(metric_lbl)
 time_lbl_js   = js_esc(time_lbl)
 M2_lbl_js     = js_esc(M2_lbl)
+metric_prefix_js = js_esc(mpfx)
 
 # ── 5. Chapter content ─────────────────────────────────────────────────────────
 has_geo     = bool(G and A.get('geo_codes'))
@@ -693,7 +696,7 @@ tk_ch = f"""
 
 # ── 6. JS chart builders ───────────────────────────────────────────────────────
 # Inject all aggregation data as a single JS constant
-js_data = json.dumps(A)
+js_data = json.dumps(A).replace('</', '<\\/')
 
 # Category chart: use renderCategoryBar helper
 cat_js_calls = ''
@@ -944,6 +947,7 @@ body{{background:#0a0a0a;color:var(--text);font-family:'Segoe UI',system-ui,sans
 
 <script>
 const D = {js_data};
+const METRIC_PREFIX = '{metric_prefix_js}';
 
 const BG = {{
   paper_bgcolor:'#111', plot_bgcolor:'#111',
@@ -1019,8 +1023,8 @@ function renderScatterBubble(divId, entities, x, y, opts) {{
     hovertemplate:'<b>%{{customdata}}</b><br>x: %{{x:,.2f}}<br>y: %{{y:,.4f}}<extra></extra>'
   }}], {{
     ...BG,
-    xaxis:{{...BG.xaxis, title:opts.xTitle||'', type:logX?'log':'-', dtick:logX?1:undefined}},
-    yaxis:{{...BG.yaxis, title:opts.yTitle||'', type:logY?'log':'-', dtick:logY?1:undefined}},
+    xaxis:{{...BG.xaxis, title:opts.xTitle||'', type:logX?'log':'linear', dtick:logX?1:undefined}},
+    yaxis:{{...BG.yaxis, title:opts.yTitle||'', type:logY?'log':'linear', dtick:logY?1:undefined}},
     margin:{{t:20,b:50,l:60,r:20}}
   }}, CFG);
 }}
@@ -1106,7 +1110,7 @@ function buildTopChart() {{
   Plotly.newPlot('topChart', [{{
     type:'bar', orientation:'h', y:names, x:vals,
     marker:{{color:vals.map((_,i)=>i===vals.length-1?'#f5c842':'#c47d2a'),opacity:.9}},
-    text:vals.map(v=>v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v.toLocaleString()),
+    text:vals.map(v=>v>=1e9?METRIC_PREFIX+(v/1e9).toFixed(1)+'B':v>=1e6?METRIC_PREFIX+(v/1e6).toFixed(1)+'M':METRIC_PREFIX+v.toLocaleString()),
     textposition:'outside', textfont:{{color:'#aab'}},
     hovertemplate:'%{{y}}: %{{x:,.2f}}<extra></extra>'
   }}], {{
