@@ -70,6 +70,8 @@ def cmd_list(pdf_path: str):
         if states:
             entry["states"] = sorted(states)
 
+        out.append(entry)
+
     print(json.dumps({"field_count": len(out), "fields": out}, indent=2, default=str))
 
 
