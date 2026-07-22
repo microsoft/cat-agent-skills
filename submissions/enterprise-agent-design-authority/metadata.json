@@ -2,18 +2,10 @@
   "name": "Enterprise Agent Design Authority (EADA)",
   "description": "An enterprise design review framework that helps architects build secure, scalable, governable, and production-ready Microsoft Copilot Studio agents.",
   "platforms": ["Copilot Studio", "Cowork"],
-  "tags": [
-    "assessment",
-    "review",
-    "architecture",
-    "governance",
-    "enterprise",
-    "design-review",
-    "copilot-studio"
-  ],
+  "tags": ["assessment", "review", "architecture", "enterprise", "design-review", "copilot-studio"],
   "author": "Faride Ilanda",
   "authorUrl": "https://github.com/farideilanda",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "createdAt": "2026-07-22",
   "updatedAt": "2026-07-22"
 }
