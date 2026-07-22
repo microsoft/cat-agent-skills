@@ -220,7 +220,7 @@ def main() -> int:
         json.dumps(manifest, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
-    print(json.dumps(manifest, ensure_ascii=False))
+print(json.dumps({"manifest": str(args.manifest), "totalFiles": total_entries, "totalExtractedBytes": total_bytes, "batchCount": len(manifest["batches"])}, ensure_ascii=False))
     return 0
 
 
