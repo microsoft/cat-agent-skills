@@ -56,7 +56,7 @@ Check **every** source below, every single run, and treat this as a minimum, not
 - **Sessionize, for standalone conferences** (not the user-groups directory above): `site:sessionize.com "call for speakers" [topic]`
 - **run.events**: `site:run.events "call for speakers" [topic]` (used by events like European Collaboration Summit)
 
-**General web search** per topic, formatted like `"[topic]" "call for speakers" 2026` or `"[topic]" CFP deadline`, to catch anything the above miss entirely.
+**General web search** per topic, formatted like `"[topic]" "call for speakers" <current year>` (and optionally also `"[topic]" "call for speakers" <next year>`), or `"[topic]" CFP deadline`, to catch anything the above miss entirely.
 
 **For every topic, identify the broader ecosystem or platform it belongs to, and search under that umbrella too, not just the literal topic string.** This matters more than naming lag on new products, community events are frequently branded at the ecosystem level even when individual sessions cover a much narrower thing someone actually cares about. A conference branded "Microsoft 365 Summit" or "SharePoint Conference" can easily have Copilot Studio or Agent 365 sessions in it without ever using those words in its own name or general marketing. Searching only the exact topic strings will systematically miss this entire category of genuinely relevant events, it's not a rare edge case.
 
@@ -94,7 +94,7 @@ Structure:
 
 ## Step 6: Deliver it
 
-If an email tool is connected, send the digest to the person's own address (confirm which address the first time, then reuse it). If nothing is connected, save the HTML as a file and say plainly that it wasn't sent, here's the file instead, don't claim delivery that didn't happen.
+If an email tool is connected, send the digest to the person's own address (confirm which address the first time, then reuse it). If nothing is connected, deliver the digest as an HTML file **only if** the current runtime supports writing/attaching files; otherwise, present the digest as formatted chat text and say plainly that it wasn't sent.
 
 ## Step 7: Set up the weekly cadence
 
