@@ -98,8 +98,10 @@ python scripts/prepare_batches.py \
 
 The staging script gives each archive a unique batch directory, preserves paths
 inside each ZIP, prevents filename collisions between batches, rejects unsafe
-or suspicious archive entries, and records a batch manifest. Do not manually
-merge or overwrite files after staging.
+or suspicious archive entries, and records a batch manifest. When a metadata
+file was uploaded, append `--metadata /app/uploads/<metadata-file>.json` so it is
+excluded from the analysis corpus. Do not manually merge or overwrite files
+after staging.
 
 If no supported files are present after preparation, stop and explain which
 formats are supported.
@@ -113,6 +115,8 @@ also supplies a metadata JSON export, pass it to the script using the schema in
 Without metadata, clearly label freshness findings as based on the downloaded
 file timestamps and therefore potentially inaccurate. Do not infer owners,
 approval status, source URLs, or original SharePoint dates from filenames.
+Metadata paths remain library-relative; the analyzer removes its staging-batch
+prefix before matching them.
 
 ### 4. Run deterministic analysis
 

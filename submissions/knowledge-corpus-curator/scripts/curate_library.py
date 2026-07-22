@@ -228,6 +228,25 @@ def normalize_relative_path(value: str) -> str:
     return value.replace("\\", "/").lstrip("./")
 
 
+def metadata_lookup_keys(relative: str) -> list[str]:
+    keys = [relative]
+    parts = relative.split("/", 1)
+    if len(parts) == 2 and (
+        re.fullmatch(r"batch-\d{3}-.+", parts[0]) or parts[0] == "loose-files"
+    ):
+        keys.append(parts[1])
+    return keys
+
+
+def find_metadata(
+    metadata: dict[str, dict[str, Any]], relative: str
+) -> dict[str, Any]:
+    for key in metadata_lookup_keys(relative):
+        if key in metadata:
+            return metadata[key]
+    return {}
+
+
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -437,7 +456,7 @@ def inventory(
         if not path.is_file():
             continue
         relative = normalize_relative_path(str(path.relative_to(input_root)))
-        source = metadata.get(relative, {})
+        source = find_metadata(metadata, relative)
         raw = path.read_bytes()
         detected_type, detected_mime_type = detect_file_type(path, detector, warnings)
         filename_extension = path.suffix.lower()

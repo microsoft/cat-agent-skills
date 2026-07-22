@@ -19,6 +19,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--uploads", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
+    parser.add_argument(
+        "--metadata",
+        type=Path,
+        help="Optional metadata JSON to exclude from the staged corpus.",
+    )
     parser.add_argument("--max-entries", type=int, default=50000)
     parser.add_argument(
         "--max-extracted-bytes",
@@ -113,8 +118,15 @@ def main() -> int:
     archives = sorted(
         path for path in args.uploads.iterdir() if path.is_file() and path.suffix.lower() == ".zip"
     )
+    metadata_path = args.metadata.resolve() if args.metadata else None
+    if metadata_path and not metadata_path.is_file():
+        raise SystemExit(f"Metadata file does not exist: {args.metadata}")
     loose_files = sorted(
-        path for path in args.uploads.iterdir() if path.is_file() and path.suffix.lower() != ".zip"
+        path
+        for path in args.uploads.iterdir()
+        if path.is_file()
+        and path.suffix.lower() != ".zip"
+        and path.resolve() != metadata_path
     )
     if not archives and not loose_files:
         raise SystemExit(f"No uploaded ZIPs or files found under {args.uploads}")
@@ -165,23 +177,38 @@ def main() -> int:
         )
 
     if loose_files:
+        loose_entries = len(loose_files)
+        loose_bytes = sum(path.stat().st_size for path in loose_files)
+        if total_entries + loose_entries > args.max_entries:
+            raise SystemExit("Uploaded files exceed the maximum entry count.")
+        if total_bytes + loose_bytes > args.max_extracted_bytes:
+            raise SystemExit("Uploaded files exceed the maximum staged size.")
         destination = args.output / "loose-files"
         destination.mkdir()
         copied: list[str] = []
-        for source in loose_files:
-            target = destination / source.name
-            shutil.copy2(source, target)
-            copied.append(source.name)
-            total_entries += 1
-            total_bytes += source.stat().st_size
+        try:
+            for source in loose_files:
+                target = destination / source.name
+                shutil.copy2(source, target)
+                copied.append(source.name)
+        except OSError as exc:
+            try:
+                shutil.rmtree(destination)
+            except OSError as cleanup_exc:
+                raise SystemExit(
+                    f"Cannot stage loose upload {source.name}: {exc}. "
+                    f"Also could not remove partial loose-file directory "
+                    f"{destination}: {cleanup_exc}"
+                ) from cleanup_exc
+            raise SystemExit(f"Cannot stage loose upload {source.name}: {exc}") from exc
+        total_entries += loose_entries
+        total_bytes += loose_bytes
         manifest["batches"].append(
             {
                 "batch": "loose-files",
                 "source": "individual uploads",
-                "fileCount": len(copied),
-                "extractedBytes": sum(
-                    (destination / name).stat().st_size for name in copied
-                ),
+                "fileCount": loose_entries,
+                "extractedBytes": loose_bytes,
                 "files": copied,
             }
         )

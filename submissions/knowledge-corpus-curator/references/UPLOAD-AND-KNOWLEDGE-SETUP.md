@@ -91,7 +91,10 @@ python scripts/prepare_batches.py \
 
 The script creates a unique directory per ZIP, preserves internal relative
 paths, rejects traversal paths, symbolic links, encrypted entries, and excessive
-compression ratios, and prevents cross-batch filename collisions.
+compression ratios, and prevents cross-batch filename collisions. When metadata
+was uploaded, append `--metadata /app/uploads/<metadata-file>.json` to exclude it
+from the analysis corpus. Metadata paths remain library-relative; the analyzer
+removes the staging-batch prefix before matching them.
 
 The returned `batch-manifest.json` maps each combined-corpus path to its source
 ZIP. Write all reports under `/app/created/knowledge-corpus-curation/`.
