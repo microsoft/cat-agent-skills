@@ -1,0 +1,12 @@
+{
+  "name": "Classic Text Adventure",
+  "description": "Play a deterministic, resumable Colossal Cave adventure with built-in diagnostics and optional illustrated text cards.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["adventure", "game", "interactive-fiction", "diagnostics", "offline"],
+  "author": "Andreas Adner",
+  "authorUrl": "https://github.com/Adner",
+  "version": "0.1.0",
+  "createdAt": "2026-07-22",
+  "updatedAt": "2026-07-22"
+}
+

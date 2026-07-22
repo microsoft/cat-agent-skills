@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "suite": "classic-text-adventure-smoke",
+  "version": "1.0.0",
+  "cases": [
+    {"id": "CTA-SMOKE-BUNDLE-001", "title": "Bundle manifests and hashes", "timeout_seconds": 5, "prerequisites": ["installed bundle"], "expected_result": "Every required bundled and third-party byte matches its manifest."},
+    {"id": "CTA-SMOKE-RUNTIME-002", "title": "Runtime, Pillow, and font availability", "timeout_seconds": 5, "prerequisites": ["Python", "Pillow"], "expected_result": "The pinned runtime and font load and Pillow reports a version."},
+    {
+      "id": "CTA-SMOKE-GAMEPLAY-003",
+      "title": "Exact startup and gameplay behavior",
+      "timeout_seconds": 5,
+      "prerequisites": ["vendored runtime"],
+      "expected_result": "Startup, both instruction answers, movement, inventory, invalid input, and quit confirmation match golden output.",
+      "output_sha256": {
+        "start": "f350926c67ee33573892049c171dd99239731efe5dd97571ce958f18ade908a3",
+        "no": "878222982e2e961db1e665daf7a221ce546e8b3d5dcea573fd8f21a073fdd38a",
+        "yes": "94d3cfe596120d298a225f5e84a3cd792b2a2a03ebe3c8d9740c823abc0294e3",
+        "enter": "d14e1a45c0bce9326c9b72fe63a54e3b86e589e312567de8ec931aa1fc60c24d",
+        "inventory": "4d669e14638039df774d87bb959fc199008d0169e62a0d7ebb7e7ab756bd356c",
+        "invalid": "d84804561f5a61087515f9b91978e11999651ada5ca9141c35210640f15857b2",
+        "quit": "8b5c88d5bc426b37bde45f7c944a7ff5029cf3fc8089d7fc5939af1ccdf21e07"
+      }
+    },
+    {"id": "CTA-SMOKE-REPLAY-004", "title": "Transcript replay and persistence", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "Separate reconstructions produce identical state and output."},
+    {"id": "CTA-SMOKE-IDEMPOTENCY-005", "title": "Request idempotency and conflict rejection", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "Identical retries replay once and conflicting or stale retries do not advance state."},
+    {"id": "CTA-SMOKE-ISOLATION-006", "title": "Independent session isolation", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "Two sessions cannot read or alter each other's state or images."},
+    {"id": "CTA-SMOKE-SAVE-007", "title": "Save command filesystem confinement", "timeout_seconds": 5, "prerequisites": ["vendored runtime"], "expected_result": "Traversal and absolute save paths create no filesystem entries."},
+    {"id": "CTA-SMOKE-RENDER-008", "title": "Deterministic PNG pixels and files", "timeout_seconds": 5, "prerequisites": ["Pillow", "bundled font"], "expected_result": "PNG mode, dimensions, file bytes, and decoded pixels are deterministic."},
+    {"id": "CTA-SMOKE-RECOVERY-009", "title": "Pending-turn journal recovery", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "A controlled pending turn commits exactly once and clears its journal."}
+  ]
+}
