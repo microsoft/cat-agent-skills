@@ -58,11 +58,17 @@ def cmd_list(pdf_path: str):
                 else:
                     options.append(str(o))
             entry["options"] = options
-        # Checkbox / radio "on" state, if discoverable
-        states = f.get("/_States_")
+        # Checkbox / radio possible states (derive from widget appearance dictionaries).
+        states = set()
+        widgets = f.get("/Kids") or [f]
+        for w in widgets:
+            w = w.get_object() if hasattr(w, "get_object") else w
+            ap = w.get("/AP") or {}
+            n = ap.get("/N")
+            if n and hasattr(n, "keys"):
+                states.update(str(k) for k in n.keys())
         if states:
-            entry["states"] = list(states)
-        out.append(entry)
+            entry["states"] = sorted(states)
 
     print(json.dumps({"field_count": len(out), "fields": out}, indent=2, default=str))
 
