@@ -1,0 +1,11 @@
+{
+  "name": "AcroForm Writer",
+  "description": "Fill an existing AcroForm PDF's real form fields from supplied data and flatten the result into a finished, non-editable PDF",
+  "platforms": ["Copilot Studio"],
+  "tags": ["acroform", "pdf", "forms", "python", "documents"],
+  "author": "Sandeep Angara",
+  "authorUrl": "https://github.com/hisandeepangara",
+  "version": "1.0.0",
+  "createdAt": "2026-07-22",
+  "updatedAt": "2026-07-22"
+}
