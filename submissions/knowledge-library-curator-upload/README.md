@@ -1,9 +1,13 @@
 # Knowledge Library Curator - Upload
 
-Review an exported SharePoint knowledge library for duplicate, stale,
-overlapping, or potentially conflicting content without changing the source
-files. The skill combines all uploaded batches into one corpus and returns an
-Excel review backlog, an HTML summary, JSON results, and a batch manifest.
+Review the files used by an AI knowledge source for duplication, redundancy,
+staleness, overlap, and potentially conflicting guidance. A cleaner,
+better-governed knowledge corpus can improve grounded response quality, reduce
+retrieval noise and response latency, and make content easier to maintain.
+
+The skill analyzes uploaded copies without changing the source files. It
+combines all uploaded batches into one corpus and returns an Excel review
+backlog, an HTML summary, JSON results, and a batch manifest.
 
 The Excel backlog consistently contains four tabs: `Review Backlog`, `Summary`,
 `Document Inventory`, and `Curation Settings`.
