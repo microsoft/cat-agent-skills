@@ -9,6 +9,11 @@ The skill analyzes uploaded copies without changing the source files. It
 combines all uploaded batches into one corpus and returns an Excel review
 backlog, an HTML summary, JSON results, and a batch manifest.
 
+The Excel backlog and HTML report include a shared UTC creation timestamp in
+their filenames, such as
+`knowledge-corpus-curation-backlog-2026-07-22-142530Z.xlsx`, so repeated runs do
+not overwrite earlier reports.
+
 The Excel backlog consistently contains four tabs: `Review Backlog`, `Summary`,
 `Document Inventory`, and `Curation Settings`.
 
@@ -20,7 +25,8 @@ The Excel backlog consistently contains four tabs: `Review Backlog`, `Summary`,
   to help validate high-risk findings.
 
 Agent knowledge is optional. The uploaded files remain the authoritative
-analysis corpus.
+analysis corpus. This workflow does not require SharePoint connector actions or
+a SharePoint MCP server.
 
 ## What SharePoint knowledge enables
 
@@ -100,6 +106,14 @@ archives, or overwrites source content.
 Confidence values are deterministic numeric detection scores where available.
 Blank confidence means the analyzer did not produce a score; it never means a
 finding was human validated.
+
+The backlog is always ordered by priority: `Critical`, `High`, `Medium`, then
+`Low`, so the most urgent review items appear first in every output format.
+
+Columns remain consistent across runs. The Excel backlog retains primary and
+related paths for traceability, while the HTML report omits those path columns
+for readability. The report title includes its UTC creation date and time, and
+the source ZIP filename or filenames appear directly below the title.
 
 ## Good to know
 

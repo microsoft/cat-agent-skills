@@ -59,6 +59,68 @@ DATE_RE = re.compile(
 NUMBER_RE = re.compile(r"\b\d+(?:\.\d+)?%?\b")
 NEGATIVE_DIRECTIVES = ("must not", "should not", "prohibited", "never")
 POSITIVE_DIRECTIVES = ("must", "should", "required", "always")
+PRIORITY_ORDER = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+CATEGORY_ORDER = {
+    "Potential conflict": 0,
+    "Extraction gap": 1,
+    "Duplicate": 2,
+    "Near duplicate": 3,
+    "Stale candidate": 4,
+    "Related content": 5,
+}
+BACKLOG_COLUMNS = (
+    "priority",
+    "category",
+    "recommendedAction",
+    "primaryDocument",
+    "primaryPath",
+    "primaryPage",
+    "primaryExcerpt",
+    "relatedDocument",
+    "relatedPath",
+    "relatedPage",
+    "relatedExcerpt",
+    "confidence",
+    "reason",
+    "sourceUrl",
+    "owner",
+)
+DOCUMENT_COLUMNS = (
+    "path",
+    "name",
+    "extension",
+    "detectedType",
+    "detectedMimeType",
+    "effectiveExtension",
+    "fileTypeMismatch",
+    "bytes",
+    "modifiedAt",
+    "sourceUrl",
+    "owner",
+    "title",
+    "contentType",
+    "sha256",
+    "normalizedSha256",
+    "characters",
+    "words",
+    "pageCount",
+    "extractionStatus",
+    "extractionMethod",
+    "error",
+)
+REPORT_COLUMNS = (
+    ("priority", "Priority"),
+    ("category", "Category"),
+    ("primaryDocument", "Primary document"),
+    ("primaryPage", "Primary page"),
+    ("primaryExcerpt", "Primary excerpt"),
+    ("relatedDocument", "Related document"),
+    ("relatedPage", "Related page"),
+    ("relatedExcerpt", "Related excerpt"),
+    ("confidence", "Confidence"),
+    ("recommendedAction", "Recommended action"),
+    ("reason", "Reason"),
+)
 TOPIC_STOPWORDS = {
     "a",
     "an",
@@ -97,6 +159,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--config", type=Path, help="Configuration JSON")
     parser.add_argument("--metadata", type=Path, help="Optional source metadata JSON")
+    parser.add_argument(
+        "--batch-manifest",
+        type=Path,
+        help="Manifest produced by prepare_batches.py for source ZIP traceability",
+    )
     parser.add_argument("--stale-after-days", type=int, help="Override stale threshold")
     parser.add_argument(
         "--corpus-scope",
@@ -139,6 +206,22 @@ def load_metadata(path: Path | None) -> dict[str, dict[str, Any]]:
             if isinstance(value, dict)
         }
     raise SystemExit("Metadata JSON must be an array or object.")
+
+
+def load_batch_sources(path: Path | None) -> list[str]:
+    if path is None:
+        return []
+    raw = load_json(path, {})
+    if not isinstance(raw, dict) or not isinstance(raw.get("batches"), list):
+        raise SystemExit("Batch manifest must contain a batches array.")
+    sources: list[str] = []
+    for batch in raw["batches"]:
+        if not isinstance(batch, dict) or not batch.get("source"):
+            raise SystemExit("Every batch manifest entry must include a source.")
+        source = str(batch["source"])
+        if source not in sources:
+            sources.append(source)
+    return sources
 
 
 def normalize_relative_path(value: str) -> str:
@@ -933,20 +1016,15 @@ def build_backlog(
             confidence=None,
             reason=f"{item['ageDays']} days since last known modification.",
         )
-    priority_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
-    category_order = {
-        "Potential conflict": 0,
-        "Extraction gap": 1,
-        "Duplicate": 2,
-        "Near duplicate": 3,
-        "Stale candidate": 4,
-        "Related content": 5,
-    }
+    return sort_backlog(backlog)
+
+
+def sort_backlog(backlog: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(
         backlog,
         key=lambda item: (
-            priority_order[item["priority"]],
-            category_order.get(item["category"], 99),
+            PRIORITY_ORDER.get(item.get("priority", ""), 99),
+            CATEGORY_ORDER.get(item.get("category", ""), 99),
         ),
     )
 
@@ -1058,6 +1136,7 @@ def write_workbook(
     metadata_supplied: bool,
     corpus_scope: str | None,
     content_scope: str | None,
+    source_batches: list[str],
 ) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
@@ -1065,10 +1144,11 @@ def write_workbook(
 
     workbook = Workbook()
     workbook.remove(workbook.active)
+    sorted_backlog = sort_backlog(backlog)
     sheets = {
-        "Review Backlog": records_to_rows(backlog),
+        "Review Backlog": records_to_rows(sorted_backlog, BACKLOG_COLUMNS),
         "Summary": [["Metric", "Value"], *[[key, value] for key, value in summary.items()]],
-        "Document Inventory": records_to_rows(documents),
+        "Document Inventory": records_to_rows(documents, DOCUMENT_COLUMNS),
         "Curation Settings": curation_settings_rows(
             config,
             analysis_methods,
@@ -1076,6 +1156,7 @@ def write_workbook(
             metadata_supplied,
             corpus_scope,
             content_scope,
+            source_batches,
         ),
     }
     for name, rows in sheets.items():
@@ -1123,6 +1204,7 @@ def curation_settings_rows(
     metadata_supplied: bool,
     corpus_scope: str | None,
     content_scope: str | None,
+    source_batches: list[str],
 ) -> list[list[Any]]:
     scope_interpretation = {
         "whole-library": (
@@ -1162,6 +1244,10 @@ def curation_settings_rows(
     )
     rows = [
         ["Area", "Setting / interpretation"],
+        [
+            "Source uploads",
+            ", ".join(source_batches) if source_batches else "Batch manifest not supplied.",
+        ],
         ["Scope", scope_interpretation],
         ["Content versions", content_scope_interpretation],
         [
@@ -1199,20 +1285,32 @@ def curation_settings_rows(
 
 def serialize_cell(value: Any) -> Any:
     if isinstance(value, (dict, list)):
-        return json.dumps(value, ensure_ascii=False)
-    return "" if value is None else value
+        value = json.dumps(value, ensure_ascii=False)
+    if value is None:
+        return ""
+    if isinstance(value, str) and value.startswith(("=", "+", "-", "@")):
+        return f"'{value}"
+    return value
 
 
-def records_to_rows(records: list[dict[str, Any]]) -> list[list[Any]]:
-    if not records:
-        return [["Status"], ["No candidates found"]]
-    headers = list(dict.fromkeys(key for record in records for key in record))
+def records_to_rows(
+    records: list[dict[str, Any]], columns: Iterable[str]
+) -> list[list[Any]]:
+    headers = list(columns)
     return [headers, *[[record.get(header, "") for header in headers] for record in records]]
 
 
 def write_html_report(
-    output: Path, summary: dict[str, Any], backlog: list[dict[str, Any]], warnings: list[str]
+    output: Path,
+    summary: dict[str, Any],
+    backlog: list[dict[str, Any]],
+    warnings: list[str],
+    generated_at: datetime,
+    source_batches: list[str],
 ) -> None:
+    sorted_backlog = sort_backlog(backlog)
+    created_label = generated_at.strftime("%Y-%m-%d %H:%M:%S UTC")
+    source_label = ", ".join(source_batches) if source_batches else "Batch manifest not supplied"
     cards = "".join(
         f"<div class='card'><strong>{html.escape(str(key))}</strong>"
         f"<span>{html.escape(str(value))}</span></div>"
@@ -1222,33 +1320,22 @@ def write_html_report(
         "<tr>"
         + "".join(
             f"<td>{html.escape(str(item.get(field, '') or ''))}</td>"
-            for field in (
-                "priority",
-                "category",
-                "primaryDocument",
-                "primaryPage",
-                "primaryExcerpt",
-                "relatedDocument",
-                "relatedPage",
-                "relatedExcerpt",
-                "recommendedAction",
-                "reason",
-            )
+            for field, _label in REPORT_COLUMNS
         )
         + "</tr>"
-        for item in backlog[:100]
+        for item in sorted_backlog[:100]
     )
     warnings_html = "".join(f"<li>{html.escape(item)}</li>" for item in warnings)
     truncation = (
-        f"<p><em>Showing the top 100 of {len(backlog)} backlog items. "
+        f"<p><em>Showing the top 100 of {len(sorted_backlog)} backlog items. "
         "See the Excel workbook for the complete list.</em></p>"
-        if len(backlog) > 100
+        if len(sorted_backlog) > 100
         else ""
     )
     output.write_text(
         f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>Knowledge Corpus Curation Report</title>
+<title>Knowledge Corpus Curation Report - {html.escape(created_label)}</title>
 <style>
 body{{font-family:Segoe UI,Arial,sans-serif;margin:40px;color:#172033;background:#f5f7fb}}
 h1{{color:#143d66}} .cards{{display:flex;flex-wrap:wrap;gap:12px}}
@@ -1258,14 +1345,12 @@ table{{border-collapse:collapse;width:100%;background:white;margin-top:20px}}
 th,td{{border:1px solid #d8deea;padding:8px;vertical-align:top;text-align:left}}
 th{{background:#1f4e78;color:white}} li{{margin:6px 0}}
 </style></head><body>
-<h1>Knowledge Corpus Curation Report</h1>
+<h1>Knowledge Corpus Curation Report - {html.escape(created_label)}</h1>
+<p><strong>Source ZIP file(s):</strong> {html.escape(source_label)}</p>
 <div class="cards">{cards}</div>
 <h2>Priority backlog</h2>
 {truncation}
-<table><thead><tr><th>Priority</th><th>Category</th><th>Primary</th>
-<th>Primary page</th><th>Primary excerpt</th><th>Related</th>
-<th>Related page</th><th>Related excerpt</th>
-<th>Recommended action</th><th>Reason</th></tr></thead>
+<table><thead><tr>{''.join(f'<th>{html.escape(label)}</th>' for _field, label in REPORT_COLUMNS)}</tr></thead>
 <tbody>{rows}</tbody></table>
 <h2>Warnings</h2><ul>{warnings_html or '<li>None</li>'}</ul>
 </body></html>""",
@@ -1309,6 +1394,7 @@ def main() -> int:
         config["useEmbeddings"] = False
 
     metadata = load_metadata(args.metadata)
+    source_batches = load_batch_sources(args.batch_manifest)
     documents, extracted, page_texts, warnings = inventory(
         args.input,
         metadata,
@@ -1334,7 +1420,7 @@ def main() -> int:
         documents, extracted, page_texts, config, warnings
     )
     stale = stale_candidates(documents, int(config["staleAfterDays"]))
-    backlog = build_backlog(
+    backlog = sort_backlog(build_backlog(
         documents,
         duplicate_groups,
         similarities,
@@ -1342,7 +1428,7 @@ def main() -> int:
         stale,
         extracted,
         page_texts,
-    )
+    ))
     output_documents = display_documents(documents)
     output_duplicate_groups = display_duplicate_groups(
         duplicate_groups, documents, extracted, page_texts
@@ -1370,9 +1456,12 @@ def main() -> int:
         "staleCandidates": len(stale),
         "backlogItems": len(backlog),
     }
+    generated_at = datetime.now(timezone.utc)
+    creation_stamp = generated_at.strftime("%Y-%m-%d-%H%M%SZ")
     result = {
-        "generatedAt": datetime.now(timezone.utc).isoformat(),
+        "generatedAt": generated_at.isoformat(),
         "inputRoot": str(args.input.resolve()),
+        "sourceBatches": source_batches,
         "analysisMode": methods,
         "warnings": warnings,
         "summary": summary,
@@ -1384,8 +1473,12 @@ def main() -> int:
         "backlog": backlog,
     }
     json_path = args.output / "curation-results.json"
-    workbook_path = args.output / "knowledge-corpus-curation-backlog.xlsx"
-    html_path = args.output / "knowledge-corpus-curation-report.html"
+    workbook_path = (
+        args.output / f"knowledge-corpus-curation-backlog-{creation_stamp}.xlsx"
+    )
+    html_path = (
+        args.output / f"knowledge-corpus-curation-report-{creation_stamp}.html"
+    )
     json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     write_workbook(
         workbook_path,
@@ -1398,8 +1491,11 @@ def main() -> int:
         args.metadata is not None,
         args.corpus_scope,
         args.content_scope,
+        source_batches,
     )
-    write_html_report(html_path, summary, backlog, warnings)
+    write_html_report(
+        html_path, summary, backlog, warnings, generated_at, source_batches
+    )
     print(
         json.dumps(
             {

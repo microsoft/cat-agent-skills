@@ -1,12 +1,9 @@
 # Upload and knowledge setup
 
-## Copilot Studio setup
+## Runtime assumptions
 
-1. Optionally add the SharePoint site or document library as agent knowledge for
-   validation.
-2. Upload this skill to the agent.
-3. Do not add SharePoint connector actions or the Work IQ SharePoint MCP server
-   for this workflow.
+This workflow does not require SharePoint connector actions or a SharePoint MCP
+server. Use configured agent knowledge only for optional validation.
 
 Agent knowledge supports optional semantic validation. The files attached by the
 user are the analysis corpus, and a metadata JSON export is the preferred source

@@ -123,6 +123,7 @@ python scripts/curate_library.py \
   --input /app/workspace/knowledge-library \
   --output /app/created/knowledge-corpus-curation \
   --config assets/default-config.json \
+  --batch-manifest /app/created/knowledge-corpus-curation/batch-manifest.json \
   --corpus-scope <whole-library|subset> \
   --content-scope <current-only|include-drafts-and-history> \
   --stale-after-days <number>
@@ -139,8 +140,12 @@ The script must produce:
 
 - `batch-manifest.json`
 - `curation-results.json`
-- `knowledge-corpus-curation-backlog.xlsx`
-- `knowledge-corpus-curation-report.html`
+- `knowledge-corpus-curation-backlog-<YYYY-MM-DD-HHMMSSZ>.xlsx`
+- `knowledge-corpus-curation-report-<YYYY-MM-DD-HHMMSSZ>.html`
+
+The workbook and HTML report filenames MUST end with the shared UTC creation
+timestamp generated for that run. This prevents one run from overwriting another
+and makes related report files easy to identify.
 
 The Excel workbook MUST contain exactly these four worksheets in this order:
 
@@ -165,6 +170,25 @@ the analyzer produces one; otherwise leave it blank. Never replace it with
 prose, validation status, or claims such as `Human validated`. The agent is not
 a human reviewer. Knowledge-source validation may add evidence or context, but
 it must not be represented as human validation.
+
+Always sort backlog rows by priority in this order: `Critical`, `High`,
+`Medium`, `Low`. Critical items must appear at the top and Low items at the
+bottom in the Excel workbook, HTML report, and JSON backlog. Never rely on the
+agent's presentation order; preserve the deterministic ordering produced by the
+script.
+
+Use the fixed workbook and report column schemas produced by the script. Do not
+add, remove, reorder, or rename columns between runs.
+
+- `Review Backlog` retains `primaryPath` and `relatedPath` for traceability.
+- The HTML report MUST NOT display `primaryPath` or `relatedPath`.
+- The HTML report columns are always: Priority, Category, Primary document,
+  Primary page, Primary excerpt, Related document, Related page, Related
+  excerpt, Confidence, Recommended action, and Reason.
+
+The HTML report title MUST include the UTC creation date and time. Display the
+source ZIP filename or filenames directly below the title using the batch
+manifest. Never infer source ZIP names from staged folder names.
 
 Treat the workbook produced by `curate_library.py` as the canonical workbook.
 Do not recreate it from scratch or change its worksheet contract. If validation

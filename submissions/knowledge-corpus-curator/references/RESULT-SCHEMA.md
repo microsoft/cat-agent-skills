@@ -41,8 +41,8 @@ boundaries, page fields remain blank rather than using an invented page number.
 
 ## Excel workbook
 
-`knowledge-corpus-curation-backlog.xlsx` always contains exactly four worksheets in
-this order:
+`knowledge-corpus-curation-backlog-<YYYY-MM-DD-HHMMSSZ>.xlsx` always contains
+exactly four worksheets in this order:
 
 1. `Review Backlog`
 2. `Summary`
@@ -52,6 +52,22 @@ this order:
 `Curation Settings` records scope, freshness basis, thresholds, analysis
 methods, warnings, and interpretation guidance. The workbook never labels an
 agent-generated finding as `Human validated`.
+
+The HTML report uses the matching filename
+`knowledge-corpus-curation-report-<YYYY-MM-DD-HHMMSSZ>.html`. Both files use the
+same UTC creation timestamp for each run.
+
+The `Review Backlog` worksheet always uses this column order:
+
+`priority`, `category`, `recommendedAction`, `primaryDocument`, `primaryPath`,
+`primaryPage`, `primaryExcerpt`, `relatedDocument`, `relatedPath`,
+`relatedPage`, `relatedExcerpt`, `confidence`, `reason`, `sourceUrl`, `owner`.
+
+The HTML report intentionally omits `primaryPath` and `relatedPath`. Its columns
+are fixed as Priority, Category, Primary document, Primary page, Primary
+excerpt, Related document, Related page, Related excerpt, Confidence,
+Recommended action, and Reason. Its title contains the UTC creation date and
+time, with source ZIP filenames displayed directly below it.
 
 ## Metadata manifest
 

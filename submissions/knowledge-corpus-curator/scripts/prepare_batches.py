@@ -99,10 +99,15 @@ def main() -> int:
     args = parse_args()
     if not args.uploads.is_dir():
         raise SystemExit(f"Uploads directory does not exist: {args.uploads}")
-    if args.output.exists() and any(args.output.iterdir()):
-        raise SystemExit(
-            f"Combined corpus directory must be empty before staging: {args.output}"
-        )
+    if args.output.exists():
+        if not args.output.is_dir():
+            raise SystemExit(
+                f"Combined corpus output path is not a directory: {args.output}"
+            )
+        if any(args.output.iterdir()):
+            raise SystemExit(
+                f"Combined corpus directory must be empty before staging: {args.output}"
+            )
     args.output.mkdir(parents=True, exist_ok=True)
 
     archives = sorted(
@@ -138,6 +143,14 @@ def main() -> int:
                 args.max_compression_ratio,
             )
         except (OSError, ValueError, zipfile.BadZipFile) as exc:
+            try:
+                shutil.rmtree(destination)
+            except OSError as cleanup_exc:
+                raise SystemExit(
+                    f"Cannot prepare {archive.name}: {exc}. "
+                    f"Also could not remove partial batch directory "
+                    f"{destination}: {cleanup_exc}"
+                ) from cleanup_exc
             raise SystemExit(f"Cannot prepare {archive.name}: {exc}") from exc
         total_entries += entries
         total_bytes += extracted_bytes
