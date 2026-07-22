@@ -103,6 +103,18 @@ def sc(col):
     """Safe-quote a column name for SQLite."""
     return f'"{col}"'
 
+def f0(v):
+    """Float coercion with NULL/NaN safety for SQLite aggregates."""
+    try:
+        if pd.isna(v):
+            return 0.0
+    except Exception:
+        pass
+    try:
+        return float(v)
+    except Exception:
+        return 0.0
+
 # ── 2. Schema Detection ────────────────────────────────────────────────────────
 US_STATES = {
     'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
@@ -249,8 +261,8 @@ A = {}
 # Totals
 row = qm(f'SELECT COUNT(*) c, SUM({sc(M)}) s, AVG({sc(M)}) av FROM _tbl').iloc[0]
 A['total_count']  = int(row['c'])
-A['total_metric'] = float(row['s'])
-A['avg_metric']   = float(row['av'])
+A['total_metric'] = f0(row['s'])
+A['avg_metric']   = f0(row['av'])
 
 # Unique entity count
 if E:
@@ -263,13 +275,21 @@ if E:
         FROM _tbl GROUP BY {sc(E)} ORDER BY total DESC LIMIT 15
     ''')
     A['top15_names']    = top['ent'].astype(str).tolist()
-    A['top15_values']   = [round(float(v), 2) for v in top['total']]
+    A['top15_values']   = [round(f0(v), 2) for v in top['total']]
     A['top15_counts']   = [int(v) for v in top['cnt']]
     A['top10_names']    = A['top15_names'][:10]
     A['top10_values']   = A['top15_values'][:10]
-    A['top_entity']     = A['top15_names'][0]
-    A['top_entity_val'] = A['top15_values'][0]
-    A['top_entity_pct'] = round(A['top_entity_val'] / A['total_metric'] * 100, 1)
+    if A['top15_names']:
+        A['top_entity']     = A['top15_names'][0]
+        A['top_entity_val'] = A['top15_values'][0]
+        A['top_entity_pct'] = (
+            round(A['top_entity_val'] / A['total_metric'] * 100, 1)
+            if A['total_metric'] else 0.0
+        )
+    else:
+        A['top_entity'] = '—'
+        A['top_entity_val'] = 0.0
+        A['top_entity_pct'] = 0.0
 
 # Category distributions (first 2 non-entity categoricals, top 10 values each)
 A['cat_data'] = {}
@@ -280,7 +300,7 @@ for col in [c for c in schema['cat_cols'] if c != E][:2]:
     ''')
     A['cat_data'][col] = {
         'labels': cd['cat'].astype(str).tolist(),
-        'values': [round(float(v), 2) for v in cd['val']],
+        'values': [round(f0(v), 2) for v in cd['val']],
         'counts': [int(v) for v in cd['cnt']],
     }
 
@@ -291,9 +311,9 @@ if T:
         FROM _tbl GROUP BY {sc(T)} ORDER BY {sc(T)}
     ''')
     A['trend_x']   = [str(v) for v in tr['period'].tolist()]
-    A['trend_y']   = [round(float(v), 2) for v in tr['total']]
+    A['trend_y']   = [round(f0(v), 2) for v in tr['total']]
     A['trend_cnt'] = [int(v) for v in tr['cnt']]
-    A['trend_avg'] = [round(float(v), 4) for v in tr['avg_v']]
+    A['trend_avg'] = [round(f0(v), 4) for v in tr['avg_v']]
 
 # Geography
 if G:
@@ -306,7 +326,7 @@ if G:
         A['geo_codes'] = [US_STATE_NAMES.get(n.strip().lower(), n) for n in A['geo_names']]
     else:
         A['geo_codes'] = list(A['geo_names'])
-    A['geo_values'] = [round(float(v), 2) for v in gd['val']]
+    A['geo_values'] = [round(f0(v), 2) for v in gd['val']]
 
 # Scatter: entity vs secondary metric
 M2 = schema['secondary_metric']
@@ -316,8 +336,8 @@ if E and M2:
         FROM _tbl GROUP BY {sc(E)} ORDER BY xv DESC LIMIT 35
     ''')
     A['scatter_entities'] = sc2['ent'].astype(str).tolist()
-    A['scatter_x']        = [round(float(v), 4) for v in sc2['xv']]
-    A['scatter_y']        = [round(float(v), 4) for v in sc2['yv']]
+    A['scatter_x']        = [round(f0(v), 4) for v in sc2['xv']]
+    A['scatter_y']        = [round(f0(v), 4) for v in sc2['yv']]
 
 # Top 5 records by metric (keep only the most useful columns)
 keep_cols = [c for c in [E, M, T, G, M2] if c] + \
@@ -1082,17 +1102,34 @@ function buildHall() {{
   const list = document.getElementById('hall-list');
   if (!list || !D.top10_names) return;
   const vals = D.top10_values;
-  const spread = (Math.max(...vals)-Math.min(...vals))/Math.max(...vals);
-  const floor = spread < 0.15 ? Math.min(...vals)-(Math.max(...vals)-Math.min(...vals))*0.5 : 0;
-  const ceil = Math.max(...vals)*1.02;
-  const pct = v => ((v-floor)/(ceil-floor)*100).toFixed(1);
+  if (!vals || !vals.length) return;
+  const vmax = Math.max(...vals);
+  const vmin = Math.min(...vals);
+  const spread = vmax ? (vmax - vmin) / vmax : 0;
+  const floor = spread < 0.15 ? vmin - (vmax - vmin) * 0.5 : 0;
+  const ceil = vmax ? vmax * 1.02 : 1;
+  const den = (ceil - floor) || 1;
+  const pct = v => Math.max(0, Math.min(100, ((v - floor) / den) * 100)).toFixed(1);
   D.top10_names.forEach((name,i) => {{
     const row = document.createElement('div');
     row.className='s-row'; row.style.transitionDelay=(i*.07)+'s';
-    row.innerHTML=`<span class="s-rank">${{i+1}}</span>
-      <span class="s-name">${{name}}</span>
-      <div class="s-bar-wrap"><div class="s-bar" data-pct="${{pct(vals[i])}}" style="width:0%"></div></div>
-      <span class="s-val">${{vals[i].toLocaleString()}}</span>`;
+    const rank = document.createElement('span');
+    rank.className = 's-rank';
+    rank.textContent = String(i + 1);
+    const label = document.createElement('span');
+    label.className = 's-name';
+    label.textContent = String(name);
+    const barWrap = document.createElement('div');
+    barWrap.className = 's-bar-wrap';
+    const bar = document.createElement('div');
+    bar.className = 's-bar';
+    bar.dataset.pct = pct(vals[i]);
+    bar.style.width = '0%';
+    barWrap.appendChild(bar);
+    const val = document.createElement('span');
+    val.className = 's-val';
+    val.textContent = Number(vals[i]).toLocaleString();
+    row.append(rank, label, barWrap, val);
     list.appendChild(row);
   }});
   list.querySelectorAll('.s-row').forEach((r,i) => {{
