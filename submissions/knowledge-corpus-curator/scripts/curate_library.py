@@ -325,8 +325,10 @@ def extract_pdf(path: Path, use_ocr: bool) -> tuple[str, str, list[str]]:
     with pdfplumber.open(path) as pdf:
         pages = [(page.extract_text() or "") for page in pdf.pages]
     text = "\n".join(pages)
-    if text.strip() or not use_ocr:
+    if text.strip():
         return text, "text", pages
+    if not use_ocr:
+        return "", "needs_ocr", pages
     ocr_pages = ocr_pdf(path)
     return "\n".join(ocr_pages), "ocr", ocr_pages
 
@@ -600,7 +602,9 @@ def inventory(
             record["extractionMethod"] = method
             if method == "needs_ocr":
                 record["extractionStatus"] = "needs_ocr"
-                warnings.append(f"{relative}: image requires --ocr.")
+                warnings.append(
+                    f"{relative}: content requires OCR; rerun with --ocr."
+                )
             elif len(normalized) < minimum_chars:
                 record["extractionStatus"] = "insufficient_text"
                 warnings.append(
@@ -1519,6 +1523,7 @@ def write_html_report(
     warnings: list[str],
     generated_at: datetime,
     source_batches: list[str],
+    workbook_available: bool,
 ) -> None:
     sorted_backlog = sort_backlog(backlog)
     created_label = generated_at.strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -1540,7 +1545,11 @@ def write_html_report(
     warnings_html = "".join(f"<li>{html.escape(item)}</li>" for item in warnings)
     truncation = (
         f"<p><em>Showing the top 100 of {len(sorted_backlog)} backlog items. "
-        "See the Excel workbook for the complete list.</em></p>"
+        + (
+            "See the Excel workbook for the complete list.</em></p>"
+            if workbook_available
+            else "See curation-results.json for the complete list.</em></p>"
+        )
         if len(sorted_backlog) > 100
         else ""
     )
@@ -1700,28 +1709,45 @@ def main() -> int:
     html_path = (
         args.output / f"knowledge-corpus-curation-report-{creation_stamp}.html"
     )
-    json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
-    write_workbook(
-        workbook_path,
-        output_documents,
-        backlog,
-        summary,
-        config,
-        methods,
-        warnings,
-        args.metadata is not None,
-        args.corpus_scope,
-        args.content_scope,
-        source_batches,
-    )
+    workbook_created = True
+    try:
+        write_workbook(
+            workbook_path,
+            output_documents,
+            backlog,
+            summary,
+            config,
+            methods,
+            warnings,
+            args.metadata is not None,
+            args.corpus_scope,
+            args.content_scope,
+            source_batches,
+        )
+    except ImportError as exc:
+        workbook_created = False
+        warnings.append(
+            "Excel workbook was not created because openpyxl is unavailable. "
+            f"{type(exc).__name__}: {exc}"
+        )
     write_html_report(
-        html_path, summary, backlog, warnings, generated_at, source_batches
+        html_path,
+        summary,
+        backlog,
+        warnings,
+        generated_at,
+        source_batches,
+        workbook_created,
+    )
+    json_path.write_text(
+        json.dumps(result, indent=2, ensure_ascii=False),
+        encoding="utf-8",
     )
     print(
         json.dumps(
             {
                 "json": str(json_path),
-                "workbook": str(workbook_path),
+                "workbook": str(workbook_path) if workbook_created else "",
                 "html": str(html_path),
                 "summary": summary,
                 "analysisMode": methods,

@@ -145,12 +145,17 @@ before extraction. The configured `maximumRetainedTextCharacters` bounds text
 held for corpus-wide content comparison; hashing and inventory continue after
 that limit is reached, and excluded files are reported as extraction gaps.
 
-The script must produce:
+The scripts normally produce:
 
 - `batch-manifest.json`
 - `curation-results.json`
 - `knowledge-corpus-curation-backlog-<YYYY-MM-DD-HHMMSSZ>.xlsx`
 - `knowledge-corpus-curation-report-<YYYY-MM-DD-HHMMSSZ>.html`
+
+If `openpyxl` is unavailable, the analyzer MUST still produce the HTML and JSON
+files, add an explicit dependency warning, omit the workbook path from stdout,
+and use `curation-results.json` as the complete backlog. Do not claim that an
+Excel workbook was created.
 
 The workbook and HTML report filenames MUST end with the shared UTC creation
 timestamp generated for that run. This prevents one run from overwriting another
@@ -286,8 +291,10 @@ owner approval.
 ### 7. Return deliverables
 
 All final deliverables must remain under `/app/created/` so Copilot Studio
-returns them as downloads. Attach the Excel backlog as the primary deliverable,
-the HTML report as the overview, and JSON for downstream automation.
+returns them as downloads. Attach the Excel backlog as the primary deliverable
+when it was created, the HTML report as the overview, and JSON for downstream
+automation. If the workbook dependency was unavailable, use HTML as the primary
+deliverable and identify JSON as the complete backlog.
 
 Summarize:
 

@@ -128,3 +128,5 @@ the source ZIP filename or filenames appear directly below the title.
 - Large corpora can exceed the configured pairwise comparison threshold. Exact
   duplicate detection remains corpus-wide, but semantic comparisons may be
   limited and will be disclosed in the report.
+- If the runtime does not include the Excel dependency, the skill still returns
+  HTML and JSON, and the JSON file contains the complete backlog.

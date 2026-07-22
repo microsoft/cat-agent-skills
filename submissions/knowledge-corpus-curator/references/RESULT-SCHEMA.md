@@ -57,6 +57,11 @@ The HTML report uses the matching filename
 `knowledge-corpus-curation-report-<YYYY-MM-DD-HHMMSSZ>.html`. Both files use the
 same UTC creation timestamp for each run.
 
+If `openpyxl` is unavailable, the analyzer omits the workbook, records an
+explicit warning in HTML and JSON, and uses the JSON `backlog` as the complete
+list. The HTML truncation notice points to JSON rather than to a missing
+workbook.
+
 The `Review Backlog` worksheet always uses this column order:
 
 `priority`, `category`, `recommendedAction`, `primaryDocument`, `primaryPath`,
