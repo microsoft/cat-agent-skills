@@ -1,7 +1,7 @@
 ---
 name: Scrollytelling Data
 description: Turns data into a scroll-driven HTML story.
-agentDescription: "Turns an uploaded dataset (.xlsx, .csv, .json, or PDF tables) into a self-contained, scroll-driven HTML data story with animated Plotly charts, counting stat cards, and narrative chapters. Use when the user asks for a data story, scrollytelling report, or an interactive narrative write-up of a dataset. If the user asks for a demo or example with no dataset of their own, build the story from the bundled sample workbook at assets/demo-agent-data.xlsx."
+agentDescription: "Turns an uploaded dataset (.xlsx, .csv, .json, or PDF tables) into a self-contained, scroll-driven HTML data story with animated Plotly charts, counting stat cards, and narrative chapters. Use when the user asks for a data story, scrollytelling report, or an interactive narrative write-up of a dataset. If the user asks for a demo or example with no dataset of their own, build the story from the bundled sample workbook at assets/Basketball_Demo_Data.xlsx."
 platforms: [Copilot Studio]
 tags: [data, visualization, storytelling, reporting]
 author: AndrewHessMSFT
@@ -26,7 +26,7 @@ A single `.html` file that:
 - Renders interactive Plotly.js charts (map, bar, scatter, heatmap, line, pie/donut)
 - Animates stat counters, shame lists, and card reveals on scroll via IntersectionObserver
 - Includes a fixed progress bar and chapter indicator
-- Is fully self-contained — no external dependencies except a Plotly CDN link
+- Is a single self-contained HTML file — Plotly.js loads from a CDN at view time
 
 ---
 
@@ -89,26 +89,28 @@ This skill ships with a bundled sample workbook so you can produce a full, featu
 **When to use it:** If the user asks for a "demo", "example", "show me what this does", or otherwise wants to see the skill in action without providing their own file, use the bundled workbook as the input dataset:
 
 ```
-scrollytelling-data/assets/demo-agent-data.xlsx
+scrollytelling-data/assets/Basketball_Demo_Data.xlsx
 ```
 
-At runtime the full path is `/app/skills/scrollytelling-data/assets/demo-agent-data.xlsx`.
+At runtime the full path is `/app/skills/scrollytelling-data/assets/Basketball_Demo_Data.xlsx`.
 
-**What's in it:** A US-states demo dataset — a multi-sheet workbook built to exercise the map, regional, ranking, and correlation chapters at once:
-- **`State Data`** (51 rows, including a `State` = `Total` rollup row): `State`, `Region`, `Demo Revenue ($)`, `Demo Accounts` — US geography, a four-way regional grouping (South / West / Northeast / Midwest), and two numeric measures.
-- **`State Symbols`** (50 rows, lookup): `State`, `State Bird`, `State Flower`, `Year Admitted to Union`, `Demo Tourism Score` — a second sheet that joins to `State Data` by `State` (the sheet-to-sheet SQL JOIN from Phase 3), adding a tourism measure plus per-state color.
+**What's in it:** A basketball demo dataset — a two-sheet workbook built to exercise joins, rankings, team breakdowns, and correlation chapters:
+- **`Players`** (~1000 rows): `PlayerID`, `Player Name`, `Team`, `Position`, `Age`, `Points/Game`, `Rebounds/Game`, `Assists/Game`.
+- **`Teams`** (~30 rows, lookup): `Team`, `City`, `Conference`, `Division`, `Home Arena`, `Founded` — joins to `Players` on `Team` (the sheet-to-sheet SQL JOIN from Phase 3).
 
 **How to run a demo:**
 1. Treat the bundled `.xlsx` above as the uploaded dataset and run the **full five-phase workflow** on it exactly as you would a user's file — no shortcuts.
 2. Because the demo file lives in the skill folder (not `/app/uploads/`), the Phase 1 upload gate doesn't apply — read it directly. Running `preprocess.py` is optional here (fine for a consistent inspection step, but not required to unlock the file).
-3. **Exclude the `State` = `Total` row** from every aggregation and chart — it's a rollup, not a state, and leaving it in dominates the map scale and every ranking (~$127M vs. a ~$4.8M real-state max).
-4. **Lead with a big US states map.** Render a full-width choropleth of `Demo Revenue ($)` by state as a centerpiece chapter — tall (≈560–640px) so the states read nice and large. State names are full names (`Alabama`), so convert them to two-letter postal codes and plot with `locationmode:'USA-states'` + `geo:{scope:'usa'}` (see `references/CHART-PATTERNS.md`).
-5. Load **both** sheets and JOIN them in SQL (Phase 3) so the story can pair revenue/accounts with region and tourism score — e.g. a revenue-vs-accounts scatter, or a regional breakdown.
-6. **Put the `State Symbols` data to work — don't leave bird/flower unused.** For roughly the **top 10 states** by `Demo Revenue ($)`, name each state's `State Bird` and `State Flower` somewhere in the story (e.g. a captioned detail under the top-10 ranking, in the map hover text, or a small annotated list). It doesn't have to cover all 50 — the top 10 is enough to make the joined lookup sheet visibly pay off and turn the SQL JOIN into real narrative content, not just numbers.
-7. Narrate the friendly emoji checkpoints (no step numbers). There's no time series here, so skip the trend chapter and let the data pick the chapters that fit.
-8. Name the output per the File Naming Convention (e.g. `demo-agent-data-story-YYYY-MM-DD.html`).
+3. Load **both** sheets and JOIN them in SQL (Phase 3) so the story can combine player stats with team metadata (conference/division/city/arena/founded).
+4. Prioritize chapters that fit this dataset: top scorers, team-level averages, position splits, conference/division comparisons, and correlation views (`Points/Game` vs `Assists/Game` or `Rebounds/Game`).
+5. Use the default chart-selection rules; there is no built-in geo field and no required map chapter for this demo.
+6. Narrate the friendly emoji checkpoints (no step numbers). There's no built-in time column, so skip time-trend chapters unless you derive a valid time dimension from the user prompt.
+7. **Basketball demo color rule (demo-only):** when the input is this bundled basketball demo workbook, switch accents to pink + green tones for the page/theme and chart accents. Keep it constrained to that demo path only; for user-uploaded datasets, use the normal theme rules.
+8. Name the output per the File Naming Convention (e.g. `basketball-demo-data-story-YYYY-MM-DD.html`).
+9. In the delivery message, explicitly remind the user this run used bundled **demo data**, and set expectation that stories built from their real uploaded data are usually more relevant and often better than the demo output.
+10. **Basketball demo anti-repeat rule (demo-only):** avoid repeated chart patterns. Do not place the same primary chart type in back-to-back chapters, and cap bar-chart chapters at two total unless the user explicitly asks for mostly bar charts.
 
-**Tone — celebrate every state, rank nothing as "best."** This is people's home states, so keep the copy warm and inclusive: no state is the "winner," "loser," "worst," "bottom," or "falling behind." Frame differences as *scale* or *character*, not merit — every state contributes something. Use language like "leads in revenue," "each state brings its own strengths," "smaller markets with room to grow," or spotlight a state's bird/flower/tourism charm rather than implying anywhere is lesser. When a chart necessarily orders states (a ranking or choropleth), pair it with copy that honors the full set, not just the top.
+**Tone — competitive but respectful.** It's fine to discuss leaders and lagging groups in basketball stats, but avoid insulting or demeaning language about players/teams. Keep the copy energetic and constructive.
 
 If the user later uploads their own dataset, use that instead — the demo file is only a fallback when no dataset is provided.
 
