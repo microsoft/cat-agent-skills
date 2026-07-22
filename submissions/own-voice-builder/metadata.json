@@ -1,0 +1,9 @@
+{
+  "name": "Own Voice Builder",
+  "description": "Mines your sent emails to extract your real writing voice — languages, tone modes, structure, vocabulary, taboo phrases — and generates a personal voice skill that makes every email and Teams draft sound like you.",
+  "platforms": ["Cowork", "Scout"],
+  "tags": ["writing", "voice", "email", "teams", "productivity", "microsoft-365"],
+  "author": "Marcel",
+  "authorUrl": "https://github.com/marcelhuszar",
+  "version": "1.0.0"
+}
