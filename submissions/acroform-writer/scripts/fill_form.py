@@ -85,6 +85,11 @@ def cmd_fill(pdf_path: str, data_path: str, out_path: str, flatten: bool):
     writer = PdfWriter()
     writer.append(reader)
 
+    # Ask viewers to regenerate appearance streams since we don't auto-regenerate.
+    acroform = writer._root_object.get("/AcroForm")
+    if acroform:
+        (acroform.get_object() if hasattr(acroform, "get_object") else acroform)[NameObject("/NeedAppearances")] = BooleanObject(True)
+
     # Fill every page (fields can live on any page)
     for page in writer.pages:
         writer.update_page_form_field_values(page, data, auto_regenerate=False)
