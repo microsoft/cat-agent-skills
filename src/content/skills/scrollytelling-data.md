@@ -183,10 +183,11 @@ conn = sqlite3.connect(":memory:")
 df = pd.read_excel(path) # or pd.read_csv, etc.
 df.to_sql("data", conn, index=False)
 
-# Multi-sheet Excel: load EVERY sheet into its OWN table (named after the
-# sheet), then JOIN them in SQL. This is how sheet-to-sheet relationships
-# (e.g. a "transactions" sheet referencing a "customers" sheet by ID) are
-# resolved — never manually merge dataframes in pandas.
+# Multi-sheet Excel: preferred live-workflow approach is to load EVERY sheet
+# into its OWN table (named after the sheet), then JOIN them in SQL. This is
+# how sheet-to-sheet relationships (e.g. a "transactions" sheet referencing a
+# "customers" sheet by ID) are normally resolved. (A reference script may use
+# a pragmatic pre-merge, but the runtime workflow should still favor SQL joins.)
 sheets = pd.read_excel(path, sheet_name=None)  # dict of {sheet_name: df}
 for sheet_name, sheet_df in sheets.items():
     sheet_df.to_sql(sheet_name, conn, index=False)
