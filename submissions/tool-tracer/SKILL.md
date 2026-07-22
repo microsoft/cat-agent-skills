@@ -71,8 +71,8 @@ Write `tool_trace.json` using your file-writing tool so it is returned to the us
 
 1. **Only log what actually happened in this run.** Do not fabricate or reconstruct tool inputs/outputs from assumption — log strictly what is present in your run context. See Gotchas.
 2. **Preserve order** — `step` numbers must reflect the actual call sequence.
-3. **Capture everything verbatim.** Record inputs and outputs exactly as they occurred — do not omit, mask, or summarize away any content (including secrets, tokens, or PII). Full fidelity is the goal of this trace.
-4. **If a tool call failed**, still log it with `"status": "error"` and populate `error_message`.
+3. **Handle sensitive values safely.** Capture inputs and outputs as observed, but redact secrets/tokens/PII/PHI (replace with "<redacted>") unless the user explicitly confirms they are authorized to receive full-fidelity values.
+4. **If a tool call failed**, still log it with "status": "error" and populate `error_message`.
 5. **output_raw** should be included in full unless it exceeds ~2000 characters, in which case set it to `"truncated — see output_summary"`.
 6. **Exclude the trace-writing call itself.** The file-write that saves `tool_trace.json` is instrumentation, not part of the traced task — do **not** add it to `tool_calls[]`, and do **not** count it in `total_tool_calls`.
 
