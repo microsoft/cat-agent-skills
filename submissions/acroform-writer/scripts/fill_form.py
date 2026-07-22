@@ -85,10 +85,10 @@ def cmd_fill(pdf_path: str, data_path: str, out_path: str, flatten: bool):
     unmatched = set(data.keys()) - set((reader.get_fields() or {}).keys())
 
     if flatten:
-        # Make viewers render the typed-in appearance instead of regenerating it
-        if "/AcroForm" in writer._root_object:
-            writer._root_object["/AcroForm"][NameObject("/NeedAppearances")] = BooleanObject(True)
-
+        # Ask viewers to regenerate field appearance streams (we don't auto-regenerate)
+        acroform = writer._root_object.get("/AcroForm")
+        if acroform:
+            (acroform.get_object() if hasattr(acroform, "get_object") else acroform)[NameObject("/NeedAppearances")] = BooleanObject(True)
         # Mark every field read-only (Ff bit 1) so it no longer behaves as an
         # editable form field in viewers that respect the flag.
         from pypdf.generic import NumberObject
