@@ -1,6 +1,6 @@
 {
   "name": "Tool Tracer",
-  "description": "Admin/debug tool for Copilot Studio. On the exact command /special-debug tool-trace, runs the task normally then emits a structured JSON run summary (tool_trace.json) of every tool, action, connector, knowledge query, and sub-skill used - inputs, outputs, error codes, retries, and order - so you can see what happened behind the scenes and triage without reproducing it in the test pane.",
+  "description": "On-demand tool/action trace for Copilot Studio runs (`/special-debug tool-trace` \u2192 `tool_trace.json`).",
   "platforms": [
     "Copilot Studio"
   ],
