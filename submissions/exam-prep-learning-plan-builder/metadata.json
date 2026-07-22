@@ -4,5 +4,6 @@
   "platforms": ["Copilot Studio"],
   "tags": ["planning", "productivity", "learning"],
   "author": "Michael Heath",
-  "version": "2.0.0"
+  "authorUrl": "https://github.com/GetAutomating",
+  "version": "2.0.1"
 }
