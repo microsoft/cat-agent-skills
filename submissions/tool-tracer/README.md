@@ -63,6 +63,7 @@ window?"* — that looked completely normal to the customer, but wasn't undernea
     "agent_name": "Contoso Support Assistant",
     "timestamp_utc": "2026-07-22T18:31:04Z",
     "total_tool_calls": 4,
+    "mode": "redacted",
     "status": "success"
   },
   "tool_calls": [
@@ -132,9 +133,11 @@ casual phrasings like *"trace this"* or *"debug that"* — requiring the precise
 command keeps a trace a deliberate act, so a normal user on a live channel can't
 trigger one by accident and day-to-day interactions stay untouched.
 
-Because the trace captures full-fidelity values (see boundaries below), restrict
-the agent or this command to authorized admin/maker users when you deploy it, and
-avoid exposing it on untrusted end-user channels.
+By default the trace **redacts** sensitive values — secrets, tokens, credentials,
+and PII/PHI are masked so it's safe to share for triage. An authorized admin can
+append **`--full`** to keep those values verbatim for deep debugging; restrict who
+can use `--full` (and the agent) when you deploy it, and avoid exposing it on
+untrusted end-user channels.
 
 ## Where it fits
 
@@ -164,11 +167,18 @@ plus citations/summary) — the full retrieved passage text may not always be
 recoverable. When a value genuinely can't be recovered, the skill records `null`
 or `"unavailable"` rather than guessing.
 
-> **This is an admin / debug tool, and it captures values in full by design** —
-> the same data the operator running it is already authorized to see, so a trace
-> can contain secrets, tokens, or PHI. That fidelity *is* the point: you're
-> looking at exactly what happened. Treat `tool_trace.json` with the same care as
-> the underlying system data and keep it within that trusted boundary.
+> **This is an admin / debug tool with two modes.** By default it **redacts**
+> sensitive values — secrets, tokens, credentials, and PII/PHI are masked so a
+> trace is safe to hand around for triage while still showing *what* ran. An
+> authorized admin can append **`--full`** to capture everything verbatim for deep
+> debugging; treat a `--full` `tool_trace.json` with the same care as the
+> underlying system data and keep it within that trusted boundary.
+>
+> **Who can run `--full`?** The skill can't enforce that — enforcement is
+> platform-side. The practical pattern: install tool-tracer only on an
+> **admin-scoped agent** shared with your makers/admins (not the customer-facing
+> one), optionally gating the `--full` path behind an authenticated topic that
+> checks the signed-in user's Entra group.
 
 ## Files
 

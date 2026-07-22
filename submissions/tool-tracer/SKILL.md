@@ -1,6 +1,6 @@
 ---
 name: tool-tracer
-description: Use ONLY when the user's message contains the exact command `/special-debug tool-trace`; run the task normally, then write `tool_trace.json` summarizing tool/action/connector calls in order.
+description: Use ONLY when the user's message contains the exact command `/special-debug tool-trace` (optionally with `--full`); run the task normally, then write `tool_trace.json` summarizing tool/action/connector calls in order. Sensitive values (secrets, tokens, PII/PHI) are redacted by default; `--full` keeps them verbatim for an authorized admin.
 ---
 
 # Skill: tool-tracer
@@ -19,7 +19,9 @@ This skill activates **only** when the user's message contains the exact debug c
 
 The command may be followed by (or precede) the task to run — e.g. `/special-debug tool-trace  look up order 4471 and email the customer`. If the command is present, run the task and produce the trace; if it is **not** present, this skill does not apply — even for casual phrasings like "trace this", "log this run", "debug this", or "what did you just do". Requiring the explicit command keeps a trace a deliberate act, not something a channel user triggers by accident.
 
-> **Scope & sensitivity.** This is an admin / debug tool. By design the trace captures full-fidelity values — the same data the caller's session already touched — so `tool_trace.json` can contain secrets, tokens, or PHI. A skill cannot enforce access control; **the maker deploying this is responsible for restricting the agent (or this command) to authorized admin/maker users** and for handling the file within that trust boundary. Prefer not to expose the command on agents published to untrusted end-user channels.
+**Two capture modes.** By default the trace runs in **redacted** mode — values that look like secrets, tokens, credentials, or PII/PHI are masked so the trace is safe to share for triage while still showing *what* ran. An authorized admin can append **`--full`** (`/special-debug tool-trace --full …`) to capture every value verbatim for deep debugging. Restrict who can use `--full` at deployment — a skill can't enforce it.
+
+> **Scope & sensitivity.** This is an admin / debug tool. In the default **redacted** mode, values that look like secrets, tokens, credentials, or PII/PHI are masked (e.g. `"<redacted:token>"`) so the trace shows *what* ran without leaking sensitive data. In **`--full`** mode nothing is masked, so `tool_trace.json` can contain secrets, tokens, or PHI verbatim. A skill cannot enforce access control; **the maker deploying this is responsible for restricting `--full` (and the agent) to authorized admin/maker users** and for handling the file within that trust boundary. Prefer not to expose `--full` on agents published to untrusted end-user channels.
 
 ---
 
@@ -45,6 +47,7 @@ Write `tool_trace.json` using your file-writing tool so it is returned to the us
     "agent_name": "<agent name if known, else null>",
     "timestamp_utc": "<ISO 8601 timestamp of when the task completed, or null if no clock is available>",
     "total_tool_calls": 0,
+    "mode": "redacted | full",
     "status": "success | partial | failed"
   },
   "tool_calls": [
@@ -71,7 +74,7 @@ Write `tool_trace.json` using your file-writing tool so it is returned to the us
 
 1. **Only log what actually happened in this run.** Do not fabricate or reconstruct tool inputs/outputs from assumption — log strictly what is present in your run context. See Gotchas.
 2. **Preserve order** — `step` numbers must reflect the actual call sequence.
-3. **Handle sensitive values safely.** Capture inputs and outputs as observed, but redact secrets/tokens/PII/PHI (replace with "<redacted>") unless the user explicitly confirms they are authorized to receive full-fidelity values.
+3. **Redact by default; full fidelity only with `--full`.** In default mode, mask any value that looks like a secret, token, credential, or PII/PHI with a typed placeholder (e.g. `"<redacted:token>"`, `"<redacted:pii>"`) — keep the field key so the call's shape stays visible. Only when the invocation includes `--full` (an authorized admin) do you record every value verbatim with no masking. Record the active mode in `trace_metadata.mode`.
 4. **If a tool call failed**, still log it with "status": "error" and populate `error_message`.
 5. **output_raw** should be included in full unless it exceeds ~2000 characters, in which case set it to `"truncated — see output_summary"`.
 6. **Exclude the trace-writing call itself.** The file-write that saves `tool_trace.json` is instrumentation, not part of the traced task — do **not** add it to `tool_calls[]`, and do **not** count it in `total_tool_calls`.
@@ -94,6 +97,8 @@ Write `tool_trace.json` using your file-writing tool so it is returned to the us
 2. Calls `send_email_v2` to email the hiring manager → logs step 2
 3. Calls `create` to write `tool_trace.json` → this instrumentation call is **excluded** from both `tool_calls[]` and `total_tool_calls` (see Rule 6)
 4. Returns the file to the user
+
+By default, any secret/token/PII in those inputs or outputs is masked in the trace (`mode: "redacted"`); append `--full` (`/special-debug tool-trace --full …`) to capture them verbatim.
 
 ---
 
