@@ -53,7 +53,9 @@ run. Files from a prior conversation are not assumed to remain available.
 
 After every upload, apply this mandatory intake gate:
 
-1. Record the newly attached ZIP or files in the current-corpus list.
+1. Record every ZIP or loose file attached to the user's message in the
+   current-corpus list. When one message contains multiple attachments, process
+   them as one upload event and ask the completion question only once.
 2. If the user did not explicitly say that it was the final batch, ask:
    "Is this the complete corpus you want analyzed, or will you upload another
    batch?"

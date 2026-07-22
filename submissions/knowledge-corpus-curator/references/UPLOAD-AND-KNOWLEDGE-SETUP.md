@@ -38,6 +38,10 @@ related-content, and potential-conflict comparison is incomplete.
 Keep each document in only one batch. Upload all batches in the same active
 conversation and identify the final batch before analysis starts.
 
+The user can attach multiple ZIP files to one chat message. Each ZIP can be up
+to 50 MB as long as the combined files attached in the chat session remain under
+200 MB. Treat all attachments in one message as one upload event.
+
 After each upload, the agent asks whether the complete intended corpus is now
 present or whether another batch is coming. If another batch is coming, the
 agent waits without extracting or analyzing files. Staging starts only after the

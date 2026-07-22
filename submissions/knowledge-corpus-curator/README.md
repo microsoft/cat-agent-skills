@@ -71,12 +71,13 @@ coverage is incomplete.
 ## How to use it
 
 1. Add the skill to your Copilot Studio agent.
-2. Upload every ZIP in the same active conversation.
-3. After the final upload, say:
-
-   > That is the final batch. Analyze these now.
-
-4. The agent stages all batches together, analyzes every uploaded file, validates
+2. Attach one or more ZIP files in the same chat message. Each ZIP can be up to
+   50 MB, provided the combined size of all files attached in the chat session
+   remains under 200 MB.
+3. If the agent asks whether more files are coming, confirm that the upload is
+   complete or attach another batch. No specific confirmation phrase is
+   required.
+4. The agent stages all confirmed uploads together, analyzes every uploaded file, validates
    the highest-risk findings, and returns the report files.
 
 Final-batch confirmation is the only required intake question. The skill does
