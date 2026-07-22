@@ -877,17 +877,39 @@ def comparison_evidence(
                 score = shared + overlap
                 if best is None or score > best[0]:
                     best = (score, left, right)
-    return (
-        evidence_record("similar_content", best[1], best[2])
-        if best
-        else {
-            "type": "whole_document",
-            "leftPage": "",
-            "leftExcerpt": "The complete extracted documents matched; no concise passage was isolated.",
-            "rightPage": "",
-            "rightExcerpt": "The complete extracted documents matched; no concise passage was isolated.",
-        }
+    if best:
+        return evidence_record("similar_content", best[1], best[2])
+    left_representative = representative_unit(
+        extracted.get(left_id, ""), page_texts.get(left_id, [])
     )
+    right_representative = representative_unit(
+        extracted.get(right_id, ""), page_texts.get(right_id, [])
+    )
+    return evidence_record(
+        "representative_content",
+        left_representative
+        or {
+            "page": None,
+            "excerpt": "No extracted text was available for this document.",
+        },
+        right_representative
+        or {
+            "page": None,
+            "excerpt": "No extracted text was available for this document.",
+        },
+    )
+
+
+def representative_unit(text: str, pages: list[str]) -> dict[str, Any] | None:
+    units = sentence_units(text, pages)
+    if units:
+        return units[0]
+    sources = list(enumerate(pages, start=1)) if pages else [(None, text)]
+    for page, source in sources:
+        excerpt = " ".join(source.split()).strip()
+        if excerpt:
+            return {"page": page, "excerpt": excerpt}
+    return None
 
 
 def build_backlog(
