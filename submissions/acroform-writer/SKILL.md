@@ -15,11 +15,11 @@ description: >-
   skill explicitly detects and reports rather than silently failing.
 ---
 
-Fill an existing PDF's real AcroForm fields with supplied data, and optionally
-flatten the result into a normal, non-editable PDF ready to send or file. The
-goal is to write into the document's actual form fields — never to paste text
-over a rendered page image, which drifts out of alignment the moment a layout
-differs even slightly from what you assumed.
+Fill an existing PDF's real AcroForm fields with supplied data, and
+optionally lock the result read-only so it's ready to send or file without
+further edits. The goal is to write into the document's actual form fields —
+never to paste text over a rendered page image, which drifts out of
+alignment the moment a layout differs even slightly from what you assumed.
 
 ## Instructions
 1. **Find the source PDF via knowledge search — do not ask the user to upload it.**
@@ -61,14 +61,17 @@ differs even slightly from what you assumed.
    - If a value you were given doesn't obviously map to any listed field, do
      not force it into the closest-sounding one — leave it out and flag it to
      the user rather than guessing.
-6. **Fill (and flatten, if the result should be final/non-editable):**
+6. **Fill (and lock read-only, if the result should be final):**
    ```
    python scripts/fill_form.py fill <downloaded_form.pdf> <data.json> <output.pdf> [--flatten]
    ```
    Add `--flatten` whenever the output is meant to be a finished, submission-
-   ready document (the common case) so it opens as ordinary content rather
-   than an editable form. Leave it off only if the user explicitly wants to
-   keep the fields editable for further changes later.
+   ready document (the common case) so the fields are marked read-only and
+   most viewers treat it as no longer editable. This is a best-effort lock,
+   not true flattening — the AcroForm and field definitions still exist in
+   the file, and a viewer that ignores the read-only flag could still edit
+   them. Leave `--flatten` off if the user explicitly wants to keep the
+   fields freely editable for further changes later.
 7. **Check the JSON result the script prints.** It reports `fields_filled` and
    any `unmatched_fields` — data keys that didn't correspond to a real field.
    Always surface unmatched fields to the user by name; never fill silently
@@ -78,20 +81,6 @@ differs even slightly from what you assumed.
    filled, whether it was flattened, and any fields left blank or unmatched.
    Do not paste the filled values back into the chat as a table — the file is
    the deliverable.
-
-## Bundled files
-- `scripts/fill_form.py` — pure `pypdf` (already available in the agent
-  sandbox), no external services. Two modes:
-  - `list <input.pdf>` — dumps all AcroForm fields as JSON (name, type,
-    current value, checkbox/radio states, dropdown options). Exits 1 with a
-    clear message if the PDF has no fillable fields at all.
-  - `fill <input.pdf> <data.json> <output.pdf> [--flatten]` — writes the
-    supplied values into the matching fields and, with `--flatten`, sets
-    `NeedAppearances` and marks every field's widget read-only so the result
-    behaves as a normal static PDF in standard viewers.
-- `assets/sample_intake_form.pdf` — a tiny fillable sample (name, email,
-  checkbox) for smoke-testing the flow end-to-end before trying it on a real
-  document.
 
 ## Guardrails
 - Never ask the user to upload the blank form — find it via knowledge search
@@ -106,9 +95,8 @@ differs even slightly from what you assumed.
 - Never force a supplied value into a checkbox/radio/dropdown field using
   anything other than that field's own reported states/options.
 - Don't silently drop unmatched data — always report it.
-- Flattening is about making the PDF final and non-editable, not about
-  changing any of the entered values — never alter data during the flatten
-  step.
+- `--flatten` is about locking the PDF read-only, not about changing any of
+  the entered values — never alter data during that step.
 
 ## Tone
 Precise and matter-of-fact. State plainly what was filled, what wasn't, and

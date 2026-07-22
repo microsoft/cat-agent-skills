@@ -4,10 +4,10 @@ fill_form.py — inspect, fill, and (optionally) flatten AcroForm PDF fields.
 
 Usage:
   # 1. Discover fields (always run this first)
-  python fill_form.py list  <input.pdf>
+  python scripts/fill_form.py list  <input.pdf>
 
   # 2. Fill from a JSON file of {field_name: value}
-  python fill_form.py fill  <input.pdf> <data.json> <output.pdf> [--flatten]
+  python scripts/fill_form.py fill  <input.pdf> <data.json> <output.pdf> [--flatten]
 
 Exit codes:
   0  success
@@ -77,7 +77,10 @@ def cmd_fill(pdf_path: str, data_path: str, out_path: str, flatten: bool):
 
     if not isinstance(data, dict):
         die("Data JSON must be an object mapping field names to values.", code=2)
-    reader = PdfReader(pdf_path)
+    try:
+        reader = PdfReader(pdf_path)
+    except Exception as e:
+        die(f"Failed to read PDF '{pdf_path}': {e}", code=2)
     if not reader.get_fields():
         die(
             "No AcroForm fields found in this PDF — nothing to fill. Run the "
@@ -118,8 +121,11 @@ def cmd_fill(pdf_path: str, data_path: str, out_path: str, flatten: bool):
                     ff = int(obj.get("/Ff", 0))
                     obj[NameObject("/Ff")] = NumberObject(ff | 1)
 
-    with open(out_path, "wb") as fh:
-        writer.write(fh)
+    try:
+        with open(out_path, "wb") as fh:
+            writer.write(fh)
+    except OSError as e:
+        die(f"Failed to write output PDF '{out_path}': {e}", code=2)
 
     result = {
         "output": out_path,
