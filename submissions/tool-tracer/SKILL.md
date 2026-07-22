@@ -1,6 +1,6 @@
 ---
 name: tool-tracer
-description: Admin/debug tool for Copilot Studio. Runs the user's task normally, then writes a structured JSON run summary (tool_trace.json) of every tool, action, connector, knowledge query, and sub-skill the agent used — inputs, outputs, error codes, retries, and order — so an admin can see what happened behind the scenes and triage without reproducing it in the test pane. Use ONLY when the user's message contains the exact command `/special-debug tool-trace` (optionally followed by the task). Do NOT use for ordinary requests, even ones that mention tracing, logging, debugging, or ask "what did you just do" — unless that exact command is present.
+description: Use ONLY when the user's message contains the exact command `/special-debug tool-trace`; run the task normally, then write `tool_trace.json` summarizing tool/action/connector calls in order.
 ---
 
 # Skill: tool-tracer
