@@ -49,10 +49,10 @@ jobs:
       - name: Commit extracted skills
         if: github.event.pull_request.head.repo.full_name == github.repository
         run: |
-          if [ -n "$(git status --porcelain src/content/skills public/bundles)" ]; then
+          if [ -n "$(git status --porcelain src/content/skills src/content/guides public/bundles)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src/content/skills public/bundles
+            git add src/content/skills src/content/guides public/bundles
             git commit -m "chore: extract skill submissions"
             git push
           else
