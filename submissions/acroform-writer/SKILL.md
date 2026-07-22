@@ -8,8 +8,8 @@ description: >-
   or the conversation. Triggers include "fill out the job application form",
   "complete the intake form for [person]", "populate our standard NDA
   template", and "make this ready to send / non-editable" (flatten). The
-  source form is found via knowledge search — never ask the user to upload it.
-  Do NOT use this for extracting or reading data OUT of a PDF (that's a
+  source form should be found via knowledge search; only ask the user to upload
+  it if knowledge search turns up nothing plausible.
   different task), and do NOT use it on scanned/image-only PDFs that have no
   real fillable fields — those need OCR or manual overlay instead, which this
   skill explicitly detects and reports rather than silently failing.
