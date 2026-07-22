@@ -28,7 +28,10 @@ def die(msg: str, code: int = 2):
 
 
 def cmd_list(pdf_path: str):
-    reader = PdfReader(pdf_path)
+    try:
+        reader = PdfReader(pdf_path)
+    except Exception as e:
+        die(f"Failed to read PDF '{pdf_path}': {e}", code=2)
     fields = reader.get_fields()
     if not fields:
         die(
