@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Study Plan</title>
+<style>
+  :root {
+    --blue: #3a6ea5;
+    --blue-light: #eaf1f8;
+    --amber: #b8770a;
+    --amber-light: #fbf1e0;
+    --green: #2e8b57;
+    --ink: #1c1f24;
+    --muted: #6b7280;
+    --border: #e2e5ea;
+    --bg: #fafbfc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+  header.top { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+  h1 { font-size: 24px; margin: 0; }
+  .countdown { font-size: 15px; color: var(--blue); font-weight: 600; background: var(--blue-light); padding: 6px 14px; border-radius: 20px; white-space: nowrap; }
+  .meta { color: var(--muted); font-size: 14px; margin: 4px 0 24px; }
+  nav.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 24px; overflow-x: auto; }
+  nav.tabs button {
+    background: none; border: none; padding: 10px 16px; font-size: 14px; font-weight: 600;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    white-space: nowrap;
+  }
+  nav.tabs button.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  h2.section { font-size: 16px; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h2.section:first-child { margin-top: 0; }
+
+  /* Overview / timeline */
+  .plan-note { background: var(--blue-light); padding: 14px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 24px; }
+  .plan-note.triage { background: var(--amber-light); }
+  #timeline-svg { width: 100%; height: auto; display: block; }
+  .confidence-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .confidence-chip { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 10px; border-radius: 16px; background: #fff; border: 1px solid var(--border); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot.low { background: #c0392b; }
+  .dot.medium { background: #d4a017; }
+  .dot.high { background: var(--green); }
+
+  /* Day by day */
+  .daybyday-layout { display: flex; gap: 32px; align-items: flex-start; }
+  .calendar-sidebar { flex: 0 0 260px; position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; padding-right: 4px; }
+  .schedule-main { flex: 1; min-width: 0; }
+  @media (max-width: 720px) {
+    .daybyday-layout { flex-direction: column; }
+    .calendar-sidebar { position: static; max-height: none; width: 100%; }
+  }
+  .week-block { margin-bottom: 8px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .week-header { background: #fff; padding: 10px 14px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .week-header:after { content: "\25BE"; color: var(--muted); }
+  .week-header.collapsed:after { content: "\25B8"; }
+  .week-body { padding: 10px 14px 14px; }
+  .week-body.collapsed { display: none; }
+  .day { margin: 10px 0; padding: 12px 14px; border-left: 3px solid var(--blue); background: #fff; border-radius: 0 6px 6px 0; scroll-margin-top: 90px; }
+  .day.checkpoint { border-left-color: var(--amber); background: var(--amber-light); }
+  .day-header { font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+  .day-desc { white-space: pre-wrap; font-size: 14px; color: #333; }
+  .day-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); font-weight: 600; }
+
+  /* Calendar picker */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; }
+  .cal-grid .dow { font-size: 11px; color: var(--muted); text-align: center; font-weight: 600; }
+  .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 6px; cursor: default; position: relative; }
+  .cal-day.has-session { cursor: pointer; background: var(--blue-light); font-weight: 600; }
+  .cal-day.has-session:hover { background: #d6e5f2; }
+  .cal-day.checkpoint-day { background: var(--amber-light); }
+  .cal-month-label { font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+
+  /* Domain */
+  .domain-row { margin-bottom: 14px; }
+  .domain-label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .domain-bar-track { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; }
+  .domain-bar-fill { background: var(--blue); height: 100%; border-radius: 6px; }
+
+  /* Download */
+  .download-box { text-align: center; padding: 40px 20px; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
+  .btn { background: var(--blue); color: #fff; border: none; padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn:hover { background: #2f5a86; }
+  .btn.secondary { background: #fff; color: var(--blue); border: 1px solid var(--blue); }
+  .btn.secondary:hover { background: var(--blue-light); }
+  .download-hint { color: var(--muted); font-size: 13px; margin-top: 10px; }
+
+  /* Notes */
+  .notes-item { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+  .notes-item-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .notes-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .notes-row label { font-size: 13px; color: var(--muted); }
+  select.confidence-select { font-size: 13px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); }
+  textarea.notes-text { width: 100%; min-height: 56px; font-family: inherit; font-size: 13px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); resize: vertical; }
+  #copy-output { width: 100%; min-height: 120px; font-family: monospace; font-size: 12px; margin-top: 14px; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+  .copy-status { font-size: 13px; color: var(--green); margin-left: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1 id="exam-title">Study Plan</h1>
+    <div class="countdown" id="countdown"></div>
+  </header>
+  <div class="meta" id="meta-line"></div>
+
+  <nav class="tabs">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="daybyday">Day-by-Day</button>
+    <button data-tab="domain">By Domain</button>
+    <button data-tab="download">Download</button>
+    <button data-tab="notes">Progress &amp; Notes</button>
+  </nav>
+
+  <section id="panel-overview" class="panel active">
+    <div id="plan-note" class="plan-note"></div>
+    <h2 class="section">Timeline</h2>
+    <svg id="timeline-svg" viewBox="0 0 800 120"></svg>
+    <h2 class="section">Starting confidence</h2>
+    <div class="confidence-grid" id="confidence-grid"></div>
+  </section>
+
+  <section id="panel-daybyday" class="panel">
+    <div class="daybyday-layout">
+      <aside class="calendar-sidebar">
+        <h2 class="section">Jump to a date</h2>
+        <div id="calendar-container"></div>
+      </aside>
+      <div class="schedule-main">
+        <h2 class="section">Full schedule</h2>
+        <div id="week-container"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="panel-domain" class="panel">
+    <h2 class="section">Time by domain</h2>
+    <div id="domain-container"></div>
+  </section>
+
+  <section id="panel-download" class="panel">
+    <div class="download-box">
+      <p>Import every session directly into Outlook, Google Calendar, or Apple Calendar.</p>
+      <button class="btn" id="download-ics-btn">Download .ics</button>
+      <div class="download-hint">Study times default to the plan's preferred time. Adjust individual events after import if needed.</div>
+    </div>
+  </section>
+
+  <section id="panel-notes" class="panel">
+    <h2 class="section">Update how you're feeling on each topic</h2>
+    <div id="notes-container"></div>
+    <button class="btn secondary" id="copy-updates-btn">Copy my updates</button>
+    <span class="copy-status" id="copy-status"></span>
+    <textarea id="copy-output" readonly placeholder="Your formatted update will appear here, ready to paste back into the chat."></textarea>
+  </section>
+
+</div>
+
+<!--
+  PLAN DATA SCHEMA (replace the JSON below with real plan data before saving this file):
+  {
+    "examName": "string",
+    "examDate": "YYYY-MM-DD",
+    "startDate": "YYYY-MM-DD",
+    "totalSessions": number,
+    "weeklyHours": number,
+    "preferredTime": "HH:MM" (24hr),
+    "planNote": "string, 2-4 sentences on how the plan was built",
+    "isTriage": boolean,
+    "topics": [
+      { "id": "slug", "name": "string", "confidence": "low|medium|high", "domain": "string" }
+    ],
+    "sessions": [
+      {
+        "date": "YYYY-MM-DD",
+        "topicId": "slug matching a topics[].id",
+        "type": "first-pass|revisit|checkpoint|final-review",
+        "title": "string, short",
+        "description": "string, plain calendar-ready text",
+        "durationMinutes": number
+      }
+    ]
+  }
+-->
+<script type="application/json" id="plan-data">{{PLAN_DATA_JSON}}</script>
+
+<script>
+(function () {
+  function showFatalError(text) {
+    document.body.textContent = '';
+    var msg = document.createElement('p');
+    msg.style.padding = '24px';
+    msg.style.fontFamily = '-apple-system, Segoe UI, Roboto, Arial, sans-serif';
+    msg.textContent = text;
+    document.body.appendChild(msg);
+  }
+
+  var data;
+  try {
+    data = JSON.parse(document.getElementById('plan-data').textContent);
+  } catch (e) {
+    showFatalError('This file is a template. Replace {{PLAN_DATA_JSON}} with real plan data JSON before opening.');
+    return;
+  }
+  var ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+  if (
+    !data ||
+    !Array.isArray(data.topics) ||
+    !Array.isArray(data.sessions) ||
+    typeof data.examName !== 'string' || !data.examName.trim() ||
+    typeof data.examDate !== 'string' || !ISO_DATE.test(data.examDate) ||
+    typeof data.startDate !== 'string' || !ISO_DATE.test(data.startDate)
+  ) {
+    showFatalError('Invalid plan data: expected "topics" and "sessions" arrays, plus examName, examDate, and startDate (YYYY-MM-DD) in the embedded JSON.');
+    return;
+  }
+  var validConf = { low: 1, medium: 1, high: 1 };
+  data.topics.forEach(function (t) { t.confidence = validConf[t.confidence] ? t.confidence : 'medium'; });
+  var topicsById = {};
+  data.topics.forEach(function (t) { topicsById[t.id] = t; });
+
+  // ---------- helpers ----------
+  function parseDate(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function fmtShort(d) { return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }); }
+  function fmtLong(d) { return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }); }
+  function isoDate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function dayNum(d) { return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000; }
+  function weekOf(d, start) { return Math.floor((dayNum(d) - dayNum(start)) / 7); }
+
+  var examDate = parseDate(data.examDate);
+  var startDate = parseDate(data.startDate);
+  var sessions = data.sessions.slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+
+  // ---------- header ----------
+  document.getElementById('exam-title').textContent = data.examName + ' Study Plan';
+  document.getElementById('meta-line').textContent =
+    'Exam date: ' + fmtLong(examDate) + '  |  Total sessions: ' + data.totalSessions + '  |  Weekly time: ' + data.weeklyHours + ' hrs';
+  var daysLeft = Math.ceil((examDate - new Date()) / 86400000);
+  document.getElementById('countdown').textContent =
+    daysLeft > 0 ? daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' until exam' : (daysLeft === 0 ? 'Exam is today' : 'Exam date has passed');
+
+  // ---------- tabs ----------
+  document.querySelectorAll('nav.tabs button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('nav.tabs button').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---------- overview: plan note ----------
+  var noteEl = document.getElementById('plan-note');
+  noteEl.textContent = data.planNote + (data.isTriage ? '  (Compressed / triage plan.)' : '');
+  if (data.isTriage) noteEl.classList.add('triage');
+
+  // ---------- overview: timeline SVG ----------
+  (function renderTimeline() {
+    var svg = document.getElementById('timeline-svg');
+    var totalDays = Math.max(1, (examDate - startDate) / 86400000);
+    var W = 800, H = 120, padX = 20, lineY = 60;
+    var parts = [];
+    parts.push('<line x1="' + padX + '" y1="' + lineY + '" x2="' + (W - padX) + '" y2="' + lineY + '" stroke="#e2e5ea" stroke-width="4" stroke-linecap="round"/>');
+
+    function xFor(dateStr) {
+      var d = parseDate(dateStr);
+      var frac = Math.min(1, Math.max(0, (d - startDate) / (totalDays * 86400000)));
+      return padX + frac * (W - 2 * padX);
+    }
+
+    // week ticks
+    var weeks = Math.ceil(totalDays / 7);
+    for (var w = 0; w <= weeks; w++) {
+      var wd = new Date(startDate.getTime() + w * 7 * 86400000);
+      if (wd > examDate) break;
+      var x = xFor(isoDate(wd));
+      parts.push('<line x1="' + x + '" y1="' + (lineY - 6) + '" x2="' + x + '" y2="' + (lineY + 6) + '" stroke="#c7ccd4" stroke-width="2"/>');
+      parts.push('<text x="' + x + '" y="' + (lineY + 24) + '" font-size="10" fill="#6b7280" text-anchor="middle">Wk ' + (w + 1) + '</text>');
+    }
+
+    // checkpoint markers
+    sessions.filter(function (s) { return s.type === 'checkpoint'; }).forEach(function (s) {
+      var x = xFor(s.date);
+      parts.push('<rect x="' + (x - 5) + '" y="' + (lineY - 5) + '" width="10" height="10" fill="#b8770a" transform="rotate(45 ' + x + ' ' + lineY + ')"/>');
+    });
+
+    // exam marker
+    var ex = xFor(data.examDate);
+    parts.push('<circle cx="' + ex + '" cy="' + lineY + '" r="7" fill="#3a6ea5"/>');
+    parts.push('<text x="' + ex + '" y="' + (lineY - 14) + '" font-size="11" fill="#3a6ea5" font-weight="bold" text-anchor="middle">Exam</text>');
+
+    // start marker
+    parts.push('<circle cx="' + padX + '" cy="' + lineY + '" r="5" fill="#2e8b57"/>');
+    parts.push('<text x="' + padX + '" y="' + (lineY - 14) + '" font-size="11" fill="#2e8b57" text-anchor="start">Start</text>');
+
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML = parts.join('');
+  })();
+
+  // ---------- overview: confidence chips ----------
+  (function renderConfidence() {
+    var el = document.getElementById('confidence-grid');
+    data.topics.forEach(function (t) {
+      var chip = document.createElement('div');
+      chip.className = 'confidence-chip';
+      var dot = document.createElement('span');
+      dot.className = 'dot ' + t.confidence;
+      chip.appendChild(dot);
+      chip.appendChild(document.createTextNode(t.name));
+      el.appendChild(chip);
+    });
+  })();
+
+  // ---------- day-by-day ----------
+  function sessionLabel(s) {
+    var typeLabel = { 'first-pass': 'first pass', 'revisit': 'revisit, spaced', 'checkpoint': 'practice test checkpoint', 'final-review': 'final review' }[s.type] || s.type;
+    return typeLabel;
+  }
+
+  function renderWeeks() {
+    var container = document.getElementById('week-container');
+    container.innerHTML = '';
+    var byWeek = {};
+    sessions.forEach(function (s) {
+      var wk = weekOf(parseDate(s.date), startDate);
+      (byWeek[wk] = byWeek[wk] || []).push(s);
+    });
+    Object.keys(byWeek).sort(function (a, b) { return a - b; }).forEach(function (wk) {
+      var block = document.createElement('div');
+      block.className = 'week-block';
+      var header = document.createElement('div');
+      header.className = 'week-header';
+      header.textContent = 'Week ' + (parseInt(wk) + 1);
+      var body = document.createElement('div');
+      body.className = 'week-body';
+      header.addEventListener('click', function () {
+        header.classList.toggle('collapsed');
+        body.classList.toggle('collapsed');
+      });
+      byWeek[wk].forEach(function (s) {
+        var day = document.createElement('div');
+        day.className = 'day' + (s.type === 'checkpoint' ? ' checkpoint' : '');
+        day.id = 'day-' + s.date + '-' + s.topicId;
+
+        var tag = document.createElement('div');
+        tag.className = 'day-tag';
+        tag.textContent = fmtShort(parseDate(s.date));
+
+        var head = document.createElement('div');
+        head.className = 'day-header';
+        head.appendChild(document.createTextNode(s.title + ' '));
+        var typeSpan = document.createElement('span');
+        typeSpan.style.fontWeight = '400';
+        typeSpan.style.color = '#6b7280';
+        typeSpan.textContent = '(' + sessionLabel(s) + ')';
+        head.appendChild(typeSpan);
+
+        var desc = document.createElement('div');
+        desc.className = 'day-desc';
+        desc.textContent = s.description;
+
+        day.appendChild(tag);
+        day.appendChild(head);
+        day.appendChild(desc);
+        body.appendChild(day);
+      });
+      block.appendChild(header);
+      block.appendChild(body);
+      container.appendChild(block);
+    });
+  }
+  renderWeeks();
+
+  // ---------- calendar picker ----------
+  (function renderCalendar() {
+    var container = document.getElementById('calendar-container');
+    var sessionDates = {};
+    sessions.forEach(function (s) {
+      (sessionDates[s.date] = sessionDates[s.date] || []).push(s);
+    });
+    var cur = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    var end = new Date(examDate.getFullYear(), examDate.getMonth(), 1);
+    var dow = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    while (cur <= end) {
+      var label = document.createElement('div');
+      label.className = 'cal-month-label';
+      label.textContent = cur.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      container.appendChild(label);
+
+      var grid = document.createElement('div');
+      grid.className = 'cal-grid';
+      dow.forEach(function (d) {
+        var dEl = document.createElement('div');
+        dEl.className = 'dow';
+        dEl.textContent = d;
+        grid.appendChild(dEl);
+      });
+      var firstDow = new Date(cur.getFullYear(), cur.getMonth(), 1).getDay();
+      for (var i = 0; i < firstDow; i++) grid.appendChild(document.createElement('div'));
+      var daysInMonth = new Date(cur.getFullYear(), cur.getMonth() + 1, 0).getDate();
+      for (var day = 1; day <= daysInMonth; day++) {
+        var dISO = isoDate(new Date(cur.getFullYear(), cur.getMonth(), day));
+        var cell = document.createElement('div');
+        cell.className = 'cal-day';
+        cell.textContent = day;
+        var daySessions = sessionDates[dISO];
+        if (daySessions) {
+          cell.classList.add('has-session');
+          if (daySessions.some(function (s) { return s.type === 'checkpoint'; })) cell.classList.add('checkpoint-day');
+          cell.title = daySessions.map(function (s) { return s.title; }).join(', ');
+          cell.addEventListener('click', function (dISO, daySessions) {
+            return function () {
+              document.querySelector('nav.tabs button[data-tab="daybyday"]').click();
+              var target = document.getElementById('day-' + dISO + '-' + daySessions[0].topicId);
+              if (target) {
+                var weekBody = target.closest('.week-body');
+                if (weekBody) { weekBody.classList.remove('collapsed'); weekBody.previousElementSibling && weekBody.previousElementSibling.classList.remove('collapsed'); }
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.style.outline = '2px solid #3a6ea5';
+                setTimeout(function () { target.style.outline = ''; }, 1600);
+              }
+            };
+          }(dISO, daySessions));
+        }
+        grid.appendChild(cell);
+      }
+      container.appendChild(grid);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+  })();
+
+  // ---------- by domain ----------
+  (function renderDomains() {
+    var container = document.getElementById('domain-container');
+    var byDomain = {};
+    sessions.forEach(function (s) {
+      var domain = (topicsById[s.topicId] || {}).domain || 'Other';
+      byDomain[domain] = (byDomain[domain] || 0) + (s.durationMinutes || 60);
+    });
+    var domainKeys = Object.keys(byDomain);
+    if (domainKeys.length === 0) {
+      var empty = document.createElement('p');
+      empty.style.color = '#6b7280';
+      empty.textContent = 'No session data available yet.';
+      container.appendChild(empty);
+      return;
+    }
+    var maxMinutes = Math.max.apply(null, domainKeys.map(function (k) { return byDomain[k]; }));
+    domainKeys.sort(function (a, b) { return byDomain[b] - byDomain[a]; }).forEach(function (domain) {
+      var minutes = byDomain[domain];
+      var hours = (minutes / 60).toFixed(1);
+      var row = document.createElement('div');
+      row.className = 'domain-row';
+
+      var labelRow = document.createElement('div');
+      labelRow.className = 'domain-label';
+      var nameSpan = document.createElement('span');
+      nameSpan.textContent = domain;
+      var hoursSpan = document.createElement('span');
+      hoursSpan.textContent = hours + ' hrs';
+      labelRow.appendChild(nameSpan);
+      labelRow.appendChild(hoursSpan);
+
+      var track = document.createElement('div');
+      track.className = 'domain-bar-track';
+      var fill = document.createElement('div');
+      fill.className = 'domain-bar-fill';
+      fill.style.width = maxMinutes > 0 ? (100 * minutes / maxMinutes) + '%' : '0%';
+      track.appendChild(fill);
+
+      row.appendChild(labelRow);
+      row.appendChild(track);
+      container.appendChild(row);
+    });
+  })();
+
+  // ---------- .ics generation ----------
+  function fold(line) {
+    if (line.length <= 75) return line;
+    var parts = [line.slice(0, 75)], rest = line.slice(75);
+    while (rest.length) { parts.push(' ' + rest.slice(0, 74)); rest = rest.slice(74); }
+    return parts.join('\r\n');
+  }
+  function icsEscape(text) {
+    return String(text)
+      .replace(/\r\n?/g, '\n')
+      .replace(/\\/g, '\\\\')
+      .replace(/\n/g, '\\n')
+      .replace(/,/g, '\\,')
+      .replace(/;/g, '\\;');
+  }
+  function buildICS() {
+    var ptRaw = String(data.preferredTime || '19:00').trim();
+    var m = /^(\d{1,2}):(\d{2})$/.exec(ptRaw);
+    var ptH = m ? Math.min(23, Math.max(0, +m[1])) : 19;
+    var ptM = m ? Math.min(59, Math.max(0, +m[2])) : 0;
+    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Exam Prep Learning Plan Builder//EN', 'CALSCALE:GREGORIAN'];
+    sessions.forEach(function (s, idx) {
+      var d = parseDate(s.date);
+      d.setHours(ptH, ptM, 0, 0);
+      var dur = s.durationMinutes || (s.type === 'checkpoint' ? 105 : 60);
+      var endD = new Date(d.getTime() + dur * 60000);
+      function stamp(dt) {
+        return dt.getFullYear() + String(dt.getMonth() + 1).padStart(2, '0') + String(dt.getDate()).padStart(2, '0') +
+          'T' + String(dt.getHours()).padStart(2, '0') + String(dt.getMinutes()).padStart(2, '0') + '00';
+      }
+      var nowStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      lines.push('BEGIN:VEVENT');
+      var uid = String(s.date + '-' + s.topicId + '-' + idx + '@examprep').replace(/[^A-Za-z0-9\-@.]/g, '-');
+      lines.push(fold('UID:' + uid));
+      lines.push('DTSTAMP:' + nowStamp);
+      lines.push('DTSTART:' + stamp(d));
+      lines.push('DTEND:' + stamp(endD));
+      lines.push(fold('SUMMARY:' + icsEscape(data.examName + ' Study: ' + s.title + ' (' + sessionLabel(s) + ')')));
+      lines.push(fold('DESCRIPTION:' + icsEscape(s.description)));
+      lines.push('END:VEVENT');
+    });
+    lines.push('END:VCALENDAR');
+    return lines.join('\r\n');
+  }
+  document.getElementById('download-ics-btn').addEventListener('click', function () {
+    var blob = new Blob([buildICS()], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = data.examName.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-study-plan.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // ---------- notes tab ----------
+  var notesRefs = {};
+  (function renderNotes() {
+    var container = document.getElementById('notes-container');
+    data.topics.forEach(function (t) {
+      var item = document.createElement('div');
+      item.className = 'notes-item';
+
+      var title = document.createElement('div');
+      title.className = 'notes-item-title';
+      title.textContent = t.name;
+
+      var row = document.createElement('div');
+      row.className = 'notes-row';
+      var label = document.createElement('label');
+      label.textContent = 'Updated confidence:';
+      var select = document.createElement('select');
+      select.className = 'confidence-select';
+      select.setAttribute('data-topic', t.id);
+      [['low', 'Low'], ['medium', 'Medium'], ['high', 'High']].forEach(function (pair) {
+        var opt = document.createElement('option');
+        opt.value = pair[0];
+        opt.textContent = pair[1];
+        if (pair[0] === t.confidence) opt.selected = true;
+        select.appendChild(opt);
+      });
+      row.appendChild(label);
+      row.appendChild(select);
+
+      var textarea = document.createElement('textarea');
+      textarea.className = 'notes-text';
+      textarea.setAttribute('data-topic', t.id);
+      textarea.placeholder = 'How is this topic going? Anything you fell behind on or want to flag?';
+
+      item.appendChild(title);
+      item.appendChild(row);
+      item.appendChild(textarea);
+      container.appendChild(item);
+
+      notesRefs[t.id] = { select: select, textarea: textarea };
+    });
+  })();
+
+  document.getElementById('copy-updates-btn').addEventListener('click', function () {
+    var lines = ['Study plan update for ' + data.examName + ':'];
+    var changed = false;
+    data.topics.forEach(function (t) {
+      var refs = notesRefs[t.id];
+      if (!refs) return;
+      var newConf = refs.select.value;
+      var note = refs.textarea.value.trim();
+      if (newConf !== t.confidence || note) {
+        changed = true;
+        lines.push('- ' + t.name + ': confidence ' + t.confidence + ' -> ' + newConf + (note ? ' | notes: ' + note : ''));
+      }
+    });
+    var output = document.getElementById('copy-output');
+    var status = document.getElementById('copy-status');
+    if (!changed) {
+      output.value = 'No changes entered yet. Update a confidence level or add a note above, then try again.';
+      status.textContent = '';
+      return;
+    }
+    output.value = lines.join('\n') + '\n\nPaste this back into the chat to have the plan updated.';
+    output.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(output.value).then(function () {
+        status.textContent = 'Copied to clipboard';
+      }).catch(function () {
+        status.textContent = 'Select the text below and copy manually';
+      });
+    } else {
+      status.textContent = 'Select the text below and copy manually';
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
