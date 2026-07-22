@@ -18,6 +18,27 @@ The Excel backlog consistently contains four tabs: `Review Backlog`, `Summary`,
 Agent knowledge is optional. The uploaded files remain the authoritative
 analysis corpus.
 
+## What SharePoint knowledge enables
+
+Adding the corresponding SharePoint site, library, or document location as an
+agent knowledge source gives the skill an additional validation layer alongside
+the uploaded files. It can:
+
+- Check whether current SharePoint passages support or clarify high-risk
+  duplicate and conflict findings.
+- Identify audience, region, effective-date, or scope differences that may
+  explain an apparent conflict.
+- Find related or potentially authoritative documents that were not included in
+  the uploaded corpus.
+- Flag relevant SharePoint documents as `Not included in uploaded corpus` for a
+  future review batch.
+
+SharePoint knowledge does not replace the uploaded source files. Retrieved
+knowledge passages are partial chunks, so they cannot prove whole-document
+duplication, a complete-document conflict, or exhaustive library coverage. They
+also do not reliably provide original owners, URLs, approval status, or modified
+dates; supply the optional metadata manifest when those fields matter.
+
 ## Prepare the files
 
 Package the export as one or more independent ZIP files while preserving the
