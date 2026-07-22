@@ -1,0 +1,11 @@
+{
+  "name": "Conditional Chat Reminder",
+  "description": "Schedule a Teams reminder that sends only when the expected person has not already posted a relevant update.",
+  "platforms": ["Scout"],
+  "tags": ["automation", "teams", "reminders", "follow-up", "productivity"],
+  "author": "Giorgio Ughini",
+  "authorUrl": "https://github.com/GiorgioUghini",
+  "version": "1.0.0",
+  "createdAt": "2026-07-22",
+  "updatedAt": "2026-07-22"
+}
