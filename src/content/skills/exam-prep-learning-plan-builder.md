@@ -5,9 +5,7 @@ agentDescription: "Build a personalized, day-by-day study plan for an upcoming e
 platforms: [Copilot Studio]
 tags: [planning, productivity, learning]
 author: Michael Heath
-authorUrl: "https://github.com/GetAutomating"
-authorGithub: GetAutomating
-version: 2.0.1
+version: 2.0.0
 bundle: bundles/exam-prep-learning-plan-builder.zip
 ---
 # Exam Prep Learning Plan Builder
