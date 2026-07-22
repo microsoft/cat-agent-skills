@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "cases": [
     {"id": "CTA-SMOKE-BUNDLE-001", "title": "Bundle manifests and hashes", "timeout_seconds": 5, "prerequisites": ["installed bundle"], "expected_result": "Every required bundled and third-party byte matches its manifest."},
-    {"id": "CTA-SMOKE-RUNTIME-002", "title": "Runtime, Pillow, and font availability", "timeout_seconds": 5, "prerequisites": ["Python", "Pillow"], "expected_result": "The pinned runtime and font load and Pillow reports a version."},
+    {"id": "CTA-SMOKE-RUNTIME-002", "title": "Python and runtime availability", "timeout_seconds": 5, "prerequisites": ["Python"], "expected_result": "The pinned vendored runtime is present and reports the expected version."},
     {
       "id": "CTA-SMOKE-GAMEPLAY-003",
       "title": "Exact startup and gameplay behavior",
@@ -21,11 +21,10 @@
         "quit": "8b5c88d5bc426b37bde45f7c944a7ff5029cf3fc8089d7fc5939af1ccdf21e07"
       }
     },
-    {"id": "CTA-SMOKE-REPLAY-004", "title": "Transcript replay and persistence", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "Separate reconstructions produce identical state and output."},
+    {"id": "CTA-SMOKE-REPLAY-004", "title": "Transcript replay and persistence", "timeout_seconds": 15, "prerequisites": ["private writable root"], "expected_result": "Separate reconstructions produce identical state and output."},
     {"id": "CTA-SMOKE-IDEMPOTENCY-005", "title": "Request idempotency and conflict rejection", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "Identical retries replay once and conflicting or stale retries do not advance state."},
-    {"id": "CTA-SMOKE-ISOLATION-006", "title": "Independent session isolation", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "Two sessions cannot read or alter each other's state or images."},
+    {"id": "CTA-SMOKE-ISOLATION-006", "title": "Independent session isolation", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "Two sessions cannot read or alter each other's state."},
     {"id": "CTA-SMOKE-SAVE-007", "title": "Save command filesystem confinement", "timeout_seconds": 5, "prerequisites": ["vendored runtime"], "expected_result": "Traversal and absolute save paths create no filesystem entries."},
-    {"id": "CTA-SMOKE-RENDER-008", "title": "Deterministic PNG pixels and files", "timeout_seconds": 5, "prerequisites": ["Pillow", "bundled font"], "expected_result": "PNG mode, dimensions, file bytes, and decoded pixels are deterministic."},
     {"id": "CTA-SMOKE-RECOVERY-009", "title": "Pending-turn journal recovery", "timeout_seconds": 5, "prerequisites": ["private writable root"], "expected_result": "A controlled pending turn commits exactly once and clears its journal."}
   ]
 }

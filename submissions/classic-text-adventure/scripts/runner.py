@@ -7,7 +7,6 @@ import argparse
 import json
 import os
 import re
-import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -25,7 +24,6 @@ from checkpoint import (
     write_checkpoint,
     write_journal,
 )
-from render import render_pages
 from runtime_adapter import (
     RUNTIME_ID,
     AdapterError,
@@ -43,10 +41,6 @@ from runtime_adapter import (
 PROTOCOL = 1
 SESSION_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 REQUEST_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
-SKILL_ROOT = Path(__file__).resolve().parent.parent
-FONT_PATH = SKILL_ROOT / "assets" / "fonts" / "JetBrainsMono-Regular.ttf"
-
-
 class RequestError(ValueError):
     pass
 
@@ -72,7 +66,6 @@ def _session_paths(state_root: Path, session_id: str) -> dict[str, Path]:
         "checkpoint": session / "checkpoint.json",
         "journal": session / "pending-turn.json",
         "lock": session / ".lock",
-        "images": session / "images",
     }
 
 
@@ -100,51 +93,8 @@ def _response(checkpoint: dict[str, Any], request_id: str, *, replayed: bool = F
         "text": checkpoint["text"],
         "finished": checkpoint["finished"],
         "scene_key": checkpoint["scene_key"],
-        "image_status": checkpoint.get("image_status", "pending"),
-        "image_paths": checkpoint.get("image_paths", []),
         "replayed": replayed,
     }
-
-
-def _render(checkpoint: dict[str, Any], paths: dict[str, Path]) -> list[dict[str, Any]]:
-    rendered = render_pages(checkpoint["text"], checkpoint["scene_key"], FONT_PATH)
-    records = []
-    for data, metadata in rendered:
-        name = f"classic-adventure-t{checkpoint['sequence']:04d}-p{metadata['page']:02d}.png"
-        output = paths["images"] / name
-        output.parent.mkdir(parents=True, exist_ok=True)
-        temp = output.with_suffix(".png.tmp")
-        with temp.open("wb") as handle:
-            handle.write(data)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp, output)
-        os.chmod(output, 0o600)
-        records.append({**metadata, "path": str(output)})
-    return records
-
-
-def _ensure_images(checkpoint: dict[str, Any], paths: dict[str, Path]) -> dict[str, Any]:
-    if checkpoint.get("image_status") == "complete" and all(
-        Path(path).is_file() for path in checkpoint.get("image_paths", [])
-    ):
-        return checkpoint
-    updated = dict(checkpoint)
-    try:
-        records = _render(checkpoint, paths)
-        updated["image_status"] = "complete"
-        updated["image_paths"] = [record["path"] for record in records]
-        updated["image_hashes"] = [
-            {"file_sha256": record["file_sha256"], "pixel_sha256": record["pixel_sha256"]} for record in records
-        ]
-        updated.pop("image_error", None)
-    except Exception as exc:
-        updated["image_status"] = "failed"
-        updated["image_paths"] = []
-        updated["image_hashes"] = []
-        updated["image_error"] = (str(exc) or exc.__class__.__name__)[:256]
-    write_checkpoint(paths["checkpoint"], updated)
-    return updated
 
 
 def _commit_step(checkpoint: dict[str, Any], journal: dict[str, Any], paths: dict[str, Path]) -> dict[str, Any]:
@@ -170,9 +120,6 @@ def _commit_step(checkpoint: dict[str, Any], journal: dict[str, Any], paths: dic
         "text": result.text,
         "finished": result.finished,
         "scene_key": result.scene_key,
-        "image_status": "pending",
-        "image_paths": [],
-        "image_hashes": [],
         "last_request": {
             "request_id": journal["request_id"],
             "input_hash": journal["input_hash"],
@@ -180,7 +127,7 @@ def _commit_step(checkpoint: dict[str, Any], journal: dict[str, Any], paths: dic
     }
     write_checkpoint(paths["checkpoint"], next_checkpoint)
     remove_file(paths["journal"])
-    return _ensure_images(next_checkpoint, paths)
+    return next_checkpoint
 
 
 def _recover(checkpoint: dict[str, Any] | None, paths: dict[str, Path]) -> dict[str, Any] | None:
@@ -198,7 +145,7 @@ def _recover(checkpoint: dict[str, Any] | None, paths: dict[str, Path]) -> dict[
         if last.get("input_hash") != journal.get("input_hash"):
             raise CheckpointError("committed request hash conflicts with journal")
         remove_file(paths["journal"])
-        return _ensure_images(checkpoint, paths)
+        return checkpoint
     return _commit_step(checkpoint, journal, paths)
 
 
@@ -213,7 +160,6 @@ def _handle_start(
             raise RequestError("request_id was already used with different input")
         if checkpoint.get("finished"):
             raise GameFinished("session is finished; reset before starting a new game")
-        checkpoint = _ensure_images(checkpoint, paths)
         return _response(checkpoint, request_id, replayed=True)
     seed = request.get("seed")
     state, result = start(seed)
@@ -229,13 +175,9 @@ def _handle_start(
         "text": result.text,
         "finished": result.finished,
         "scene_key": result.scene_key,
-        "image_status": "pending",
-        "image_paths": [],
-        "image_hashes": [],
         "last_request": {"request_id": request_id, "input_hash": input_hash},
     }
     write_checkpoint(paths["checkpoint"], checkpoint)
-    checkpoint = _ensure_images(checkpoint, paths)
     return _response(checkpoint, request_id)
 
 
@@ -250,7 +192,6 @@ def _handle_step(request: dict[str, Any], paths: dict[str, Path], request_id: st
     if last.get("request_id") == request_id:
         if last.get("input_hash") != input_hash:
             raise RequestError("request_id was already used with different input")
-        checkpoint = _ensure_images(checkpoint, paths)
         return _response(checkpoint, request_id, replayed=True)
     base_sequence = request.get("base_sequence")
     if isinstance(base_sequence, bool) or not isinstance(base_sequence, int):
@@ -282,7 +223,6 @@ def _handle_status(paths: dict[str, Path], request_id: str) -> dict[str, Any]:
     checkpoint = _recover(load_checkpoint(paths["checkpoint"]), paths)
     if checkpoint is None:
         return {"protocol": PROTOCOL, "ok": True, "request_id": request_id, "exists": False}
-    checkpoint = _ensure_images(checkpoint, paths)
     runtime = inspect_state(_state_bytes(checkpoint))
     return {**_response(checkpoint, request_id), "exists": True, "runtime": runtime}
 
@@ -291,8 +231,6 @@ def _handle_reset(paths: dict[str, Path], request_id: str) -> dict[str, Any]:
     existed = load_checkpoint(paths["checkpoint"]) is not None
     remove_file(paths["checkpoint"])
     remove_file(paths["journal"])
-    if paths["images"].exists():
-        shutil.rmtree(paths["images"])
     return {"protocol": PROTOCOL, "ok": True, "request_id": request_id, "reset": existed}
 
 

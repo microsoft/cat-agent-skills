@@ -21,7 +21,6 @@ from typing import Any, Callable
 sys.dont_write_bytecode = True
 
 import checkpoint
-import render
 import runner
 import runtime_adapter
 
@@ -100,7 +99,7 @@ def case_bundle_manifests(_: Path, __: dict[str, Any]) -> dict[str, Any]:
     )
     expected_third_party = {
         relative for relative in actual_bundle if relative.startswith("scripts/runtime/adventure/")
-    } | {"assets/fonts/JetBrainsMono-Regular.ttf"}
+    }
     third_missing = sorted(expected_third_party - third_party_paths)
     third_unexpected = sorted(third_party_paths - expected_third_party)
     _assert(
@@ -111,13 +110,10 @@ def case_bundle_manifests(_: Path, __: dict[str, Any]) -> dict[str, Any]:
 
 
 def case_runtime_imports(_: Path, __: dict[str, Any]) -> dict[str, Any]:
-    from PIL import __version__ as pillow_version
-
-    font = SKILL_ROOT / "assets" / "fonts" / "JetBrainsMono-Regular.ttf"
-    _assert(font.is_file(), "bundled font is missing")
-    _assert(font.stat().st_size > 100_000, "bundled font is unexpectedly small")
     _assert(runtime_adapter.RUNTIME_ID == "adventure-1.7", "unexpected runtime version")
-    return {"pillow": pillow_version, "font_sha256": _sha256(font)}
+    runtime_package = SCRIPT_DIR / "runtime" / "adventure" / "__init__.py"
+    _assert(runtime_package.is_file(), "vendored runtime package is missing")
+    return {"python": platform.python_version(), "runtime": runtime_adapter.RUNTIME_ID}
 
 
 def case_startup_gameplay(_: Path, case: dict[str, Any]) -> dict[str, Any]:
@@ -228,12 +224,7 @@ def case_session_isolation(root: Path, _: dict[str, Any]) -> dict[str, Any]:
     alpha_checkpoint = checkpoint.load_checkpoint(runner._session_paths(root, "alpha")["checkpoint"])
     beta_checkpoint = checkpoint.load_checkpoint(beta_path)
     _assert(alpha_checkpoint["transcript"] == ["no"] and beta_checkpoint["transcript"] == [], "transcripts crossed sessions")
-    _assert(
-        all("alpha" in path for path in alpha.get("image_paths", []))
-        and all("beta" in path for path in beta.get("image_paths", [])),
-        "rendered image paths crossed sessions",
-    )
-    return {"alpha_sequence": 1, "beta_sequence": 0, "isolated_images": True}
+    return {"alpha_sequence": 1, "beta_sequence": 0}
 
 
 def case_save_confinement(root: Path, _: dict[str, Any]) -> dict[str, Any]:
@@ -255,22 +246,6 @@ def case_save_confinement(root: Path, _: dict[str, Any]) -> dict[str, Any]:
             path.unlink()
     _assert(not created, f"save command wrote requested path(s): {created!r}")
     return {"confined": True}
-
-
-def case_render_determinism(root: Path, _: dict[str, Any]) -> dict[str, Any]:
-    from PIL import Image
-
-    font = SKILL_ROOT / "assets" / "fonts" / "JetBrainsMono-Regular.ttf"
-    one, meta_one = render.render_png("A deterministic cave.\n", "cave", font)
-    two, meta_two = render.render_png("A deterministic cave.\n", "cave", font)
-    _assert(one == two, "PNG file bytes differ across renders")
-    _assert(meta_one["pixel_sha256"] == meta_two["pixel_sha256"], "rendered pixels differ")
-    output = root / "render.png"
-    output.write_bytes(one)
-    with Image.open(output) as image:
-        _assert(image.size == (1280, 960), "render dimensions changed")
-        _assert(image.mode == "RGB", "render mode changed")
-    return {"file_sha256": meta_one["file_sha256"], "pixel_sha256": meta_one["pixel_sha256"]}
 
 
 def case_journal_recovery(root: Path, _: dict[str, Any]) -> dict[str, Any]:
@@ -305,7 +280,6 @@ CASE_RUNNERS: dict[str, Callable[[Path, dict[str, Any]], dict[str, Any]]] = {
     "CTA-SMOKE-IDEMPOTENCY-005": case_idempotency_conflict,
     "CTA-SMOKE-ISOLATION-006": case_session_isolation,
     "CTA-SMOKE-SAVE-007": case_save_confinement,
-    "CTA-SMOKE-RENDER-008": case_render_determinism,
     "CTA-SMOKE-RECOVERY-009": case_journal_recovery,
 }
 
@@ -397,10 +371,6 @@ def run_suite(
         if not keep_temp:
             shutil.rmtree(temp, ignore_errors=True)
     failed = sum(result["status"] == "failed" for result in results)
-    try:
-        from PIL import __version__ as pillow_version
-    except ImportError:
-        pillow_version = "unavailable"
     report = {
         "schema_version": 1,
         "suite": definition["suite"],
@@ -409,7 +379,6 @@ def run_suite(
         "summary": {"total": len(results), "passed": len(results) - failed, "failed": failed, "skipped": 0},
         "environment": {
             "python": platform.python_version(),
-            "pillow": pillow_version,
             "platform": platform.platform(),
         },
         "duration_ms": round((time.time() - started_at) * 1000, 3),
@@ -451,7 +420,7 @@ def main(argv: list[str] | None = None) -> int:
             "suite": "classic-text-adventure-smoke",
             "suite_version": "1.0.0",
             "overall_status": "error",
-            "environment": {"python": platform.python_version(), "pillow": "unknown", "platform": platform.platform()},
+            "environment": {"python": platform.python_version(), "platform": platform.platform()},
             "summary": {"total": 0, "passed": 0, "failed": 0, "skipped": 0},
             "duration_ms": 0,
             "cases": [],

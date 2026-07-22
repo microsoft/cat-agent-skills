@@ -29,10 +29,7 @@ def _record(root: Path, path: Path, origin: str, license_expression: str) -> dic
     relative = path.relative_to(root).as_posix()
     if relative.startswith("scripts/runtime/adventure/"):
         copyright_notice = "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain"
-        modified = False
-    elif relative == "assets/fonts/JetBrainsMono-Regular.ttf":
-        copyright_notice = "Copyright 2020 The JetBrains Mono Project Authors"
-        modified = False
+        modified = relative == "scripts/runtime/adventure/tests/__init__.py"
     else:
         copyright_notice = "Copyright (c) Microsoft Corporation and contributors"
         modified = None
@@ -48,8 +45,6 @@ def _record(root: Path, path: Path, origin: str, license_expression: str) -> dic
 
 
 def classify(relative: str) -> tuple[str, str]:
-    if relative == "assets/fonts/JetBrainsMono-Regular.ttf":
-        return "JetBrains Mono 2.304", "OFL-1.1"
     if relative.startswith("scripts/runtime/adventure/"):
         if relative.endswith("advent.dat"):
             return "Adventure 1.7 / original Colossal Cave data", "LicenseRef-Public-Domain"
@@ -58,8 +53,6 @@ def classify(relative: str) -> tuple[str, str]:
         return "Adventure 1.7", "Apache-2.0"
     if relative == "references/licenses/Apache-2.0.txt":
         return "Apache Software Foundation license text", "Apache-2.0"
-    if relative == "references/licenses/OFL-1.1.txt":
-        return "SIL Open Font License text", "OFL-1.1"
     return "classic-text-adventure skill", "MIT"
 
 
@@ -75,7 +68,7 @@ def build_manifests(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         record = _record(root, path, origin, license_expression)
         if relative not in SIDECARS:
             bundle.append(record)
-        if relative.startswith("scripts/runtime/adventure/") or relative == "assets/fonts/JetBrainsMono-Regular.ttf":
+        if relative.startswith("scripts/runtime/adventure/"):
             third_party.append(record)
     return (
         {
@@ -87,13 +80,6 @@ def build_manifests(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
                     "archive": "adventure-1.7.tar.gz",
                     "archive_sha256": "fba584064d3b8b1ef6b62f6df6099092522d6bd3bce0525db002c54dc29ac6a1",
                     "url": "https://files.pythonhosted.org/packages/source/a/adventure/adventure-1.7.tar.gz",
-                },
-                {
-                    "name": "JetBrains Mono",
-                    "version": "2.304",
-                    "archive": "JetBrainsMono-2.304.zip",
-                    "archive_sha256": "6f6376c6ed2960ea8a963cd7387ec9d76e3f629125bc33d1fdcd7eb7012f7bbf",
-                    "url": "https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip",
                 },
             ],
             "files": third_party,
@@ -108,7 +94,8 @@ def build_manifests(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
 
 def write_json(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(value, indent=2, sort_keys=True) + "\n")
 
 
 def main(argv: list[str] | None = None) -> int:

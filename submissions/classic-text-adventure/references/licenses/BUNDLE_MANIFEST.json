@@ -6,31 +6,13 @@
   ],
   "files": [
     {
-      "bytes": 273900,
-      "copyright": "Copyright 2020 The JetBrains Mono Project Authors",
-      "license": "OFL-1.1",
-      "modified": false,
-      "origin": "JetBrains Mono 2.304",
-      "path": "assets/fonts/JetBrainsMono-Regular.ttf",
-      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f"
-    },
-    {
-      "bytes": 3225,
-      "copyright": "Copyright (c) Microsoft Corporation and contributors",
-      "license": "MIT",
-      "modified": null,
-      "origin": "classic-text-adventure skill",
-      "path": "references/compatibility.md",
-      "sha256": "2e9864debc1fc258d91de7ea8332d2d4d7e66de498b27e7d017b6ecfb89d8fdc"
-    },
-    {
-      "bytes": 898,
+      "bytes": 1059,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "references/licenses/adventure-NOTICE.md",
-      "sha256": "0d86fd1785d6eada7aaf2b87fc2e2c5047a1a49488b50be5992f805a2a5b0bce"
+      "sha256": "8a6efa99ae6b2b6b11475b69b3f5088b57146b3cc8e0c5ff660618d7423ee9a1"
     },
     {
       "bytes": 11358,
@@ -42,49 +24,31 @@
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
     },
     {
-      "bytes": 736,
-      "copyright": "Copyright (c) Microsoft Corporation and contributors",
-      "license": "MIT",
-      "modified": null,
-      "origin": "classic-text-adventure skill",
-      "path": "references/licenses/font-NOTICE.md",
-      "sha256": "2a24ae2d13e391a460dae8b80e290d677309f467b2d0f11b1acffe645aabebfa"
-    },
-    {
-      "bytes": 1162,
+      "bytes": 1141,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "references/licenses/MIT.txt",
-      "sha256": "9906940f61b1f0b533fa7d99baf55178b2808fbe113ea51dfbfad8572ccd5f2b"
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
     },
     {
-      "bytes": 844,
+      "bytes": 842,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "references/licenses/MODIFICATIONS.md",
-      "sha256": "2813c7fcdec11e7d55d841ec013ec1d2b1649c88a3390add58d7f9ec978bedd3"
+      "sha256": "3ca9b5f5582c83dec4a0d5ce5a1f56d09917142dd1358c98f812729fe6600d2f"
     },
     {
-      "bytes": 4399,
-      "copyright": "Copyright (c) Microsoft Corporation and contributors",
-      "license": "OFL-1.1",
-      "modified": null,
-      "origin": "SIL Open Font License text",
-      "path": "references/licenses/OFL-1.1.txt",
-      "sha256": "30f0c136e3c88e422d0791acd97238870f9054a9729bc34cf2ff0d4ed8cac4ad"
-    },
-    {
-      "bytes": 8166,
+      "bytes": 7320,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "references/licenses/THIRD_PARTY_MANIFEST.json",
-      "sha256": "bc5ac8daba26697dcaf50eba4fb44607b5e4dcdd60980b4cf1756c8b3486918f"
+      "sha256": "40dc12e9b1df7e1ed5418edb7c85b58b6d77297271ad0bbc6d268f973032b1dd"
     },
     {
       "bytes": 5048,
@@ -96,31 +60,22 @@
       "sha256": "dc211ee4c1b3345c1eed4b32dbab0434608214fe963b509ce0f7befabf0a8df8"
     },
     {
-      "bytes": 5051,
+      "bytes": 4302,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/generate_license_manifest.py",
-      "sha256": "4654e0ac29d5388770464e4abeb10e98974f1e12c828dbbc8e5698a996f5a6a2"
+      "sha256": "b958a29bec2eb4447b7a78e758ee66897a039ac97827595a8c71d2d1f4550542"
     },
     {
-      "bytes": 3961,
-      "copyright": "Copyright (c) Microsoft Corporation and contributors",
-      "license": "MIT",
-      "modified": null,
-      "origin": "classic-text-adventure skill",
-      "path": "scripts/render.py",
-      "sha256": "e6c43fd176b9617e246197b21e0f4ced0c0cf2cd33fcebfbe2e0cf53ea432374"
-    },
-    {
-      "bytes": 14233,
+      "bytes": 11689,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/runner.py",
-      "sha256": "22e118e793453e4007c857e685174ede57327128ea48860dcbd985d819a9b9d5"
+      "sha256": "47dca7b2503a1ba05dd66dd1757a9059254816a7b4112816daf0648188690f03"
     },
     {
       "bytes": 1173,
@@ -195,13 +150,13 @@
       "sha256": "4ff0ced51c90a94b85ecd6a8df637caaae5a180fd37bdc3096bc775566502305"
     },
     {
-      "bytes": 0,
+      "bytes": 82,
       "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
       "license": "Apache-2.0 AND LicenseRef-Public-Domain",
-      "modified": false,
+      "modified": true,
       "origin": "Adventure 1.7",
       "path": "scripts/runtime/adventure/tests/__init__.py",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sha256": "de648dcf698ec1ed82b7ea75ab251759e245292196ef493e254886b8387de02a"
     },
     {
       "bytes": 1727,
@@ -294,22 +249,22 @@
       "sha256": "45b74d3b1e33494d688100c64bd455ea620f123398658c9f2be05c94a624a628"
     },
     {
-      "bytes": 2951,
+      "bytes": 2691,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/smoke_cases.json",
-      "sha256": "125976ba6a99f9a9a6c15d6e40df2078862a73d137f6a7d57e46dcf2c052c60f"
+      "sha256": "cb8cb761c79a4815733c24afa407c3357ac9684e835d933e24c6343bac3c16a2"
     },
     {
-      "bytes": 20581,
+      "bytes": 19142,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/smoke_test.py",
-      "sha256": "8809ed191ceae44fb6149af612d128089387dc21f7aa24bc4ff0b9587d503dd2"
+      "sha256": "0efcb06444adc29116e6856b9fa67c5a81af1eddfd9e1c147aaeb693fd7f3f0e"
     },
     {
       "bytes": 1171,
@@ -321,22 +276,13 @@
       "sha256": "9f09254630b4ef7282934ed350e08669410f8241837bbdb26d4850157be3217c"
     },
     {
-      "bytes": 1774,
-      "copyright": "Copyright (c) Microsoft Corporation and contributors",
-      "license": "MIT",
-      "modified": null,
-      "origin": "classic-text-adventure skill",
-      "path": "scripts/tests/test_render.py",
-      "sha256": "8c6c3bf4b3e64a9d370978181871e4804336721be705da2db17c065fd0864f47"
-    },
-    {
-      "bytes": 4352,
+      "bytes": 4223,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "scripts/tests/test_runner.py",
-      "sha256": "680c5ea05216b2c6f1309f171ce1f47371e82bcbc00c3da11009cacce0f97172"
+      "sha256": "600ca885b069f751bfd2cdca245b3b366388fad14711bb1384926fb8014cb243"
     },
     {
       "bytes": 2041,
@@ -357,13 +303,13 @@
       "sha256": "647c17082917dcc3d28b08c129d5e635fa21d8aa01c10634dea00387aa6ee49d"
     },
     {
-      "bytes": 4626,
+      "bytes": 4904,
       "copyright": "Copyright (c) Microsoft Corporation and contributors",
       "license": "MIT",
       "modified": null,
       "origin": "classic-text-adventure skill",
       "path": "SKILL.md",
-      "sha256": "e8f04c9a90f73e54e33deba05f5fb3142e1ca5b85f328cc806f681c8454006b4"
+      "sha256": "40bd5a5ba6032ea9a8278334fc1e1f8685b8e853e06f0ba7ae832d8141c5082f"
     }
   ],
   "schema": 1

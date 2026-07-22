@@ -1,15 +1,6 @@
 {
   "files": [
     {
-      "bytes": 273900,
-      "copyright": "Copyright 2020 The JetBrains Mono Project Authors",
-      "license": "OFL-1.1",
-      "modified": false,
-      "origin": "JetBrains Mono 2.304",
-      "path": "assets/fonts/JetBrainsMono-Regular.ttf",
-      "sha256": "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f"
-    },
-    {
       "bytes": 1173,
       "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
       "license": "Apache-2.0",
@@ -82,13 +73,13 @@
       "sha256": "4ff0ced51c90a94b85ecd6a8df637caaae5a180fd37bdc3096bc775566502305"
     },
     {
-      "bytes": 0,
+      "bytes": 82,
       "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
       "license": "Apache-2.0 AND LicenseRef-Public-Domain",
-      "modified": false,
+      "modified": true,
       "origin": "Adventure 1.7",
       "path": "scripts/runtime/adventure/tests/__init__.py",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "sha256": "de648dcf698ec1ed82b7ea75ab251759e245292196ef493e254886b8387de02a"
     },
     {
       "bytes": 1727,
@@ -180,13 +171,6 @@
       "name": "adventure",
       "url": "https://files.pythonhosted.org/packages/source/a/adventure/adventure-1.7.tar.gz",
       "version": "1.7"
-    },
-    {
-      "archive": "JetBrainsMono-2.304.zip",
-      "archive_sha256": "6f6376c6ed2960ea8a963cd7387ec9d76e3f629125bc33d1fdcd7eb7012f7bbf",
-      "name": "JetBrains Mono",
-      "url": "https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip",
-      "version": "2.304"
     }
   ]
 }

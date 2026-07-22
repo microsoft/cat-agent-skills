@@ -10,4 +10,4 @@ This bundle contains the unmodified `adventure/` package directory from the `adv
 - Python engine: Copyright 2010–2015 Brandon Rhodes, Apache License 2.0.
 - `advent.dat`, the original Adventure source, and phrases copied from it: public domain, as stated in the bundled upstream `README.txt`.
 
-No upstream file was modified. The upstream distribution contains no separate NOTICE file. Its complete license is in `Apache-2.0.txt`, and its copyright/provenance statement remains available in `scripts/runtime/adventure/README.txt`.
+No executable upstream file was modified. The otherwise empty `scripts/runtime/adventure/tests/__init__.py` package marker contains a comment because some skill hosts discard zero-byte files. The upstream distribution contains no separate NOTICE file. Its complete license is in `Apache-2.0.txt`, and its copyright/provenance statement remains available in `scripts/runtime/adventure/README.txt`.

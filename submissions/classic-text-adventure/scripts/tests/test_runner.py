@@ -2,14 +2,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest import mock
 
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 
 import checkpoint
-import render
 import runner
 
 
@@ -86,12 +84,12 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaises(runner.RequestError):
             runner.handle_request({**request, "raw_input": "yes"}, self.root)
 
-    def test_render_failure_does_not_lose_text(self):
-        with mock.patch.object(runner, "render_pages", side_effect=render.RenderUnavailable("no renderer")):
-            response = self.start()
-        self.assertIn("WELCOME TO ADVENTURE", response["text"])
-        self.assertNotIn("images", response)
-        self.assertTrue(runner.handle_request({"protocol": 1, "action": "status", "session_id": "game", "request_id": "status"}, self.root)["exists"])
+    def test_responses_and_checkpoints_are_text_only(self):
+        response = self.start()
+        checkpoint_document = checkpoint.load_checkpoint(self.root / "game" / "checkpoint.json")
+        for document in (response, checkpoint_document):
+            self.assertIn("text", document)
+            self.assertFalse(any(key.startswith("image_") for key in document))
 
     def test_session_identifier_blocks_traversal(self):
         with self.assertRaises(runner.RequestError):
