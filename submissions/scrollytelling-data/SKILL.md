@@ -114,7 +114,8 @@ If the user later uploads their own dataset, use that instead — the demo file 
 Always start here. Never skip.
 
 ```bash
-python /app/skills/analyzing-xlsx/scripts/preprocess.py <file>
+# XLSX flow only (CSV/JSON/PDF use their own inspect path, not this xlsx metadata artifact)
+python /app/skills/analyzing-xlsx/scripts/preprocess.py <xlsx_file>
 cat /app/workspace/_artifacts/<hash>/xlsx/1.0/metadata.json
 ```
 

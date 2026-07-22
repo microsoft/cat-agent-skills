@@ -4,6 +4,7 @@ Generic Scrollytelling Story Builder
 =====================================
 Usage:  python3 build_story.py <path_to_file> [output_dir]
 Input:  .xlsx / .xls / .csv / .json
+        (for this reference script, convert PDF tables to .xlsx/.csv first)
 Output: A single self-contained, scroll-driven HTML story file.
 
 Auto-detects:
@@ -202,6 +203,8 @@ def detect_schema(df):
 
     # ── Categorical columns ────────────────────────────────────────────────────
     skip = {s['geo_col'], s['time_col']}
+    id_kw = ('id', '_id', 'key', 'index', 'num', 'no.')
+    is_id_like = lambda col: any(col.lower().endswith(kw) or col.lower() == kw for kw in id_kw)
     cats = []
     for col in df.columns:
         if col in nums or col in skip:
@@ -209,15 +212,18 @@ def detect_schema(df):
         nu = df[col].nunique()
         if 2 <= nu <= 200:
             cats.append((col, nu))
+    # High-cardinality order helps pick a useful primary entity.
     cats.sort(key=lambda x: x[1], reverse=True)
-    s['cat_cols'] = [c for c, _ in cats]
+    # Category chapters should avoid identifier fields and prefer segment-style columns.
+    non_id_cats = [(c, nu) for c, nu in cats if not is_id_like(c)]
+    non_id_cats.sort(key=lambda x: x[1])  # lower-cardinality first for clearer distributions
+    s['cat_cols'] = [c for c, _ in non_id_cats]
 
     # Entity = highest-cardinality categorical that isn't a plain ID column
-    id_kw = ('id', '_id', 'key', 'index', 'num', 'no.')
     for col, nu in cats:
         if col in skip:
             continue
-        if any(col.lower().endswith(kw) or col.lower() == kw for kw in id_kw):
+        if is_id_like(col):
             continue
         if nu >= 3:
             s['entity_col'] = col; break
