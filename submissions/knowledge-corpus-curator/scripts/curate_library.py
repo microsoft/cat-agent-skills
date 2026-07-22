@@ -92,8 +92,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("/app/created/knowledge-curation"),
-        help="Output directory (default: /app/created/knowledge-curation)",
+        default=Path("/app/created/knowledge-corpus-curation"),
+        help="Output directory (default: /app/created/knowledge-corpus-curation)",
     )
     parser.add_argument("--config", type=Path, help="Configuration JSON")
     parser.add_argument("--metadata", type=Path, help="Optional source metadata JSON")
@@ -1248,7 +1248,7 @@ def write_html_report(
     output.write_text(
         f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>Knowledge Library Curation Report</title>
+<title>Knowledge Corpus Curation Report</title>
 <style>
 body{{font-family:Segoe UI,Arial,sans-serif;margin:40px;color:#172033;background:#f5f7fb}}
 h1{{color:#143d66}} .cards{{display:flex;flex-wrap:wrap;gap:12px}}
@@ -1258,7 +1258,7 @@ table{{border-collapse:collapse;width:100%;background:white;margin-top:20px}}
 th,td{{border:1px solid #d8deea;padding:8px;vertical-align:top;text-align:left}}
 th{{background:#1f4e78;color:white}} li{{margin:6px 0}}
 </style></head><body>
-<h1>Knowledge Library Curation Report</h1>
+<h1>Knowledge Corpus Curation Report</h1>
 <div class="cards">{cards}</div>
 <h2>Priority backlog</h2>
 {truncation}
@@ -1384,8 +1384,8 @@ def main() -> int:
         "backlog": backlog,
     }
     json_path = args.output / "curation-results.json"
-    workbook_path = args.output / "knowledge-curation-backlog.xlsx"
-    html_path = args.output / "knowledge-curation-report.html"
+    workbook_path = args.output / "knowledge-corpus-curation-backlog.xlsx"
+    html_path = args.output / "knowledge-corpus-curation-report.html"
     json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     write_workbook(
         workbook_path,

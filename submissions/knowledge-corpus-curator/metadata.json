@@ -1,6 +1,6 @@
 {
-  "name": "Knowledge Library Curator - Upload",
-  "description": "Combine uploaded SharePoint library ZIP batches, audit files across batch boundaries for duplicate, stale, overlapping, and potentially conflicting content, then validate findings against agent knowledge.",
+  "name": "Knowledge Corpus Curator",
+  "description": "Review uploaded knowledge-source files for duplication, redundancy, staleness, overlap, and potentially conflicting guidance, then produce an evidence-based curation backlog.",
   "platforms": [
     "Copilot Studio"
   ],
@@ -15,7 +15,7 @@
   ],
   "author": "Doug Bellingeri",
   "authorUrl": "https://github.com/CATDAB",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "createdAt": "2026-07-21",
   "updatedAt": "2026-07-21"
 }

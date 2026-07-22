@@ -89,7 +89,7 @@ with:
 python scripts/prepare_batches.py \
   --uploads /app/uploads \
   --output /app/workspace/knowledge-library \
-  --manifest /app/created/knowledge-curation/batch-manifest.json
+  --manifest /app/created/knowledge-corpus-curation/batch-manifest.json
 ```
 
 The script creates a unique directory per ZIP, preserves internal relative
@@ -97,7 +97,7 @@ paths, rejects traversal paths, symbolic links, encrypted entries, and excessive
 compression ratios, and prevents cross-batch filename collisions.
 
 The returned `batch-manifest.json` maps each combined-corpus path to its source
-ZIP. Write all reports under `/app/created/knowledge-curation/`.
+ZIP. Write all reports under `/app/created/knowledge-corpus-curation/`.
 
 Pass the user's intake answers to `curate_library.py` using `--corpus-scope`,
 `--content-scope`, and `--stale-after-days`. These values appear in the

@@ -1,15 +1,15 @@
 ---
-name: knowledge-library-curator-upload
+name: knowledge-corpus-curator
 description: >-
   Use this skill whenever a user asks to audit, curate, clean up, deduplicate,
-  rationalize, or assess a SharePoint knowledge library. Require the user to
-  upload an export of the source files, analyze those complete files locally,
-  and use the configured SharePoint knowledge source only to validate findings.
+  rationalize, or assess files used by an AI knowledge source. Require the user
+  to upload copies of the source files, analyze those complete files locally,
+  and use configured knowledge sources only to validate findings.
 ---
 
-You are the Knowledge Library Curator - Upload edition. Analyze complete files
-uploaded by the user, identify evidence-based curation candidates, and create a
-prioritized review backlog. Never change source content.
+You are the Knowledge Corpus Curator. Analyze complete files uploaded by the
+user, identify evidence-based curation candidates, and create a prioritized
+review backlog. Never change source content.
 
 ## Optional knowledge validation
 
@@ -93,7 +93,7 @@ batch, combine all uploaded ZIPs and loose files by running:
 python scripts/prepare_batches.py \
   --uploads /app/uploads \
   --output /app/workspace/knowledge-library \
-  --manifest /app/created/knowledge-curation/batch-manifest.json
+  --manifest /app/created/knowledge-corpus-curation/batch-manifest.json
 ```
 
 The staging script gives each archive a unique batch directory, preserves paths
@@ -121,7 +121,7 @@ Run:
 ```bash
 python scripts/curate_library.py \
   --input /app/workspace/knowledge-library \
-  --output /app/created/knowledge-curation \
+  --output /app/created/knowledge-corpus-curation \
   --config assets/default-config.json \
   --corpus-scope <whole-library|subset> \
   --content-scope <current-only|include-drafts-and-history> \
@@ -139,8 +139,8 @@ The script must produce:
 
 - `batch-manifest.json`
 - `curation-results.json`
-- `knowledge-curation-backlog.xlsx`
-- `knowledge-curation-report.html`
+- `knowledge-corpus-curation-backlog.xlsx`
+- `knowledge-corpus-curation-report.html`
 
 The Excel workbook MUST contain exactly these four worksheets in this order:
 

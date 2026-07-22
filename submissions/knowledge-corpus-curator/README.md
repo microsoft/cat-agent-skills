@@ -1,4 +1,4 @@
-# Knowledge Library Curator - Upload
+# Knowledge Corpus Curator
 
 Review the files used by an AI knowledge source for duplication, redundancy,
 staleness, overlap, and potentially conflicting guidance. A cleaner,

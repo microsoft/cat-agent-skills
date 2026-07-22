@@ -41,7 +41,7 @@ boundaries, page fields remain blank rather than using an invented page number.
 
 ## Excel workbook
 
-`knowledge-curation-backlog.xlsx` always contains exactly four worksheets in
+`knowledge-corpus-curation-backlog.xlsx` always contains exactly four worksheets in
 this order:
 
 1. `Review Backlog`
