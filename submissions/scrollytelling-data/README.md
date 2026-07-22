@@ -2,7 +2,7 @@
 
 You can say to the Agent **"Run the Demo"** to start the demo, or upload your own data.
 
-- **Run the Demo** — builds a full story from the bundled sample workbook (`assets/demo-agent-data.xlsx`, a US-states revenue dataset), leading with a big US states map.
+- **Run the Demo** — builds a full story from the bundled sample workbook (`assets/Basketball_Demo_Data.xlsx`, a multi-sheet basketball players + teams dataset).
 - **Upload your own data** — drop in a `.xlsx`, `.csv`, `.json`, or a PDF with tables and the Agent builds the story from that instead.
 
 ## What you get
@@ -22,6 +22,6 @@ Under the hood it loads your data into **SQLite** and runs the group-bys, sorts,
 ## Files
 
 - `SKILL.md` — the full workflow the Agent follows
-- `assets/demo-agent-data.xlsx` — the bundled demo dataset
+- `assets/Basketball_Demo_Data.xlsx` — the bundled demo dataset
 - `scripts/build_story.py` — reference implementation of the page generator
 - `references/` — chart patterns and demo-mode notes
