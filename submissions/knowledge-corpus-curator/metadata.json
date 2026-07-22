@@ -1,0 +1,21 @@
+{
+  "name": "Knowledge Corpus Curator",
+  "description": "Review uploaded knowledge-source files for duplication, redundancy, staleness, overlap, and potentially conflicting guidance, then produce an evidence-based curation backlog.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "knowledge",
+    "sharepoint",
+    "governance",
+    "deduplication",
+    "documents",
+    "uploads",
+    "excel"
+  ],
+  "author": "Doug Bellingeri",
+  "authorUrl": "https://github.com/CATDAB",
+  "version": "0.7.1",
+  "createdAt": "2026-07-21",
+  "updatedAt": "2026-07-22"
+}
