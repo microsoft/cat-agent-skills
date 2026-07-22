@@ -1124,25 +1124,50 @@ def build_backlog(
                 reason=document["error"] or document["extractionStatus"],
             )
     for group in duplicate_groups:
+        extracted_members = [
+            document_id
+            for document_id in group["documents"]
+            if document_id in extracted
+        ]
+        evidence_anchor = (
+            group["suggestedPrimary"]
+            if group["suggestedPrimary"] in extracted
+            else (
+                max(
+                    extracted_members,
+                    key=lambda document_id: by_id[document_id]["modifiedAt"],
+                )
+                if extracted_members
+                else ""
+            )
+        )
+        comparison_anchor = evidence_anchor or group["suggestedPrimary"]
         for document_id in group["documents"]:
-            if document_id == group["suggestedPrimary"]:
+            if document_id == comparison_anchor:
                 continue
-            if (
-                document_id not in extracted
-                or group["suggestedPrimary"] not in extracted
-            ):
+            if not evidence_anchor or document_id not in extracted:
+                add(
+                    "High",
+                    "Extraction gap",
+                    "Resolve extraction, then review the hash-matched copy.",
+                    comparison_anchor,
+                    document_id,
+                    1.0,
+                    f"{group['reason']} Passage evidence is unavailable because "
+                    "one or both files were not content-extracted.",
+                )
                 continue
             add(
                 "High",
                 "Duplicate",
-                "Confirm the primary copy, then review this copy for merge or archive.",
+                "Confirm the primary document, then review the related copy for merge or archive.",
+                evidence_anchor,
                 document_id,
-                group["suggestedPrimary"],
                 1.0,
                 group["reason"],
                 comparison_evidence(
+                    evidence_anchor,
                     document_id,
-                    group["suggestedPrimary"],
                     extracted,
                     page_texts,
                 ),
@@ -1549,6 +1574,8 @@ def main() -> int:
     args = parse_args()
     if not args.input.is_dir():
         raise SystemExit(f"Input directory does not exist: {args.input}")
+    if args.output.exists() and not args.output.is_dir():
+        raise SystemExit(f"Output path is not a directory: {args.output}")
     args.output.mkdir(parents=True, exist_ok=True)
     config = load_json(args.config, {})
     defaults = {
