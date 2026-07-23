@@ -216,8 +216,10 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
     topics_with_items = {str(item.get("topic", "")) for item in items}
     empty_topics: list[str] = []
     for topic in config.get("watch_topics", []):
-        key = str(topic.get("key", ""))
-        if key and key not in topics_with_items:
+        key = str(topic.get("key", "")).strip()
+        if not key:
+            continue  # skip topics without a real key (see tiles loop above)
+        if key not in topics_with_items:
             empty_topics.append(str(topic.get("name", key)))
 
     empty_html = ""
