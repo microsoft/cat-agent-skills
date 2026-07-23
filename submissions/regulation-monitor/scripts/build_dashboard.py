@@ -110,7 +110,6 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
 
     total = len(items)
     per_topic = Counter(item.get("topic", "") for item in items)
-    per_stage = Counter(item.get("stage", "") for item in items)
     team_relevant = sum(1 for item in items if item.get("relevant_to_your_team"))
 
     # Sort: team-relevant first, then stage order, then date desc.

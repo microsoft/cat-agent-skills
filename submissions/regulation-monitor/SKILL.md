@@ -1,22 +1,6 @@
 ---
-name: regulation-monitor
-description: |
-  Monitors user-specified regulations, laws, and regulatory guidance on a
-  recurring schedule. On first run, walks the user through a one-time setup
-  (watch topics, jurisdictions, cadence), auto-discovers the top authoritative
-  sources for each watch topic, and locks the sweep to that fixed source list
-  plus the user's own seed sources. Every subsequent run visits only those
-  sources (never an open-ended web search), classifies each item, flags items
-  relevant to the user's team using WorkIQ-derived context, and renders a
-  self-contained HTML dashboard.
-  Use when the user says "monitor regulations", "set up a regulation tracker",
-  "watch for new rules on X", "any updates on the EU AI Act", "run my
-  regulation monitor", or wants a weekly regulatory digest.
-  Do NOT use for one-off legal research (use deep-research), for computing a
-  compliance liability or filing position (out of scope — this is monitoring),
-  or for reading a single document the user already has (use docx / pptx).
-  This skill is domain-agnostic — tax, privacy, AI/ML, healthcare, finance,
-  ESG, labor, etc. — the user picks the topics at setup.
+name: "regulation-monitor"
+description: "Monitors user-specified regulations, laws, and regulatory guidance on a"
 ---
 
 # Regulation Monitor
@@ -404,15 +388,17 @@ narrow ones (e.g., one EU regulation).
 
 ## Scheduling
 
-See the submission's `README.md` (a human-facing sidecar; not bundled into
-the agent's context) for scheduling walkthroughs on Scout and Cowork. The
-core skill has no cadence of its own — the schedule lives outside the skill
-and simply invokes it.
+See `references/automation-template.md` for how to schedule this skill on
+Scout (via Scout automation) and Cowork
+(scheduled task). The core skill has no cadence of its own — the schedule
+lives outside the skill and simply invokes it.
 
 ## References
 
 - `references/sources-and-taxonomy.md` — reputable-domain allowlist for
   fallback search, item classification taxonomy, stage-inference rules, and
   per-topic search-query templates.
+- `references/automation-template.md` — how to schedule the monitor on
+  Scout and Cowork.
 - `scripts/build_dashboard.py` — self-contained dashboard generator
   (Python standard library only).
