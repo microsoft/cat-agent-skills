@@ -1,0 +1,19 @@
+{
+  "name": "Business OS",
+  "description": "A practical operating system for Copilot Studio that gives agents a consistent way to clarify outcomes, choose the right approach, solve problems, make decisions, plan projects, improve processes, handle incidents, and turn repeatable work into reusable skills. Unlike a standard Copilot experience that relies mainly on the prompt and available context, Business OS adds a structured way of working so responses are more consistent, actionable, and easier to reuse across real business tasks.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "business",
+    "decision-making",
+    "problem-solving",
+    "project-planning",
+    "process-improvement",
+    "governance",
+    "skill-generation"
+  ],
+  "author": "Matthew James Davis",
+  "authorUrl": "https://agentskillslibrary.ai",
+  "version": "1.0.0"
+}

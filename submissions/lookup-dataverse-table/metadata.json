@@ -1,0 +1,11 @@
+{
+  "name": "Dataverse Table Lookup",
+  "description": "Search any Microsoft Dataverse table, browse matching records, and drill into full record details — sourced live via the Dataverse MCP Server.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["dataverse", "mcp", "data-lookup", "power-platform", "crm"],
+  "author": "Chris Garty",
+  "authorUrl": "https://github.com/ChrisGarty",
+  "version": "1.0.0",
+  "createdAt": "2026-07-18",
+  "updatedAt": "2026-07-18"
+}
