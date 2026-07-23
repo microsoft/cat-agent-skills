@@ -127,7 +127,7 @@ def sorted_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         reverse=True,
     )
     def group_key(item: dict[str, Any]) -> tuple[int, int]:
-        relevant_first = 0 if item.get("relevant_to_your_team") else 1
+        relevant_first = 0 if item.get("relevant_to_your_team") is True else 1
         stage = str(item.get("stage") or "")
         stage_idx = (
             STAGE_ORDER.index(stage) if stage in STAGE_ORDER else len(STAGE_ORDER)
@@ -139,10 +139,14 @@ def sorted_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
     profile_name = esc(config.get("profile_name", "regulation-monitor"))
     cadence = esc(config.get("cadence", "on demand"))
-    try:
-        window_days = int(config.get("window_days") or 7)
-    except (TypeError, ValueError):
+    window_raw = config.get("window_days")
+    if window_raw is None:
         window_days = 7
+    else:
+        try:
+            window_days = int(window_raw)
+        except (TypeError, ValueError):
+            window_days = 7
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     topic_name_by_key: dict[str, str] = {}
@@ -153,8 +157,8 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
         topic_name_by_key[key] = str(topic.get("name", key))
 
     total = len(items)
-    per_topic = Counter(item.get("topic", "") for item in items)
-    team_relevant = sum(1 for item in items if item.get("relevant_to_your_team"))
+    per_topic = Counter(str(item.get("topic") or "") for item in items)
+    team_relevant = sum(1 for item in items if item.get("relevant_to_your_team") is True)
 
     ordered = sorted_items(items)
 
@@ -174,7 +178,7 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
     # equals chronological (date), plain lowercased text elsewhere.
     rows_html: list[str] = []
     for item in ordered:
-        topic_key = str(item.get("topic", ""))
+        topic_key = str(item.get("topic") or "")  # None -> "" not "None"
         topic_display = topic_name_by_key.get(topic_key, topic_key or "-")
         stage = str(item.get("stage") or "")
         stage_sort = (
@@ -197,7 +201,7 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
         rows_html.append(
             "<tr>"
             f'<td data-sort="{esc(date_str)}">{esc(date_str or "-")}</td>'
-            f'<td data-sort="{esc(topic_display.lower())}">{esc(topic_display)} {relevant_badge(bool(item.get("relevant_to_your_team")))}</td>'
+            f'<td data-sort="{esc(topic_display.lower())}">{esc(topic_display)} {relevant_badge(item.get("relevant_to_your_team") is True)}</td>'
             f'<td data-sort="{esc(jurisdiction.lower())}">{esc(jurisdiction)}</td>'
             f'<td data-sort="{esc(stage_sort)}">{stage_pill(stage)}</td>'
             f'<td data-sort="{esc(title.lower())}">'
@@ -213,7 +217,7 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
         )
 
     # Empty-topic callout: list any watch topic that produced zero items.
-    topics_with_items = {str(item.get("topic", "")) for item in items}
+    topics_with_items = {str(item.get("topic") or "") for item in items}
     empty_topics: list[str] = []
     for topic in config.get("watch_topics", []):
         key = str(topic.get("key", "")).strip()
@@ -449,6 +453,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     config = load_json(args.config)
+    if not isinstance(config, dict):
+        print(
+            f"config file must contain a JSON object; got {type(config).__name__}",
+            file=sys.stderr,
+        )
+        return 2
     items_doc = load_json(args.items)
     raw_items = items_doc.get("items", []) if isinstance(items_doc, dict) else []
     if not isinstance(raw_items, list):
