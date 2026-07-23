@@ -50,6 +50,7 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.oxml.ns import qn
 
 INK="1B2A4A"; SECONDARY="3E6690"; ACCENT="C8322D"; CARD="EDF1F6"; ATINT="F6E3E2"; INK_SOFT="5A6B7C"; HAIR="C9D6E2"
+
 def C(h): return RGBColor.from_string(h)
 
 prs=Presentation(); prs.slide_width=Emu(12192000); prs.slide_height=Emu(int(12192000/1.6))
