@@ -4,6 +4,7 @@
   "platforms": ["Cowork", "Scout"],
   "tags": ["regulation", "monitoring", "compliance", "dashboard", "research"],
   "author": "Jagmeet Chabra",
+  "authorUrl": "https://github.com/jchha001",
   "version": "1.0.0",
   "createdAt": "2026-07-23",
   "updatedAt": "2026-07-23"
