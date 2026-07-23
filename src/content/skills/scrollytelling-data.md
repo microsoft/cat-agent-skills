@@ -108,6 +108,8 @@ Before writing a single line of HTML, answer these questions from the data:
 
 Each answer becomes a **chapter**. Aim for 6–8 chapters. Too few = shallow. Too many = boring.
 
+**Plan once, then commit.** Before touching any code, write your final chapter list — for each chapter: its **title**, its **chart type**, and the **one-line insight** it delivers. Make every skip / merge / split / reorder decision *here*. Aim to settle this in a **single** planning pass; allow yourself **at most one** revision if something is clearly wrong, then the list is **locked**. Repeatedly re-deriving the story — re-counting chapters, reshuffling order, second-guessing chart choices — is the single biggest time sink, so do the thinking now and stop.
+
 ### Phase 3 — Prepare the Data as JSON
 
 Extract all data needed for charts and inject it as a JavaScript constant in the HTML. This is what makes the file self-contained.
@@ -161,6 +163,8 @@ Save to `/app/workspace/story_data.json`. Then build the HTML in a separate scri
 
 Write the HTML to `/app/workspace/build_story.py` using the `create` tool, then run it with `python3`. Always write to a file — never use a heredoc with nested quotes.
 
+**Build the chapter list you locked in Phase 2 — don't re-plan while coding.** Write the script in one pass that renders exactly that committed plan. Don't re-order, re-count, or reconsider chart choices mid-build; the scaffold below is a rendering reference for a plan you've *already decided*, not a prompt to decide again.
+
 **Build every chart and animation through the shared helpers in this file** — `renderCategoryBar`/`renderDonut`/`BG`/`CFG` in the Chart Selection Guide, and the counter/leaderboard/record-card code in Animated Components — rather than re-typing traces per chapter. Each carries bug-fix rules (length asserts, single-fire counters) that keep charts and counters from silently dying. Only the **conditional** chart types (maps, scatter/bubble, dual-axis `yaxis2`) live in [`references/CHART-PATTERNS.md`](references/CHART-PATTERNS.md) — open it only when the data actually shows one of those shapes.
 
 **Default story scaffold (a starting point, not a fixed recipe):**
@@ -182,7 +186,7 @@ Write the HTML to `/app/workspace/build_story.py` using the `create` tool, then 
 [EPILOGUE]      One-paragraph verdict + badge
 ```
 
-This scaffold keeps you off a blank page. Keep the hero → stat splash → epilogue bookends almost always — they make it feel like a complete story. **Everything in between is a decision, not a checklist:** order chapters by narrative strength for *this* dataset (not the list order above); skip, merge, split, reorder freely (no timeline data → drop that chapter); add chapters the scaffold doesn't mention when the data reveals an angle worth its own beat. 6–8 chapters is a rough guide — let the data's depth decide, and aim for the strongest narrative, not a template filled in the same order every time.
+This scaffold keeps you off a blank page. Keep the hero → stat splash → epilogue bookends almost always — they make it feel like a complete story. The chapters in between are **the plan you already committed to in Phase 2** — you decided there which to skip, merge, split, reorder, or add based on this dataset's strengths. Render that plan now in that order; don't re-open those decisions while writing.
 
 **Chapter layout pattern (two-column):**
 
