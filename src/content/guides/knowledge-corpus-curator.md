@@ -71,24 +71,21 @@ coverage is incomplete.
 ## How to use it
 
 1. Add the skill to your Copilot Studio agent.
-2. Upload every ZIP in the same active conversation.
-3. After the final upload, say:
+2. Attach one or more ZIP files. Multiple ZIPs can be attached to the same
+   message, and additional batches can be sent in later messages in the same
+   conversation. Each ZIP can be up to 50 MB, provided the combined size of all
+   files attached in the chat session remains under 200 MB.
+3. If the agent asks whether more files are coming, confirm that the upload is
+   complete or attach another batch. No specific confirmation phrase is
+   required.
+4. The agent stages all confirmed uploads together, analyzes every uploaded file, validates
+   the highest-risk findings, and returns the report files.
 
-   > That is the final batch. Analyze these now.
-
-4. The agent collects the three setup answers below, stages all batches together,
-   analyzes the combined corpus, validates the highest-risk findings, and returns
-   the report files.
-
-After you confirm the final batch, the agent asks three short setup questions,
-one at a time:
-
-1. Whether the upload represents the whole intended library or a subset.
-2. Whether the uploaded corpus contains current content only or also includes
-   drafts, archived files, or historical versions.
-3. Which freshness threshold in days to use; the default is 365 days.
-
-These answers are recorded in the `Curation Settings` worksheet.
+Final-batch confirmation is the only required intake question. The skill does
+not ask whether the upload is a whole library or subset, and it does not filter
+drafts, archives, or historical versions. Every file in the confirmed upload is
+included. Staleness uses the default 365-day threshold unless you already
+requested another value.
 
 ## What it finds
 
