@@ -48,37 +48,9 @@ Example checkpoints (an illustrative full run — drop any line that doesn't app
 
 ---
 
-## Demo Mode — Build a Story with No Upload
+## Demo Mode
 
-This skill ships with a bundled sample workbook so you can produce a full, feature-complete story even when the user hasn't uploaded anything.
-
-**When to use it:** If the user asks for a "demo", "example", "show me what this does", or otherwise wants to see the skill in action without providing their own file, use the bundled workbook as the input dataset:
-
-```
-scrollytelling-data/assets/Basketball_Demo_Data.xlsx
-```
-
-At runtime the full path is `/app/skills/scrollytelling-data/assets/Basketball_Demo_Data.xlsx`.
-
-**What's in it:** A basketball demo dataset — a two-sheet workbook built to exercise joins, rankings, team breakdowns, and correlation chapters:
-- **`Players`** (~1000 rows): `PlayerID`, `Player Name`, `Team`, `Position`, `Age`, `Points/Game`, `Rebounds/Game`, `Assists/Game`.
-- **`Teams`** (~30 rows, lookup): `Team`, `City`, `Conference`, `Division`, `Home Arena`, `Founded` — joins to `Players` on `Team` (the sheet-to-sheet SQL JOIN from Phase 3).
-
-**How to run a demo:**
-1. Treat the bundled `.xlsx` above as the uploaded dataset and run the **full five-phase workflow** on it exactly as you would a user's file — no shortcuts.
-2. Because the demo file lives in the skill folder (not `/app/uploads/`), the Phase 1 upload gate doesn't apply — read it directly. Running `preprocess.py` is optional here (fine for a consistent inspection step, but not required to unlock the file).
-3. Load **both** sheets and JOIN them in SQL (Phase 3) so the story can combine player stats with team metadata (conference/division/city/arena/founded).
-4. Prioritize chapters that fit this dataset: top scorers, team-level averages, position splits, conference/division comparisons, and correlation views (`Points/Game` vs `Assists/Game` or `Rebounds/Game`).
-5. Use the default chart-selection rules; there is no built-in geo field and no required map chapter for this demo.
-6. Narrate the friendly emoji checkpoints (no step numbers). There's no built-in time column, so skip time-trend chapters unless you derive a valid time dimension from the user prompt.
-7. **Basketball demo color rule (demo-only):** when the input is this bundled basketball demo workbook, switch accents to pink + green tones for the page/theme and chart accents. Keep it constrained to that demo path only; for user-uploaded datasets, use the normal theme rules.
-8. Name the output per the File Naming Convention (e.g. `basketball-demo-data-story-YYYY-MM-DD.html`).
-9. In the delivery message, explicitly remind the user this run used bundled **demo data**, and set expectation that stories built from their real uploaded data are usually more relevant and often better than the demo output.
-10. **Basketball demo anti-repeat rule (demo-only):** avoid repeated chart patterns. Do not place the same primary chart type in back-to-back chapters, and cap bar-chart chapters at two total unless the user explicitly asks for mostly bar charts.
-
-**Tone — competitive but respectful.** It's fine to discuss leaders and lagging groups in basketball stats, but avoid insulting or demeaning language about players/teams. Keep the copy energetic and constructive.
-
-If the user later uploads their own dataset, use that instead — the demo file is only a fallback when no dataset is provided.
+If the user asks for a demo, an example, or "show me what this does" without uploading a dataset of their own, build the story from the bundled workbook at `assets/Basketball_Demo_Data.xlsx` (runtime path `/app/skills/scrollytelling-data/assets/Basketball_Demo_Data.xlsx`) and follow [`references/DEMO-MODE.md`](references/DEMO-MODE.md) for the full demo workflow (sheet join, demo theme, ~5-chapter cap). If the user later uploads their own dataset, use that instead.
 
 ---
 
@@ -189,7 +161,7 @@ Save to `/app/workspace/story_data.json`. Then build the HTML in a separate scri
 
 Write the HTML to `/app/workspace/build_story.py` using the `create` tool, then run it with `python3`. Always write to a file — never use a heredoc with nested quotes.
 
-**Before writing chart or animation code, open [`references/CHART-PATTERNS.md`](references/CHART-PATTERNS.md).** It holds the shared helpers this phase is built from — base layout (`BG`/`CFG`), `renderCategoryBar`, `renderDonut`, the low-variance zoom, and the counter/leaderboard/record-card animation code — each with the bug-fix rules (length asserts, single-fire counters) that keep charts and counters from silently dying. Build every chart and animation through those helpers rather than re-typing traces per chapter.
+**Build every chart and animation through the shared helpers in this file** — `renderCategoryBar`/`renderDonut`/`BG`/`CFG` in the Chart Selection Guide, and the counter/leaderboard/record-card code in Animated Components — rather than re-typing traces per chapter. Each carries bug-fix rules (length asserts, single-fire counters) that keep charts and counters from silently dying. Only the **conditional** chart types (maps, scatter/bubble, dual-axis `yaxis2`) live in [`references/CHART-PATTERNS.md`](references/CHART-PATTERNS.md) — open it only when the data actually shows one of those shapes.
 
 **Default story scaffold (a starting point, not a fixed recipe):**
 
@@ -210,14 +182,7 @@ Write the HTML to `/app/workspace/build_story.py` using the `create` tool, then 
 [EPILOGUE]      One-paragraph verdict + badge
 ```
 
-This scaffold exists so you're never starting from a blank page, and the hero → stat splash → epilogue bookends are worth keeping almost always — they're what make the page feel like a complete story rather than a loose set of charts. **Everything in between is a decision, not a checklist:**
-
-- **Order chapters by narrative strength for this specific dataset**, not by the list position above. If "the who" (top performers) is the most surprising finding, it can lead; geography doesn't have to go first just because it's listed first here.
-- **Skip, merge, split, or reorder chapters freely.** No timeline data → drop that chapter. Two story beats are thin on their own but powerful together → combine them into one chapter with two charts. A single beat has enough depth for two angles → split it into two chapters.
-- **Add chapters the scaffold doesn't mention** when the data reveals an angle worth its own beat (a correlation, an anomaly, a segment comparison) — the Phase 2 story-beat table is a prompt for thinking, not an exhaustive chapter list.
-- **6–8 chapters is a rough guide, not a hard target** — let the data's actual depth decide the count.
-
-Use your judgment the same way an editor would: the goal is the strongest possible narrative from *this* dataset, not a template filled in the same order every time.
+This scaffold keeps you off a blank page. Keep the hero → stat splash → epilogue bookends almost always — they make it feel like a complete story. **Everything in between is a decision, not a checklist:** order chapters by narrative strength for *this* dataset (not the list order above); skip, merge, split, reorder freely (no timeline data → drop that chapter); add chapters the scaffold doesn't mention when the data reveals an angle worth its own beat. 6–8 chapters is a rough guide — let the data's depth decide, and aim for the strongest narrative, not a template filled in the same order every time.
 
 **Chapter layout pattern (two-column):**
 
@@ -266,42 +231,128 @@ Use `.c-inner.full` for full-width chapters (timeline, leaderboard, worst record
 
 ### Phase 5 — Deliver
 
+Write the file to `/app/created/` (per the File Naming Convention below) so it's returned as an attachment:
+
 ```python
 with open("/app/created/<dataset-name>-story-YYYY-MM-DD.html", "w") as f:
     f.write(html)
 ```
 
-Always write to `/app/created/` so it is returned as an attachment.
-
 ---
 
 ## Chart Selection Guide
 
-This table is a **starting point for the most common data shapes** — use it to move fast, but override the pick whenever a different chart would reveal the specific story in front of you more clearly (e.g. a scatter instead of bars when the real story is a correlation, or small multiples instead of one crowded chart when comparing many categories at once).
+**Default to a small set of fast, robust charts** — these cover almost every dataset and rarely need bespoke math. Reach for them first and reuse them freely; **repeating a bar or donut across chapters is completely fine.**
 
-| Data Shape | Common Choice | Plotly Type |
+| Data Shape | Chart | Plotly Type |
 |---|---|---|
-| Rankings (top N entities) | Vertical bar | `bar` |
-| Rankings with long names | Horizontal bar | `bar` + `orientation:'h'` |
-| Share / composition | Donut | `pie` + `hole:0.55`, `showlegend:false`, on-slice `label+percent` — **max one donut/pie per story** — `renderDonut()` in `references/CHART-PATTERNS.md` |
-| Two variables per entity | Scatter / bubble | `renderScatterBubble()` — conditional pattern, see `references/CHART-PATTERNS.md` |
-| Geographic (US states) | Choropleth | `choropleth` + `locationmode:'USA-states'` + `geo:{scope:'usa'}` — see `references/CHART-PATTERNS.md` |
-| Geographic (world) | World map | `choropleth` + `locationmode:'country names'` (or `'ISO-3'`) + `geo:{scope:'world'}` — see `references/CHART-PATTERNS.md` |
-| Two metrics over time | Dual-axis line | Two `scatter` traces + `yaxis2` — see `references/CHART-PATTERNS.md` |
-| Category × category intensity | Heatmap | `heatmap` |
-| Distribution of values | Box plot | `box` |
-| Distribution shape | Histogram | `histogram` |
-| Part-to-whole with many categories or a hierarchy | Treemap / sunburst | `treemap` / `sunburst` |
-| Ordered stages / drop-off (e.g. Scoping → Piloting → Live) | Funnel | `funnel` |
-| Composition across a few groups | 100% stacked bar | `bar` + `barnorm:'percent'` + `barmode:'stack'` |
-| Cumulative build-up / running total | Waterfall | `waterfall` |
-| Multi-attribute profile of a few entities | Radar | `scatterpolar` + `fill:'toself'` |
-| Flow / transfer between categories | Sankey | `sankey` |
-| Density across two numeric axes | Density heatmap | `histogram2dcontour` |
+| Rankings (top N entities) | Bar (horizontal for long names) | `bar` (+ `orientation:'h'`) — `renderCategoryBar()` |
+| Top-N with animated rows | Leaderboard | animated rows — see Animated Components |
+| Share / composition | Donut | `pie` + `hole:0.55` — **max one per story** — `renderDonut()` |
+| Two variables per entity | Scatter / bubble | **top ~10 entities only** — `renderScatterBubble()` — see `references/CHART-PATTERNS.md` |
+| A metric over time | Line | `scatter` mode `lines` |
+| A real geo column is present | Choropleth map | `choropleth` — see `references/CHART-PATTERNS.md` |
+| Two metrics on one time axis | Dual-axis line | two `scatter` + `yaxis2` — see `references/CHART-PATTERNS.md` |
 
-**Right chart for the data first, variety second — never "fancy for its own sake."** The chart type must always be driven by what the data is actually saying: a funnel only if the categories are real ordered stages, a treemap only for genuine part-to-whole/hierarchy, a radar only when comparing a few entities across several attributes, and so on. Never reach for a fancier chart just because it looks impressive — a forced treemap or sankey that doesn't match the data is worse than a plain bar. *Within* that constraint, aim for variety: don't render five bar charts in a row when some chapters would genuinely be clearer as a treemap, funnel, waterfall, or radar. So: pick the correct chart for each chapter's data, and let that naturally produce a mix of shapes rather than a wall of identical bars. The only hard caps are the composition ones (max one donut/pie). Keep every chart readable on the dark theme (spread `...BG`, set explicit label/tick colors) and render it through `renderSection(id)` with a real `height` on the div.
+**Advanced charts (heatmap, treemap/sunburst, funnel, radar, sankey, waterfall, box/histogram) are opt-in only.** They cost far more per-run reasoning (custom normalization, pivoted matrices, per-axis scaling) and are a top cause of slow runs. Use one *only* when its exact precondition is met and a default chart genuinely can't tell the story — **never just to avoid repeating a bar or donut.**
 
-**Chart code and conditional patterns live in [`references/CHART-PATTERNS.md`](references/CHART-PATTERNS.md).** That one file has both the shared build helpers you'll use on most stories — the base layout (`BG`/`CFG`), `renderCategoryBar` (bar), `renderDonut` (donut), the **Low-Variance Rankings** axis-zoom fix, and the counter/leaderboard/record-card animation code — and the conditional chart types that only apply to some datasets (maps/choropleth, scatter/bubble `renderScatterBubble()`, and bar+overlay `yaxis2` combos). Open it in Phase 4 before writing any chart or animation code and build through these helpers, so the bug-fix rules (length asserts, single-fire counters) are applied consistently rather than re-typed per chapter.
+**Scatter/bubble charts: plot at most ~10 entities, always.** A scatter of 20–30+ points is an unreadable clump of overlapping, mislabeled bubbles — pick the top ~10 by the size metric (or the story's focus) and plot only those, even if you hand-roll the trace instead of using `renderScatterBubble()` (which caps at 10 automatically). Keep the chapter copy consistent ("top 10", not "top 30").
+
+Keep every chart readable on the dark theme (spread `...BG`, set explicit label/tick colors) and render it through `renderSection(id)` with a real `height` on the div. **Build all bars, donuts, and rankings through the shared helpers below** so the bug-fix rules (length asserts, ordering, low-variance zoom, no legend collision) apply consistently instead of being re-typed per chapter.
+
+### Base Layout (`BG` / `CFG`)
+
+Spread `...BG` into every chart's layout for dark-theme consistency:
+
+```javascript
+const BG = {
+  paper_bgcolor:'#111', plot_bgcolor:'#111',
+  font:{color:'#bbb', size:11},
+  margin:{t:16, b:52, l:58, r:18},
+  xaxis:{gridcolor:'#1e1e1e', linecolor:'#2a2a2a'},
+  yaxis:{gridcolor:'#1e1e1e', linecolor:'#2a2a2a'}
+};
+const CFG = {responsive:true, displayModeBar:false};
+```
+
+### Category Bar — `renderCategoryBar()`
+
+Charts like "resolution time by priority" (Low/Medium/High/Critical vs. hours) are a classic failure point: vertical columns misaligned to the category axis, or a category silently missing its bar — usually because each chapter's bar trace is hand-typed slightly differently. **Use one shared helper for every "category compared to a metric" bar chart**, never a bespoke `Plotly.newPlot` per chapter:
+
+```javascript
+// Generic helper for ANY category-vs-metric bar chart (priority, category, channel, region, etc.)
+function renderCategoryBar(divId, categories, values, opts = {}) {
+  if (categories.length !== values.length) {
+    throw new Error(`${divId}: categories/values length mismatch (${categories.length} vs ${values.length})`);
+  }
+  // Pair, then sort/order once from a single source of truth — never build x/y as two separately-derived arrays.
+  const order = opts.categoryOrder;                 // optional fixed order, e.g. ['Critical','High','Medium','Low']
+  const pairs = categories.map((c, i) => [c, values[i]]);
+  if (order) pairs.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+  else pairs.sort((a, b) => b[1] - a[1]);            // default: descending by value
+
+  const cats = pairs.map(p => p[0]);
+  const vals = pairs.map(p => p[1]);
+
+  // Low-variance guard: zoom the axis instead of always starting at 0 (see "Low-Variance Rankings")
+  const spread = (Math.max(...vals) - Math.min(...vals)) / Math.max(...vals);
+  const floor  = spread < 0.15 ? Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.5 : 0;
+
+  Plotly.newPlot(divId, [{
+    type: 'bar', orientation: 'h', y: cats, x: vals,   // always horizontal: category on y, metric on x
+    marker: { color: opts.color || '#ff5fa2', opacity: .9 },
+    text: vals.map(v => opts.fmt ? opts.fmt(v) : v), textposition: 'outside', textfont: { color: '#aab' },
+    hovertemplate: `%{y}: %{x}${opts.unit || ''}<extra></extra>`
+  }], {
+    ...BG,
+    xaxis: { ...BG.xaxis, title: opts.xTitle || '', range: [floor, Math.max(...vals) * 1.15] },
+    yaxis: { ...BG.yaxis, type: 'category', categoryorder: order ? 'array' : 'total ascending', categoryarray: order, automargin: true },
+    margin: { t: 20, b: 50, l: 140, r: 60 }
+  }, CFG);
+}
+```
+
+Enforced rules: `orientation:'h'` with categories on `y`/values on `x`; `x`/`y` derived from **one** paired sorted list (never two arrays that can drift); categories never filtered independently of values; explicit `categoryorder`/`categoryarray`; and a length assert that fails loudly instead of rendering a phantom label with no bar.
+
+### Donut / Pie — `renderDonut()`
+
+**Use a donut/pie at most once per story.** If another column also tells a share/composition story, reach for a different shape (treemap, 100% stacked bar, funnel, or a plain bar) rather than a second donut. A donut's slices are already labeled directly, so **a legend is redundant and collides** (Plotly places it right, overlapping slice labels into tangled text like "In DevelopmentPiloting"). Never render a donut with both on-slice labels and a legend:
+
+```javascript
+// Generic donut for ANY category share/composition (status, type, segment, ...).
+function renderDonut(divId, labels, values, opts = {}) {
+  if (labels.length !== values.length)
+    throw new Error(`${divId}: labels/values length mismatch (${labels.length} vs ${values.length})`);
+  Plotly.newPlot(divId, [{
+    type: 'pie', hole: 0.55,
+    labels, values,
+    sort: true, direction: 'clockwise',
+    textinfo: 'label+percent',        // label the slice itself...
+    textposition: 'inside',           // ...inside the ring
+    insidetextorientation: 'horizontal',
+    textfont: { color: '#fff', size: 12 },
+    marker: { line: { color: '#111', width: 2 } },  // thin gap between slices
+    hovertemplate: '%{label}: %{value} (%{percent})<extra></extra>'
+  }], {
+    ...BG,
+    showlegend: false,                // ← the fix: no redundant, colliding legend
+    margin: { t: 20, b: 20, l: 20, r: 20 }
+  }, CFG);
+}
+```
+
+If a slice is too thin for an inside label, don't turn the legend back on — merge tiny tail categories into an "Other" slice, or switch to a horizontal bar for many small categories.
+
+### Low-Variance Rankings — When Every Value Looks the Same
+
+Before building any ranked bar list (leaderboards, top-N charts), **check the spread**: `(max - min) / max`. If it's small (under ~15–20%, e.g. CSAT 3.98–4.08, or 94%–97%), a 0-based bar renders every row visually identical. Fix — pick one:
+
+1. **Zoom the axis to the actual data range**, not 0. Compute `pct` as `(value - floor) / (ceil - floor) * 100` where `floor` is slightly below the min (or a meaningful baseline like a group average) and `ceil` slightly above the max. Default fix for leaderboard rows.
+2. **Show delta-from-baseline** — plot `value − average` as a diverging bar (positive in `--fire`, negative in muted gray) instead of the absolute score.
+3. **Switch chart type** (dot/lollipop on a zoomed axis, or a table with a per-row sparkline/tint) when a bar list still isn't informative.
+4. **Never leave a 0-based bar as the only visual** for a low-variance metric.
+
+State the actual spread in the chapter copy (e.g. "the gap between #1 and #10 is just 0.10 points") so the visual and narrative agree.
 
 ## Stat Card Rules
 
@@ -332,7 +383,82 @@ This table is a **starting point for the most common data shapes** — use it to
 
 ## Animated Components
 
-The animated-component code lives in [`references/CHART-PATTERNS.md`](references/CHART-PATTERNS.md): the scroll-triggered **counter** (the two-observer pattern that keeps counters from mis-firing or stalling at 0), the **leaderboard rows** staggered reveal, and the **record cards** reveal. Open that file in Phase 4 when wiring up animations.
+### Scroll-Triggered Counter
+
+Add `data-target="12345"` and optionally `data-prefix="$"` to any `.num` element; a dedicated observer calls `counter(el)` when its card scrolls into view.
+
+```html
+<div class="num" data-prefix="$" data-target="419917">$0</div>
+```
+
+**Never start counters from the same IntersectionObserver that drives generic `.reveal` transitions.** That observer fires for every reveal element in the same batch, so a counter can start (or get skipped) while the card is still mid-opacity-transition — numbers race, stall, or never animate. Use two independent, single-purpose observers, and guard `counter()` so it can never fire twice:
+
+```javascript
+function counter(el) {
+  if (el.dataset.counted) return;   // guard: fire at most once per element
+  el.dataset.counted = '1';
+  // ...existing animation logic...
+}
+
+// Visual reveal only — no counter logic here.
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, {threshold: 0.15});
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// Isolated counter observer: higher threshold so the card is substantially visible before
+// numbers move, and unobserve immediately so it can never double-trigger.
+const counterObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.querySelectorAll('.num[data-target]').forEach(n => counter(n));
+    counterObs.unobserve(e.target);
+  });
+}, {threshold: 0.3});
+document.querySelectorAll('.num[data-target]').forEach(n => {
+  counterObs.observe(n.closest('.reveal') || n);
+});
+```
+
+### Leaderboard Rows
+
+Rows slide in from the left one by one, then value bars grow right. **Check variance first** (see "Low-Variance Rankings"); if `top10` values are tightly clustered, scale from a zoomed floor instead of 0:
+
+```javascript
+const vals = D.top10_values;
+const spread = (Math.max(...vals) - Math.min(...vals)) / Math.max(...vals);
+const floor = spread < 0.15 ? Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.5 : 0;
+const ceil = Math.max(...vals) * 1.02;
+const pct = v => ((v - floor) / (ceil - floor)) * 100;
+
+function buildLeaderboard(){
+  D.top10_names.forEach((name, i) => {
+    const row = document.createElement('div');
+    row.className = 's-row';
+    row.style.transitionDelay = (i * .07) + 's';
+    row.innerHTML = `...`; // use pct(D.top10_values[i]) for bar width, not a raw 0-based ratio
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.s-row').forEach((r, i) => {
+    setTimeout(() => {
+      r.classList.add('vis');
+      setTimeout(() => {
+        r.querySelector('.s-bar').style.width = r.querySelector('.s-bar').dataset.pct + '%';
+      }, 350);
+    }, i * 90);
+  });
+}
+```
+
+### Record Cards
+
+5 cards fly up from below, staggered:
+
+```javascript
+wrap.querySelectorAll('.i-card').forEach((c, i) => {
+  setTimeout(() => c.classList.add('vis'), i * 110);
+});
+```
 
 ---
 
@@ -412,12 +538,12 @@ The epilogue should echo the hero's opening claim and close the loop:
 
 ---
 
-## Design System (Dark Fire Theme)
+## Design System (Dark Neon Theme)
 
 ```css
 :root {
-  --fire: #ff6600;   /* primary accent — headlines, numbers, bars */
-  --ember: #ff3300;  /* gradient end — buttons, glow */
+  --fire:  #ff5fa2;  /* primary accent — headlines, numbers, bars (pink) */
+  --ember: #a855f7;  /* gradient end — buttons, glow (purple) */
   --text: #f0ede8;   /* body text */
   --muted: #999;     /* secondary text, labels */
 }
@@ -428,20 +554,13 @@ body        { background: #0a0a0a }
 .s-card     { background: #111; border: 1px solid #222 }
 ```
 
-For a different theme (e.g. corporate blue, green sustainability), replace `--fire` and `--ember` and update the radial gradient in `#hero` and `#epilogue`.
+Favor green, pink, and purple accents — they contrast well with the dark background. For a different mood, replace `--fire` and `--ember` and update the radial gradient in `#hero` and `#epilogue`.
 
 ---
 
 ## File Naming Convention
 
-```
-<dataset-name>-story-YYYY-MM-DD.html
-```
-
-Lowercase kebab-case dataset name, the word `story`, then the current date. Examples:
-- `basketball-demo-data-story-2025-07-21.html`
-- `sales-data-story-2025-07-21.html`
-- `customer-survey-story-2024-11-03.html`
+Lowercase kebab-case dataset name, the word `story`, then the current date. Example: `sales-data-story-2025-07-21.html`
 
 Always deliver to `/app/created/` so it is returned as an attachment.
 
@@ -453,7 +572,7 @@ Always deliver to `/app/created/` so it is returned as an attachment.
 |---|---|
 | Large numbers clipped in stat cards | Use `.s-card-wide` for any value ≥ 7 chars |
 | Content looks tiny with wasted black space | Increase chart heights to 460–500px; use `clamp(2.2rem,4.5vw,4rem)` for headlines |
-| Donut/pie legend overlaps the slice labels (tangled text like "In DevelopmentPiloting" on the right) | The slices are already labeled on-slice, so the legend is redundant and collides. Set `showlegend:false` and label slices with `textinfo:'label+percent'`, `textposition:'inside'` — see `renderDonut()` in `references/CHART-PATTERNS.md` |
+| Donut/pie legend overlaps the slice labels (tangled text like "In DevelopmentPiloting" on the right) | The slices are already labeled on-slice, so the legend is redundant and collides. Set `showlegend:false` and label slices with `textinfo:'label+percent'`, `textposition:'inside'` — see `renderDonut()` above |
 | Charts not rendering | Each chart div needs an explicit `height` in its inline style; Plotly needs a sized container |
 | Blank charts AND every stat counter stuck at 0 | A single JS `SyntaxError` (often an unescaped apostrophe in a single-quoted string, e.g. `'Who's Buying'`) kills the whole `<script>` so nothing runs. Escape apostrophes and run `node --check` on the generated JS before shipping — see Phase 4 "Rendering contract" |
 | Only the first chart renders; later charts stay blank | The lazy-render `IntersectionObserver` reports the **section** id (`ch-map`), not the chart-div id (`mapChart`). Dispatch `renderSection` branches on the section id |
@@ -461,11 +580,12 @@ Always deliver to `/app/created/` so it is returned as an attachment.
 | Nested quotes break the Python heredoc | Always write HTML builder to a `.py` file with the `create` tool, then run it — never use heredocs with nested single quotes |
 | Chapters render before scroll | Charts are only initialized inside `IntersectionObserver` callback with a `rendered` guard object — never call `Plotly.newPlot` at page load |
 | Leaderboard bars jump on load | Set `width:0` in CSS; only transition to final width after `.vis` class is added via JS |
-| Ranked bars all look the same length (e.g. CSAT 3.98–4.08) | Values are tightly clustered — a 0-based bar hides the difference. Zoom the scale to the actual range (or a meaningful floor like the desk average), or plot delta-from-baseline instead of raw value. See "Low-Variance Rankings" in `references/CHART-PATTERNS.md` |
-| A category (e.g. "Low") shows a label but no bar, or bars render as misaligned vertical columns instead of horizontal rows | `x`/`y` arrays are mismatched, misordered, or `orientation:'h'` is missing. Rebuild `x`/`y` from one ordered list of pairs and verify `trace.x.length === trace.y.length`. See "Horizontal Bar Charts" in `references/CHART-PATTERNS.md` |
+| Ranked bars all look the same length (e.g. CSAT 3.98–4.08) | Values are tightly clustered — a 0-based bar hides the difference. Zoom the scale to the actual range (or a meaningful floor like the desk average), or plot delta-from-baseline instead of raw value. See "Low-Variance Rankings" above |
+| A category (e.g. "Low") shows a label but no bar, or bars render as misaligned vertical columns instead of horizontal rows | `x`/`y` arrays are mismatched, misordered, or `orientation:'h'` is missing. Rebuild `x`/`y` from one ordered list of pairs and verify `trace.x.length === trace.y.length`. See "Category Bar — `renderCategoryBar()`" above |
 | File too large to send | Avoid embedding Plotly.js inline (3MB+); always use the CDN script tag |
 | Stat counters stall, jump straight to final value, or never animate | Counter starts were mixed into the shared `.reveal` IntersectionObserver batch and raced against other reveal transitions. Use an isolated, single-shot counter observer with a `counted` guard, decoupled from `revealObs`. See "Scroll-Triggered Counter" |
 | Scatter/bubble log axis shows confusing repeating ticks (`0.1, 2, 5, 1, 2, 5, 10...`) | Set `dtick: 1` on any log-type axis so labeled ticks land only on powers of ten. See `references/CHART-PATTERNS.md` |
+| Scatter/bubble is an unreadable clump of overlapping circles (dozens of points) | Plot at most ~10 entities — pick the top ~10 by the size metric and drop the rest, even in a hand-rolled trace. `renderScatterBubble()` caps at 10 via `opts.maxPoints`. Keep the copy consistent ("top 10"). See `references/CHART-PATTERNS.md` |
 | Scatter/bubble labels overlap into unreadable mush in a crowded region | Don't statically label every point — greedily label largest markers first, skip a label if it collides with one already placed, keep full name on hover. See `renderScatterBubble()` in `references/CHART-PATTERNS.md` |
 | Stat card text overflows/wraps (e.g. "105M tons", "$3.61→$4.17/kg") | The 6-vs-7 char rule applies to the full rendered string (prefix+number+suffix), not just the number. Keep `data-suffix`/`data-prefix` to short units only — never prose, arrows, or ranges. If the value isn't a clean countable number, don't animate it; show static text or redesign the stat |
 | Dual-trace label collision (e.g. a bar's `outside` label and a scatter/line's `top center` label overlap at the bar top) | A bar chart and a scatter/line trace share the same x-position with labels pointing the same direction. Assign labels to opposite sides (e.g. bar `'inside'`, scatter `'bottom center'`) so the two never share the same vertical space. See `references/CHART-PATTERNS.md` |
