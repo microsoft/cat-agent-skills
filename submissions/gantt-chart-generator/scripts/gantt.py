@@ -184,7 +184,7 @@ def gantt(
         try:
             return pd.to_datetime(s, format=date_fmt)
         except Exception:
-            return pd.to_datetime(s, infer_datetime_format=True)
+            return pd.to_datetime(s)
 
     df["_start"] = _parse_dates(start)
 
@@ -235,9 +235,10 @@ def gantt(
         ax.barh(y, width, left=start_n, height=bar_height,
                 color=colour, alpha=0.85, edgecolor="white", linewidth=1.0)
 
-        # Completion hatch overlay
+        # Completion hatch overlay (clamp to 0–100)
         if completion and completion in df.columns:
-            pct = float(row[completion]) / 100.0 if not pd.isna(row.get(completion)) else 0.0
+            raw = row.get(completion)
+            pct = 0.0 if pd.isna(raw) else max(0.0, min(float(raw), 100.0)) / 100.0
             if pct > 0:
                 ax.barh(y, width * pct, left=start_n, height=bar_height,
                         color=colour, alpha=0.40, edgecolor="white",

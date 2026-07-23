@@ -25,19 +25,19 @@ from gantt import gantt
 
 # Basic — start + end columns
 gantt("schedule.csv", phase="Phase", start="Start", end="End",
-      title="Project Schedule", out="/app/created/gantt.png")
+      title="Project Schedule", out="gantt.png")
 
 # Group colour-coding + today line
 gantt(df, phase="phase", start="planned_start", end="planned_end",
-      group="project", today=True, out="/app/created/schedule.png")
+      group="project", today=True, out="schedule.png")
 
 # Duration instead of end date
 gantt(df, phase="task", start="start_date", duration="days",
-      out="/app/created/schedule.png")
+      out="schedule.png")
 
 # Completion % hatch overlay
 gantt(df, phase="Phase", start="Start", end="End",
-      completion="PctDone", out="/app/created/gantt.png")
+      completion="PctDone", out="gantt.png")
 ```
 
 3. See `references/cheatsheet.md` for full parameter reference and CLI examples.
