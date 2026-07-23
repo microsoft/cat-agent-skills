@@ -404,17 +404,15 @@ narrow ones (e.g., one EU regulation).
 
 ## Scheduling
 
-See `references/automation-template.md` for how to schedule this skill on
-Scout (via Scout automation) and Cowork
-(scheduled task). The core skill has no cadence of its own — the schedule
-lives outside the skill and simply invokes it.
+See the submission's `README.md` (a human-facing sidecar; not bundled into
+the agent's context) for scheduling walkthroughs on Scout and Cowork. The
+core skill has no cadence of its own — the schedule lives outside the skill
+and simply invokes it.
 
 ## References
 
 - `references/sources-and-taxonomy.md` — reputable-domain allowlist for
   fallback search, item classification taxonomy, stage-inference rules, and
   per-topic search-query templates.
-- `references/automation-template.md` — how to schedule the monitor on
-  Scout and Cowork.
 - `scripts/build_dashboard.py` — self-contained dashboard generator
   (Python standard library only).

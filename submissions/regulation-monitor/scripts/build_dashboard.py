@@ -346,7 +346,20 @@ def main(argv: list[str] | None = None) -> int:
 
     config = load_json(args.config)
     items_doc = load_json(args.items)
-    items = items_doc.get("items", []) if isinstance(items_doc, dict) else []
+    raw_items = items_doc.get("items", []) if isinstance(items_doc, dict) else []
+    if not isinstance(raw_items, list):
+        print(
+            f"items file must contain an 'items' list; got {type(raw_items).__name__}",
+            file=sys.stderr,
+        )
+        return 2
+    items = [item for item in raw_items if isinstance(item, dict)]
+    dropped = len(raw_items) - len(items)
+    if dropped:
+        print(
+            f"warning: dropped {dropped} non-dict entries from items[]",
+            file=sys.stderr,
+        )
 
     html_out = build_html(config, items)
     args.output.parent.mkdir(parents=True, exist_ok=True)
