@@ -125,14 +125,18 @@ def sorted_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
     profile_name = esc(config.get("profile_name", "regulation-monitor"))
     cadence = esc(config.get("cadence", "on demand"))
-    window_days = config.get("window_days", 7)
+    try:
+        window_days = int(config.get("window_days") or 7)
+    except (TypeError, ValueError):
+        window_days = 7
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     topic_name_by_key: dict[str, str] = {}
     for topic in config.get("watch_topics", []):
-        topic_name_by_key[str(topic.get("key", ""))] = str(
-            topic.get("name", topic.get("key", ""))
-        )
+        key = str(topic.get("key", "")).strip()
+        if not key:
+            continue  # skip topics without a key rather than colliding on ""
+        topic_name_by_key[key] = str(topic.get("name", key))
 
     total = len(items)
     per_topic = Counter(item.get("topic", "") for item in items)

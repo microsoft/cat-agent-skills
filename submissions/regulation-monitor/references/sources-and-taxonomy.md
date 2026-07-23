@@ -43,14 +43,15 @@ Environment / ESG: `epa.gov`, `energy.gov`, `iso.org`, `issb.ifrs.org`,
 
 Labor and workforce: `dol.gov`, `eeoc.gov`, `nlrb.gov`.
 
-Tax: `irs.gov`, `treasury.gov`, `hmrc.gov.uk`, `taxpolicycenter.org`,
-`taxfoundation.org`, state DOR sites (already covered by `.gov`).
+Tax: `irs.gov`, `treasury.gov`, `hmrc.gov.uk` (state DOR sites are already covered by `.gov`).
 
 Standards and technical: `nist.gov`, `iso.org`, `ieee.org`, `w3.org`,
 `iana.org`.
 
 ### Reputable trackers and think tanks (opt-in)
 
+- `taxfoundation.org` — Tax Foundation
+- `taxpolicycenter.org` — Tax Policy Center
 - `mtc.gov` — Multistate Tax Commission
 - `ncsl.org` — National Conference of State Legislatures
 - `cost.org` — Council on State Taxation (public materials only)
