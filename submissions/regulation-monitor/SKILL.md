@@ -241,7 +241,9 @@ that is a human judgment.
 
 ### Step 8 — Build the dashboard
 
-1. Write items to `working/regulation-items.json`.
+1. Write items to `working/regulation-items.json` as a JSON object with the
+   shape `{"items": [ ... ]}` (not a bare array). Each entry follows the
+   Step 6 schema.
 2. Run the bundled generator:
    ```
    python scripts/build_dashboard.py \

@@ -59,7 +59,21 @@ STAGE_COLORS = {
 
 
 def load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    """Read and parse a JSON file, raising SystemExit on IO or parse errors.
+
+    Callers get a clean 'exit 2 with a helpful message' instead of a raw
+    traceback when the input is missing, unreadable, or malformed.
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"could not read {path}: {exc}", file=sys.stderr)
+        raise SystemExit(2)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        print(f"invalid JSON in {path}: {exc}", file=sys.stderr)
+        raise SystemExit(2)
 
 
 def safe_url(value: Any) -> str:
