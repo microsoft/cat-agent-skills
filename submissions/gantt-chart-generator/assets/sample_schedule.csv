@@ -1,0 +1,14 @@
+Phase,Project,Start,End,PctDone
+Requirements,Alpha,2026-01-05,2026-01-16,100
+Architecture,Alpha,2026-01-19,2026-01-30,100
+Backend Dev,Alpha,2026-02-02,2026-03-13,85
+Frontend Dev,Alpha,2026-02-09,2026-03-20,70
+Integration,Alpha,2026-03-23,2026-04-03,30
+QA & Testing,Alpha,2026-04-06,2026-04-24,0
+UAT,Alpha,2026-04-27,2026-05-08,0
+Go-Live,Alpha,2026-05-11,2026-05-15,0
+Discovery,Beta,2026-01-05,2026-01-23,100
+Design,Beta,2026-01-26,2026-02-13,90
+Development,Beta,2026-02-16,2026-04-10,50
+Testing,Beta,2026-04-13,2026-05-01,0
+Release,Beta,2026-05-04,2026-05-08,0
