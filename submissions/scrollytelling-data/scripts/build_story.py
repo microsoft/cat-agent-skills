@@ -680,9 +680,10 @@ if 'entity_count' in A:
     tail_txt = (f'The remaining {tail_count} {entity_lbl.lower()}s share the rest.'
                 if tail_count > 0 else '')
     takeaways.append((
-        '02', f'The top 3 carry most of the weight.',
-        f'{round(sum(A["top15_values"][:3]) / A["total_metric"] * 100) if A["total_metric"] else 0}% '
-if has_cat and A['cat_data']:
+        '02', 'The top 3 carry most of the weight.',
+        f'<strong>{round(sum(A["top15_values"][:3]) / A["total_metric"] * 100, 1) if A["total_metric"] else 0.0}%</strong> '
+        f'of total {metric_lbl.lower()} comes from the top three {entity_lbl.lower()}s. {tail_txt}'
+    ))
     ccol = list(A['cat_data'].keys())[0]
     cdat = A['cat_data'][ccol]
     takeaways.append((
