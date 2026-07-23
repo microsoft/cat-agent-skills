@@ -1,24 +1,6 @@
 ---
-name: regulation-monitor
-description: |
-  Monitors user-specified regulations, laws, and regulatory guidance on a
-  recurring schedule. On first run, walks the user through a one-time setup
-  (watch topics, jurisdictions, cadence), auto-discovers the top authoritative
-  sources for each watch topic, and STOPS for explicit user confirmation
-  before starting any monitoring. Every subsequent run visits only the
-  locked source list plus user seeds (never an open-ended web search),
-  classifies each item, flags items relevant to the user's team using a
-  light WorkIQ-derived profile, and renders a self-contained HTML dashboard
-  with client-side sortable columns.
-  Use when the user says "monitor regulations", "set up a regulation
-  tracker", "watch for new rules on X", "any updates on the EU AI Act",
-  "run my regulation monitor", or wants a weekly regulatory digest.
-  Do NOT use for one-off legal research (use deep-research), for computing
-  a compliance liability or filing position (out of scope — this is
-  monitoring), or for reading a single document the user already has
-  (use docx / pptx). This skill is domain-agnostic — tax, privacy, AI/ML,
-  healthcare, finance, ESG, labor, etc. — the user picks the topics at
-  setup.
+name: "regulation-monitor"
+description: "Monitors user-specified regulations, laws, and regulatory guidance on a"
 ---
 
 # Regulation Monitor

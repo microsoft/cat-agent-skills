@@ -76,7 +76,7 @@ Each item recorded by the sweep has:
 | `summary` | 1-2 sentences in the model's own words | required |
 | `source_name` | publisher's short name | required |
 | `source_url` | canonical public URL that was actually retrieved | required |
-| `relevant_to_your_team` | `true` if any function-area keyword matches | derived at Step 4 |
+| `relevant_to_your_team` | `true` if any function-area keyword matches | derived at Step 7 |
 
 ## Search-query templates
 

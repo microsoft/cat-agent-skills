@@ -382,6 +382,10 @@ def _sorter_script() -> str:
       var cmp;
       if (type === 'number') {
         cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+      } else if (type === 'date') {
+        // ISO 8601 date strings sort correctly as byte-string comparison —
+        // avoid Date parsing here so malformed inputs stay deterministic.
+        cmp = (av < bv) ? -1 : (av > bv ? 1 : 0);
       } else {
         cmp = av.localeCompare(bv);
       }
