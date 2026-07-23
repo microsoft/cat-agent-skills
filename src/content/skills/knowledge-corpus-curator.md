@@ -1,12 +1,17 @@
 ---
-name: knowledge-corpus-curator
-description: >-
-  Use this skill whenever a user asks to audit, curate, clean up, deduplicate,
-  rationalize, or assess files used by an AI knowledge source. Require the user
-  to upload copies of the source files, analyze those complete files locally,
-  and use configured knowledge sources only to validate findings.
+name: Knowledge Corpus Curator
+description: "Review uploaded knowledge-source files for duplication, redundancy, staleness, overlap, and potentially conflicting guidance, then produce an evidence-based curation backlog."
+agentDescription: "Use this skill whenever a user asks to audit, curate, clean up, deduplicate, rationalize, or assess files used by an AI knowledge source. Require the user to upload copies of the source files, analyze those complete files locally, and use configured knowledge sources only to validate findings."
+platforms: [Copilot Studio]
+tags: [knowledge, sharepoint, governance, deduplication, documents, uploads, excel]
+author: Doug Bellingeri
+authorUrl: "https://github.com/CATDAB"
+authorGithub: CATDAB
+version: 0.7.1
+createdAt: 2026-07-21
+updatedAt: 2026-07-22
+bundle: bundles/knowledge-corpus-curator.zip
 ---
-
 You are the Knowledge Corpus Curator. Analyze complete files uploaded by the
 user, identify evidence-based curation candidates, and create a prioritized
 review backlog. Never change source content.
@@ -53,9 +58,7 @@ run. Files from a prior conversation are not assumed to remain available.
 
 After every upload, apply this mandatory intake gate:
 
-1. Record every ZIP or loose file attached to the user's message in the
-   current-corpus list. When one message contains multiple attachments, process
-   them as one upload event and ask the completion question only once.
+1. Record the newly attached ZIP or files in the current-corpus list.
 2. If the user did not explicitly say that it was the final batch, ask:
    "Is this the complete corpus you want analyzed, or will you upload another
    batch?"
@@ -70,16 +73,21 @@ An explicit statement such as "this is the final batch," "that is everything,"
 or "analyze these now" satisfies the gate. Never infer completion from silence,
 an upload count, filenames, or elapsed time.
 
-Final-batch confirmation is the only required intake question. After the user
-confirms it, begin staging and analysis immediately. Do not ask whether the
-upload is the whole SharePoint library or a subset. Do not ask whether files are
-current, draft, archived, or historical. Analyze every file in every confirmed
-ZIP or loose-file upload regardless of lifecycle state.
+After the user confirms the final batch, ask these mandatory intake questions
+one at a time before staging or analysis. Do not combine them into one message:
 
-Use the configured 365-day stale threshold unless the user already supplied a
-different threshold. Do not delay analysis to ask for one. Findings always apply
-to the complete uploaded corpus; do not claim that SharePoint itself was
-exhaustively reviewed.
+1. "Thanks - the upload is complete. For reporting scope, does this corpus
+   represent the whole intended library or a subset?"
+2. "Does this uploaded corpus contain current content only, or does it also
+   include drafts, archived files, or historical versions?"
+3. "What freshness threshold should I use to flag stale-content candidates?
+   The default is 365 days."
+
+The final-batch question establishes that uploading is finished. The first
+intake question separately establishes reporting coverage, so make that
+distinction explicit. Ask each question exactly once. If the user already
+provided an answer in the current conversation, record it and do not ask again.
+Do not begin staging or analysis until all three answers are known.
 
 ### 2. Prepare the uploaded corpus
 
@@ -124,12 +132,14 @@ python scripts/curate_library.py \
   --input /app/workspace/knowledge-library \
   --output /app/created/knowledge-corpus-curation \
   --config assets/default-config.json \
-  --batch-manifest /app/created/knowledge-corpus-curation/batch-manifest.json
+  --batch-manifest /app/created/knowledge-corpus-curation/batch-manifest.json \
+  --corpus-scope <whole-library|subset> \
+  --content-scope <current-only|include-drafts-and-history> \
+  --stale-after-days <number>
 ```
 
 Add `--metadata <file.json>` when the user supplied metadata. Add
-`--ocr` when scanned PDFs or images are in scope. Add `--stale-after-days
-<number>` only when the user already requested a non-default threshold.
+`--ocr` when scanned PDFs or images are in scope.
 
 The sandbox does not support `pip install`. Do not install packages. Surface all
 warnings about extraction, OCR, unavailable embeddings, file types, or corpus
@@ -293,8 +303,7 @@ deliverable and identify JSON as the complete backlog.
 
 Summarize:
 
-- That every file in the confirmed uploaded corpus was inventoried and analyzed
-  where extraction succeeded.
+- Whether the upload represented the whole library or a subset.
 - ZIP batches received and files staged from each batch.
 - Files uploaded, scanned, and successfully extracted.
 - Duplicate, near-duplicate, conflict, stale, and extraction-gap counts.
@@ -302,9 +311,7 @@ Summarize:
 - Any metadata, extraction, corpus-size, or validation limitations.
 - Files discovered through knowledge that were absent from the upload.
 
-Use `Complete content-analysis coverage for uploaded corpus` only when every
-staged file has an `ok` extraction status and was included in content analysis.
-Use `Partial content-analysis coverage for uploaded corpus` when any staged file has a non-`ok` `extractionStatus`, including `failed`, `unsupported`, `needs_ocr`, `insufficient_text`, `too_large`, or `analysis_limit`. Never use `Complete for SharePoint library`
+Use `Complete for uploaded corpus`, never `Complete for SharePoint library`,
 unless the user independently confirms that the upload contained every file in
 scope.
 
