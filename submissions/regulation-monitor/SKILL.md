@@ -252,7 +252,7 @@ that is a human judgment.
 1. Write items to `working/regulation-items.json` as a JSON object with the
    shape `{"items": [ ... ]}` (not a bare array). Each entry follows the
    Step 6 schema.
-2. Run the bundled generator (single-line command; works in any shell):
+2. Run the bundled generator (single-line command):
    ```
    python scripts/build_dashboard.py --config config.json --items working/regulation-items.json --output output/regulation-dashboard.html
    ```
