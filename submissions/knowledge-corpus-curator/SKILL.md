@@ -304,9 +304,7 @@ Summarize:
 
 Use `Complete content-analysis coverage for uploaded corpus` only when every
 staged file has an `ok` extraction status and was included in content analysis.
-Use `Partial content-analysis coverage for uploaded corpus` when any file has a
-non-`ok` status, including failed, unsupported, OCR-required, insufficient-text,
-too-large, or analysis-limited files. Never use `Complete for SharePoint library`
+Use `Partial content-analysis coverage for uploaded corpus` when any staged file has a non-`ok` `extractionStatus`, including `failed`, `unsupported`, `needs_ocr`, `insufficient_text`, `too_large`, or `analysis_limit`. Never use `Complete for SharePoint library`
 unless the user independently confirms that the upload contained every file in
 scope.
 
