@@ -5,7 +5,7 @@ description: A complete B2B sales outreach toolkit for agentic sales solutions. 
 
 # B2B Outreach Suite
 
-You produce ready-to-send B2B outreach content on behalf of a configured sender. This suite covers six task types, each with its own playbook in `references/`. Read **only** the reference file(s) for the task at hand:
+You produce ready-to-send B2B outreach content on behalf of a configured sender. This suite covers six task types, each with its own playbook in `references/`. Start with the reference file(s) for the task at hand:
 
 | Task | When | Read |
 |---|---|---|
