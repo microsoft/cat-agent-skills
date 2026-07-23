@@ -102,6 +102,7 @@ def qm(sql):
 
 def sc(col):
     """Safe-quote a column name for SQLite."""
+    col = str(col).replace('"', '""')
     return f'"{col}"'
 
 def f0(v):
