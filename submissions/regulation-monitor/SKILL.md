@@ -1,6 +1,24 @@
 ---
-name: "regulation-monitor"
-description: "Monitors user-specified regulations, laws, and regulatory guidance on a"
+name: regulation-monitor
+description: |
+  Monitors user-specified regulations, laws, and regulatory guidance on a
+  recurring schedule. On first run, walks the user through a one-time setup
+  (watch topics, jurisdictions, cadence), auto-discovers the top authoritative
+  sources for each watch topic, and STOPS for explicit user confirmation
+  before starting any monitoring. Every subsequent run visits only the
+  locked source list plus user seeds (never an open-ended web search),
+  classifies each item, flags items relevant to the user's team using a
+  light WorkIQ-derived profile, and renders a self-contained HTML dashboard
+  with client-side sortable columns.
+  Use when the user says "monitor regulations", "set up a regulation
+  tracker", "watch for new rules on X", "any updates on the EU AI Act",
+  "run my regulation monitor", or wants a weekly regulatory digest.
+  Do NOT use for one-off legal research (use deep-research), for computing
+  a compliance liability or filing position (out of scope — this is
+  monitoring), or for reading a single document the user already has
+  (use docx / pptx). This skill is domain-agnostic — tax, privacy, AI/ML,
+  healthcare, finance, ESG, labor, etc. — the user picks the topics at
+  setup.
 ---
 
 # Regulation Monitor
@@ -8,12 +26,12 @@ description: "Monitors user-specified regulations, laws, and regulatory guidance
 ## Overview
 
 Turns a saved "watch profile" — topics, jurisdictions, source list, cadence —
-into a repeatable regulatory sweep. On each run the skill visits **only** the
+into a repeatable regulatory sweep. On each run the skill visits only the
 sources locked into the profile at setup: the top authoritative sources the
-skill discovered for each watch topic plus any seed sources the user added.
+skill proposed for each watch topic plus any seed sources the user added.
 It classifies each new item, flags items likely relevant to the user's team
 using a light org profile derived once from WorkIQ, and produces a
-self-contained HTML dashboard.
+self-contained HTML dashboard with sortable columns.
 
 It is a **monitoring** tool. It reports what regulators, legislatures, and
 courts are doing. It never files, calculates liability, or gives a legal
@@ -30,23 +48,24 @@ prone to noise. Instead, at setup:
    reputable trade press).
 2. **The skill presents that shortlist to the user and stops.** No
    monitoring runs until the user has confirmed the list.
-3. The user can swap/remove any of the 5, and can supply their own
-   **seed sources** on top.
+3. The user can swap/remove any of the 5, lower the target, and can supply
+   their own **seed sources** on top.
 4. The confirmed list is **locked into the profile config**.
 
 Every subsequent run visits **only** those sources. A tightly-bounded
 fallback web search (at most one query per topic, capped result count,
-allowlist-filtered) is used only when a seed source returns nothing new in
-the window. See "Runtime budget" below.
+allowlist-filtered) is used only when a locked source is silent for a
+topic in the window. See "Runtime budget" below.
 
 ## When to Use
 
 - On-demand: "run my regulation monitor", "what changed on the EU AI Act
   this week"
-- Setup: "set up a regulation tracker for [topics]", "monitor [X] regulations
-  for me"
-- Scheduled: the unattended weekly (or user-chosen cadence) run produced by
-  the bundled automation template — no user prompt needed
+- Setup: "set up a regulation tracker for [topics]", "monitor [X]
+  regulations for me"
+- Scheduled: unattended runs invoked by an external scheduler (Scout
+  automation, Cowork scheduled task, etc.) — see the submission's
+  README.md for platform-specific templates
 
 ## When NOT to Use
 
@@ -62,7 +81,7 @@ the window. See "Runtime budget" below.
 ```
 User: "Set up a regulation monitor for OECD Pillar II across all jurisdictions"
 1. Capture profile name, watch topics, jurisdictions, cadence, delivery.
-2. Discovery pass: propose the top 5 authoritative sources per watch topic.
+2. Discovery pass: propose up to 5 authoritative sources per watch topic.
 3. STOP — show the shortlist to the user and ask two things: which to swap
    out, and whether they want to add their own seed sources.
 4. Wait for confirmation. Do not do any monitoring until the user approves.
@@ -70,16 +89,6 @@ User: "Set up a regulation monitor for OECD Pillar II across all jurisdictions"
    it for confirmation.
 6. Lock all of this into config.json.
 7. Do the first sweep now that the user has approved the source list.
-
-User (later, or on schedule): "Run my regulation monitor"
-1. Load the profile config.
-2. Resolve the time window (default: since last successful run, else the
-   profile's window_days).
-3. Sweep the locked source list. Bounded fallback search only when a source
-   is silent.
-4. Classify each item.
-5. Flag team-relevant items.
-6. Build the dashboard and deliver per the profile.
 ```
 
 ## Core Instructions
@@ -306,9 +315,10 @@ a human judgment.
 3. Verify the file was written before telling the user it is ready.
 
 The dashboard is a single self-contained HTML file — KPI tiles (total items,
-count per topic, team-relevant count), a sortable table color-coded by
-stage, a team-relevant badge on flagged rows, and every row linking to its
-primary source.
+count per topic, team-relevant count), a table color-coded by stage with
+**client-side sortable columns** (click any column header to sort), a
+team-relevant badge on flagged rows, and every row linking to its primary
+source.
 
 ### Step 9 — Deliver and update last-run
 
@@ -337,8 +347,9 @@ narrow ones (e.g., one EU regulation).
 
 ## Output
 
-- **Dashboard**: `output/regulation-dashboard.html` — KPI tiles, sortable
-  color-coded table, team-relevant badges, per-row source links.
+- **Dashboard**: `output/regulation-dashboard.html` — KPI tiles, client-side
+  sortable color-coded table, team-relevant badges, per-row source links
+  (URL scheme sanitized — only `http`/`https`/`mailto` render).
 - **Items JSON**: `working/regulation-items.json` — raw items from this run
   (useful for diffing or feeding downstream tools).
 - **Inline summary**: ≤12 lines — window, item counts by topic, top team-
@@ -376,29 +387,38 @@ narrow ones (e.g., one EU regulation).
 - **Confirm before external sends.** Emailing anyone other than the user
   requires explicit confirmation on an interactive run; unattended runs
   never add recipients.
-- **Confidentiality and PII.** Do not add any WorkIQ-derived personal names,
-  email addresses, or internal identifiers to the dashboard beyond the
-  keywords the user confirmed at setup. The dashboard may be attached to
-  emails and shared.
+- **Confidentiality and sensitivity.** If slides or notes carry a
+  confidentiality label or sensitivity marking (for example
+  "Confidential", "Internal Only", "Restricted", or an enterprise
+  information-protection label), or contain unreleased figures,
+  customer or partner identifiers, or names that aren't public yet,
+  flag them and confirm with the user before including that content in
+  the spoken script. Never add PII or customer identifiers the source
+  material doesn't already contain.
+- **Compute timings with code**, not by hand; state the pace assumption
+  so the presenter can recalibrate.
+- **Cover exactly the requested topics** — no more, no fewer.
+- **Do not reproduce third-party copyrighted text** verbatim; paraphrase
+  in the skill's own words.
 - **Verify delivery.** Confirm the dashboard file exists before reporting
-  success. If the delivery block failed, report the failure — do not report
-  success.
+  success. If the delivery block failed, report the failure — do not
+  report success.
 - **Cite by exact source name** and validate every date against the
   requested window.
 
 ## Scheduling
 
-See `references/automation-template.md` for how to schedule this skill on
-Scout (via Scout automation) and Cowork
-(scheduled task). The core skill has no cadence of its own — the schedule
-lives outside the skill and simply invokes it.
+The core skill has no schedule of its own — it just runs. See the
+submission's `README.md` (a human-facing sidecar; not bundled into the
+agent's context) for platform-specific scheduling walkthroughs on Scout and
+Cowork. Wire this skill to your platform's scheduler and it invokes the
+skill on cadence.
 
 ## References
 
 - `references/sources-and-taxonomy.md` — reputable-domain allowlist for
   fallback search, item classification taxonomy, stage-inference rules, and
   per-topic search-query templates.
-- `references/automation-template.md` — how to schedule the monitor on
-  Scout and Cowork.
 - `scripts/build_dashboard.py` — self-contained dashboard generator
-  (Python standard library only).
+  (Python standard library only; embeds a small vanilla-JS sorter for
+  the items table).

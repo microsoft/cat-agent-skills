@@ -105,10 +105,12 @@ cadence.
 
 ## Output
 
-- **Dashboard**: `output/regulation-dashboard.html` — KPI tiles, sortable
-  color-coded table, team-relevant badges, per-row source links (URL scheme
-  sanitized — only `http`/`https`/`mailto` are rendered), and a "Quiet this
-  period" section listing every watch topic that produced zero items as
+- **Dashboard**: `output/regulation-dashboard.html` — KPI tiles,
+  client-side sortable color-coded table (click any column header to sort
+  by date, topic, jurisdiction, stage, title, or source), team-relevant
+  badges, per-row source links (URL scheme sanitized — only
+  `http`/`https`/`mailto` are rendered), and a "Quiet this period" section
+  listing every watch topic that produced zero items as
   **"No significant developments this period"**.
 - **Items JSON**: `working/regulation-items.json` — raw items from this run.
 - **Inline summary**: ≤12 lines — window, item counts by topic, top team-

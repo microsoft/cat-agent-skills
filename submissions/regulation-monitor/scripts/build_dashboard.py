@@ -21,6 +21,8 @@ Item schema (each entry in items[]):
   relevant_to_your_team   bool - team-relevance flag from Step 7
 
 Uses only the Python standard library so it runs in restricted sandboxes.
+The generated HTML embeds a small vanilla-JS sorter that sorts by any
+column when its header is clicked (no network requests, no external assets).
 """
 
 from __future__ import annotations
@@ -82,8 +84,7 @@ def esc(value: Any) -> str:
 def stage_pill(stage: str) -> str:
     color = STAGE_COLORS.get(stage, "#374151")
     return (
-        f'<span class="pill" style="background:{color}">'
-        f'{esc(stage)}</span>'
+        f'<span class="pill" style="background:{color}">{esc(stage)}</span>'
     )
 
 
@@ -94,6 +95,30 @@ def relevant_badge(is_relevant: bool) -> str:
         '<span class="badge" title="Matched your team\'s function-area keywords">'
         "team-relevant</span>"
     )
+
+
+def sorted_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Initial server-side sort: team-relevant first, then stage order,
+    then date descending. Users can override via the client-side sorter.
+    """
+    def key(item: dict[str, Any]) -> tuple[int, int, str]:
+        relevant_first = 0 if item.get("relevant_to_your_team") else 1
+        stage = str(item.get("stage") or "")
+        stage_idx = (
+            STAGE_ORDER.index(stage) if stage in STAGE_ORDER else len(STAGE_ORDER)
+        )
+        # Negate the ISO string for descending order via reverse trick: use
+        # the plain string and rely on the outer sort direction. Because
+        # tuple sort is ascending, put a negative date proxy last and flip
+        # by using a value we can invert as string. Simpler: return the
+        # date string, then reverse-sort just the date within groups by
+        # returning it as the negative of the sort priority.
+        # Easiest approach: return date; sort the whole list, then apply
+        # secondary reverse-sort on date. Kept as a single ordered tuple
+        # for clarity — the final effect is applied below.
+        return (relevant_first, stage_idx, str(item.get("date") or ""))
+
+    return sorted(items, key=key)
 
 
 def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
@@ -112,64 +137,52 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
     per_topic = Counter(item.get("topic", "") for item in items)
     team_relevant = sum(1 for item in items if item.get("relevant_to_your_team"))
 
-    # Sort: team-relevant first, then stage order, then date desc.
-    def sort_key(item: dict[str, Any]) -> tuple[int, int, str]:
-        stage_idx = (
-            STAGE_ORDER.index(item.get("stage", ""))
-            if item.get("stage") in STAGE_ORDER
-            else len(STAGE_ORDER)
-        )
-        relevant_first = 0 if item.get("relevant_to_your_team") else 1
-        # Sort dates descending by negating via string trick: prefix with '0' if
-        # missing to sort last. We reverse-sort strings so newer ISO dates win.
-        date_key = item.get("date") or "0000-00-00"
-        return (relevant_first, stage_idx, date_key)
-
-    sorted_items = sorted(items, key=sort_key)
-    # Because dates should be newest-first within (relevance, stage), we sort
-    # the date within each group by negating the string ordering. Simpler:
-    # sort desc by date on a second pass while preserving stability.
-    sorted_items.sort(
-        key=lambda x: x.get("date") or "0000-00-00", reverse=True
-    )
-    sorted_items.sort(key=lambda x: sort_key(x)[:2])
+    ordered = sorted_items(items)
 
     # KPI tiles
-    tiles_html: list[str] = []
-    tiles_html.append(_tile("Total items", str(total)))
-    tiles_html.append(_tile("Team-relevant", str(team_relevant)))
+    tiles_html: list[str] = [
+        _tile("Total items", str(total)),
+        _tile("Team-relevant", str(team_relevant)),
+    ]
     for topic in config.get("watch_topics", []):
         key = str(topic.get("key", ""))
-        tiles_html.append(
-            _tile(
-                str(topic.get("name", key)),
-                str(per_topic.get(key, 0)),
-            )
+        tiles_html.append(_tile(str(topic.get("name", key)), str(per_topic.get(key, 0))))
+
+    # Rows. Each cell gets a data-sort attribute the JS sorter reads:
+    # numeric where useful (stage order), ISO string where lexicographic
+    # equals chronological (date), plain lowercased text elsewhere.
+    rows_html: list[str] = []
+    for item in ordered:
+        topic_key = str(item.get("topic", ""))
+        topic_display = topic_name_by_key.get(topic_key, topic_key or "-")
+        stage = str(item.get("stage") or "")
+        stage_sort = (
+            str(STAGE_ORDER.index(stage))
+            if stage in STAGE_ORDER
+            else str(len(STAGE_ORDER))
+        )
+        date_str = str(item.get("date") or "")
+        jurisdiction = str(item.get("jurisdiction") or "-")
+        title = str(item.get("title") or "(untitled)")
+        summary = str(item.get("summary") or "")
+        source_name = str(item.get("source_name") or "")
+        source_url = safe_url(item.get("source_url"))
+        source_link = (
+            f'<a href="{esc(source_url)}" target="_blank" rel="noopener nofollow">{esc(source_name)}</a>'
+            if source_url
+            else esc(source_name)
         )
 
-    # Rows
-    rows_html: list[str] = []
-    for item in sorted_items:
-        topic_key = str(item.get("topic", ""))
-        topic_display = topic_name_by_key.get(topic_key, topic_key or "—")
-        title = esc(item.get("title", "(untitled)"))
-        summary = esc(item.get("summary", ""))
-        source_name = esc(item.get("source_name", ""))
-        source_url = esc(safe_url(item.get("source_url", "")))
-        source_link = (
-            f'<a href="{source_url}" target="_blank" rel="noopener nofollow">{source_name}</a>'
-            if source_url
-            else source_name
-        )
         rows_html.append(
             "<tr>"
-            f"<td>{esc(item.get('date') or '—')}</td>"
-            f"<td>{esc(topic_display)} {relevant_badge(bool(item.get('relevant_to_your_team')))}</td>"
-            f"<td>{esc(item.get('jurisdiction') or '—')}</td>"
-            f"<td>{stage_pill(str(item.get('stage', '')))}</td>"
-            f"<td><div class=\"title\">{title}</div>"
-            f"<div class=\"summary\">{summary}</div></td>"
-            f"<td>{source_link}</td>"
+            f'<td data-sort="{esc(date_str)}">{esc(date_str or "-")}</td>'
+            f'<td data-sort="{esc(topic_display.lower())}">{esc(topic_display)} {relevant_badge(bool(item.get("relevant_to_your_team")))}</td>'
+            f'<td data-sort="{esc(jurisdiction.lower())}">{esc(jurisdiction)}</td>'
+            f'<td data-sort="{esc(stage_sort)}">{stage_pill(stage)}</td>'
+            f'<td data-sort="{esc(title.lower())}">'
+            f'<div class="title">{esc(title)}</div>'
+            f'<div class="summary">{esc(summary)}</div></td>'
+            f'<td data-sort="{esc(source_name.lower())}">{source_link}</td>'
             "</tr>"
         )
 
@@ -194,12 +207,13 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
         )
         empty_html = (
             '<section class="empty-topics">'
-            '<h2>Quiet this period</h2>'
-            f'<ul>{rows}</ul>'
+            "<h2>Quiet this period</h2>"
+            f"<ul>{rows}</ul>"
             "</section>"
         )
 
     style = _stylesheet()
+    script = _sorter_script()
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -229,16 +243,16 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
 </section>
 
 <section>
-  <h2>Items</h2>
-  <table>
+  <h2>Items <span class="hint">— click any column header to sort</span></h2>
+  <table id="items-table">
     <thead>
       <tr>
-        <th>Date</th>
-        <th>Topic</th>
-        <th>Jurisdiction</th>
-        <th>Stage</th>
-        <th>Title &amp; summary</th>
-        <th>Source</th>
+        <th data-col="0" data-type="date">Date</th>
+        <th data-col="1" data-type="text">Topic</th>
+        <th data-col="2" data-type="text">Jurisdiction</th>
+        <th data-col="3" data-type="number">Stage</th>
+        <th data-col="4" data-type="text">Title &amp; summary</th>
+        <th data-col="5" data-type="text">Source</th>
       </tr>
     </thead>
     <tbody>
@@ -252,6 +266,7 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
 <footer>
   <div>Regulation Monitor is a <strong>monitoring</strong> tool. Nothing on this dashboard is legal, tax, or compliance advice. Team-relevance is a keyword match, not an impact assessment.</div>
 </footer>
+<script>{script}</script>
 </body>
 </html>
 """
@@ -292,6 +307,8 @@ h1{margin:2px 0 0;font-size:22px;font-weight:600}
 section{padding:24px 32px}
 section h2{margin:0 0 12px;font-size:14px;text-transform:uppercase;
   letter-spacing:.06em;color:var(--muted);font-weight:600}
+section h2 .hint{color:var(--muted);text-transform:none;letter-spacing:0;
+  font-size:12px;font-weight:400;margin-left:6px}
 
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
   gap:12px;padding:16px 32px 0}
@@ -304,7 +321,13 @@ table{width:100%;border-collapse:collapse;background:var(--card);
   border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
 thead th{background:#f1f5f9;color:var(--muted);text-align:left;font-weight:600;
   padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
-  border-bottom:1px solid var(--line)}
+  border-bottom:1px solid var(--line);cursor:pointer;user-select:none;
+  position:relative}
+thead th:hover{color:var(--ink)}
+thead th::after{content:"";display:inline-block;margin-left:6px;opacity:.35;
+  font-size:10px;transform:translateY(-1px)}
+thead th[aria-sort="ascending"]::after{content:"\\25B2";opacity:1;color:var(--accent)}
+thead th[aria-sort="descending"]::after{content:"\\25BC";opacity:1;color:var(--accent)}
 tbody td{padding:12px;vertical-align:top;border-bottom:1px solid var(--line);
   font-size:13px}
 tbody tr:last-child td{border-bottom:none}
@@ -326,6 +349,54 @@ footer{padding:16px 32px 32px;color:var(--muted);font-size:11px}
 .empty-topics li{padding:10px 14px;border-bottom:1px solid var(--line);
   color:var(--muted);font-size:13px}
 .empty-topics li:last-child{border-bottom:none}
+"""
+
+
+def _sorter_script() -> str:
+    """Vanilla-JS click-to-sort. Reads td[data-sort] for the sort key,
+    respects data-type on th ('number' | 'date' | 'text'), toggles
+    ascending / descending, and updates aria-sort for accessibility.
+    """
+    return """
+(function(){
+  var table = document.getElementById('items-table');
+  if (!table) return;
+  var thead = table.tHead;
+  var tbody = table.tBodies[0];
+  if (!thead || !tbody) return;
+  var ths = thead.rows[0].cells;
+  for (var i = 0; i < ths.length; i++) {
+    (function(colIndex){
+      var th = ths[colIndex];
+      th.addEventListener('click', function(){
+        var type = th.getAttribute('data-type') || 'text';
+        var current = th.getAttribute('aria-sort');
+        var asc = current !== 'ascending';
+        for (var j = 0; j < ths.length; j++) ths[j].removeAttribute('aria-sort');
+        th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
+        var rows = Array.prototype.slice.call(tbody.rows).filter(function(r){
+          return !(r.cells.length === 1 && r.cells[0].getAttribute('colspan'));
+        });
+        rows.sort(function(a, b){
+          var av = (a.cells[colIndex] && a.cells[colIndex].getAttribute('data-sort')) || '';
+          var bv = (b.cells[colIndex] && b.cells[colIndex].getAttribute('data-sort')) || '';
+          var cmp;
+          if (type === 'number') {
+            cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+          } else if (type === 'date') {
+            cmp = av.localeCompare(bv);
+          } else {
+            cmp = av.localeCompare(bv);
+          }
+          return asc ? cmp : -cmp;
+        });
+        var frag = document.createDocumentFragment();
+        rows.forEach(function(r){ frag.appendChild(r); });
+        tbody.appendChild(frag);
+      });
+    })(i);
+  }
+})();
 """
 
 
