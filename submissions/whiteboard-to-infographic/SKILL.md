@@ -67,10 +67,14 @@ is the main failure mode, so confirm interpretation **before** building.
    coordinate** — so verify structurally rather than by eye: every step/node
    present, columns/nodes evenly spaced, no shape overlapping another, every
    label inside its box, drop-lines landing on their cards, edges approaching
-    nodes straight-on and not crossing through them. If your runtime can
-    rasterize the slide, optionally do a visual critique pass; if it can't, lean
-    entirely on the computed geometry. Fix in code and rebuild. Faithfulness beats
-    polish — never add a step, field, or connection that wasn't on the board.
+    nodes straight-on and not crossing through them. If your runtime can
+
+    rasterize the slide, optionally do a visual critique pass; if it can't, lean
+
+    entirely on the computed geometry. Fix in code and rebuild. Faithfulness beats
+
+    polish — never add a step, field, or connection that wasn't on the board.
+
    polish
 
    — never add a step, field, or connection that wasn't on the board.
