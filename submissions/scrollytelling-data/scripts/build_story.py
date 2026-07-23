@@ -536,7 +536,10 @@ else:
 # ── Category chapter ───────────────────────────────────────────────────────────
 cat_ch_num = ch() if has_cat else None
 if has_cat:
-    first_cat_col  = list(A['cat_data'].keys())[0]
+    first_cat_col  = next(
+        k for k, v in A['cat_data'].items()
+        if v.get('labels') and v.get('values')
+    )
     first_cat_data = A['cat_data'][first_cat_col]
     top_cat_label  = first_cat_data['labels'][0]
     top_cat_val    = fmt(first_cat_data['values'][0])
@@ -741,7 +744,10 @@ js_data = json.dumps(A).replace('</', '<\\/')
 # Category chart: use renderCategoryBar helper
 cat_js_calls = ''
 if has_cat:
-    ccol = list(A['cat_data'].keys())[0]
+    ccol = next(
+        k for k, v in A['cat_data'].items()
+        if v.get('labels') and v.get('values')
+    )
     cat_js_calls = f"""
   if (id==='ch-cat') {{
     renderCategoryBar('catChart',
