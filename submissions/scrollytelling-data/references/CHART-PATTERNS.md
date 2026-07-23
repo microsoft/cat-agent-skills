@@ -1,24 +1,12 @@
-# Chart Patterns & Build Helpers Reference
+# Chart Patterns Reference (Conditional Charts)
 
-This file has two kinds of content:
-
-- **Conditional chart types** (first) — combinations that only apply to **some** datasets: a geo column, a real two-variable correlation, or a bar+overlay pairing. Read these only when the data shape at hand calls for one.
-- **Shared build helpers** (second) — the base layout object and helper functions used on **most** stories when writing the HTML in Phase 4 (`renderCategoryBar`, `renderDonut`, the low-variance fix, and the counter / leaderboard / record-card animation code). Open this file before writing chart or animation code and build through these helpers.
+This file holds **conditional chart patterns** — combinations that only apply to *some* datasets: a geo column, a real two-variable correlation, or a bar+overlay pairing. Read a section only when the data shape at hand calls for it. The always-used build helpers (`BG`/`CFG`, `renderCategoryBar`, `renderDonut`, low-variance zoom, and the counter/leaderboard/record-card animations) live inline in `SKILL.md`.
 
 ## Contents
-**Conditional chart types**
 - Combining Traces (Bar + Scatter/Line Overlay) — label collisions
 - Geography: Don't Assume USA — Detect It From the Data
 - Combining a Bar Trace with a Second Y-Axis Overlay (`yaxis2`)
 - Scatter / Bubble Charts (entity-on-two-axes) — Log Ticks and Label Crowding
-
-**Shared build helpers (Phase 4)**
-- Base layout object (`BG` / `CFG`) — used by every chart
-- Horizontal Bar Charts (`renderCategoryBar`) — get the axes right
-- Donut / Pie Charts (`renderDonut`) — label on the slice, no legend
-- Low-Variance Rankings — when every value looks the same
-- Scroll-Triggered Counter — two-observer pattern
-- Leaderboard Rows / Record Cards — staggered reveals
 
 ---
 
@@ -60,6 +48,7 @@ Charts that plot every entity by two metrics (e.g. volume vs. price, count vs. r
 
 1. **Confusing log-axis ticks.** Plotly's log-axis default draws a labeled tick at every `1`, `2`, `5` within each decade (`0.1, 2, 5, 1, 2, 5, 10, 2, 5, ...`). That's technically correct but reads as broken/non-monotonic to a viewer skimming left to right. Fix it generically by forcing one labeled tick per decade (`dtick: 1` on a `type:'log'` axis draws only the power-of-ten ticks: `0.1, 1, 10, 100`), regardless of what the data's actual min/max happen to be.
 2. **Overlapping static labels.** When many entities sit close together (common at the low-volume/low-count end), printing every entity's name as a permanent text label produces unreadable overlapping text — and that crowding gets *worse*, not better, in exactly the region the chart is trying to highlight. Never decide by eye which labels to hide per dataset; compute it.
+3. **Too many bubbles.** Even with perfect label logic, plotting dozens or hundreds of entities is an unreadable clump of overlapping circles. Cap the chart to the ~10 most significant entities (top by the size metric) — the helper does this by default via `opts.maxPoints` (10). Feed it the top rows, not the full table.
 
 **Use one shared helper for every "entity on two numeric axes" scatter/bubble chart:**
 
@@ -69,6 +58,18 @@ Charts that plot every entity by two metrics (e.g. volume vs. price, count vs. r
 function renderScatterBubble(divId, entities, x, y, opts = {}) {
   if (entities.length !== x.length || entities.length !== y.length) {
     throw new Error(`${divId}: entities/x/y length mismatch (${entities.length}, ${x.length}, ${y.length})`);
+  }
+
+  // Cap to the most significant bubbles (default 10). A scatter with dozens of overlapping
+  // points is unreadable no matter how labels are placed — keep the largest by size metric.
+  const maxPoints = opts.maxPoints ?? 10;
+  if (entities.length > maxPoints) {
+    const keep = entities.map((_, i) => i)
+      .sort((a, b) => (opts.size ? opts.size[b] - opts.size[a] : 0))
+      .slice(0, maxPoints);
+    const pick = arr => Array.isArray(arr) ? keep.map(i => arr[i]) : arr;
+    entities = pick(entities); x = pick(x); y = pick(y);
+    opts = { ...opts, size: pick(opts.size), color: pick(opts.color) };
   }
 
   const logX = opts.logX ?? (Math.max(...x) / Math.min(...x.filter(v => v > 0)) > 100);
@@ -127,216 +128,3 @@ Rules this helper enforces (for reference, if extending it):
 5. **`minGap` is a tunable density knob, not a per-dataset cutoff** — widen it for very crowded charts, narrow it for sparse ones, but never hand-pick which specific entities get labels.
 
 ---
-
-## Base Layout Object (`BG` / `CFG`)
-
-Always use this base layout object for dark-theme consistency, and spread `...BG`
-into every chart's layout:
-
-```javascript
-const BG = {
-  paper_bgcolor:'#111', plot_bgcolor:'#111',
-  font:{color:'#bbb', size:11},
-  margin:{t:16, b:52, l:58, r:18},
-  xaxis:{gridcolor:'#1e1e1e', linecolor:'#2a2a2a'},
-  yaxis:{gridcolor:'#1e1e1e', linecolor:'#2a2a2a'}
-};
-const CFG = {responsive:true, displayModeBar:false};
-```
-
-## Horizontal Bar Charts (category-vs-value) — Get the Axes Right
-
-Charts like "resolution time by priority" (Low/Medium/High/Critical vs. hours) are a classic failure point: it's easy to end up with vertical columns misaligned to the category axis, or a category silently missing its bar. This tends to happen because each chapter's chart is hand-written separately and one copy-paste drifts from the rest — the fix is to stop hand-writing bar traces per chapter and go through one shared helper instead.
-
-**Use one shared JS function for every "category compared to a metric" bar chart, regardless of dataset or chapter.** Never write a bespoke `Plotly.newPlot` bar trace per chapter — call this helper so the rules below are enforced in one place instead of re-implemented (and potentially mis-implemented) each time:
-
-```javascript
-// Generic helper for ANY category-vs-metric bar chart (priority, category, channel, region, etc.)
-// Call this the same way regardless of what the categories/metric actually represent.
-function renderCategoryBar(divId, categories, values, opts = {}) {
-  if (categories.length !== values.length) {
-    throw new Error(`${divId}: categories/values length mismatch (${categories.length} vs ${values.length})`);
-  }
-  // Pair, then sort/order once from a single source of truth — never build x/y as two separately-derived arrays.
-  const order = opts.categoryOrder;                 // optional fixed order, e.g. ['Critical','High','Medium','Low']
-  const pairs = categories.map((c, i) => [c, values[i]]);
-  if (order) pairs.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-  else pairs.sort((a, b) => b[1] - a[1]);            // default: descending by value
-
-  const cats = pairs.map(p => p[0]);
-  const vals = pairs.map(p => p[1]);
-
-  // Low-variance guard: zoom the axis instead of always starting at 0 (see "Low-Variance Rankings")
-  const spread = (Math.max(...vals) - Math.min(...vals)) / Math.max(...vals);
-  const floor  = spread < 0.15 ? Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.5 : 0;
-
-  Plotly.newPlot(divId, [{
-    type: 'bar', orientation: 'h', y: cats, x: vals,   // always horizontal: category on y, metric on x
-    marker: { color: opts.color || '#ff6600', opacity: .9 },
-    text: vals.map(v => opts.fmt ? opts.fmt(v) : v), textposition: 'outside', textfont: { color: '#aab' },
-    hovertemplate: `%{y}: %{x}${opts.unit || ''}<extra></extra>`
-  }], {
-    ...BG,
-    xaxis: { ...BG.xaxis, title: opts.xTitle || '', range: [floor, Math.max(...vals) * 1.15] },
-    yaxis: { ...BG.yaxis, type: 'category', categoryorder: order ? 'array' : 'total ascending', categoryarray: order, automargin: true },
-    margin: { t: 20, b: 50, l: 140, r: 60 }
-  }, CFG);
-}
-
-// Every chapter that compares categories to a metric calls the SAME function:
-// renderCategoryBar('priChart', D.pri_labels, D.pri_hrs, {categoryOrder:['Critical','High','Medium','Low'], unit:'h', xTitle:'Avg Resolution Hours'});
-// renderCategoryBar('catChart', D.cat_names, D.cat_cnt, {unit:' tickets', xTitle:'Ticket Count'});
-// renderCategoryBar('chanChart', D.chan_labels, D.chan_cnt, {unit:' tickets', xTitle:'Ticket Count'});
-```
-
-This is the actual fix for the class of bug we saw (a "Low" category with no visible bar): it wasn't a one-off mistake in a single chapter, it was the *lack of a shared pattern* — one chapter's bar trace was hand-typed slightly differently than the others. Centralizing it in `renderCategoryBar()` means every category-bar chapter — for any dataset, any column names — gets the length-check, orientation, ordering, and low-variance zoom for free, instead of relying on each chapter's author to remember the rules correctly by hand.
-
-The specific rules this helper enforces (for reference, if extending it):
-
-1. **`orientation:'h'`, category array on `y`, numeric array on `x`** — never the reverse.
-2. **`x` and `y` are derived from one paired, sorted list** — never two separately-ordered arrays that can drift out of sync.
-3. **Categories are never filtered independently of their values** — drop both together or not at all.
-4. **`yaxis.categoryorder`/`categoryarray`** set explicitly so label order can't drift from bar order on re-render.
-5. **Length is asserted (`categories.length === values.length`) before plotting**, failing loudly instead of silently rendering a phantom label with no bar.
-
-## Donut / Pie Charts (share / composition) — Label On the Slice, No Legend
-
-**Use a donut/pie at most once per story — never two.** A single composition chart is a nice change of pace among the bars and lines; a second one makes the story feel repetitive and dilutes its impact. If another column also tells a share/composition story, reach for a *different* shape rather than a second donut — pick whichever fits the data:
-
-- **Treemap** (`type:'treemap'`) — great for a part-to-whole with many categories or a hierarchy (e.g. department → status), and it labels comfortably inside the tiles.
-- **100% stacked bar** — a single full-width bar split into its shares; ideal for one composition, or a few side-by-side bars to compare composition *across* groups.
-- **Stacked / grouped bar** — when the interesting story is the counts within each category, not just their fractions.
-- **Funnel** (`type:'funnel'`) — when the categories form ordered stages (e.g. Scoping → Piloting → In Development → Live).
-- **Vertical or horizontal bar** — a plain ranked bar is often the clearest, but don't treat it as the *only* fallback.
-
-Match the chart to what the data is actually saying; the rule is just "not a second donut," not "always a bar."
-
-A donut's slices are already labeled directly (name + percent on each slice), so **a legend is redundant — and worse, it collides**: Plotly places the legend to the right, where its entries overlap the slice labels and each other, producing tangled text like "In DevelopmentPiloting". Never render a donut with both on-slice labels and a legend.
-
-**Use one shared helper for every donut, with the legend off:**
-
-```javascript
-// Generic donut for ANY category share/composition (status, type, segment, ...).
-function renderDonut(divId, labels, values, opts = {}) {
-  if (labels.length !== values.length)
-    throw new Error(`${divId}: labels/values length mismatch (${labels.length} vs ${values.length})`);
-  Plotly.newPlot(divId, [{
-    type: 'pie', hole: 0.55,
-    labels, values,
-    sort: true, direction: 'clockwise',
-    textinfo: 'label+percent',        // label the slice itself...
-    textposition: 'inside',           // ...inside the ring
-    insidetextorientation: 'horizontal',
-    textfont: { color: '#fff', size: 12 },
-    marker: { line: { color: '#111', width: 2 } },  // thin gap between slices
-    hovertemplate: '%{label}: %{value} (%{percent})<extra></extra>'
-  }], {
-    ...BG,
-    showlegend: false,                // ← the fix: no redundant, colliding legend
-    margin: { t: 20, b: 20, l: 20, r: 20 }
-  }, CFG);
-}
-```
-
-Rules this enforces:
-1. **`showlegend: false`** — the on-slice `label+percent` text is the only labeling; the legend is always off.
-2. **`textposition: 'inside'` with `insidetextorientation: 'horizontal'`** — keeps labels on their slice and readable, never floating outside where they collide with neighbors.
-3. **`sort: true`** so slices read largest-to-smallest.
-4. If a slice is too thin for an inside label, **don't turn the legend back on** — merge tiny tail categories into an "Other" slice, or switch to a horizontal bar (`renderCategoryBar`) for many small categories.
-
-## Low-Variance Rankings — When Every Value Looks the Same
-
-Before building any ranked bar list (leaderboards, top-N charts), **check the spread of the values**: `(max - min) / max`. If that spread is small (roughly under ~15–20%, e.g. CSAT scores of 3.98–4.08, or percentages like 94%–97%), a bar scaled from 0 → max will render every row as visually identical — the chart tells the reader nothing.
-
-**Fix — pick one based on the chapter's purpose:**
-
-1. **Zoom the axis / bar scale to the actual data range**, not 0. Compute `pct` as `(value - floor) / (ceil - floor) * 100` where `floor` is slightly below the min (e.g. min − 10% of range, or a meaningful baseline like a group average) and `ceil` is slightly above the max. This is the right default fix for the leaderboard bar rows.
-2. **Show delta-from-baseline instead of the raw value.** If the story point is "these agents beat the average," plot `value − desk_average` as a diverging bar (positive bars extend right in `--fire`, negative in a muted gray) instead of the absolute score. This makes small-but-real differences visible and matches the narrative.
-3. **Switch chart type** when a bar list still isn't informative even after zooming: a **dot/lollipop plot** on a zoomed axis, or a **table with a small sparkline/heatmap-tint per row** (color intensity instead of bar length), reads better than near-equal-length bars for tightly clustered rankings.
-4. **Never leave a 0-based bar as the only visual** for a low-variance metric — always zoom, delta, or switch.
-
-State the actual spread in the chapter copy too (e.g. "the gap between #1 and #10 is just 0.10 points on a 5-point scale") so the visual and the narrative agree on how tight the race is.
-
-## Scroll-Triggered Counter
-
-Add `data-target="12345"` and optionally `data-prefix="$"` to any `.num` element. A dedicated observer calls `counter(el)` automatically when its card scrolls into view.
-
-```html
-<div class="num" data-prefix="$" data-target="419917">$0</div>
-```
-
-**Never start counters from the same IntersectionObserver that drives generic `.reveal` transitions.** That observer fires for every reveal element on the page (chapter text, chart boxes, stat cards, ...) in the same batch — mixing counter starts into it means a stat card's counter can start (or get skipped) while the card is still mid-opacity-transition, so numbers race, stall, or never animate. This isn't a one-off card issue, it's a class of bug: any dataset with more than a couple of stat cards can reproduce it.
-
-Use two independent, single-purpose observers instead — one for visual reveal, one for counters — and guard `counter()` so it can never fire twice for the same element:
-
-```javascript
-function counter(el) {
-  if (el.dataset.counted) return;   // guard: fire at most once per element
-  el.dataset.counted = '1';
-  // ...existing animation logic...
-}
-
-// Visual reveal only — no counter logic here.
-const revealObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
-}, {threshold: 0.15});
-document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
-// Isolated counter observer: watches whichever container each .num[data-target] lives in
-// (works for any number of stat cards anywhere on the page — nothing hardcoded to an id
-// or count), uses a higher threshold so the card is substantially visible before its
-// numbers start moving, and unobserves immediately so it can never double-trigger.
-const counterObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (!e.isIntersecting) return;
-    e.target.querySelectorAll('.num[data-target]').forEach(n => counter(n));
-    counterObs.unobserve(e.target);
-  });
-}, {threshold: 0.3});
-document.querySelectorAll('.num[data-target]').forEach(n => {
-  counterObs.observe(n.closest('.reveal') || n);
-});
-```
-
-## Leaderboard Rows
-Animated stagger: rows slide in from the left one by one, then value bars grow right.
-
-**Before computing `pct`, check variance first** (see "Low-Variance Rankings" above). If the top10 values are tightly clustered, scale from a zoomed floor instead of 0:
-
-```javascript
-const vals = D.top10_values;
-const spread = (Math.max(...vals) - Math.min(...vals)) / Math.max(...vals);
-// Zoom in when values are tightly clustered (e.g. CSAT 3.98-4.08)
-const floor = spread < 0.15 ? Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.5 : 0;
-const ceil = Math.max(...vals) * 1.02;
-const pct = v => ((v - floor) / (ceil - floor)) * 100;
-```
-
-```javascript
-function buildLeaderboard(){
-  D.top10_names.forEach((name, i) => {
-    const row = document.createElement('div');
-    row.className = 's-row';
-    row.style.transitionDelay = (i * .07) + 's';
-    row.innerHTML = `...`; // use pct(D.top10_values[i]) for the bar width, not a raw 0-based ratio
-    list.appendChild(row);
-  });
-  // Stagger visibility
-  list.querySelectorAll('.s-row').forEach((r, i) => {
-    setTimeout(() => {
-      r.classList.add('vis');
-      setTimeout(() => {
-        r.querySelector('.s-bar').style.width = r.querySelector('.s-bar').dataset.pct + '%';
-      }, 350);
-    }, i * 90);
-  });
-}
-```
-
-## Record Cards
-5 cards fly up from below, staggered:
-```javascript
-wrap.querySelectorAll('.i-card').forEach((c, i) => {
-  setTimeout(() => c.classList.add('vis'), i * 110);
-});
-```

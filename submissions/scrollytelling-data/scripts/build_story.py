@@ -339,7 +339,7 @@ M2 = schema['secondary_metric']
 if E and M2:
     sc2 = qm(f'''
         SELECT {sc(E)} ent, SUM({sc(M)}) xv, AVG({sc(M2)}) yv
-        FROM _tbl GROUP BY {sc(E)} ORDER BY xv DESC LIMIT 35
+        FROM _tbl GROUP BY {sc(E)} ORDER BY xv DESC LIMIT 10
     ''')
     A['scatter_entities'] = sc2['ent'].astype(str).tolist()
     A['scatter_x']        = [round(f0(v), 4) for v in sc2['xv']]
@@ -753,7 +753,7 @@ map_js = f"""
     Plotly.newPlot('mapChart', [{{
       type:'choropleth', locationmode:'{locationmode}',
       locations: D.geo_codes, z: D.geo_values,
-      colorscale:[['0','#1a0d00'],['0.2','#3d1c00'],['0.5','#7a3a00'],['0.8','#c47d2a'],['1','#f5c842']],
+      colorscale:[['0','#14001a'],['0.2','#3d0a33'],['0.5','#a855f7'],['0.8','#ff5fa2'],['1','#2ee6a6']],
       colorbar:{{title:{{text:'{metric_lbl_js}',font:{{color:'#bbb'}}}}, tickfont:{{color:'#bbb'}}}},
       hovertemplate:'%{{location}}: %{{z:,.0f}}<extra></extra>'
     }}], {{
@@ -774,19 +774,19 @@ trend_js = f"""
     Plotly.newPlot('trendChart', [
       {{type:'scatter', mode:'lines+markers', name:'Total {metric_lbl_js}',
         x:D.trend_x, y:D.trend_y,
-        line:{{color:'#c47d2a',width:2.5}}, marker:{{size:6,color:'#c47d2a'}},
+        line:{{color:'#ff5fa2',width:2.5}}, marker:{{size:6,color:'#ff5fa2'}},
         hovertemplate:'%{{x}}: %{{y:,.2f}}<extra></extra>'}},
       {{type:'scatter', mode:'lines+markers', name:'Avg {M2_lbl_js if M2 else metric_lbl_js} / record',
         x:D.trend_x, y:D.trend_avg, yaxis:'y2',
-        line:{{color:'#f5c842',width:2,dash:'dot'}}, marker:{{size:5,color:'#f5c842'}},
+        line:{{color:'#2ee6a6',width:2,dash:'dot'}}, marker:{{size:5,color:'#2ee6a6'}},
         hovertemplate:'%{{x}}: %{{y:.4f}}<extra></extra>'}}
     ], {{
       ...BG,
       xaxis:{{...BG.xaxis, title:'{time_lbl_js}', type:'category'}},
       yaxis:{{...BG.yaxis, title:'Total {metric_lbl_js}'}},
       yaxis2:{{title:'Avg / record', overlaying:'y', side:'right',
-        gridcolor:'transparent', tickfont:{{color:'#f5c842'}},
-        titlefont:{{color:'#f5c842'}}, linecolor:'#2a2a2a'}},
+        gridcolor:'transparent', tickfont:{{color:'#2ee6a6'}},
+        titlefont:{{color:'#2ee6a6'}}, linecolor:'#2a2a2a'}},
       legend:{{x:.02,y:.98,font:{{color:'#bbb'}},bgcolor:'rgba(0,0,0,0)'}},
       margin:{{t:20,b:55,l:70,r:80}}
     }}, CFG);
@@ -803,7 +803,7 @@ html = f"""<!DOCTYPE html>
 <style>
 *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
 :root{{
-  --fire:#c47d2a; --ember:#e05a00; --gold:#f5c842;
+  --fire:#ff5fa2; --ember:#a855f7; --gold:#2ee6a6;
   --text:#f0ede8; --muted:#999; --card:#161616; --border:#252525;
 }}
 html{{scroll-behavior:smooth}}
@@ -815,7 +815,7 @@ body{{background:#0a0a0a;color:var(--text);font-family:'Segoe UI',system-ui,sans
 /* HERO */
 #hero{{min-height:100vh;display:flex;flex-direction:column;align-items:center;
   justify-content:center;text-align:center;padding:2rem;
-  background:radial-gradient(ellipse at 50% 40%,#1a0d00 0%,#0a0a0a 70%)}}
+  background:radial-gradient(ellipse at 50% 40%,#14001a 0%,#0a0a0a 70%)}}
 .hero-eyebrow{{font-size:.75rem;letter-spacing:.25em;color:var(--fire);
   text-transform:uppercase;margin-bottom:1.5rem}}
 .hero-title{{font-size:clamp(3rem,8vw,6.5rem);font-weight:900;line-height:1.0;
@@ -908,7 +908,7 @@ body{{background:#0a0a0a;color:var(--text);font-family:'Segoe UI',system-ui,sans
 /* EPILOGUE */
 #epilogue{{min-height:60vh;display:flex;align-items:center;justify-content:center;
   text-align:center;padding:6rem 2rem;
-  background:radial-gradient(ellipse at 50% 50%,#1a0d00 0%,#0a0a0a 65%)}}
+  background:radial-gradient(ellipse at 50% 50%,#14001a 0%,#0a0a0a 65%)}}
 .ep-badge{{display:inline-block;padding:.4rem 1.2rem;border:1px solid var(--fire);
   border-radius:20px;font-size:.7rem;letter-spacing:.2em;color:var(--fire);
   text-transform:uppercase;margin-bottom:2rem}}
@@ -1001,7 +1001,7 @@ function renderCategoryBar(divId, categories, values, opts) {{
   const floor  = spread < 0.15 ? Math.min(...vals) - (Math.max(...vals) - Math.min(...vals)) * 0.5 : 0;
   Plotly.newPlot(divId, [{{
     type:'bar', orientation:'h', y:cats, x:vals,
-    marker:{{color:'#c47d2a', opacity:.9}},
+    marker:{{color:'#ff5fa2', opacity:.9}},
     text:vals.map(v => opts.fmt ? opts.fmt(v) : v.toLocaleString()),
     textposition:'outside', textfont:{{color:'#aab'}},
     hovertemplate:'%{{y}}: %{{x}}<extra></extra>'
@@ -1043,7 +1043,7 @@ function renderScatterBubble(divId, entities, x, y, opts) {{
     marker:{{
       size: sizes, sizemode:'area',
       sizeref: opts.size ? Math.max(...sizes)/40**2 : undefined,
-      color:'#c47d2a', opacity:.8, line:{{width:1,color:'#333'}}
+      color:'#ff5fa2', opacity:.8, line:{{width:1,color:'#333'}}
     }},
     customdata: entities,
     hovertemplate:'<b>%{{customdata}}</b><br>x: %{{x:,.2f}}<br>y: %{{y:,.4f}}<extra></extra>'
@@ -1152,7 +1152,7 @@ function buildTopChart() {{
   const names = D.top15_names.slice().reverse();
   Plotly.newPlot('topChart', [{{
     type:'bar', orientation:'h', y:names, x:vals,
-    marker:{{color:vals.map((_,i)=>i===vals.length-1?'#f5c842':'#c47d2a'),opacity:.9}},
+    marker:{{color:vals.map((_,i)=>i===vals.length-1?'#2ee6a6':'#ff5fa2'),opacity:.9}},
     text:vals.map(v=>v>=1e9?METRIC_PREFIX+(v/1e9).toFixed(1)+'B':v>=1e6?METRIC_PREFIX+(v/1e6).toFixed(1)+'M':METRIC_PREFIX+v.toLocaleString()),
     textposition:'outside', textfont:{{color:'#aab'}},
     hovertemplate:'%{{y}}: %{{x:,.2f}}<extra></extra>'

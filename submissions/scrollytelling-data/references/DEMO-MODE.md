@@ -22,7 +22,8 @@ Build the story from this sample exactly as you would for a real upload — insp
 - **Skip the upload/preprocessor gate.** The sample isn't under `/app/uploads/`, so read the path directly instead of running `analyzing-xlsx/preprocess.py` first.
 - **Name the output** per the File Naming Convention (`basketball-demo-data-story-<YYYY-MM-DD>.html`) and write it to `/app/created/`.
 - **Set expectations in the handoff message.** Say clearly this story uses bundled **demo data**, and that stories built from the user's real uploaded data are usually more relevant and often better than the demo output.
-- **Avoid repeating chart types in the demo.** Don't use the same primary chart type in back-to-back chapters, and cap bar-chart chapters at two unless the user explicitly asks for a bar-heavy output.
+- **Favor fast, simple charts in the demo.** Prefer the default set (bar, donut, leaderboard, scatter, line). Repeating a chart type across chapters is fine — don't reach for radar, heatmap, treemap, funnel, or sankey just for variety; use an advanced chart only when the data genuinely calls for it (see the Chart Selection Guide in `SKILL.md`). This keeps demo runs fast.
+- **Keep the demo short — about 5 chapters** (plus hero, stat splash, and epilogue). Fewer chapters means a faster run and still feels like a complete story.
 
 You still make every editorial decision (chapter selection, order, narrative copy) — a demo should look like a real, hand-authored story, not a template dump.
 
@@ -30,12 +31,12 @@ You still make every editorial decision (chapter selection, order, narrative cop
 
 ## `scripts/build_story.py` — a complete worked reference
 
-`scripts/build_story.py` (runtime path `/app/skills/scrollytelling-data/scripts/build_story.py`) is a full, end-to-end example generator: it loads a workbook, performs a pragmatic cross-sheet merge in pandas when keys overlap, writes the joined result to SQLite for aggregations, detects schema (entity / metric / time / geo / category), and assembles a complete Dark-Fire scrollytelling page.
+`scripts/build_story.py` (runtime path `/app/skills/scrollytelling-data/scripts/build_story.py`) is a full, end-to-end example generator: it loads a workbook, performs a pragmatic cross-sheet merge in pandas when keys overlap, writes the joined result to SQLite for aggregations, detects schema (entity / metric / time / geo / category), and assembles a complete Dark-Neon scrollytelling page.
 
 **Use it as a reference, not as the thing you ship — and never run it as a shortcut for the demo.** Building the demo means authoring your own story exactly like a real upload (Phases 1–5). Do **not** execute `build_story.py` to produce the deliverable; its templated output is only a code example to read. Read `build_story.py` when you want a concrete, known-good example of how a piece fits together end to end — especially the parts that are fiddly to get right from prose alone:
 
 - The `<head>`/`<body>` assembly with **Plotly loaded synchronously in `<head>`** so it's guaranteed defined before any chart dispatch fires (call `Plotly.newPlot` directly — no async poller).
 - The single **`renderSection(id)`** function driven by *both* the `IntersectionObserver` **and** a 2.5s safety-net timeout, so charts and counters still appear if the observer never fires. Dispatch is keyed on the **section** id (`ch-map`, `ch-cat`, ...), not the chart-div id.
 - The two isolated `IntersectionObserver`s (reveal vs. single-shot counter) and the lazy per-section chart dispatch with a `rendered` guard.
-- The `renderCategoryBar()` / `renderScatterBubble()` / `buildHall()` helpers and the shared `BG` / `CFG` layout objects, plus the `js_esc()` label-escaping and the `node --check` pass after writing the file.
+- The `renderCategoryBar()` / `renderScatterBubble()` / `buildLeaderboard()` helpers and the shared `BG` / `CFG` layout objects, plus the `js_esc()` label-escaping and the `node --check` pass after writing the file.
 - Stat-card layout (`.s-card` / `.s-card-wide`) without the `margin:auto` / greedy-`flex` pitfalls.
