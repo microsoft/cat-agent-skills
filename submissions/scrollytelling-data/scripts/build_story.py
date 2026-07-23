@@ -392,6 +392,17 @@ def s_card(value, label, delay=0.0, wide=False, raw_target=None,
         pre, tgt, sfx = raw_prefix, raw_target, raw_suffix
     else:
         pre, tgt, sfx = stat_counter_attrs(value)
+
+    # Auto-widen when the rendered counter string will exceed the .s-card target.
+    # (JS uses toLocaleString(), so include comma-grouping in the estimate.)
+    try:
+        rendered_num = f"{int(tgt):,}"
+    except Exception:
+        rendered_num = str(tgt)
+    rendered = f"{pre}{rendered_num}{sfx}"
+    if not wide and len(rendered) > 6:
+        wide = True
+
     cls = 's-card-wide' if wide else 's-card'
     dly = f' style="transition-delay:{delay:.1f}s"' if delay else ''
     return (f'<div class="{cls} reveal"{dly}>'
