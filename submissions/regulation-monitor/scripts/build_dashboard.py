@@ -16,8 +16,9 @@ Item schema (each entry in items[]):
   title                   str  - source's short title, verbatim
   summary                 str  - 1-2 sentence summary
   source_name             str  - publisher's short name
-  source_url              str  - canonical public URL
-  relevant_to_your_team   bool - team-relevance flag from Step 4
+  source_url              str  - canonical public URL (http/https/mailto only;
+                                  other schemes are dropped at render time)
+  relevant_to_your_team   bool - team-relevance flag from Step 7
 
 Uses only the Python standard library so it runs in restricted sandboxes.
 """
@@ -57,6 +58,21 @@ STAGE_COLORS = {
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def safe_url(value: Any) -> str:
+    """Return the URL only if it uses a safe scheme (http/https/mailto).
+
+    Prevents javascript:/data:/vbscript: injection when items are sourced
+    from external content the skill did not author.
+    """
+    if not value:
+        return ""
+    text = str(value).strip()
+    lowered = text.lower()
+    if lowered.startswith(("http://", "https://", "mailto:")):
+        return text
+    return ""
 
 
 def esc(value: Any) -> str:
@@ -140,9 +156,9 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
         title = esc(item.get("title", "(untitled)"))
         summary = esc(item.get("summary", ""))
         source_name = esc(item.get("source_name", ""))
-        source_url = esc(item.get("source_url", ""))
+        source_url = esc(safe_url(item.get("source_url", "")))
         source_link = (
-            f'<a href="{source_url}" target="_blank" rel="noopener">{source_name}</a>'
+            f'<a href="{source_url}" target="_blank" rel="noopener nofollow">{source_name}</a>'
             if source_url
             else source_name
         )

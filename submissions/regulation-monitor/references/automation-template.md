@@ -18,7 +18,9 @@ prompt: |
   Run the regulation-monitor skill for profile "<profile-name>".
   Load the profile's config.json, sweep the window since the last run,
   build the dashboard, and email the digest to the user per the
-  delivery block. Send silently if no items were found.
+  delivery block. Always send the dashboard, including on quiet weeks —
+  topics with no items are reported explicitly as "No significant
+  developments this period" and the empty-state view is intentional.
 teamsNotify: auto
 ```
 

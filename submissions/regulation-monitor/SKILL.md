@@ -116,11 +116,14 @@ through setup:
 
 ### Step 1 — Auto-discover authoritative sources, then STOP for confirmation
 
-**This is an interactive checkpoint. Do not proceed to any research or
-monitoring until the user has explicitly confirmed the source list.**
+**This is an interactive checkpoint. The skill runs a small discovery pass
+to identify candidate sources, then presents them and stops. Do not start
+the monitoring sweep (Step 5) until the user has explicitly confirmed the
+source list.**
 
-For each watch topic the user configured, propose **exactly 5 authoritative
-sources**:
+For each watch topic the user configured, propose up to **5 authoritative
+sources** (default target is 5; use fewer if the user asks or if the domain
+genuinely has fewer canonical sources):
 
 - **Preference order** (in this order — pick the strongest 5 that exist for
   the topic):
@@ -176,9 +179,11 @@ sources**:
   - Approve as-is → proceed.
   - Ask to swap or remove one of the 5 → re-run discovery for that slot
     with the constraint they gave you.
-  - Add their own seed URLs → merge them into `seed_sources` in the config.
-    Seed sources are **not** counted against the "top 5" — a topic can end
-    up with 5 auto-discovered + N user seeds.
+  - Add their own seed URLs → append them to `seed_sources_by_topic` under
+    the appropriate topic key. Seed sources are **not** counted against the
+    "top 5" — a topic can end up with 5 auto-discovered + N user seeds.
+    A user seed that spans multiple topics should be added under each
+    relevant topic key.
   - Ask you to lower the target from 5 (e.g., "just the two OECD pages
     are enough") → honor it.
 
@@ -224,7 +229,7 @@ Write `config.json`:
         "kind": "regulator" }
     ]
   },
-  "seed_sources": [],
+  "seed_sources_by_topic": {},
   "cadence": "weekly",
   "window_days": 7,
   "runtime_budget": {
@@ -257,15 +262,16 @@ Write `config.json`:
 
 Sweep proceeds in this order and stops when the budget is met:
 
-1. **Every source in `sources_by_topic` and `seed_sources`.** `web_fetch`
-   each URL. Extract items dated within the window.
+1. **Every source in `sources_by_topic[topic]` and
+   `seed_sources_by_topic[topic]` for each topic.** `web_fetch` each URL.
+   Extract items dated within the window.
    - Cap `max_fetches_per_source` (default 2). If a source's index page
      links to individual items, follow at most that many links per source.
 2. **Bounded fallback search** only for topics where every locked source
-   returned zero items in the window. At most one `web_search` per topic,
-   at most `max_fallback_searches` total across the run (default 2).
-   Filter results by the reputable-domain allowlist. Discard non-matching
-   results.
+   (auto-discovered + user seeds) returned zero items in the window. At
+   most one `web_search` per topic, at most `max_fallback_searches` total
+   across the run (default 2). Filter results by the reputable-domain
+   allowlist. Discard non-matching results.
 3. **Stop when `max_items` is reached** (default 40). Prefer regulator
    sources > tracker sources > firm alerts when trimming.
 
@@ -373,12 +379,13 @@ narrow ones (e.g., one EU regulation).
 - **Public sources only.** Never bypass a paywall or reproduce paywalled or
   copyrighted text. Summarize in the skill's own words and link the source.
 - **Locked source list.** The sweep only visits URLs in the profile's
-  `sources_by_topic` and `seed_sources`. That list is set at interactive
-  setup with an explicit user confirmation — the skill cannot start
-  monitoring until the user has approved the sources. Fallback search at
-  runtime is bounded by `runtime_budget.max_fallback_searches` and filtered
-  by the reputable-domain allowlist. Do not add new sources on an
-  unattended run — that requires interactive re-setup.
+  `sources_by_topic` and `seed_sources_by_topic`. That list is set at
+  interactive setup with an explicit user confirmation — the skill cannot
+  start the monitoring sweep until the user has approved the sources.
+  Fallback search at runtime is bounded by
+  `runtime_budget.max_fallback_searches` and filtered by the reputable-
+  domain allowlist. Do not add new sources on an unattended run — that
+  requires interactive re-setup.
 - **Monitoring, not advice.** The skill never states a filing position, a
   legal conclusion, or a business impact. `relevant_to_your_team` is a soft
   keyword-match highlight.

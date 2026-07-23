@@ -33,7 +33,7 @@ Financial: `sec.gov`, `cftc.gov`, `federalreserve.gov`, `fdic.gov`, `occ.gov`,
 Privacy and data: `ftc.gov`, `edpb.europa.eu`, `ico.org.uk`, `cnil.fr`,
 `bfdi.bund.de`, `oaic.gov.au`, `priv.gc.ca`.
 
-Competition: `justice.gov`, `ftc.gov`, `ec.europa.eu/competition`, `cma.gov.uk`,
+Competition: `justice.gov`, `ftc.gov`, `ec.europa.eu`, `cma.gov.uk`,
 `bundeskartellamt.de`, `competitionbureau.gc.ca`.
 
 Health: `hhs.gov`, `fda.gov`, `cms.gov`, `ema.europa.eu`, `mhra.gov.uk`.
