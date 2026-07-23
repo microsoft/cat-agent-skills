@@ -1,0 +1,11 @@
+{
+  "name": "Gantt Chart Builder",
+  "description": "Generate clean, consistently-styled matplotlib Gantt charts from a schedule CSV or DataFrame — with group colours, completion overlays, and a today line.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["gantt", "timeline", "project-management", "matplotlib", "charts", "scripts"],
+  "author": "Nazish Qasim",
+  "authorUrl": "https://github.com/nazishqassim",
+  "version": "1.0.0",
+  "createdAt": "2026-07-23",
+  "updatedAt": "2026-07-23"
+}

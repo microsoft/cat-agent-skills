@@ -1,5 +1,5 @@
 ---
-name: Gantt Chart Builder
+name: gantt-chart-generator
 description: "Use this skill whenever the user asks to visualize a project schedule, timeline, Gantt chart, or phase/task breakdown over time. It gives the agent a prebuilt, parameterized gantt() function so Gantt charts are produced instantly and consistently — with colour-coded groups, completion overlays, a today reference line, and auto-scaled date axes — instead of hand-writing matplotlib each time."
 ---
 
