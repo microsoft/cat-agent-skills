@@ -427,7 +427,10 @@ metric_prefix_js = js_esc(mpfx)
 # ── 5. Chapter content ─────────────────────────────────────────────────────────
 has_geo     = bool(G and A.get('geo_codes'))
 has_trend   = bool(T and A.get('trend_x') and len(A['trend_x']) >= 3)
-has_cat     = bool(A.get('cat_data'))
+has_cat     = any(
+    v.get('labels') and v.get('values')
+    for v in A.get('cat_data', {}).values()
+)
 has_scatter = bool(A.get('scatter_x') and len(A['scatter_x']) > 4 and M2)
 
 top_ent     = A.get('top_entity', '—')
