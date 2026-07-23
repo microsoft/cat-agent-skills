@@ -25,13 +25,6 @@ teamsNotify: auto
 Scout will keep the recurrence, invoke the skill, and post the summary
 according to the automation's Teams notification policy.
 
-## Copilot Studio
-
-Create a scheduled agent in Copilot Studio pointed at the skill. In the
-agent's schedule, choose the same cadence as the profile
-(`cadence: weekly` → weekly). The agent's prompt is identical to the Scout
-automation prompt above.
-
 ## Cowork
 
 Cowork tasks can run on a schedule. Create a recurring task:

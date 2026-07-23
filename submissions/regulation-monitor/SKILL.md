@@ -398,7 +398,7 @@ narrow ones (e.g., one EU regulation).
 ## Scheduling
 
 See `references/automation-template.md` for how to schedule this skill on
-Scout (via Scout automation), Copilot Studio (scheduled agent), and Cowork
+Scout (via Scout automation) and Cowork
 (scheduled task). The core skill has no cadence of its own — the schedule
 lives outside the skill and simply invokes it.
 
@@ -408,6 +408,6 @@ lives outside the skill and simply invokes it.
   fallback search, item classification taxonomy, stage-inference rules, and
   per-topic search-query templates.
 - `references/automation-template.md` — how to schedule the monitor on
-  Scout, Copilot Studio, and Cowork.
+  Scout and Cowork.
 - `scripts/build_dashboard.py` — self-contained dashboard generator
   (Python standard library only).
