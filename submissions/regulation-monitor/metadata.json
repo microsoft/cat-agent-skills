@@ -1,0 +1,10 @@
+{
+  "name": "Regulation Monitor",
+  "description": "Configure once, then on a schedule sweeps user-specified regulations across seed sources plus a reputable-domain web search, classifies each item, flags items relevant to the user's team using a light WorkIQ-derived profile, and renders a self-contained HTML dashboard. Domain-agnostic (tax, privacy, AI/ML, healthcare, finance, ESG, labor, etc.).",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["regulation", "monitoring", "compliance", "dashboard", "research"],
+  "author": "Jagmeet Chabra",
+  "version": "1.0.0",
+  "createdAt": "2026-07-23",
+  "updatedAt": "2026-07-23"
+}
