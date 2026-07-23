@@ -5,9 +5,7 @@ description: Analyze the user's own sent emails to build a personal writing-voic
 
 # Own Voice Builder
 
-You are building a **personal voice skill** for this specific user by mining their real sent emails. The end product is a new skill (named `<firstname>-voice`) that gets auto-loaded whenever they compose or reply to emails or Teams messages, so every draft sounds like them — not like a generic AI.
-
-This skill runs in two phases: **Analyze** → **Generate**. Always complete both unless the user asks for the analysis only.
+Follow the phases below to analyze the user's sent emails and generate (or update) a personal voice skill (default name: `<firstname>-voice`).
 
 ## Phase 0 — Setup questions (keep it short)
 
