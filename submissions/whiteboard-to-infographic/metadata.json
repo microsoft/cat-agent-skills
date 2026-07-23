@@ -1,0 +1,12 @@
+{
+  "name": "Whiteboard to Infographic",
+  "description": "Turn a photo of a hand-drawn whiteboard or process sketch into a polished, client-ready infographic slide (.pptx), generated natively in the agent's Python container.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["infographic", "whiteboard", "powerpoint", "presentations", "diagrams", "design", "consulting"],
+  "author": "Andy Zehr",
+  "authorUrl": "https://www.linkedin.com/in/andyzehr",
+  "authorGithub": "NickBurns42",
+  "version": "1.0.0",
+  "createdAt": "2026-07-22",
+  "updatedAt": "2026-07-22"
+}
