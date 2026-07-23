@@ -99,26 +99,27 @@ def relevant_badge(is_relevant: bool) -> str:
 
 def sorted_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Initial server-side sort: team-relevant first, then stage order,
-    then date descending. Users can override via the client-side sorter.
+    then date descending within each group. Users can override any
+    dimension via the client-side column sorter.
+
+    Implemented as two stable passes because Python's sort doesn't
+    support a per-key `reverse` for individual tuple elements: sort by
+    date descending first, then stable-sort by (relevant, stage) so the
+    date-desc order is preserved inside each stable group.
     """
-    def key(item: dict[str, Any]) -> tuple[int, int, str]:
+    by_date_desc = sorted(
+        items,
+        key=lambda item: str(item.get("date") or ""),
+        reverse=True,
+    )
+    def group_key(item: dict[str, Any]) -> tuple[int, int]:
         relevant_first = 0 if item.get("relevant_to_your_team") else 1
         stage = str(item.get("stage") or "")
         stage_idx = (
             STAGE_ORDER.index(stage) if stage in STAGE_ORDER else len(STAGE_ORDER)
         )
-        # Negate the ISO string for descending order via reverse trick: use
-        # the plain string and rely on the outer sort direction. Because
-        # tuple sort is ascending, put a negative date proxy last and flip
-        # by using a value we can invert as string. Simpler: return the
-        # date string, then reverse-sort just the date within groups by
-        # returning it as the negative of the sort priority.
-        # Easiest approach: return date; sort the whole list, then apply
-        # secondary reverse-sort on date. Kept as a single ordered tuple
-        # for clarity — the final effect is applied below.
-        return (relevant_first, stage_idx, str(item.get("date") or ""))
-
-    return sorted(items, key=key)
+        return (relevant_first, stage_idx)
+    return sorted(by_date_desc, key=group_key)
 
 
 def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:

@@ -387,16 +387,14 @@ narrow ones (e.g., one EU regulation).
 - **Confirm before external sends.** Emailing anyone other than the user
   requires explicit confirmation on an interactive run; unattended runs
   never add recipients.
-- **Confidentiality and sensitivity.** If slides or notes carry a
-  confidentiality label or sensitivity marking (for example
-  "Confidential", "Internal Only", "Restricted", or an enterprise
-  information-protection label), or contain unreleased figures,
-  customer or partner identifiers, or names that aren't public yet,
-  flag them and confirm with the user before including that content in
-  the spoken script. Never add PII or customer identifiers the source
-  material doesn't already contain.
-- **Compute timings with code**, not by hand; state the pace assumption
-  so the presenter can recalibrate.
+- **Confidentiality and sensitivity.** If a retrieved source carries a
+  confidentiality label or sensitivity marking (for example "Confidential",
+  "Internal Only", "Restricted", or an enterprise information-protection
+  label), or contains unreleased figures, customer or partner identifiers,
+  or names that aren't public yet, drop it — this skill uses public
+  sources only. Never add PII, customer identifiers, or non-public
+  attribution to the dashboard beyond the function-area keywords the user
+  confirmed at setup.
 - **Cover exactly the requested topics** — no more, no fewer.
 - **Do not reproduce third-party copyrighted text** verbatim; paraphrase
   in the skill's own words.
