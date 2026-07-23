@@ -680,9 +680,7 @@ if 'entity_count' in A:
                 if tail_count > 0 else '')
     takeaways.append((
         '02', f'The top 3 carry most of the weight.',
-        f'The top 3 {entity_lbl.lower()}s together account for '
-        f'{round(sum(A["top15_values"][:3]) / A["total_metric"] * 100)}% '
-        f'of all {metric_lbl.lower()}. {tail_txt}'))
+        f'{round(sum(A["top15_values"][:3]) / A["total_metric"] * 100) if A["total_metric"] else 0}% '
 if has_cat and A['cat_data']:
     ccol = list(A['cat_data'].keys())[0]
     cdat = A['cat_data'][ccol]
