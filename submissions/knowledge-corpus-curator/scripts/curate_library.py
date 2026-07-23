@@ -1408,12 +1408,15 @@ def curation_settings_rows(
         [
             "Scope",
             (
-                "Complete for uploaded corpus: every staged file was inventoried, "
-                "hashed, and successfully content-extracted."
+                "Complete content-analysis coverage for uploaded corpus: every "
+                "staged file was inventoried, hashed, and included in content "
+                "analysis."
                 if extraction_gap_count == 0
-                else "Partial uploaded-corpus coverage: every staged file was "
-                f"inventoried and hashed, but {extraction_gap_count} file(s) were "
-                "not successfully content-extracted."
+                else "Partial content-analysis coverage for uploaded corpus: every "
+                f"staged file was inventoried and hashed, but {extraction_gap_count} "
+                "file(s) could not be fully included in content analysis or "
+                "comparison. See Document Inventory and extraction-gap backlog "
+                "items for status-specific details."
             )
             + " SharePoint coverage was not independently verified.",
         ],

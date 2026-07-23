@@ -128,9 +128,11 @@ Knowledge results cannot establish exhaustive coverage.
 
 Use these labels:
 
-- `Complete for uploaded corpus`: every supported uploaded file was processed.
-- `Partial uploaded-corpus coverage`: one or more uploaded files failed,
-  exceeded analysis limits, or were unsupported.
+- `Complete content-analysis coverage for uploaded corpus`: every staged file
+  has an `ok` extraction status and was included in content analysis.
+- `Partial content-analysis coverage for uploaded corpus`: one or more staged
+  files has a non-`ok` status, including failed, unsupported, OCR-required,
+  insufficient-text, too-large, or analysis-limited files.
 - `Not included in uploaded corpus`: knowledge identified a relevant SharePoint
   file that was not uploaded.
 

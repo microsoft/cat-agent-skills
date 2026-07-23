@@ -114,16 +114,6 @@ related paths for traceability, while the HTML report omits those path columns
 for readability. The report title includes its UTC creation date and time, and
 the source ZIP filename or filenames appear directly below the title.
 
-## Example outputs
-
-### HTML curation report
-
-![Knowledge Corpus Curator HTML report showing summary metrics and the priority backlog](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/knowledge-corpus-curator/assets/example-outputs/knowledge-corpus-curation-report.png)
-
-### Excel review backlog
-
-![Knowledge Corpus Curator Excel review backlog showing prioritized findings and document evidence](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/knowledge-corpus-curator/assets/example-outputs/knowledge-corpus-curation-backlog.png)
-
 ## Good to know
 
 - Upload all batches in one conversation so comparisons work across batch

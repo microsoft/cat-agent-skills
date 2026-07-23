@@ -302,11 +302,13 @@ Summarize:
 - Any metadata, extraction, corpus-size, or validation limitations.
 - Files discovered through knowledge that were absent from the upload.
 
-Use `Complete for uploaded corpus` only when every staged file was successfully
-content-extracted. Use `Partial uploaded-corpus coverage` when any file failed,
-was unsupported, required OCR, or exceeded an analysis limit. Never use
-`Complete for SharePoint library` unless the user independently confirms that
-the upload contained every file in scope.
+Use `Complete content-analysis coverage for uploaded corpus` only when every
+staged file has an `ok` extraction status and was included in content analysis.
+Use `Partial content-analysis coverage for uploaded corpus` when any file has a
+non-`ok` status, including failed, unsupported, OCR-required, insufficient-text,
+too-large, or analysis-limited files. Never use `Complete for SharePoint library`
+unless the user independently confirms that the upload contained every file in
+scope.
 
 ## Guardrails
 
@@ -336,8 +338,6 @@ the upload contained every file in scope.
   candidate detection, and Excel/HTML/JSON generation.
 - `scripts/prepare_batches.py`: safe ZIP staging and combined-corpus manifest.
 - `assets/default-config.json`: analysis thresholds and runtime settings.
-- `assets/example-outputs/`: gallery screenshots showing the HTML report and
-  Excel backlog.
 - `references/UPLOAD-AND-KNOWLEDGE-SETUP.md`: human-assisted export, upload, and
   knowledge-validation workflow.
 - `references/RESULT-SCHEMA.md`: result and optional metadata schemas.
