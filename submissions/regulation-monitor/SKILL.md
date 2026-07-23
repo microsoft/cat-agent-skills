@@ -78,6 +78,14 @@ Preference order (pick the strongest 5 that exist for the topic):
 Match the mix to the domain — do not force tax-style sources onto a
 non-tax topic.
 
+**Trackers and firm alerts are pointers, not authoritative sources.**
+Sources in categories 4 and 5 are useful as indices to find primary
+regulator/court/legislative material, but any item you record must cite
+the underlying **official document or announcement** (regulator page,
+official journal, court opinion) as its `source_url` — not the tracker
+or firm alert that linked to it. If you only have the tracker link and
+can't find the primary source, drop the item.
+
 **How to find them:** for each topic, do a short bounded discovery
 pass — one to three focused web searches against the reputable-domain
 allowlist in `references/sources-and-taxonomy.md` — just enough to
@@ -244,12 +252,9 @@ that is a human judgment.
 1. Write items to `working/regulation-items.json` as a JSON object with the
    shape `{"items": [ ... ]}` (not a bare array). Each entry follows the
    Step 6 schema.
-2. Run the bundled generator:
+2. Run the bundled generator (single-line command; works in any shell):
    ```
-   python scripts/build_dashboard.py \
-     --config config.json \
-     --items working/regulation-items.json \
-     --output output/regulation-dashboard.html
+   python scripts/build_dashboard.py --config config.json --items working/regulation-items.json --output output/regulation-dashboard.html
    ```
 3. Verify the file was written before telling the user it is ready.
 

@@ -164,7 +164,9 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
         _tile("Team-relevant", str(team_relevant)),
     ]
     for topic in config.get("watch_topics", []):
-        key = str(topic.get("key", ""))
+        key = str(topic.get("key", "")).strip()
+        if not key:
+            continue  # matches topic_name_by_key skip above
         tiles_html.append(_tile(str(topic.get("name", key)), str(per_topic.get(key, 0))))
 
     # Rows. Each cell gets a data-sort attribute the JS sorter reads:

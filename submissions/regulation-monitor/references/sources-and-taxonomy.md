@@ -58,7 +58,6 @@ Standards and technical: `nist.gov`, `iso.org`, `ieee.org`, `w3.org`,
 - `iapp.org` — International Association of Privacy Professionals
 - `future-of-privacy-forum.org`
 - `brookings.edu`, `hoover.stanford.edu`, `aei.org`, `epic.org`
-- `hbr.org` (limited to freely available articles)
 
 The user can extend this list via `domain_allowlist_extensions` in the config.
 Add sparingly — the whole point of the allowlist is signal, not volume.
