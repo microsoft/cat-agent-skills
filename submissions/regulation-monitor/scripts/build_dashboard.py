@@ -248,12 +248,12 @@ def build_html(config: dict[str, Any], items: list[dict[str, Any]]) -> str:
   <table id="items-table">
     <thead>
       <tr>
-        <th data-col="0" data-type="date">Date</th>
-        <th data-col="1" data-type="text">Topic</th>
-        <th data-col="2" data-type="text">Jurisdiction</th>
-        <th data-col="3" data-type="number">Stage</th>
-        <th data-col="4" data-type="text">Title &amp; summary</th>
-        <th data-col="5" data-type="text">Source</th>
+        <th data-col="0" data-type="date" tabindex="0" role="button" aria-label="Sort by date">Date</th>
+        <th data-col="1" data-type="text" tabindex="0" role="button" aria-label="Sort by topic">Topic</th>
+        <th data-col="2" data-type="text" tabindex="0" role="button" aria-label="Sort by jurisdiction">Jurisdiction</th>
+        <th data-col="3" data-type="number" tabindex="0" role="button" aria-label="Sort by stage">Stage</th>
+        <th data-col="4" data-type="text" tabindex="0" role="button" aria-label="Sort by title">Title &amp; summary</th>
+        <th data-col="5" data-type="text" tabindex="0" role="button" aria-label="Sort by source">Source</th>
       </tr>
     </thead>
     <tbody>
@@ -323,8 +323,9 @@ table{width:100%;border-collapse:collapse;background:var(--card);
 thead th{background:#f1f5f9;color:var(--muted);text-align:left;font-weight:600;
   padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
   border-bottom:1px solid var(--line);cursor:pointer;user-select:none;
-  position:relative}
+  position:relative;outline:none}
 thead th:hover{color:var(--ink)}
+thead th:focus-visible{color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
 thead th::after{content:"";display:inline-block;margin-left:6px;opacity:.35;
   font-size:10px;transform:translateY(-1px)}
 thead th[aria-sort="ascending"]::after{content:"\\25B2";opacity:1;color:var(--accent)}
@@ -366,34 +367,40 @@ def _sorter_script() -> str:
   var tbody = table.tBodies[0];
   if (!thead || !tbody) return;
   var ths = thead.rows[0].cells;
+  function doSort(th, colIndex) {
+    var type = th.getAttribute('data-type') || 'text';
+    var current = th.getAttribute('aria-sort');
+    var asc = current !== 'ascending';
+    for (var j = 0; j < ths.length; j++) ths[j].removeAttribute('aria-sort');
+    th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
+    var rows = Array.prototype.slice.call(tbody.rows).filter(function(r){
+      return !(r.cells.length === 1 && r.cells[0].getAttribute('colspan'));
+    });
+    rows.sort(function(a, b){
+      var av = (a.cells[colIndex] && a.cells[colIndex].getAttribute('data-sort')) || '';
+      var bv = (b.cells[colIndex] && b.cells[colIndex].getAttribute('data-sort')) || '';
+      var cmp;
+      if (type === 'number') {
+        cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
+      } else {
+        cmp = av.localeCompare(bv);
+      }
+      return asc ? cmp : -cmp;
+    });
+    var frag = document.createDocumentFragment();
+    rows.forEach(function(r){ frag.appendChild(r); });
+    tbody.appendChild(frag);
+  }
   for (var i = 0; i < ths.length; i++) {
     (function(colIndex){
       var th = ths[colIndex];
-      th.addEventListener('click', function(){
-        var type = th.getAttribute('data-type') || 'text';
-        var current = th.getAttribute('aria-sort');
-        var asc = current !== 'ascending';
-        for (var j = 0; j < ths.length; j++) ths[j].removeAttribute('aria-sort');
-        th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
-        var rows = Array.prototype.slice.call(tbody.rows).filter(function(r){
-          return !(r.cells.length === 1 && r.cells[0].getAttribute('colspan'));
-        });
-        rows.sort(function(a, b){
-          var av = (a.cells[colIndex] && a.cells[colIndex].getAttribute('data-sort')) || '';
-          var bv = (b.cells[colIndex] && b.cells[colIndex].getAttribute('data-sort')) || '';
-          var cmp;
-          if (type === 'number') {
-            cmp = (parseFloat(av) || 0) - (parseFloat(bv) || 0);
-          } else if (type === 'date') {
-            cmp = av.localeCompare(bv);
-          } else {
-            cmp = av.localeCompare(bv);
-          }
-          return asc ? cmp : -cmp;
-        });
-        var frag = document.createDocumentFragment();
-        rows.forEach(function(r){ frag.appendChild(r); });
-        tbody.appendChild(frag);
+      th.addEventListener('click', function(){ doSort(th, colIndex); });
+      // Keyboard accessibility: Enter or Space triggers the same sort.
+      th.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          doSort(th, colIndex);
+        }
       });
     })(i);
   }
