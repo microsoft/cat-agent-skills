@@ -7,9 +7,6 @@ Generate horizontal Gantt charts from schedule data via the bundled `scripts/gan
 The `gantt()` function accepts a DataFrame or file path plus column names, and saves a PNG (returning the path).
 It handles theming, date parsing, bar colour-coding, completion overlays, today-line, legend, and saving.
 
-## Trigger keywords
-Invoke this skill when the user mentions: Gantt, timeline chart, project schedule, phase schedule, task schedule, WBS, schedule visualization.
-
 ## Instructions
 
 1. Provide the data source: a pandas DataFrame, or a path to a `.csv` / `.tsv` / `.json` file.
