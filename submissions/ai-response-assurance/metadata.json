@@ -2,7 +2,7 @@
   "name": "AI Response Assurance",
   "description": "Verify, score, and improve AI-generated responses before delivery using a deterministic enterprise response assurance framework.",
   "platforms": [
-    "Copilot Studio"
+    "Copilot Studio", "Cowork"
   ],
   "tags": [
     "ai",
