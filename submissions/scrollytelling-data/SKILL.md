@@ -158,11 +158,11 @@ Write the HTML to `/app/workspace/build_story.py` using the `create` tool, then 
 
 **Build every chart and animation through the shared helpers in this file** — `renderCategoryBar`/`renderDonut`/`BG`/`CFG` in the Chart Selection Guide, and the counter/leaderboard/record-card code in Animated Components — rather than re-typing traces per chapter. Each carries bug-fix rules (length asserts, single-fire counters) that keep charts and counters from silently dying. Only the **conditional** chart types (maps, scatter/bubble, dual-axis `yaxis2`) live in [`references/CHART-PATTERNS.md`](references/CHART-PATTERNS.md) — open it only when the data actually shows one of those shapes.
 
-**Default story scaffold (a starting point, not a fixed recipe):**
+**Default story scaffold (fixed bookends + flexible middle):**
 
 ```
 [HERO]          Full-screen dramatic title + subtitle + scroll cue
-[STAT SPLASH]   Animated counting stat cards (5–6 key numbers)
+[STAT SPLASH]   Animated counting stat cards (4–6 key numbers)
 [CHAPTER]       Geography / where (choropleth map)
 [CHAPTER]       Method / tool / type (bar chart)
 [CHAPTER]       Category / what (horizontal bar)
@@ -177,7 +177,14 @@ Write the HTML to `/app/workspace/build_story.py` using the `create` tool, then 
 [EPILOGUE]      One-paragraph verdict + badge
 ```
 
-This scaffold keeps you off a blank page. Keep the hero → stat splash → epilogue bookends almost always — they make it feel like a complete story. The chapters in between are **the plan you already committed to in Phase 2** — you decided there which to skip, merge, split, reorder, or add based on this dataset's strengths. Render that plan now in that order; don't re-open those decisions while writing.
+The **first page (hero), second page (stat splash), and last page (epilogue) are deterministic anchors**. Treat them as fixed templates on every run unless the user explicitly asks to skip one. The chapters in between are **the plan you already committed to in Phase 2** — that's the flexible, data-driven part.
+
+**Deterministic bookend contract (don't improvise these):**
+- **Page 1 — HERO:** one short headline + one short subtitle + scroll cue. Headline should be dataset-wide and metric-agnostic (no niche jargon from a prior demo). Subtitle must include one concrete number from this run.
+- **Page 2 — STAT SPLASH:** render 4–6 cards in this order when available: total entities/count, total primary metric, average primary metric, top entity + value, strongest segment/region, one supporting context stat. If a slot is unavailable, skip it; do not invent a replacement metric.
+- **Last page — EPILOGUE:** exactly one short verdict paragraph plus one badge/label line. It must restate the main finding from the story in plain language and avoid introducing any new analysis.
+
+Render these three pages quickly from Phase 1/3 outputs, then spend reasoning budget on the middle chapters.
 
 **Chapter layout pattern (two-column):**
 
@@ -242,9 +249,12 @@ with open("/app/created/<dataset-name>-story-YYYY-MM-DD.html", "w") as f:
 | Data Shape | Chart | Plotly Type |
 |---|---|---|
 | Rankings (top N entities) | Bar (horizontal for long names) | `bar` (+ `orientation:'h'`) — `renderCategoryBar()` |
+| Small fixed groups (e.g. Midwest/South/West/Northeast) | Horizontal bar comparison | `bar` (+ `orientation:'h'`) — `renderCategoryBar()` (use `categoryOrder` when order matters) |
 | Top-N with animated rows | Leaderboard | animated rows — see Animated Components |
+| Top 3–5 where rank drama matters more than precise scale | Podium / vertical rising bars (optional) | custom HTML/CSS bars — see `references/CHART-PATTERNS.md` |
 | Share / composition | Donut | `pie` + `hole:0.55` — **max one per story** — `renderDonut()` |
 | Two variables per entity | Scatter / bubble | **top ~10 entities only** — `renderScatterBubble()` — see `references/CHART-PATTERNS.md` |
+| All entities on two metrics with region colors + trend line + outlier labels | Canvas scatter (optional) | custom `<canvas>` renderer — see `references/CHART-PATTERNS.md` |
 | A metric over time | Line | `scatter` mode `lines` |
 | A real geo column is present | Choropleth map | `choropleth` — see `references/CHART-PATTERNS.md` |
 | Two metrics on one time axis | Dual-axis line | two `scatter` + `yaxis2` — see `references/CHART-PATTERNS.md` |
@@ -527,7 +537,7 @@ Make headlines dramatic. Use `<em>` (styled with the accent color) for the key w
 <h2 class="c-head">The margin<br>of victory <em>matters.</em></h2>
 ```
 
-The epilogue should echo the hero's opening claim and close the loop:
+The epilogue is deterministic: keep it to one short verdict paragraph plus one badge/label line. It should echo the hero's opening claim and close the loop:
 - Hero: *"One Number Explains the Season."*
 - Epilogue: *"The data is clear. The standings never lie."*
 
@@ -604,4 +614,3 @@ Always deliver to `/app/created/` so it is returned as an attachment.
 - [ ] Chart heights: minimum 460px per chart div
 - [ ] Headline font: `clamp(2.2rem, 4.5vw, 4rem)` minimum
 - [ ] Output file → `/app/created/<dataset-name>-story-YYYY-MM-DD.html`
-

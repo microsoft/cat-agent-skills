@@ -7,6 +7,40 @@ This file holds **conditional chart patterns** — combinations that only apply 
 - Geography: Don't Assume USA — Detect It From the Data
 - Combining a Bar Trace with a Second Y-Axis Overlay (`yaxis2`)
 - Scatter / Bubble Charts (entity-on-two-axes) — Log Ticks and Label Crowding
+- Canvas Scatter for All-Entity Correlation (optional)
+- Podium / Vertical Rising Bars for Top-5 Drama (optional)
+
+## Canvas Scatter for All-Entity Correlation (optional)
+
+Use this only when the chapter explicitly needs **all entities at once** (for example, 50 states) with region coloring, outlier callouts, and a trend line. The default remains `renderScatterBubble()` with ~10 entities for readability and speed.
+
+When to use:
+- You need one "all points visible" diagnostic view, not a ranked top-10 story.
+- Point count is high enough that static Plotly text labels become clutter even after top-10 capping.
+- The chapter's claim depends on overall correlation (or lack of it), not just leaders.
+
+Implementation rules:
+1. Draw points on `<canvas>` and color by segment/region, but keep a simple legend outside the canvas in HTML.
+2. Compute a least-squares line (`y = m*x + b`) from the same plotted points and draw it in a high-contrast color.
+3. Label only a tiny outlier set (e.g. largest residual magnitudes or user-important entities), never all labels.
+4. Keep full entity details in adjacent copy/list if hover is unavailable; canvas has no built-in Plotly tooltip system.
+5. Keep this chapter optional — don't replace the default scatter helper for routine runs.
+
+## Podium / Vertical Rising Bars for Top-5 Drama (optional)
+
+Use podium bars when the goal is theatrical rank emphasis (Top 3/5 spotlight), not precise side-by-side comparison across many categories. For normal category comparisons, keep using `renderCategoryBar()`.
+
+When to use:
+- Exactly 3–5 ranked entities.
+- Narrative intent is "who stands on top" more than quantitative axis reading.
+- You can devote a full-width chapter to a custom animated component.
+
+Implementation rules:
+1. Pre-sort values descending once in Python/JS and render in rank order.
+2. Animate bars from zero height to target percentage on reveal; stagger starts slightly for readability.
+3. Show value labels on every bar and rank badges (`#1`, `#2`, ...); don't rely on height alone.
+4. If spread is tiny, show the numeric gap in copy so the visual drama doesn't overstate differences.
+5. Keep this component custom HTML/CSS (not Plotly) and use it at most once per story.
 
 ---
 
