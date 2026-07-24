@@ -1,0 +1,11 @@
+{
+  "name": "Regulation Monitor",
+  "description": "Configure once, then on a schedule sweeps a locked list of authoritative sources (auto-discovered at setup, confirmed by the user) plus any user-supplied seeds. Classifies each item, flags items relevant to the user's team using a light WorkIQ-derived profile, and renders a self-contained HTML dashboard. A tightly-bounded fallback web search is used only when a locked source is silent in the window. Domain-agnostic (tax, privacy, AI/ML, healthcare, finance, ESG, labor, etc.).",
+  "platforms": ["Cowork", "Scout"],
+  "tags": ["regulation", "monitoring", "compliance", "dashboard", "research"],
+  "author": "Jagmeet Chabra",
+  "authorUrl": "https://github.com/jchha001",
+  "version": "1.0.0",
+  "createdAt": "2026-07-23",
+  "updatedAt": "2026-07-23"
+}
