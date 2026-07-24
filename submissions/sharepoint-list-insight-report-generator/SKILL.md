@@ -17,7 +17,7 @@ Before performing any analysis, enumerate all SharePoint lists available in the 
 
   Allowed conditions to continue:
   - Exact list name match.
-  - User explicitly selects a list from the available list.
+  - User explicitly selects a list from the available lists.
   - Alias defined in list metadata.
 
   Forbidden behavior:
@@ -62,7 +62,7 @@ Before performing any analysis, enumerate all SharePoint lists available in the 
   Stop.
   Do not select Campaign.
 
-###If the requested list does not exist:
+### If the requested list does not exist:
 
 - Stop the process immediately.
 - Do not analyze data.
@@ -164,7 +164,7 @@ Use:
 - DataTables
 - Chart.js
 
-Use only libraries that can be used safetly by brower.
+Use only libraries that can be used safetly by browser.
 
 ### Executive Summary
 
