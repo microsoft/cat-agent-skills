@@ -161,7 +161,7 @@ Report_<ListName>_<yyyyMMdd_HHmmss>.html
 
 ## How to Use
 
-* Create new Copilot Studio agent using new UI.
+* Create a new Copilot Studio agent using the Copilot Studio UI.
 * Add skill and knowledge source to your agent.
 
 <img width="522" height="709" alt="image" src="https://github.com/user-attachments/assets/e083b4fc-11b5-4b74-8376-5d38996a2c94" />
