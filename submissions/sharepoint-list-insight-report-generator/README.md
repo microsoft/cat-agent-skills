@@ -168,5 +168,5 @@ Report_<ListName>_<yyyyMMdd_HHmmss>.html
 
 * Use simple instructions like
 ```text
-Using sharepoint-list-insight-report-generator, create an HTML report based on the selected SharePoint knowledge source.​
+Using sharepoint-list-insight-report-generator, create an HTML report based on the selected SharePoint knowledge source.
 ```
