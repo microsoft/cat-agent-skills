@@ -1,6 +1,6 @@
 ---
 name: sharepoint-list-insight-report-generator
-description: Automatically discovers and validates a SharePoint list within a connected knowledge source, analyzes its structure and data, identifies key business insights, and generates a downloadable interactive HTML report. The report includes dynamic filters, interactive charts, sortable and searchable tables with pagination, detailed record drill-down through modal popups, and direct links to open items in SharePoint. If the requested list is not found, the skill suggests available lists and closest matches before stopping the analysis.
+description: Use this skill whenever the user asks for an insights/reporting analysis of a SharePoint list from a connected SharePoint knowledge source; first validate the list exists, then generate and save a self-contained interactive HTML report to the site’s Documents library and return its SharePoint URL.
 ---
 ## Step 1 – Identify the Target List
 
