@@ -1,0 +1,241 @@
+{
+  "process_name": "Vendor Onboarding",
+  "version": "1.0",
+  "state": "current",
+  "purpose": "Create approved and usable vendor records while maintaining financial controls.",
+  "scope": {
+    "starts": "Business submits a vendor request",
+    "ends": "Vendor is activated in the ERP",
+    "exclusions": [
+      "Contract negotiation",
+      "Ongoing vendor performance management"
+    ]
+  },
+  "trigger": "A business user submits a vendor request",
+  "inputs": [
+    "Vendor request",
+    "Tax form",
+    "Banking documentation"
+  ],
+  "outputs": [
+    "Approved vendor record",
+    "Requester notification"
+  ],
+  "roles": [
+    {
+      "name": "Requester",
+      "description": "Provides the business need and vendor information"
+    },
+    {
+      "name": "Procurement",
+      "description": "Validates commercial and documentation requirements"
+    },
+    {
+      "name": "Finance",
+      "description": "Validates payment information and creates the ERP record"
+    }
+  ],
+  "systems": [
+    "Vendor intake portal",
+    "ERP",
+    "Email"
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "name": "Submit vendor request",
+      "type": "task",
+      "owner": "Requester",
+      "description": "Complete the intake form and attach required documents.",
+      "next": "S2",
+      "inputs": [
+        "Vendor details"
+      ],
+      "outputs": [
+        "Submitted request"
+      ],
+      "system": "Vendor intake portal",
+      "sla": "2 business days",
+      "control_ids": []
+    },
+    {
+      "id": "S2",
+      "name": "Is request complete?",
+      "type": "decision",
+      "owner": "Procurement",
+      "description": "Verify required fields and supporting documents.",
+      "yes_next": "S3",
+      "no_next": "S1",
+      "control_ids": [
+        "C1"
+      ]
+    },
+    {
+      "id": "S3",
+      "name": "Review vendor risk",
+      "type": "task",
+      "owner": "Procurement",
+      "description": "Perform required risk and duplicate checks.",
+      "next": "S4",
+      "inputs": [
+        "Submitted request"
+      ],
+      "outputs": [
+        "Review result"
+      ],
+      "system": "Vendor intake portal",
+      "sla": "2 business days",
+      "control_ids": [
+        "C2"
+      ]
+    },
+    {
+      "id": "S4",
+      "name": "Approve vendor?",
+      "type": "decision",
+      "owner": "Procurement",
+      "description": "Determine whether the vendor satisfies onboarding requirements.",
+      "yes_next": "S5",
+      "no_next": "S6",
+      "control_ids": []
+    },
+    {
+      "id": "S5",
+      "name": "Create vendor record",
+      "type": "task",
+      "owner": "Finance",
+      "description": "Create the vendor record in the ERP and retain evidence.",
+      "next": "S7",
+      "inputs": [
+        "Approved request"
+      ],
+      "outputs": [
+        "Vendor record"
+      ],
+      "system": "ERP",
+      "sla": "1 business day",
+      "control_ids": [
+        "C3"
+      ]
+    },
+    {
+      "id": "S6",
+      "name": "Notify requester of rejection",
+      "type": "task",
+      "owner": "Procurement",
+      "description": "Provide the rejection reason and required remediation.",
+      "next": null,
+      "inputs": [
+        "Rejection decision"
+      ],
+      "outputs": [
+        "Rejection notice"
+      ],
+      "system": "Email",
+      "sla": "1 business day",
+      "control_ids": []
+    },
+    {
+      "id": "S7",
+      "name": "Notify requester of activation",
+      "type": "task",
+      "owner": "Finance",
+      "description": "Confirm that the vendor is available for use.",
+      "next": null,
+      "inputs": [
+        "Vendor record"
+      ],
+      "outputs": [
+        "Activation notice"
+      ],
+      "system": "Email",
+      "sla": "1 business day",
+      "control_ids": []
+    }
+  ],
+  "controls": [
+    {
+      "id": "C1",
+      "name": "Completeness review",
+      "objective": "Prevent incomplete requests from progressing",
+      "owner": "Procurement",
+      "frequency": "Per request",
+      "evidence": "Completed intake checklist",
+      "type": "preventive"
+    },
+    {
+      "id": "C2",
+      "name": "Duplicate vendor search",
+      "objective": "Prevent duplicate vendor records",
+      "owner": "Procurement",
+      "frequency": "Per request",
+      "evidence": "Search result retained with request",
+      "type": "preventive"
+    },
+    {
+      "id": "C3",
+      "name": "Maker-checker verification",
+      "objective": "Validate vendor banking and master-data entry",
+      "owner": "Finance",
+      "frequency": "Per vendor creation",
+      "evidence": "Approval record",
+      "type": "detective"
+    }
+  ],
+  "risks": [
+    {
+      "id": "R1",
+      "description": "Duplicate vendor record",
+      "impact": "Duplicate or incorrect payments",
+      "mitigation": "Search existing vendor records before approval"
+    },
+    {
+      "id": "R2",
+      "description": "Incorrect banking data",
+      "impact": "Payment fraud or failed payment",
+      "mitigation": "Independent verification before activation"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "Cycle time",
+      "definition": "Elapsed time from submission to activation",
+      "target": "5 business days",
+      "owner": "Procurement Operations"
+    },
+    {
+      "name": "First-pass completeness",
+      "definition": "Percent of requests complete on first submission",
+      "target": "90%",
+      "owner": "Procurement Operations"
+    }
+  ],
+  "improvements": [
+    {
+      "title": "Add duplicate-match scoring",
+      "problem": "Manual searches vary by reviewer",
+      "recommendation": "Use deterministic matching on name, tax ID, and address",
+      "value": "High",
+      "effort": "Medium",
+      "risk": "Medium",
+      "priority": "P1",
+      "owner": "ERP Product Team"
+    },
+    {
+      "title": "Provide guided intake",
+      "problem": "Incomplete requests create rework",
+      "recommendation": "Add conditional fields and inline validation",
+      "value": "High",
+      "effort": "Low",
+      "risk": "Low",
+      "priority": "P1",
+      "owner": "Procurement Operations"
+    }
+  ],
+  "assumptions": [
+    "Required tax and banking documents are defined by policy."
+  ],
+  "open_questions": [
+    "Who performs independent bank-account verification?"
+  ]
+}
