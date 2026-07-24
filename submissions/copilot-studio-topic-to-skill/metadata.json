@@ -1,0 +1,17 @@
+{
+  "name": "Copilot Studio Topic to Skill",
+  "description": "Convert classic Microsoft Copilot Studio AdaptiveDialog topic YAML into a canonical Agent Skill for the new Copilot Studio experience.",
+  "platforms": ["Cowork"],
+  "tags": [
+    "copilot-studio",
+    "migration",
+    "topics",
+    "adaptive-dialog",
+    "agent-skills"
+  ],
+  "author": "Matthew Marra",
+  "authorUrl": "https://github.com/matthewmarra",
+  "version": "1.0.0",
+  "createdAt": "2026-06-14",
+  "updatedAt": "2026-07-23"
+}
