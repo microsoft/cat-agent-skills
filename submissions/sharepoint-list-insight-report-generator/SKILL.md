@@ -245,9 +245,9 @@ Requirements:
 
 After generating the HTML report:
 
-- Generate a unique name using:
+- Generate a unique name using a sanitized list name (replace spaces with `_` and remove/replace characters SharePoint disallows in filenames).
 
-   Report_<ListName>_<yyyyMMdd_HHmmss>.html
+   Report_<SanitizedListName>_<yyyyMMdd_HHmmss>.html
 
 ---
 
