@@ -82,9 +82,6 @@ Insights are prioritized based on business relevance and actionability.
 
 The generated report is a self-contained HTML5 application built using browser-safe technologies:
 
-* HTML5
-* Bootstrap 5
-* DataTables
 * Chart.js
 
 ### Executive Dashboard
