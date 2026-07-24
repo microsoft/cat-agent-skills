@@ -1,0 +1,47 @@
+{
+  "reference_year": 2026,
+  "last_updated": "2026-01-01",
+  "sources": {
+    "minimum_wage": "Decreto (reajuste 2026) — ver também Banco Central, série SGS 1619",
+    "inss": "Portaria Interministerial MPS/MF — tabela de contribuição 2026",
+    "irrf": "Receita Federal — tabela progressiva mensal + Lei 15.270/2025"
+  },
+  "minimum_wage": 1621.00,
+  "inss": {
+    "ceiling_salary": 8475.55,
+    "max_contribution": 988.09,
+    "brackets": [
+      { "up_to": 1621.00, "rate": 0.075 },
+      { "up_to": 2902.84, "rate": 0.09 },
+      { "up_to": 4354.27, "rate": 0.12 },
+      { "up_to": 8475.55, "rate": 0.14 }
+    ]
+  },
+  "irrf": {
+    "brackets": [
+      { "up_to": 2428.80, "rate": 0.0, "deduction": 0.0 },
+      { "up_to": 2826.65, "rate": 0.075, "deduction": 182.16 },
+      { "up_to": 3751.05, "rate": 0.15, "deduction": 394.16 },
+      { "up_to": 4664.68, "rate": 0.225, "deduction": 675.49 },
+      { "up_to": null, "rate": 0.275, "deduction": 908.73 }
+    ],
+    "dependent_deduction_monthly": 189.59,
+    "simplified_discount_monthly": 607.20,
+    "law_15270_2025": {
+      "full_exemption_up_to": 5000.00,
+      "phase_out_up_to": 7350.00,
+      "reduction_formula": "max(0, 978.62 - 0.133145 * rendimento_tributavel_mensal)",
+      "note": "O redutor se aplica ao rendimento tributável mensal bruto até R$ 7.350,00 e nunca pode exceder o imposto apurado pela tabela progressiva. Rendimentos até R$ 5.000,00 ficam totalmente isentos."
+    }
+  },
+  "fgts": {
+    "monthly_rate": 0.08,
+    "dismissal_fine_rate": 0.40,
+    "mutual_agreement_fine_rate": 0.20
+  },
+  "notice_period": {
+    "base_days": 30,
+    "extra_days_per_year": 3,
+    "max_days": 90
+  }
+}
