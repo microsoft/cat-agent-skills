@@ -10,6 +10,7 @@ authorGithub: GiorgioUghini
 version: 1.0.0
 createdAt: 2026-07-22
 updatedAt: 2026-07-22
+featured: true
 ---
 Create one enabled, one-time Scout automation that captures the chat's state now,
 checks only for later relevant updates, and either suppresses or sends the agreed

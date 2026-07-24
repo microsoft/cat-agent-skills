@@ -38,19 +38,20 @@ related-content, and potential-conflict comparison is incomplete.
 Keep each document in only one batch. Upload all batches in the same active
 conversation and identify the final batch before analysis starts.
 
+The user can attach multiple ZIP files to one chat message. Each ZIP can be up
+to 50 MB as long as the combined files attached in the chat session remain under
+200 MB. Treat all attachments in one message as one upload event.
+
 After each upload, the agent asks whether the complete intended corpus is now
 present or whether another batch is coming. If another batch is coming, the
 agent waits without extracting or analyzing files. Staging starts only after the
 user explicitly confirms the final batch.
 
-Confirmation that the corpus is complete is sufficient to proceed to the final
-intake questions. The agent asks them one at a time: whether the corpus is the
-whole intended library or a subset; whether the uploaded corpus contains
-current content only or also includes drafts, archives, and historical versions;
-and which freshness threshold in days to use. Upload
-completion and library coverage are different concepts, so the agent briefly
-explains that distinction rather than treating the questions as duplicates. It
-does not begin staging or analysis until all three answers are known.
+Final-batch confirmation is the only required intake question. Once confirmed,
+the agent immediately stages and analyzes every uploaded file. It does not ask
+whether the upload is a whole library or subset and does not ask whether files
+are current, draft, archived, or historical. The default stale threshold is 365
+days unless the user already supplied another value.
 
 ## Cross-batch comparison
 
@@ -100,9 +101,9 @@ removes the staging-batch prefix before matching them.
 The returned `batch-manifest.json` maps each combined-corpus path to its source
 ZIP. Write all reports under `/app/created/knowledge-corpus-curation/`.
 
-Pass the user's intake answers to `curate_library.py` using `--corpus-scope`,
-`--content-scope`, and `--stale-after-days`. These values appear in the
-`Curation Settings` worksheet.
+Use `--stale-after-days` only when the user already supplied a non-default
+threshold. The `Curation Settings` worksheet records that every staged file was
+included and that completion applies to the uploaded corpus.
 
 ## Validation model
 
@@ -127,9 +128,11 @@ Knowledge results cannot establish exhaustive coverage.
 
 Use these labels:
 
-- `Complete for uploaded corpus`: every supported uploaded file was processed.
-- `Partial uploaded-corpus coverage`: one or more uploaded files failed,
-  exceeded analysis limits, or were unsupported.
+- `Complete content-analysis coverage for uploaded corpus`: every staged file
+  has an `ok` extraction status and was included in content analysis.
+- `Partial content-analysis coverage for uploaded corpus`: one or more staged
+  files has a non-`ok` status, including failed, unsupported, OCR-required,
+  insufficient-text, too-large, or analysis-limited files.
 - `Not included in uploaded corpus`: knowledge identified a relevant SharePoint
   file that was not uploaded.
 
