@@ -7,8 +7,8 @@ description: Automatically discovers and validates a SharePoint list within a co
 1. Read the user request and identify the requested SharePoint list name.
 2. Inspect the selected SharePoint knowledge source.
 3. Retrieve all available SharePoint lists.
-4. Perform a case-insensitive comparison.
-5. Identify the best matching list.
+4. Perform a case-insensitive exact match on list title (and any explicit aliases in list metadata).
+5. Proceed only on an exact match or an explicit user selection; otherwise stop and prompt the user to choose from the available lists.
 
 ### Validation Logic
 Before performing any analysis, enumerate all SharePoint lists available in the selected knowledge source.
