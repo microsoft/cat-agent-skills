@@ -105,7 +105,6 @@ const FIXED_ZIP_DATE = new Date(2000, 0, 1, 0, 0, 0);
 // installers) may be added. See loadSubmission() for enforcement.
 const LEGACY_ZIP_SLUGS = new Set([
   "copilot-studio-test-planner",
-  "phi-deidentifier",
   "powerpoint-deck-designer",
   "vacation-urgent-forwarder",
 ]);

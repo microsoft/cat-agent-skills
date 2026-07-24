@@ -18,7 +18,8 @@
   ],
   "author": "Rafael Lopez Alcaraz",
   "authorUrl": "https://github.com/rafalcaraz",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "createdAt": "2026-07-19",
-  "updatedAt": "2026-07-19"
+  "updatedAt": "2026-07-21",
+  "featured": true
 }
