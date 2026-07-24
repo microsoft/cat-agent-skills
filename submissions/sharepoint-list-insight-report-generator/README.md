@@ -1,6 +1,6 @@
 # SharePoint List Insight Report Generator
 
-This Copilot Studio skill, turn any validated SharePoint list into an interactive business intelligence report with automated schema discovery, data analysis, visual insights, and downloadable HTML reporting.
+This Copilot Studio skill turns any validated SharePoint list into an interactive business intelligence report with automated schema discovery, data analysis, visual insights, and downloadable HTML reporting.
 
 ## Who it's for
 
@@ -156,7 +156,7 @@ Selecting a row opens a responsive detail modal showing:
 Generated reports follow the naming convention:
 
 ```text
-Report__yyyyMMdd_HHmmss.html
+Report_<ListName>_<yyyyMMdd_HHmmss>.html
 ```
 
 ## How to Use
@@ -168,5 +168,5 @@ Report__yyyyMMdd_HHmmss.html
 
 * Use simple instructions like
 ```text
-U‌sing sharepoint-list-insight-report-generator skill create create HTML report based on knowledge source​
+Using sharepoint-list-insight-report-generator, create an HTML report based on the selected SharePoint knowledge source.​
 ```
