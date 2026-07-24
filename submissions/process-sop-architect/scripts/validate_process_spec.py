@@ -31,7 +31,7 @@ def validate(spec):
         else:
             nxt=s.get('next')
             if nxt and nxt not in steps:errors.append(f'{sid}: next references unknown step {nxt}')
-        for cid in s.get('control_ids',[]):
+        for cid in (s.get('control_ids') or []):
             if cid not in controls:errors.append(f'{sid}: unknown control {cid}')
     for c in spec.get('controls',[]):
         for f in ['id','name','objective','owner','frequency','evidence']:
