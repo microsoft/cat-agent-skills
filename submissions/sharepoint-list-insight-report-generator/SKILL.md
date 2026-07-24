@@ -153,15 +153,11 @@ Prioritize actionable recommendations.
 
 ## Step 5 – Build Interactive HTML Report
 
-Produce a single, completely self-contained HTML file with all CSS and JavaScript embedded inline. Load Chart.js (version 4) from CDN — the only external dependency.
+Produce a single, completely self-contained HTML file with all CSS and JavaScript embedded inline. Chart.js (version 4) may be loaded from a CDN and is the only permitted external dependency. Do not use external Bootstrap, DataTables, fonts, stylesheets, scripts, or other CDN resources. Implement table filtering, sorting, pagination, and responsive styling using embedded CSS and JavaScript.
 
 ### Technologies
 
 Use:
-
-- HTML5
-- Bootstrap 5
-- DataTables
 - Chart.js
 
 Use only libraries that can be used safely by browser.
