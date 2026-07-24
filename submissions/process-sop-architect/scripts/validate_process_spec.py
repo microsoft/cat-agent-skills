@@ -6,8 +6,19 @@ def validate(spec):
     errors=[];warnings=[]
     for f in ['process_name','purpose','trigger','roles','steps']: 
         if not spec.get(f):errors.append(f'Missing required field: {f}')
-    roles={r.get('name') for r in spec.get('roles',[])};steps={s.get('id'):s for s in spec.get('steps',[])};controls={c.get('id') for c in spec.get('controls',[])}
-    if len(steps)!=len(spec.get('steps',[])):errors.append('Step IDs must be unique and nonblank')
+    roles = {r.get('name') for r in spec.get('roles', [])}
+    steps_list = spec.get('steps', [])
+    steps = {}
+    for i, step in enumerate(steps_list, start=1):
+        sid = step.get('id')
+        if not sid or not str(sid).strip():
+            errors.append(f'Step #{i}: missing nonblank id')
+            continue
+        if sid in steps:
+            errors.append(f'Duplicate step id: {sid}')
+            continue
+        steps[sid] = step
+    controls = {c.get('id') for c in spec.get('controls', [])}
     for sid,s in steps.items():
         if not s.get('name'):errors.append(f'{sid}: missing step name')
         if not s.get('owner'):errors.append(f'{sid}: missing owner')
