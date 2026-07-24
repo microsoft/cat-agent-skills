@@ -71,7 +71,7 @@ Before performing any analysis, enumerate all SharePoint lists available in the 
 - Return closest matching list names.
 
 Proceed only if the requested list exists.
-For example if the user create a request for sales and the product list contains sales data stop the process. The user request must be related to existing knwoledge source.
+For example: if the user requests "sales" and only a "Product" list exists that happens to contain sales-related data, stop and ask the user to choose an existing list from the knowledge source.
 
 ---
 
@@ -164,7 +164,7 @@ Use:
 - DataTables
 - Chart.js
 
-Use only library that can be used safetly by brower.
+Use only libraries that can be used safetly by brower.
 
 ### Executive Summary
 
@@ -238,7 +238,7 @@ Requirements:
 - Open in a new browser tab
 - Use SharePoint item URL when available
 - Use target="_blank"
-
+- Use target="_blank" and rel="noopener noreferrer"
 ---
 
 ## Step 6 – Save Report 
