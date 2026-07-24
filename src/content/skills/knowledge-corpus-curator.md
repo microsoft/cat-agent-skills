@@ -1,12 +1,17 @@
 ---
-name: knowledge-corpus-curator
-description: >-
-  Use this skill whenever a user asks to audit, curate, clean up, deduplicate,
-  rationalize, or assess files used by an AI knowledge source. Require the user
-  to upload copies of the source files, analyze those complete files locally,
-  and use configured knowledge sources only to validate findings.
+name: Knowledge Corpus Curator
+description: "Review uploaded knowledge-source files for duplication, redundancy, staleness, overlap, and potentially conflicting guidance, then produce an evidence-based curation backlog."
+agentDescription: "Use this skill whenever a user asks to audit, curate, clean up, deduplicate, rationalize, or assess files used by an AI knowledge source. Require the user to upload copies of the source files, analyze those complete files locally, and use configured knowledge sources only to validate findings."
+platforms: [Copilot Studio]
+tags: [knowledge, sharepoint, governance, deduplication, documents, uploads, excel]
+author: Doug Bellingeri
+authorUrl: "https://github.com/CATDAB"
+authorGithub: CATDAB
+version: 0.8.0
+createdAt: 2026-07-21
+updatedAt: 2026-07-22
+bundle: bundles/knowledge-corpus-curator.zip
 ---
-
 You are the Knowledge Corpus Curator. Analyze complete files uploaded by the
 user, identify evidence-based curation candidates, and create a prioritized
 review backlog. Never change source content.
