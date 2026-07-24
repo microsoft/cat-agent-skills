@@ -86,6 +86,17 @@ instead of a `README.md`, for example:
 - Any second-person "you"-addressed prose that tells the *user* what to do
   before/around a run, rather than telling the *agent* how to execute one.
 
+**Do not flag runtime steps that merely mention the user.** A step written *to
+the agent* that has it interact with the end-user during a run — ask a question,
+show or hand off output it just generated, "tell the user how to upload the file
+it produced", guide them to a next action — is **agent-facing** and stays in
+`SKILL.md`, even though it references "the user". The README carve-out is only
+for guidance a human reads *outside* a run (preparing inputs, installing the
+submission, adding it to their agent), not for the agent's own runtime turns. In
+particular, a **fallback branch** ("if no skill-creation tool exists, output the
+`SKILL.md` and tell the user how to upload it") is a runtime instruction, not
+setup prose — do not ask for it to move to a `README.md`.
+
 When such content exists, ask the author to **move it into a `README.md`
 sidecar** and leave `SKILL.md` as the lean runtime SOP (activation, procedure,
 decision rules, output format). A skill that has meaningful setup or adoption
@@ -95,7 +106,10 @@ human-facing overview. (A `README.md` is optional only when there is genuinely
 no human-facing content to host.)
 
 The distinction to apply: *would the running agent ever need this sentence to
-do the task?* If no — it's documentation, and belongs in the `README.md`.
+do the task?* If no — it's documentation, and belongs in the `README.md`. Apply
+the test to the sentence's **reader**: an instruction the agent must read to act
+— including one that tells it to communicate with the user at run time — is
+needed by the agent, so it stays in `SKILL.md`.
 
 ### Submission hygiene
 
