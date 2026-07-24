@@ -167,6 +167,7 @@ Report_<ListName>_<yyyyMMdd_HHmmss>.html
 <img width="522" height="709" alt="image" src="https://github.com/user-attachments/assets/e083b4fc-11b5-4b74-8376-5d38996a2c94" />
 
 * Use simple instructions like
+  
 ```text
 Using sharepoint-list-insight-report-generator, create an HTML report based on the selected SharePoint knowledge source.
 ```
