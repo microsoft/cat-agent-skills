@@ -160,7 +160,7 @@ Produce a single, completely self-contained HTML file with all CSS and JavaScrip
 Use:
 - Chart.js
 
-Use only libraries that can be used safely by browser.
+Use only libraries that can be used safely in a browser.
 
 ### Executive Summary
 
