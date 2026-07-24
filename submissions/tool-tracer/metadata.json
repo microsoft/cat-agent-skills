@@ -1,0 +1,21 @@
+{
+  "name": "Tool Tracer",
+  "description": "On-demand tool/action trace for Copilot Studio runs (`/special-debug tool-trace` \u2192 `tool_trace.json`).",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "transparency",
+    "observability",
+    "debugging",
+    "workflow",
+    "logging",
+    "json",
+    "productivity"
+  ],
+  "author": "Rafael Lopez Alcaraz",
+  "authorUrl": "https://github.com/rafalcaraz",
+  "version": "1.0.0",
+  "createdAt": "2026-07-22",
+  "updatedAt": "2026-07-22"
+}

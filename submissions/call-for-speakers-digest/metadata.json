@@ -1,0 +1,9 @@
+{
+  "name": "Call for Speakers Digest",
+  "description": "Weekly HTML email digest of open conference Call for Speakers (CFP) opportunities matching your topics of interest. Pulls from confs.tech, Papercall, AdatoSystems' CFP tracker, CFP Radar, Sessionize's public user-groups directory, community-specific hubs (like communitydays.org for the Microsoft ecosystem), targeted search of standalone Sessionize conferences and run.events, and general web search. Filters to genuinely open CFPs only, and includes close dates, event dates, format (virtual/in-person), and speaker benefits when stated. Won't repeat a listing week to week unless its deadline is closing soon.",
+  "platforms": ["Copilot Studio", "Scout", "Cowork"],
+  "tags": ["productivity", "speaking", "conference", "automation"],
+  "author": "Michael Heath",
+  "authorUrl": "https://github.com/GetAutomating",
+  "version": "1.0.0"
+}
