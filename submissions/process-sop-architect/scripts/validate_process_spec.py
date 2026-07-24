@@ -6,8 +6,18 @@ def validate(spec):
     errors=[];warnings=[]
     for f in ['process_name','purpose','trigger','roles','steps']: 
         if not spec.get(f):errors.append(f'Missing required field: {f}')
-    roles = {r.get('name') for r in spec.get('roles', [])}
-    steps_list = spec.get('steps', [])
+    def _objects(key):
+        val=spec.get(key)
+        if val is None:return []
+        if not isinstance(val,list):
+            errors.append(f"Field '{key}' must be a list of objects");return []
+        result=[]
+        for i,item in enumerate(val,start=1):
+            if isinstance(item,dict):result.append(item)
+            else:errors.append(f'{key}[{i}] must be an object')
+        return result
+    roles_list=_objects('roles');steps_list=_objects('steps');controls_list=_objects('controls')
+    roles = {r.get('name') for r in roles_list}
     steps = {}
     for i, step in enumerate(steps_list, start=1):
         sid = step.get('id')
@@ -18,7 +28,7 @@ def validate(spec):
             errors.append(f'Duplicate step id: {sid}')
             continue
         steps[sid] = step
-    controls = {c.get('id') for c in spec.get('controls', [])}
+    controls = {c.get('id') for c in controls_list}
     for sid,s in steps.items():
         if not s.get('name'):errors.append(f'{sid}: missing step name')
         if not s.get('owner'):errors.append(f'{sid}: missing owner')
@@ -33,7 +43,7 @@ def validate(spec):
             if nxt and nxt not in steps:errors.append(f'{sid}: next references unknown step {nxt}')
         for cid in (s.get('control_ids') or []):
             if cid not in controls:errors.append(f'{sid}: unknown control {cid}')
-    for c in spec.get('controls',[]):
+    for c in controls_list:
         for f in ['id','name','objective','owner','frequency','evidence']:
             if not c.get(f):warnings.append(f"Control {c.get('id','?')} missing {f}")
     if len(steps)>25:warnings.append('Process has more than 25 steps; consider subprocesses')

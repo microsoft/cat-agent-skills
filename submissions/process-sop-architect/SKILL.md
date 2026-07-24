@@ -16,7 +16,7 @@ Do NOT activate when:
 ## How this skill runs
 1. Review the user's source material and build a process specification using `references/process_spec_schema.md`.
 2. Ask targeted questions for missing trigger, scope, roles, decisions, exceptions, controls, or outputs. Ask one question at a time.
-3. Save the specification as `process_spec.json` in the current working directory (a writable location in the sandbox; do not rely on `/tmp`).
+3. From the skill's root directory (the folder that contains `scripts/` and `references/`), save the specification as `process_spec.json`, and run the commands below from that same directory so the `scripts/` paths resolve. Use this directory rather than `/tmp`, which is not reliably writable in the sandbox.
 4. Validate it:
    ```bash
    python scripts/validate_process_spec.py --input process_spec.json
