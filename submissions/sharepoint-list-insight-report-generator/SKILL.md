@@ -153,7 +153,7 @@ Prioritize actionable recommendations.
 
 ## Step 5 – Build Interactive HTML Report
 
-Generate a single self-contained HTML5 report.
+Produce a single, completely self-contained HTML file with all CSS and JavaScript embedded inline. Load Chart.js (version 4) from CDN — the only external dependency.
 
 ### Technologies
 
@@ -164,7 +164,7 @@ Use:
 - DataTables
 - Chart.js
 
-Use only libraries that can be used safetly by browser.
+Use only libraries that can be used safely by browser.
 
 ### Executive Summary
 
@@ -237,7 +237,6 @@ Requirements:
 
 - Open in a new browser tab
 - Use SharePoint item URL when available
-- Use target="_blank"
 - Use target="_blank" and rel="noopener noreferrer"
 ---
 
