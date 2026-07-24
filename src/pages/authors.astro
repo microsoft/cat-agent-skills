@@ -88,34 +88,49 @@ const MAX_CHIPS = 8;
           return (
             <li class="author-card" data-login={a.login}>
               <div class="author-top">
-                <img
-                  src={`https://github.com/${a.login}.png?size=96`}
-                  alt=""
-                  width="44"
-                  height="44"
-                  loading="lazy"
-                  class="author-avatar"
-                />
+                <a
+                  class="author-avatar-link"
+                  href={withBase(`/?author=${a.login}`)}
+                  aria-label={`Browse ${a.displayName}'s skills`}
+                >
+                  <img
+                    src={`https://github.com/${a.login}.png?size=96`}
+                    alt=""
+                    width="44"
+                    height="44"
+                    loading="lazy"
+                    class="author-avatar"
+                  />
+                </a>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-2">
                     <a
-                      href={`https://github.com/${a.login}`}
-                      target="_blank"
-                      rel="noopener"
+                      href={withBase(`/?author=${a.login}`)}
                       class="truncate font-medium hover:text-accent-text"
+                      title={`Browse ${a.displayName}'s skills`}
                     >
                       {a.displayName}
                     </a>
                     <span class="you-flag hidden">you</span>
                   </div>
-                  <div class="truncate text-sm text-muted">@{a.login}</div>
+                  <a
+                    href={`https://github.com/${a.login}`}
+                    target="_blank"
+                    rel="noopener"
+                    class="block truncate text-sm text-muted hover:text-accent-text"
+                    title={`@${a.login} on GitHub`}
+                  >@{a.login}</a>
                 </div>
-                <div class="author-count">
+                <a
+                  class="author-count"
+                  href={withBase(`/?author=${a.login}`)}
+                  title={`Browse all ${a.skillCount} skill${a.skillCount === 1 ? "" : "s"} by ${a.displayName}`}
+                >
                   <span class="author-count-num">{a.skillCount}</span>
                   <span class="author-count-label">
                     skill{a.skillCount === 1 ? "" : "s"}
                   </span>
-                </div>
+                </a>
               </div>
 
               <ul class="skill-chips" role="list">
@@ -355,6 +370,15 @@ const MAX_CHIPS = 8;
       align-items: center;
       gap: 0.75rem;
     }
+    .author-avatar-link {
+      flex-shrink: 0;
+      line-height: 0;
+      border-radius: 999px;
+      transition: box-shadow 0.15s;
+    }
+    .author-avatar-link:hover {
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+    }
     .author-avatar {
       width: 2.75rem;
       height: 2.75rem;
@@ -366,6 +390,17 @@ const MAX_CHIPS = 8;
       flex-shrink: 0;
       text-align: center;
       line-height: 1;
+      border-radius: 0.6rem;
+      padding: 0.35rem 0.5rem;
+      transition:
+        background-color 0.15s,
+        color 0.15s;
+    }
+    a.author-count:hover {
+      background: var(--surface-2);
+    }
+    a.author-count:hover .author-count-num {
+      color: var(--accent-text);
     }
     .author-count-num {
       display: block;

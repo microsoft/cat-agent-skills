@@ -138,6 +138,26 @@ export function normalizeLogin(login: string | null | undefined): string {
   return (login ?? "").trim().toLowerCase().replace(/^@/, "");
 }
 
+/**
+ * Canonical key used to group and filter a person's skills across the gallery
+ * (homepage `?author=` filter, detail-page byline, Contributors links).
+ * Prefers the normalized GitHub login — stable and matching profile URLs — and
+ * falls back to a slug of the display name for the few submissions with no
+ * login, so every author is still browsable.
+ */
+export function authorKey(
+  login: string | null | undefined,
+  name: string | null | undefined,
+): string {
+  const l = normalizeLogin(login);
+  if (l) return l;
+  return (name ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function toMs(value: BadgeSkill["createdAt"]): number | null {
   if (value == null) return null;
   if (value instanceof Date) return value.getTime();

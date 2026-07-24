@@ -1,0 +1,12 @@
+{
+  "name": "SharePoint List Insight Report Generator",
+  "description": "Generate a permission-safe, downloadable HTML insight report from a validated SharePoint list, with bounded analysis, charts, filters, and record drill-down.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["sharepoint", "microsoft-365", "lists", "report", "html"],
+  "author": "Marco Rocca",
+  "authorUrl": "https://www.linkedin.com/in/marco-rocca",
+  "authorGithub": "marcorocca1973",
+  "version": "1.0.0",
+  "createdAt": "2026-07-24",
+  "updatedAt": "2026-07-24"
+}

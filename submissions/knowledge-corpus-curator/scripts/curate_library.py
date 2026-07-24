@@ -167,16 +167,6 @@ def parse_args() -> argparse.Namespace:
         help="Manifest produced by prepare_batches.py for source ZIP traceability",
     )
     parser.add_argument("--stale-after-days", type=int, help="Override stale threshold")
-    parser.add_argument(
-        "--corpus-scope",
-        choices=("whole-library", "subset"),
-        help="User-confirmed coverage of the uploaded corpus",
-    )
-    parser.add_argument(
-        "--content-scope",
-        choices=("current-only", "include-drafts-and-history"),
-        help="User-confirmed composition of the uploaded corpus",
-    )
     parser.add_argument("--ocr", action="store_true", help="OCR images and scanned PDFs")
     parser.add_argument(
         "--no-embeddings", action="store_true", help="Disable local embedding analysis"
@@ -1333,8 +1323,6 @@ def write_workbook(
     analysis_methods: list[str],
     warnings: list[str],
     metadata_supplied: bool,
-    corpus_scope: str | None,
-    content_scope: str | None,
     source_batches: list[str],
 ) -> None:
     from openpyxl import Workbook
@@ -1353,8 +1341,7 @@ def write_workbook(
             analysis_methods,
             warnings,
             metadata_supplied,
-            corpus_scope,
-            content_scope,
+            int(summary.get("extractionGaps", 0)),
             source_batches,
         ),
     }
@@ -1401,38 +1388,9 @@ def curation_settings_rows(
     analysis_methods: list[str],
     warnings: list[str],
     metadata_supplied: bool,
-    corpus_scope: str | None,
-    content_scope: str | None,
+    extraction_gap_count: int,
     source_batches: list[str],
 ) -> list[list[Any]]:
-    scope_interpretation = {
-        "whole-library": (
-            "The user identified the upload as the whole intended library. "
-            "Completion is still stated as Complete for uploaded corpus because "
-            "SharePoint coverage was not independently verified."
-        ),
-        "subset": (
-            "The user identified the upload as a subset of the library. Findings "
-            "and completion apply only to the uploaded corpus."
-        ),
-    }.get(
-        corpus_scope,
-        "Library coverage was not stated. Findings and completion apply only to "
-        "the uploaded corpus.",
-    )
-    content_scope_interpretation = {
-        "current-only": (
-            "The user identified the uploaded corpus as current content only. "
-            "The analyzer does not infer document lifecycle state."
-        ),
-        "include-drafts-and-history": (
-            "The user identified the uploaded corpus as including drafts, archives, "
-            "or historical versions. Findings include those files."
-        ),
-    }.get(
-        content_scope,
-        "Treatment of drafts, archives, and historical versions was not stated.",
-    )
     freshness_basis = (
         "Metadata manifest supplied; freshness uses manifest modified dates when "
         "available."
@@ -1447,8 +1405,26 @@ def curation_settings_rows(
             "Source uploads",
             ", ".join(source_batches) if source_batches else "Batch manifest not supplied.",
         ],
-        ["Scope", scope_interpretation],
-        ["Content versions", content_scope_interpretation],
+        [
+            "Scope",
+            (
+                "Complete content-analysis coverage for uploaded corpus: every "
+                "staged file was inventoried, hashed, and included in content "
+                "analysis."
+                if extraction_gap_count == 0
+                else "Partial content-analysis coverage for uploaded corpus: every "
+                f"staged file was inventoried and hashed, but {extraction_gap_count} "
+                "file(s) could not be fully included in content analysis or "
+                "comparison. See Document Inventory and extraction-gap backlog "
+                "items for status-specific details."
+            )
+            + " SharePoint coverage was not independently verified.",
+        ],
+        [
+            "Content versions",
+            "No uploaded file was excluded based on draft, archive, or "
+            "historical-version status.",
+        ],
         [
             "Freshness",
             f"Stale threshold: {config['staleAfterDays']} days. {freshness_basis}",
@@ -1720,8 +1696,6 @@ def main() -> int:
             methods,
             warnings,
             args.metadata is not None,
-            args.corpus_scope,
-            args.content_scope,
             source_batches,
         )
     except ImportError as exc:

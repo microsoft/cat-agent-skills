@@ -2,7 +2,8 @@
 import Layout from "../layouts/Layout.astro";
 import SkillCard from "../components/SkillCard.astro";
 import { getCollection } from "astro:content";
-import { PLATFORMS, PLATFORM_COLORS } from "../lib/skills";
+import { PLATFORMS, PLATFORM_COLORS, initials, coverGradient } from "../lib/skills";
+import { authorKey, normalizeLogin } from "../lib/badges";
 import { getRating } from "../lib/ratings";
 
 const isSample = (s: { data: { tags: string[] } }) =>
@@ -34,6 +35,30 @@ const allTags = [...tagCounts.entries()].sort(
 // most-used tags inline — 3 on mobile, 8 on desktop — and moves the long tail
 // into a searchable "More tags" popover. Multi-select combines tags (match any).
 const popularTags = allTags.slice(0, 8);
+
+// Contributor directory for the "Filter by contributor" picker. One entry per
+// person (keyed the same way as the ?author= filter), carrying a display name,
+// optional GitHub login for the avatar, and how many skills they've shipped so
+// the list can lead with the most prolific contributors.
+const contributorMap = new Map<
+  string,
+  { name: string; login: string; count: number }
+>();
+for (const skill of skills) {
+  const key = authorKey(skill.data.authorGithub, skill.data.author);
+  if (!key) continue;
+  const existing = contributorMap.get(key);
+  if (existing) existing.count++;
+  else
+    contributorMap.set(key, {
+      name: skill.data.author,
+      login: normalizeLogin(skill.data.authorGithub) ?? "",
+      count: 1,
+    });
+}
+const allContributors = [...contributorMap.entries()]
+  .map(([key, v]) => ({ key, ...v }))
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 ---
 
 <Layout>
@@ -72,7 +97,7 @@ const popularTags = allTags.slice(0, 8);
           <input
             id="skill-search"
             type="search"
-            placeholder="Search skills by name, description, or tag…"
+            placeholder="Search skills by name, contributor, description, or tag…"
             autocomplete="off"
             class="w-full rounded-xl border border-border bg-surface py-2.5 pl-11 pr-4 text-fg placeholder:text-subtle outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/25"
           />
@@ -209,13 +234,117 @@ const popularTags = allTags.slice(0, 8);
             </div>
             )
           }
+        <div
+          class="mx-1 hidden h-5 w-px shrink-0 self-center bg-border sm:block"
+          aria-hidden="true"
+        ></div>
+        <div
+          id="contributor-backdrop"
+          class="fixed inset-0 z-30 hidden bg-black/40 sm:hidden"
+          aria-hidden="true"
+        ></div>
+        <div class="relative shrink-0">
+          <button
+            type="button"
+            id="contributor-more"
+            class="flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1 text-sm font-medium text-accent-text transition hover:border-accent/60"
+            aria-expanded="false"
+            aria-haspopup="true"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-3.5 w-3.5"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="3.25"></circle>
+              <path d="M5.5 19.2a6.5 6.5 0 0 1 13 0"></path>
+            </svg>
+            Contributor<span id="contributor-count" class="font-semibold"></span> ▾
+          </button>
+          <div
+            id="contributor-panel"
+            class="fixed inset-x-0 bottom-0 z-40 hidden max-h-[70vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-surface p-3 shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:z-30 sm:mt-2 sm:max-h-none sm:w-80 sm:rounded-xl sm:shadow-lg"
+          >
+            <div class="mb-2 flex items-center justify-between sm:hidden">
+              <span class="text-sm font-semibold text-fg">Filter by contributor</span>
+              <button
+                type="button"
+                id="contributor-sheet-close"
+                class="px-2 text-lg leading-none text-muted"
+                aria-label="Close contributor filter">✕</button
+              >
+            </div>
+            <label for="contributor-search" class="sr-only">Search contributors</label>
+            <input
+              id="contributor-search"
+              type="search"
+              placeholder="Search contributors…"
+              autocomplete="off"
+              class="w-full rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-fg outline-none focus:border-accent"
+            />
+            <div
+              id="contributor-list"
+              class="mt-2 flex max-h-[50vh] flex-col gap-0.5 overflow-y-auto sm:max-h-72"
+            >
+              {
+                allContributors.map((c) => (
+                  <button
+                    type="button"
+                    data-contributor-item
+                    data-key={c.key}
+                    data-login={c.login}
+                    data-name={c.name}
+                    aria-pressed="false"
+                    class="contributor-item flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-surface-2"
+                  >
+                    {c.login ? (
+                      <img
+                        src={`https://github.com/${c.login}.png?size=40`}
+                        alt=""
+                        width="22"
+                        height="22"
+                        loading="lazy"
+                        class="h-[22px] w-[22px] shrink-0 rounded-full bg-surface-2 object-cover"
+                      />
+                    ) : (
+                      <span
+                        class="grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
+                        style={`background-image:${coverGradient(c.name)}`}
+                        aria-hidden="true"
+                      >
+                        {initials(c.name)}
+                      </span>
+                    )}
+                    <span class="contributor-name min-w-0 flex-1 truncate text-sm font-medium text-fg">
+                      {c.name}
+                    </span>
+                    <span class="shrink-0 text-xs text-subtle">{c.count}</span>
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="tag-chips" class="mt-2 flex flex-wrap gap-2 empty:mt-0"></div>
+      <div
+        id="filter-chips"
+        class="flex flex-wrap items-center gap-2"
+      >
+        <span id="contributor-chips" class="contents"></span>
+        <span id="tag-chips" class="contents"></span>
+      </div>
     </div>
   </section>
 
   <!-- Gallery -->
   <section class="mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10">
+
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-lg font-semibold text-fg">
         Skills <span id="result-count" class="text-muted"
@@ -277,6 +406,9 @@ const popularTags = allTags.slice(0, 8);
             data-tags={skill.data.tags.join(",").toLowerCase()}
             data-platforms={skill.data.platforms.join(",")}
             data-type={skill.data.type}
+            data-author-name={skill.data.author}
+            data-author-login={normalizeLogin(skill.data.authorGithub)}
+            data-author-key={authorKey(skill.data.authorGithub, skill.data.author)}
             data-rating={getRating(skill.id)}
             data-featured={skill.data.featured ? "1" : "0"}
             data-sample={skill.data.tags.includes("sample") ? "1" : "0"}
@@ -314,6 +446,8 @@ const popularTags = allTags.slice(0, 8);
 </Layout>
 
 <script>
+  import { initials, coverGradient } from "../lib/skills";
+
   const BATCH = 12;
 
   const gallery = document.getElementById("gallery")!;
@@ -335,6 +469,19 @@ const popularTags = allTags.slice(0, 8);
   const tagSearch = document.getElementById("tag-search") as HTMLInputElement | null;
   const tagSheetClose = document.getElementById("tag-sheet-close");
   const tagBackdrop = document.getElementById("tag-backdrop");
+  const contributorMore = document.getElementById("contributor-more");
+  const contributorPanel = document.getElementById("contributor-panel");
+  const contributorSearch = document.getElementById(
+    "contributor-search"
+  ) as HTMLInputElement | null;
+  const contributorSheetClose = document.getElementById("contributor-sheet-close");
+  const contributorBackdrop = document.getElementById("contributor-backdrop");
+  const contributorCount = document.getElementById("contributor-count");
+  const contributorItemBtns = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(
+      "#contributor-list [data-contributor-item]"
+    )
+  );
   const platformChips = Array.from(
     document.querySelectorAll<HTMLButtonElement>(".platform-chip")
   );
@@ -343,6 +490,8 @@ const popularTags = allTags.slice(0, 8);
   );
   const countEl = document.getElementById("result-count")!;
   const emptyEl = document.getElementById("empty-state")!;
+  const filterChips = document.getElementById("filter-chips")!;
+  const contributorChips = document.getElementById("contributor-chips")!;
   const sentinel = document.getElementById("scroll-sentinel")!;
   const sortSelect = document.getElementById("sort-select") as HTMLSelectElement;
 
@@ -353,6 +502,7 @@ const popularTags = allTags.slice(0, 8);
   const activeTags = new Set<string>();
   let activePlatform = "";
   let activeType = "";
+  const activeAuthors = new Set<string>();
   let sortMode: SortMode = "featured";
   let shown = BATCH;
   let matched: HTMLElement[] = items;
@@ -367,9 +517,12 @@ const popularTags = allTags.slice(0, 8);
         activeTags.size === 0 || tags.some((t) => activeTags.has(t));
       const platformOk = !activePlatform || platforms.includes(activePlatform);
       const typeOk = !activeType || (el.dataset.type ?? "skill") === activeType;
-      const text = `${el.dataset.name} ${el.dataset.desc} ${el.dataset.tags}`;
+      const authorOk =
+        activeAuthors.size === 0 || activeAuthors.has(el.dataset.authorKey ?? "");
+      const author = `${el.dataset.authorName ?? ""} ${el.dataset.authorLogin ?? ""}`.toLowerCase();
+      const text = `${el.dataset.name} ${el.dataset.desc} ${el.dataset.tags} ${author}`;
       const queryOk = !query || text.includes(query);
-      return tagOk && platformOk && typeOk && queryOk;
+      return tagOk && platformOk && typeOk && authorOk && queryOk;
     });
   }
 
@@ -434,6 +587,156 @@ const popularTags = allTags.slice(0, 8);
     render();
     fill();
   }
+
+  // Contributor filter (?author=<login-or-slug>,…): one or more selected
+  // contributors, chosen from the searchable picker and shown as removable chips
+  // in the filter row. Entry points are the skill detail-page byline and the
+  // Contributors directory, which deep-link here to show everything a person made.
+  function contributorMeta(key: string): { name: string; login: string } {
+    const rep = items.find((el) => (el.dataset.authorKey ?? "") === key);
+    return {
+      name: rep?.dataset.authorName || key,
+      login: rep?.dataset.authorLogin || "",
+    };
+  }
+
+  // Add spacing above the chips row only when it actually holds a chip, so an
+  // empty filter bar collapses cleanly.
+  function updateChipSpacing() {
+    const has =
+      contributorChips.childElementCount > 0 || tagChipsBox.childElementCount > 0;
+    filterChips.classList.toggle("mt-2", has);
+  }
+
+  function buildContributorChip(key: string): HTMLElement {
+    const { name, login } = contributorMeta(key);
+    const chip = document.createElement("span");
+    chip.className =
+      "inline-flex max-w-full items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft py-1 pl-1 pr-1.5 text-sm";
+
+    if (login) {
+      const img = document.createElement("img");
+      img.src = `https://github.com/${login}.png?size=40`;
+      img.alt = "";
+      img.width = 20;
+      img.height = 20;
+      img.loading = "lazy";
+      img.className = "h-5 w-5 shrink-0 rounded-full bg-surface-2 object-cover";
+      chip.appendChild(img);
+    } else {
+      const mono = document.createElement("span");
+      mono.className =
+        "grid h-5 w-5 shrink-0 place-items-center rounded-full text-[8px] font-bold text-white";
+      mono.style.backgroundImage = coverGradient(name);
+      mono.setAttribute("aria-hidden", "true");
+      mono.textContent = initials(name);
+      chip.appendChild(mono);
+    }
+
+    const label = document.createElement("span");
+    label.className = "min-w-0 truncate font-medium text-fg";
+    label.textContent = name;
+    chip.appendChild(label);
+
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.setAttribute("aria-label", `Remove contributor filter: ${name}`);
+    clear.className =
+      "grid h-5 w-5 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-surface hover:text-accent-text";
+    clear.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    clear.addEventListener("click", () => toggleContributor(key));
+    chip.appendChild(clear);
+    return chip;
+  }
+
+  function renderContributorChips() {
+    contributorChips.replaceChildren();
+    activeAuthors.forEach((key) =>
+      contributorChips.appendChild(buildContributorChip(key))
+    );
+    updateChipSpacing();
+  }
+
+  function paintContributors() {
+    contributorItemBtns.forEach((btn) => {
+      const on = activeAuthors.has(btn.dataset.key ?? "");
+      btn.setAttribute("aria-pressed", String(on));
+      btn.classList.toggle("bg-accent-soft", on);
+      btn
+        .querySelector(".contributor-name")
+        ?.classList.toggle("text-accent-text", on);
+    });
+    const any = activeAuthors.size > 0;
+    contributorMore?.classList.toggle("border-dashed", !any);
+    contributorMore?.classList.toggle("bg-accent-soft", any);
+    if (contributorCount)
+      contributorCount.textContent = any ? ` ${activeAuthors.size}` : "";
+  }
+
+  function toggleContributor(key: string) {
+    if (!key) return;
+    if (activeAuthors.has(key)) activeAuthors.delete(key);
+    else activeAuthors.add(key);
+    paintContributors();
+    renderContributorChips();
+    syncUrl();
+    refilter();
+  }
+
+  // Contributor picker: dropdown on desktop, bottom sheet on mobile. Mutually
+  // exclusive with the "More tags" panel so only one overlay is open at a time.
+  function setContributorPanel(open: boolean) {
+    if (!contributorPanel || !contributorMore) return;
+    if (open) setTagPanel(false);
+    contributorPanel.classList.toggle("hidden", !open);
+    contributorBackdrop?.classList.toggle("hidden", !open);
+    contributorMore.setAttribute("aria-expanded", String(open));
+    if (
+      open &&
+      contributorSearch &&
+      window.matchMedia("(min-width: 640px)").matches
+    ) {
+      contributorSearch.focus();
+    }
+  }
+  contributorMore?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setContributorPanel(contributorPanel?.classList.contains("hidden") ?? false);
+  });
+  contributorSheetClose?.addEventListener("click", () =>
+    setContributorPanel(false)
+  );
+  contributorBackdrop?.addEventListener("click", () => setContributorPanel(false));
+  contributorItemBtns.forEach((btn) =>
+    btn.addEventListener("click", () => toggleContributor(btn.dataset.key ?? ""))
+  );
+  contributorSearch?.addEventListener("input", () => {
+    const q = contributorSearch.value.trim().toLowerCase();
+    contributorItemBtns.forEach((btn) => {
+      const hay = `${btn.dataset.name ?? ""} ${btn.dataset.login ?? ""}`.toLowerCase();
+      btn.classList.toggle("hidden", !hay.includes(q));
+    });
+  });
+  document.addEventListener("click", (e) => {
+    if (!contributorPanel || contributorPanel.classList.contains("hidden")) return;
+    const target = e.target as Node;
+    if (
+      !contributorPanel.contains(target) &&
+      !contributorMore?.contains(target)
+    ) {
+      setContributorPanel(false);
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      contributorPanel &&
+      !contributorPanel.classList.contains("hidden")
+    ) {
+      setContributorPanel(false);
+    }
+  });
 
   // Search (debounced)
   let t: number | undefined;
@@ -513,6 +816,7 @@ const popularTags = allTags.slice(0, 8);
         chip.addEventListener("click", () => toggleTag(tag));
         tagChipsBox.appendChild(chip);
       });
+    updateChipSpacing();
   }
 
   function toggleTag(tag: string) {
@@ -541,6 +845,7 @@ const popularTags = allTags.slice(0, 8);
   // "More tags" popover: dropdown on desktop, bottom sheet on mobile.
   function setTagPanel(open: boolean) {
     if (!tagPanel || !tagMore) return;
+    if (open) setContributorPanel(false);
     tagPanel.classList.toggle("hidden", !open);
     tagBackdrop?.classList.toggle("hidden", !open);
     tagMore.setAttribute("aria-expanded", String(open));
@@ -626,6 +931,8 @@ const popularTags = allTags.slice(0, 8);
     if (activeTags.size) params.set("tag", [...activeTags].join(","));
     if (activePlatform) params.set("platform", activePlatform);
     if (activeType) params.set("type", activeType);
+    if (activeAuthors.size)
+      params.set("author", [...activeAuthors].join(","));
     if (sortMode !== "featured") params.set("sort", sortMode);
     const qs = params.toString();
     history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
@@ -642,6 +949,12 @@ const popularTags = allTags.slice(0, 8);
       .forEach((t) => activeTags.add(t));
     activePlatform = params.get("platform") ?? "";
     activeType = params.get("type") ?? "";
+    activeAuthors.clear();
+    (params.get("author") ?? "")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+      .forEach((a) => activeAuthors.add(a));
     const s = params.get("sort") as SortMode | null;
     sortMode = s && SORTS.includes(s) ? s : "featured";
     sortSelect.value = sortMode;
@@ -649,6 +962,8 @@ const popularTags = allTags.slice(0, 8);
     paintTags();
     paintChips(platformChips, "platform", activePlatform);
     paintChips(typeChips, "type", activeType);
+    paintContributors();
+    renderContributorChips();
     refilter();
   }
 
