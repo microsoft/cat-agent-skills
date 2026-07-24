@@ -37,7 +37,7 @@ If the user already stated any of these in the conversation, do not re-ask. Chec
 - **Evolution**: if the style changed over the window, weight recent months higher.
 - **Taboo list**: words, phrases, and patterns that never appear in their mail — including typical AI-isms absent from it (English examples: "I hope this email finds you well", "delve", "leverage"; identify the equivalent stock phrases in each of the user's languages).
 
-**Report:** Present the style report **inline in the chat as Markdown** — do not write a file to the workspace. Structure: language routing → modes with triggers → per-mode templates → vocabulary → formatting rules → taboo list. Ask the user to correct anything before Phase 2.
+**Report:** Present the style report **inline in the chat as Markdown** — do not write the report to a workspace file. (Writing the generated skill file is allowed only in Phase 2’s fallback.)
 
 ## Phase 2 — Validate, then generate the personal skill
 
