@@ -1,6 +1,6 @@
 {
   "name": "SharePoint List Insight Report Generator",
-  "description": "Automatically discovers and validates a SharePoint list within a connected knowledge source, analyzes its structure and data, identifies key business insights, and generates a downloadable interactive HTML report. The report includes dynamic filters, interactive charts, sortable and searchable tables with pagination, detailed record drill-down through modal popups, and direct links to open items in SharePoint. If the requested list is not found, the skill suggests available lists and closest matches before stopping the analysis.",
+  "description": "Generate a permission-safe, downloadable HTML insight report from a validated SharePoint list, with bounded analysis, charts, filters, and record drill-down.",
   "platforms": ["Copilot Studio"],
   "tags": ["sharepoint", "microsoft-365", "lists", "report", "html"],
   "author": "Marco Rocca",
