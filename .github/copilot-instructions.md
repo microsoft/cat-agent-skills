@@ -11,6 +11,50 @@ generates the published page and download bundle. See
 
 When reviewing a pull request, check the following in addition to CI:
 
+### The bar: block real problems, not style
+
+These checks are a **merge gate, not a copy-edit.** Skills are human-authored
+prose and code; treat the author's wording, formatting, and structure as theirs.
+**Only post a comment you could defend as "must fix before merge."** If the worst
+case is "could be tidier" or "slightly inconsistent," say nothing — prefer zero
+comments over a nit.
+
+**Block-worthy — do raise** (the rest of this section defines these):
+
+- Executable steps, runtime dependencies, or paths that **won't run** on a
+  targeted platform (see *Platform fit vs. executable code*).
+- Human-facing prose leaking into the agent-facing `SKILL.md`, or setup/adoption
+  guidance with nowhere to live (see *Human-facing vs. agent-facing content*).
+- Submission-hygiene breaks: mixed-scope PR, hand-committed generated artifacts,
+  wrong file layout, invalid or renamed **required** `metadata.json` fields,
+  `name`/slug mismatch, or a payload that isn't a `SKILL.md` / `.zip` / Scout
+  `.json`.
+- Anything that **breaks CI**, or is a **security / privacy** problem (secrets,
+  data exfiltration, harmful content).
+
+**Not block-worthy — do NOT raise:**
+
+- **Writing style in the skill's own text** — wording, tone, grammar,
+  capitalization, heading style, and **punctuation, including em-dashes,
+  hyphens, and Oxford commas.** A skill telling itself "no em-dashes in output"
+  is a rule for the **generated text**, not for the instructions that describe
+  it; do not flag em-dashes (or any other "banned" token) in the playbook's own
+  prose. Raise it **only** if the token appears inside a **literal
+  example/template the agent emits verbatim.**
+- **Internal-consistency and "you could also…" nits** that don't change whether
+  the skill runs or what it produces.
+- **Cosmetic `metadata.json` preferences** — `updatedAt` / date freshness,
+  optional-field bikeshedding — as long as the required fields are present and
+  valid.
+- **Generated artifacts CI commits back** (`src/content/**`, `public/bundles/**`):
+  never flag their presence, content, or that a PR "also changes" them — they are
+  CI-owned, not the contributor's edit.
+- **The same point on many lines.** Make it once, in one thread; don't open a
+  thread per occurrence.
+
+When unsure whether something clears the bar, treat it as **non-blocking** and
+leave it out.
+
 ### Platform fit vs. executable code
 
 A skill's `platforms` (`Cowork`, `Copilot Studio`, `Scout`) must match the
