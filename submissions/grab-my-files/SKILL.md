@@ -40,7 +40,7 @@ only the matching files, but still follow the rules below.
 
 After the zip is written, reply with:
 - the archive name (including its timestamp),
-- the count and list of files packaged inside, and
+- the total count of files packaged, plus a list of up to 50 packaged paths (sorted). If there are more than 50, list the first 50 and say how many additional files were included, and
 - a note that the zip is attached and ready to download.
 
 > I've packaged **3 file(s)** into **`all_files_produced_20260724_215812.zip`**:
