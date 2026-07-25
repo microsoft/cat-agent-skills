@@ -1,7 +1,8 @@
 {
-  "name": "ai-first-process-redesign",
+  "name": "AI-First Process Redesign",
   "description": "Redesign your existing processes with AI-first thinking",
   "platforms": ["Cowork", "Copilot Studio"],
   "tags": ["productivity", "process-improvement", "agentic-workflow"],
-  "author": "Tim Sparks"
+  "author": "Tim Sparks",
+  "version": "2.1.0"
 }
