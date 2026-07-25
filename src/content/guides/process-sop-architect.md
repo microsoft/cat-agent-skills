@@ -29,7 +29,13 @@ Provide source material that describes the process, such as:
 
 For best results, identify whether you want the **current state**, **future state**, or **both**.
 
-The packaged generators require a runtime that supports Python and these libraries:
+The packaged generators use these Python libraries:
+
+- `python-docx`
+- `openpyxl`
+- `python-pptx`
+
+In the Copilot Studio sandbox these libraries are already available, so no installation is needed. Only when you run the scripts **outside** Copilot Studio (for example, local testing) do you need to install them first:
 
 ```bash
 pip install python-docx openpyxl python-pptx

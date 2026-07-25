@@ -24,18 +24,25 @@ Do NOT activate when:
 ## How this skill runs
 1. Review the user's source material and build a process specification using `references/process_spec_schema.md`.
 2. Ask targeted questions for missing trigger, scope, roles, decisions, exceptions, controls, or outputs. Ask one question at a time.
-3. Save the specification as `/tmp/process_spec.json`.
+3. From the skill's root directory (the folder that contains `scripts/` and `references/`), save the specification as `process_spec.json`, and run the commands below from that same directory so the `scripts/` paths resolve. Use this directory rather than `/tmp`, which is not reliably writable in the sandbox.
 4. Validate it:
    ```bash
-   python scripts/validate_process_spec.py --input /tmp/process_spec.json
+   python scripts/validate_process_spec.py --input process_spec.json
    ```
 5. Generate the process pack, including the polished executive PowerPoint briefing:
    ```bash
    python scripts/generate_process_pack.py \
-      --input /tmp/process_spec.json \
-      --output-dir /tmp/process_pack
+      --input process_spec.json \
+      --output-dir process_pack
    ```
 6. Return the generated SOP, process map, RACI workbook, improvement backlog, executive summary, and PowerPoint briefing.
+
+## Requirements
+- `python-docx` (Word SOP)
+- `openpyxl` (Excel RACI and control register)
+- `python-pptx` (PowerPoint executive briefing)
+
+These packages are present in the Copilot Studio sandbox — no `pip install` is required. The generators import them at startup and fail fast with a clear error if a dependency is missing, so a partial pack is never reported as complete.
 
 ## Required outputs
 - Editable Word SOP
@@ -78,10 +85,10 @@ Do NOT activate when:
 python scripts/validate_process_spec.py --input assets/example_process_spec.json
 python scripts/generate_process_pack.py \
   --input assets/example_process_spec.json \
-  --output-dir /tmp/vendor_onboarding_pack
+  --output-dir vendor_onboarding_pack
 
 # Generate only the PowerPoint briefing
 python scripts/generate_presentation.py \
   --input assets/example_process_spec.json \
-  --output-dir /tmp/vendor_onboarding_pack
+  --output-dir vendor_onboarding_pack
 ```
