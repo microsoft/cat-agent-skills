@@ -1,0 +1,9 @@
+{
+  "name": "Cowork Cost Tracker",
+  "description": "After a Cowork run, append an estimated Copilot Credit cost plus your month-to-date total as a short cost footer, then point to the Copilot Control System for billed actuals.",
+  "platforms": ["Cowork"],
+  "tags": ["cost", "governance", "finops", "copilot-credits", "reporting"],
+  "author": "Holger Imbery",
+  "authorUrl": "https://github.com/HolgerImbery" ,
+  "version": "1.0.0"
+}
