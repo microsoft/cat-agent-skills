@@ -103,7 +103,7 @@ on that observed average. Re-check monthly, since Cowork's model mix and rates s
 4. **Append + tally.** Add `{ "ts", "task", "models", "tool_calls", "retrievals", "pages",
    "runtime_min", "est_credits", "est_usd" }`; recompute `total_credits` and the run count for the month.
 5. **Persist.** Write the log back with the artifact tools on `surface="user"`
-   (`host-EditArtifact`, or `host-CreateArtifact` on first use) — never a direct file write.
+   (`EditArtifact`, or `CreateArtifact` on first use) — never a direct file write.
 6. **Show the footer** (below). Keep it to a few lines; do not expand it into a report unless asked.
 
 ## Output format — the cost footer
