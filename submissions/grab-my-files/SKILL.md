@@ -5,17 +5,6 @@ description: Bundle every file the agent produced in this session into a single 
 
 # Grab My Files
 
-## Overview
-
-Copilot Studio writes the files it generates during a session to **`/app/created/`**.
-This skill packages everything currently in that folder into one timestamped `.zip`
-and returns it to the user as a downloadable attachment — a one-tap way to grab all
-of a session's outputs at once instead of downloading them one by one.
-
-There is **no bundled script**. You perform the export yourself with the tools you
-already have (e.g. the code interpreter). Work against whatever is actually present
-in `/app/created/` at the moment the user asks — do not assume a fixed set of files.
-
 ## When to use
 
 Invoke when the user says anything like:
