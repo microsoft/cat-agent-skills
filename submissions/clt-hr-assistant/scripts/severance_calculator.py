@@ -343,10 +343,6 @@ def main():
                    help="saída em JSON em vez do relatório")
     args = p.parse_args()
 
-    if args.salary < 0 or args.avg_variables < 0 or args.vested_vacations < 0 or args.dependents < 0:
-        p.error("--salary, --avg-variables, --vested-vacations e --dependents devem ser >= 0")
-    if args.fgts_balance is not None and args.fgts_balance < 0:
-        p.error("--fgts-balance deve ser >= 0")
     with open(args.tables, encoding="utf-8") as fh:
         tables = json.load(fh)
 

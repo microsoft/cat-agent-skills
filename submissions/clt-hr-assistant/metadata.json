@@ -3,5 +3,6 @@
   "description": "Assistente de legislação trabalhista brasileira (CLT) para equipes de RH e Departamento Pessoal. Responde dúvidas sobre férias, 13º salário, aviso prévio, jornada e tipos de rescisão, e calcula verbas rescisórias com memória de cálculo completa usando as tabelas oficiais vigentes de 2026 (salário mínimo, INSS e IRRF, incluindo a Lei 15.270/2025).",
   "platforms": ["Copilot Studio", "Cowork", "Scout"],
   "tags": ["rh", "folha", "clt", "brasil", "trabalhista", "rescisao", "inss", "irrf", "verbas-rescisorias", "departamento-pessoal"],
-  "author": "Michael Ferro Pereira"
+  "author": "Michael Ferro Pereira",
+  "authorUrl": "https://github.com/michaelfp"
 }

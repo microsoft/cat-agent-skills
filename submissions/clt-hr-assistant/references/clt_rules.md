@@ -83,8 +83,10 @@ Salário-base para os cálculos = salário contratual + média das variáveis ha
 - Estabilidades a sinalizar: gestantes, membros da CIPA (da eleição até 1 ano após o mandato), retorno de acidente de trabalho (12 meses — Lei 8.213/91 art. 118), dirigentes sindicais.
 - Equiparação salarial: CLT art. 461 (mesma função, mesmo empregador, mesmo estabelecimento, diferenças < 2 anos na função / < 4 na empresa).
 
-## 9. Fontes para valores vigentes
+## 9. Fontes oficiais para valores vigentes (todas do governo)
 
-- Salário mínimo: decreto anual; API SGS do Banco Central, série 1619 (usada por `scripts/fetch_current_values.py`).
-- Tabela INSS: Portaria Interministerial MPS/MF publicada em janeiro — gov.br/inss → "Tabela de contribuição mensal".
-- Tabela IRRF e orientação da Lei 15.270/2025: gov.br/receitafederal → "Meu Imposto de Renda → Tabelas" e a nota oficial de orientação sobre o redutor de 2026.
+- Salário mínimo 2026 (R$ 1.621,00): Decreto nº 12.797/2025 — https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/decreto/d12797.htm ; série ao vivo: API SGS do Banco Central, série 1619 (usada por `scripts/fetch_current_values.py`).
+- Tabela INSS 2026: Portaria Interministerial MPS/MF nº 13, de 09/01/2026 — tabela oficial em https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal (nova portaria publicada todo janeiro).
+- Tabela progressiva mensal do IRRF (vigente desde maio/2025): Lei nº 15.191/2025 — https://www2.camara.leg.br/legin/fed/lei/2025/lei-15191-11-agosto-2025-797839-publicacaooriginal-176105-pl.html
+- Redutor do IR 2026 (isenção até R$ 5.000): Lei nº 15.270/2025 — https://www2.camara.leg.br/legin/fed/lei/2025/lei-15270-26-novembro-2025-798354-publicacaooriginal-177117-pl.html ; orientação de cálculo da Receita Federal — https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2025/dezembro/receita-federal-orienta-fontes-pagadoras-e-contribuintes-a-calcular-a-reducao-do-imposto-de-renda-a-partir-de-1o-de-janeiro-de-2026
+- Dedução mensal por dependente (R$ 189,59): Lei nº 9.250/1995, art. 4º, III (redação da Lei nº 13.149/2015).

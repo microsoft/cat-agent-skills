@@ -2,9 +2,9 @@
   "reference_year": 2026,
   "last_updated": "2026-01-01",
   "sources": {
-    "minimum_wage": "Decreto (reajuste 2026) — ver também Banco Central, série SGS 1619",
-    "inss": "Portaria Interministerial MPS/MF — tabela de contribuição 2026",
-    "irrf": "Receita Federal — tabela progressiva mensal + Lei 15.270/2025"
+    "minimum_wage": "Decreto nº 12.797/2025 (planalto.gov.br) — ver também Banco Central, série SGS 1619",
+    "inss": "Portaria Interministerial MPS/MF nº 13, de 09/01/2026 — tabela oficial em gov.br/inss",
+    "irrf": "Lei nº 15.191/2025 (tabela progressiva mensal) + Lei nº 15.270/2025 (redutor 2026) — orientação oficial da Receita Federal em gov.br/receitafederal"
   },
   "minimum_wage": 1621.00,
   "inss": {
