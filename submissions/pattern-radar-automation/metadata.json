@@ -1,0 +1,10 @@
+{
+  "name": "Pattern Radar (Scheduled)",
+  "description": "Twice a week, scans your recent Microsoft 365 signals and posts a Teams summary of recurring patterns worth productizing — things you keep explaining (blog candidates) and multi-step tasks you keep doing by hand (automation candidates). Read-only and privacy-aware.",
+  "tags": ["automation", "productivity", "teams", "email", "content", "insights"],
+  "author": "Srinivas Varukala",
+  "authorUrl": "https://github.com/svarukala",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
