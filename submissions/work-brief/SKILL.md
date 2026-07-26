@@ -24,8 +24,10 @@ This matters because a brief generator reads inbound content from anyone who can
 Resolve each parameter in this order, taking the first available:
 
 1. **What the invoking prompt says.** A scheduled automation states its own window, period type, and destination.
-2. **The config file** at `%USERPROFILE%/.copilot/work-brief/config.json`, if present. `assets/config.example.json` is a complete, annotated starting point - copy it to that path and edit it.
+2. **The config file** at `~/.copilot/work-brief/config.json`, if present. `assets/config.example.json` is a complete, annotated starting point - copy it to that path and edit it.
 3. **The defaults below.**
+
+Paths in this skill are written home-relative with `~`. Resolve `~` to the user's home directory through the runtime so the skill works on Windows, macOS, and Linux alike - do not assume a shell-specific variable like `%USERPROFILE%` or `$HOME`.
 
 | Parameter | Default |
 |---|---|
@@ -157,4 +159,4 @@ For items carrying a sensitivity or confidentiality label, when `sensitivity.sum
 - `references/signal-rules.md` - thread state tests, noise exclusions, worked examples.
 - `references/brief-template.md` - output structure and rendering rules.
 - `references/install-automation.md` - turning this into a recurring Scout automation, including the notification setting.
-- `assets/config.example.json` - annotated example config; copy to `%USERPROFILE%/.copilot/work-brief/config.json` and edit.
+- `assets/config.example.json` - annotated example config; copy to `~/.copilot/work-brief/config.json` and edit.

@@ -44,5 +44,5 @@
   "sensitivity": {
     "summariseLabelledContent": true
   },
-  "stateFile": "%USERPROFILE%/.copilot/work-brief/state.json"
+  "stateFile": "~/.copilot/work-brief/state.json"
 }

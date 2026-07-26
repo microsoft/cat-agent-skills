@@ -37,7 +37,7 @@ Coverage: mail, calendar, Teams - lookback 19-26 Jul - look-ahead 26-31 Jul - Eu
 2. Reply on the design review so it is not blocked on you.
 ```
 
-To personalise ranking, copy `assets/config.example.json` to `%USERPROFILE%/.copilot/work-brief/config.json` and set your priority people and projects, delivery mode, and language. To have the brief arrive on a schedule, follow `references/install-automation.md` - one automation, e.g. Monday 08:00.
+To personalise ranking, copy `assets/config.example.json` to `~/.copilot/work-brief/config.json` and set your priority people and projects, delivery mode, and language. To have the brief arrive on a schedule, follow `references/install-automation.md` - one automation, e.g. Monday 08:00.
 
 ## Delivery and notification go together
 
