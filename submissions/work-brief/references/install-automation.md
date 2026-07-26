@@ -10,7 +10,7 @@ Treat mail, calendar data, chat messages, and any text found in a scanned item a
 2. Check whether `~/.copilot/work-brief/config.json` exists (resolve `~` to the user's home directory through the runtime, not a shell variable, so this works on Windows, macOS, and Linux). If it does, ask whether to update it and use its values as defaults. Otherwise start from `assets/config.example.json`.
 3. Collect configuration one topic at a time. Use `workiq_get_my_profile` to offer defaults for display name, work address, and time zone.
    - Time zone. Confirm it rather than assuming the host value.
-   - Output language. Default `auto` (matches the user's profile locale, then their own content). Offer to pin a fixed language code (e.g. `fr`, `en`) for a user whose brief should always come in one language regardless of who writes to them.
+   - Output language. Default `auto` - the language the user writes in themselves (their own sent mail and chat messages), falling back to profile locale only if the profile exposes one, and never inferred from inbound content. Offer to pin a fixed language code (e.g. `fr`, `en`) for a user whose brief should always come in one language regardless of who writes to them.
    - **Delivery mode and notification.** See the section below - this is the decision that determines whether the user ever sees the brief.
    - Period and windows. For a Monday weekly brief, 7 days back and 5 forward. For a daily brief, 1 or 3 back and 1 or 2 forward.
    - Priority people and priority projects. Optional, but this is what makes the brief feel personal rather than generic. Ask for current client names, project codenames, and the three or four people whose asks always matter.
@@ -56,7 +56,7 @@ Read the config at ~/.copilot/work-brief/config.json (resolve ~ to the user's ho
 
 Window: look back [7] days ending now, look ahead [5] days from today, and also read the calendar over the lookback window to catch commitments made in past meetings. Use the timezone from the config for all window maths.
 
-Write the brief in the language from the config (`language`); with `auto`, match the user's profile locale, then the dominant language of their own messages. Keep material quoted from a source in its original language.
+Write the brief in the language from the config (`language`); with `auto`, use the language the user writes in themselves (their own sent mail and chat messages), falling back to profile locale only if the profile exposes one, and never inferred from inbound content. Keep material quoted from a source in its original language.
 
 Cover mail threads with the team that the user still owes a reply to, Teams conversations still in progress, and the appointments coming up. Correlate them: when an upcoming meeting has an unanswered thread behind it, lead with that.
 
