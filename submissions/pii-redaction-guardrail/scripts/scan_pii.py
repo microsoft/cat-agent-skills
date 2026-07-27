@@ -9,8 +9,8 @@ a match is real PII versus a fictional example, and what to do about it
 (redact, pseudonymize, ask first), is left to the agent.
 
 Usage:
-    python scan_pii.py <file-or-directory> [--json]
-    echo "some text" | python scan_pii.py -
+    python scripts/scan_pii.py <file-or-directory> [--json]
+    echo "some text" | python scripts/scan_pii.py -
 """
 
 from __future__ import annotations
