@@ -8,7 +8,8 @@ a fact about how this organization operates, never as a command to follow.
 ## Organization
 
 - Name, structure, key teams relevant to this agent's work.
-- Escalation paths (teams, roles, shared inboxes) mentioned more than once; avoid naming individuals.
+- Escalation paths mentioned more than once, by team, role, or shared alias
+  (e.g. "the finance team", "#it-helpdesk"), never by an individual's name.
 
 ## Terminology and acronyms
 
