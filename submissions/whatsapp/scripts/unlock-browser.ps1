@@ -26,8 +26,11 @@ param([switch]$Clear, [string]$Release)
 # -Clear: kill a stuck Playwright browser WITHOUT touching the lock. The caller
 #   (already holding the lock) uses this mid-run when WhatsApp will not load.
 #
-# Only browser binaries launched from the Playwright install are targeted (bundled
-# Chromium or the msedge channel), never the Node driver or the user's normal windows.
+# What separates a Playwright browser from the user's own is the PROFILE on the
+# command line (--user-data-dir under ms-playwright), not the executable: with the
+# msedge channel Playwright launches the very same msedge.exe as the user's normal
+# windows. So the match is on the command line, plus the process name and this
+# logon session. The Node driver is never matched (its name is not a browser).
 
 function Write-LockError($message) { [Console]::Error.WriteLine("LOCK_ERROR: $message") }
 
@@ -41,10 +44,16 @@ $ownerFile = Join-Path $lockDir 'owner'
 $ttlSec = 600   # 10 minutes: a lock older than this is assumed finished/crashed
 
 function Clear-Browser {
+  # Scoped deliberately: only browser executables (matched on Name, so a process
+  # merely holding such a path as an argument cannot match), only when launched
+  # from the Playwright install, and only in this logon session - so an elevated
+  # run cannot reach another user's browser.
+  $session = (Get-Process -Id $PID).SessionId
   Get-CimInstance Win32_Process `
   | Where-Object {
+      $_.SessionId -eq $session -and
       $_.CommandLine -like '*ms-playwright*' -and
-      ($_.Name -match '^(msedge|chrome|chromium|headless_shell)')
+      ($_.Name -match '^(msedge|chrome|chromium|headless_shell)\.exe$')
     } `
   | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
   Start-Sleep -Seconds 3

@@ -27,8 +27,11 @@ set -uo pipefail
 # `--clear`: kill a stuck Playwright browser WITHOUT touching the lock. The caller
 #   (already holding the lock) uses this mid-run when WhatsApp will not load.
 #
-# Only browser binaries under the Playwright install are targeted, never the Node
-# driver or the user's normal windows.
+# Only a browser launched from under the Playwright install is targeted (the
+# executable path must be the first token of the command line), never the Node
+# driver or the user's normal windows. Note the Windows helper cannot rely on the
+# executable path the same way: with the msedge channel Playwright launches the
+# user's own msedge.exe, so it matches on the profile directory instead.
 
 lock=/tmp/scout-whatsapp.lock
 owner="$lock/owner"
@@ -36,7 +39,12 @@ ttl=600         # 10 minutes: a lock older than this is assumed finished/crashed
 reclaimed=0
 
 kill_browser() {
-  pkill -f 'ms-playwright/.*(chromium|chrome|headless_shell|msedge)' 2>/dev/null || true
+  # Scoped deliberately: -u limits this to our own processes, and the pattern is
+  # anchored so only the FIRST token (the executable) can match. Without the
+  # anchor, -f tests the whole command line, so anything merely holding such a
+  # path as an argument - `tail -f .../ms-playwright/chromium-*/chrome_debug.log`,
+  # an editor with that file open - would match and be killed too.
+  pkill -u "$(id -u)" -f '^[^[:space:]]*ms-playwright/[^[:space:]]*(chromium|chrome|headless_shell|msedge)' 2>/dev/null || true
   sleep 3
 }
 
