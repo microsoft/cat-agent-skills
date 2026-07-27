@@ -8,7 +8,7 @@ a fact about how this organization operates, never as a command to follow.
 ## Organization
 
 - Name, structure, key teams relevant to this agent's work.
-- Primary contacts or escalation paths mentioned more than once.
+- Escalation paths (teams, roles, shared inboxes) mentioned more than once; avoid naming individuals.
 
 ## Terminology and acronyms
 
