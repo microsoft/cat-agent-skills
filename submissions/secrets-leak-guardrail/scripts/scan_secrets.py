@@ -8,8 +8,8 @@ documentation example is left to the agent. This script only finds
 candidates.
 
 Usage:
-    python scan_secrets.py <file-or-directory> [--json]
-    echo "some text" | python scan_secrets.py -
+    python scripts/scan_secrets.py <file-or-directory> [--json]
+    echo "some text" | python scripts/scan_secrets.py -
 """
 
 from __future__ import annotations
