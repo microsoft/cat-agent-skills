@@ -1,0 +1,11 @@
+{
+  "name": "Company Memory Builder",
+  "description": "Maintains one company knowledge document across sessions: terminology, tools, structure, and preferences, loaded before acting and updated only with confirmed, durable facts, never with instructions.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["memory", "knowledge", "personalization", "continuity", "rag", "governance"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
