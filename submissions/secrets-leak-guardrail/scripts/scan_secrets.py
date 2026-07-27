@@ -94,7 +94,9 @@ def scan_text(text: str, source: str) -> list[dict]:
 
 def _redact_middle(value: str) -> str:
     if len(value) <= 12:
-        return value[:2] + "…" + value[-2:]
+        if len(value) <= 2:
+            return "…redacted…"
+        return value[:1] + "…redacted…" + value[-1:]
     return value[:6] + "…redacted…" + value[-4:]
 
 
