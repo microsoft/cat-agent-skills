@@ -1,0 +1,11 @@
+{
+  "name": "Customer Support Response Drafter",
+  "description": "Drafts replies to inbound customer support emails, tickets, and chats grounded in your organization's own product and policy knowledge, matched to your support tone, with refunds, exceptions, and churn risk flagged for human review.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["customer-support", "helpdesk", "rag", "writing", "productivity"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
