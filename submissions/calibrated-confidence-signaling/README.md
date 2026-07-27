@@ -7,7 +7,7 @@ equally certain.
 
 ## How it's different from grounded-citation-guardrail
 
-[`grounded-citation-guardrail`](../grounded-citation-guardrail) is specific to
+grounded-citation-guardrail is specific to
 answering from retrieved knowledge sources: cite what's actually there, don't
 fill gaps from general knowledge. This skill is broader. It applies to any
 claim in any response, including reasoning, estimates, and recommendations
