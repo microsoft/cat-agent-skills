@@ -1,0 +1,11 @@
+{
+  "name": "HR Policy Navigator",
+  "description": "Answer HR policy questions (leave, benefits, remote work, expenses) grounded only in your organization's own SharePoint or knowledge-base sources, with exact citations and a human handoff for anything sensitive.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["hr", "policy", "sharepoint", "rag", "knowledge", "employee-self-service"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
