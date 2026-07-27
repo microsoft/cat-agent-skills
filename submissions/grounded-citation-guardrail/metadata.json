@@ -1,0 +1,11 @@
+{
+  "name": "Grounded Citation Guardrail",
+  "description": "Answer only what retrieved knowledge sources actually support, cite precisely (document, section, page), and say plainly when a question isn't covered instead of guessing.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["rag", "grounding", "citations", "knowledge", "guardrail", "accuracy"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
