@@ -27,24 +27,44 @@ set -uo pipefail
 # `--clear`: kill a stuck Playwright browser WITHOUT touching the lock. The caller
 #   (already holding the lock) uses this mid-run when WhatsApp will not load.
 #
-# Only a browser launched from under the Playwright install is targeted (the
-# executable path must be the first token of the command line), never the Node
-# driver or the user's normal windows. Note the Windows helper cannot rely on the
-# executable path the same way: with the msedge channel Playwright launches the
-# user's own msedge.exe, so it matches on the profile directory instead.
+# Only the browser Playwright is driving is targeted - identified by its profile
+# directory, since with the msedge channel the executable is the user's own Edge -
+# never the Node driver or the user's normal windows.
+#
+# The lock lives under $TMPDIR (falling back to /tmp) and carries the uid in its
+# name, so two users on the same machine do not contend over one lock, and it is
+# created mode 0700: with a default umask the owner file would be world-readable,
+# and the release token in it is the only thing stopping another local user from
+# releasing this run's lock (the sticky bit on /tmp stops them deleting it, so
+# the token is what protects it).
 
-lock=/tmp/scout-whatsapp.lock
+umask 077        # lock dir 0700, owner file 0600 - see the note above. Done with
+                 # umask rather than `mkdir -m`, which on some platforms creates
+                 # the directory and *then* fails applying the mode, so a failed
+                 # chmod would be misread as "the lock already exists".
+
+lock="${TMPDIR:-/tmp}/scout-whatsapp-$(id -u).lock"
 owner="$lock/owner"
 ttl=600         # 10 minutes: a lock older than this is assumed finished/crashed
 reclaimed=0
 
 kill_browser() {
-  # Scoped deliberately: -u limits this to our own processes, and the pattern is
-  # anchored so only the FIRST token (the executable) can match. Without the
-  # anchor, -f tests the whole command line, so anything merely holding such a
-  # path as an argument - `tail -f .../ms-playwright/chromium-*/chrome_debug.log`,
-  # an editor with that file open - would match and be killed too.
-  pkill -u "$(id -u)" -f '^[^[:space:]]*ms-playwright/[^[:space:]]*(chromium|chrome|headless_shell|msedge)' 2>/dev/null || true
+  # Match the PROFILE, not the executable. With the msedge channel Playwright
+  # launches the system Edge, which does not live under the Playwright install,
+  # so keying on the binary's path silently fails to kill it - and this helper
+  # would report a cleared browser having killed nothing. The --user-data-dir
+  # flag pointing under ms-playwright is what actually identifies our browser.
+  # It also keeps bystanders out of range: a process merely holding such a path
+  # as an argument (`tail -f .../ms-playwright/.../chrome_debug.log`, an editor
+  # with that file open) does not carry the flag. -u limits the sweep to our own
+  # processes, and the Node driver is skipped by name so it is never a target.
+  local pid
+  for pid in $(pgrep -u "$(id -u)" -f -- '--user-data-dir=[^[:space:]]*ms-playwright' 2>/dev/null); do
+    case "$(ps -o comm= -p "$pid" 2>/dev/null)" in
+      *node*|*Node*) continue ;;
+      *) kill "$pid" 2>/dev/null || true ;;
+    esac
+  done
   sleep 3
 }
 
