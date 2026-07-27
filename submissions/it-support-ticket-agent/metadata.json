@@ -1,0 +1,11 @@
+{
+  "name": "IT Support Ticket Agent",
+  "description": "Gathers what a support team actually needs from a user reporting an IT problem, assigns a priority, tries a quick fix first, then creates or drafts a ready-to-submit ticket.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["it-support", "helpdesk", "ticketing", "itsm", "productivity"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
