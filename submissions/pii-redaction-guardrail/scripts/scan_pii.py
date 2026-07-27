@@ -9,7 +9,7 @@ a match is real PII versus a fictional example, and what to do about it
 (redact, pseudonymize, ask first), is left to the agent.
 
 Usage:
-    python scripts/scan_pii.py <file-or-directory> [--json]
+    python scripts/scan_pii.py path/to/file-or-folder [--json]
     echo "some text" | python scripts/scan_pii.py -
 """
 
@@ -52,10 +52,15 @@ def find_credit_cards(line: str) -> list[str]:
     return hits
 
 
-def redact(value: str) -> str:
+def redact(value: str, kind: str) -> str:
+    if kind == "Email address":
+        return "[redacted email]"
+    # Numeric identifiers (SSN, card, phone, IP): reveal only the last 4
+    # characters. Showing a prefix too, as a shorter mask once did, exposes
+    # too much of a short value.
     if len(value) <= 4:
         return "*" * len(value)
-    return value[:2] + "*" * (len(value) - 4) + value[-2:]
+    return "*" * (len(value) - 4) + value[-4:]
 
 
 def scan_text(text: str, source: str) -> list[dict]:
@@ -77,7 +82,7 @@ def scan_text(text: str, source: str) -> list[dict]:
 
 
 def _hit(source: str, line: int, kind: str, value: str, confidence: str = "high") -> dict:
-    return {"source": source, "line": line, "kind": kind, "confidence": confidence, "value": redact(value)}
+    return {"source": source, "line": line, "kind": kind, "confidence": confidence, "value": redact(value, kind)}
 
 
 def iter_files(path: str):

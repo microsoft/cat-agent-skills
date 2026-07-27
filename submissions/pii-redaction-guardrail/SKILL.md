@@ -25,11 +25,12 @@ judgment call, not something to automate silently.
 2. Run the bundled scanner when a Python environment is available:
 
    ```bash
-   python scripts/scan_pii.py <file-or-directory>
+   python scripts/scan_pii.py path/to/file-or-folder
    ```
 
-   It also reads stdin for pasted text. Without Python, read the content
-   directly and check for the categories below.
+   For pasted text that isn't in a file yet, pipe it in and pass `-` as the
+   path: `echo "some text" | python scripts/scan_pii.py -`. Without Python,
+   read the content directly and check for the categories below.
 
 3. The scanner finds: email addresses, US SSN-shaped numbers, IPv4 addresses,
    and credit-card numbers confirmed with a Luhn checksum (all high
