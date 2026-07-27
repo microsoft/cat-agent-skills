@@ -1,8 +1,8 @@
 {
   "name": "WhatsApp",
-  "description": "Read, send, and monitor WhatsApp messages and create groups from Scout by driving WhatsApp Web in a browser - with dry-run, consent checks, and a run lock.",
+  "description": "Read, send, react to, reply to, and monitor WhatsApp messages, and create groups, from Scout by driving WhatsApp Web in a browser - with dry-run, consent checks, and a run lock.",
   "platforms": ["Scout"],
-  "tags": ["whatsapp", "messaging", "automation", "browser", "playwright", "monitor", "reactions"],
+  "tags": ["whatsapp", "messaging", "automation", "browser", "playwright", "monitor", "reactions", "reply"],
   "author": "Allan De Castro",
   "authorUrl": "https://github.com/allandecastro",
   "version": "0.1.0",

@@ -45,6 +45,6 @@ Rules:
 
 ## Recommended automation settings
 
-- Frequency: every 5 or 15 minutes. Keep the step 7 window equal to this interval.
+- Frequency: every 5 or 15 minutes. Keep the step 7 window equal to this interval, since runs are stateless. Both values sit clear of the lock's 10-minute TTL on purpose - an interval close to 10 minutes makes recovery from a crashed run unpredictable (see "Choosing a schedule interval" in the README).
 - Teams notifications: never.
 - Browser headless: true.

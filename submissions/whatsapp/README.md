@@ -1,6 +1,6 @@
 # WhatsApp
 
-Read, send, and monitor WhatsApp messages, and create WhatsApp groups, from Microsoft Scout - by driving WhatsApp Web in a Playwright browser. It is built for the small, real jobs that pull you out of focus: catching up on a group, firing off one reply, watching a chat while you work, or spinning up a group without leaving Scout.
+Read, send, react to, reply to, and monitor WhatsApp messages, and create WhatsApp groups, from Microsoft Scout - by driving WhatsApp Web in a Playwright browser. It is built for the small, real jobs that pull you out of focus: catching up on a group, firing off one reply, watching a chat while you work, or spinning up a group without leaving Scout.
 
 ## What it does
 
@@ -9,6 +9,14 @@ Read, send, and monitor WhatsApp messages, and create WhatsApp groups, from Micr
 - **React** to a specific message with an emoji, and **reply** to a specific message (quoting it) - always confirming which message first, and listing candidates for you to pick when it is unclear.
 - **Monitor** a chat for new messages in the last N minutes and draft 2-3 reply options for you to approve - it never sends on its own.
 - **Create** a WhatsApp group, adding participants and naming it, with a dry-run stop before the final confirm.
+
+## What it does not do
+
+- **No attachments.** Text messages only - no images, files, voice notes or stickers. Asking for one gets a clear refusal rather than an improvised attempt, because an untested media path aimed at a real chat is worse than saying no.
+- **No media content.** Incoming photos, voice notes, documents and system events (calls, "message deleted") are labelled by type, not read or transcribed.
+- **No history beyond what is on screen.** It reads the messages WhatsApp has rendered in the open chat, so "everything since last Tuesday" is not something it can promise. Ask for a recent window.
+- **Timestamps are minute-resolution and locale-dependent**, taken from WhatsApp's own metadata in the account's time zone. They are good enough to order a conversation, not to reason about exact intervals.
+- **No contact management** - it does not add, rename, block or delete contacts, and never writes a name-to-number mapping anywhere.
 
 ## Please read first: Terms of Service and account risk
 
@@ -163,6 +171,40 @@ Reply "create it" to finish.
 ```
 
 For recurring jobs, use the ready-to-paste prompts in `references/monitor-automation.md` and `references/send-automation.md`. A monitor can run on a schedule; a send automation must be **one-shot** (a single, fixed, pre-authored message), never a recurring send.
+
+### Choosing a schedule interval
+
+Two settings interact, and getting them wrong is the most common way a monitor misbehaves.
+
+**Keep the reporting window equal to the interval.** Runs are stateless - nothing remembers what the previous run reported - so a 15-minute schedule must look back exactly 15 minutes. A shorter window drops messages that arrived in the gap; a longer one reports the same message on several consecutive runs.
+
+**Then pick an interval clearly away from the lock's 10-minute TTL.** After a run that crashed without releasing its lock, the behaviour depends on which side of the TTL your interval falls:
+
+| Interval | What happens after a crashed run |
+|---|---|
+| Well under 10 min | The next runs see a lock younger than the TTL, print `RUN_ALREADY_ACTIVE` and are skipped until it expires - at 5 minutes you lose two runs |
+| Well over 10 min | The next run treats the lock as stale, reclaims it and clears the leftover browser - one lost run, then back to normal |
+| Around 10 min | The worst case: a few seconds decide which of the two happens, so the monitor alternates unpredictably between skipped runs and browser restarts |
+
+Either side is workable and the choice is yours; the value to avoid is the one that lands on the boundary. If you want a roughly 10-minute cadence, use 15.
+
+## Troubleshooting
+
+**A scheduled run comes back "blocked" with no WhatsApp output at all.** The helper script is not approved yet. An unattended run has nobody to answer a permission prompt, so it fails instantly instead of waiting - every interval, until you fix it. Run the automation once interactively, approve the helper with the always-allow option, then re-enable the schedule. See [Scout permissions to allow](#scout-permissions-to-allow).
+
+**Every run asks for access to the process list.** That prompt comes from stale-lock recovery, so it means the previous run never released its lock. The usual cause is an automation prompt whose release step does not pass the real token: the helper prints `LOCK_TOKEN=<token>` when it acquires the lock, and the release must pass that exact value back. Called with no token, or the wrong one, the helper correctly refuses to release someone else's lock and says so - `Not the lock owner; left it alone`. Check that your prompt captures the token in step 0 and reuses it at the end, as the templates in `references/` do.
+
+**Every run says `RUN_ALREADY_ACTIVE` and nothing happens.** A previous run crashed while holding the lock. Wait for the 10-minute TTL: the next run after that reclaims it automatically. Do not delete the lock directory by hand while a run might still be using it - that is exactly the collision the lock exists to prevent.
+
+**The helper exits non-zero with a `LOCK_ERROR:` line.** This is not contention, and it will not resolve itself by waiting. Something is wrong with the environment - the temp directory is not writable, the filesystem is full or read-only, or something else is occupying the lock path. The message names the cause; fix that rather than retrying.
+
+**A monitor reports "No new messages" when the chat clearly has some.** The chat list was filtered when it was scanned - leftover text in the search box, or a tab other than **All** / **Toutes** (Unread, Favourites, Groups) left active from an earlier run in the same browser session. The skill resets the view before scanning for this reason; if you wrote your own automation prompt, make sure it does too.
+
+**A send reports "maybe sent" / `send-unconfirmed`.** The message may or may not have gone out - open the chat and look. **Do not ask for a resend to be safe.** WhatsApp often renders the outgoing bubble seconds late, so an unconfirmed result frequently means "sent, just slowly", and a blind resend is precisely what double-posts to a real person.
+
+**WhatsApp never finishes loading, or shows the QR screen.** A profile that is not logged in cannot be fixed by the skill - authentication is always manual. Open the browser headed once and either scan the QR from Linked Devices, or use "Link with phone number instead" and type the 8-character code into WhatsApp on your phone. Later runs can be headless again on that same profile.
+
+**A selector stops matching after a WhatsApp update.** Expected, and the reason the selectors are documented rather than buried: WhatsApp Web changes its DOM often. See `references/selectors.md` for the matrix and the fallbacks, and prefer language-independent hooks when you adjust one.
 
 ## Layout
 

@@ -121,7 +121,7 @@ Never open a chat matched only by a message preview. This resolution is what kee
 
 **Targeting by phone number.** When the target is a number rather than a saved name, normalise it to international form (digits only, with country code; ask the user for the country code rather than assuming one) before searching. You can also open a number directly via `https://web.whatsapp.com/send?phone=<international-number>`; if that lands on "Phone number shared via url is invalid", report it and send nothing.
 
-**Sending an attachment (optional).** If the user asks to send an image or file, it can be pasted into the composer via the clipboard (Ctrl+V on Windows/Linux, Cmd+V on macOS) once the file is on the clipboard, then submitted from the caption dialog. This path is more brittle than text and is off by default: only attempt it on explicit request, keep `dry_run` behaviour (stop at the caption dialog), and fall back to reporting that attachment send is unavailable rather than sending the wrong thing.
+**Text only - never send an attachment.** This skill sends text messages and nothing else. If the user asks to send an image, a file, a voice note, or any other media, say plainly that attachment sending is not supported and send nothing. Do not improvise a path for it (clipboard paste into the composer, the attach menu, a file input): those are untested against a live account, and a half-working attempt on a real chat is worse than a clear refusal.
 
 ## Action: monitor
 
