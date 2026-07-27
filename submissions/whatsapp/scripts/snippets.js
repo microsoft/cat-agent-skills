@@ -451,9 +451,139 @@ async function createGroup(page, groupName, participants, options = {}) {
     : { result: 'group-created', name: groupName };
 }
 
+// Locate a target message element in the OPEN chat. spec is one of:
+//   { last: true }                     - the last message
+//   { last: true, incoming: true }     - the last incoming (message-in) message
+//   { containing: 'text' }             - the recent message whose text matches
+//   { fromSender: 'Name', last: true } - the last message from that sender
+// Returns the element handle, 'ambiguous' (several match `containing`), or null.
+async function findTargetMessage(page, spec = {}) {
+  let rows = await page.$$('#main div.message-in, #main div.message-out, #main [data-id]');
+  // Keep outermost message containers only (a [data-id] may wrap message-in/out).
+  const filtered = [];
+  for (const r of rows) {
+    const nested = await r.evaluate((el) =>
+      !!el.parentElement && !!el.parentElement.closest('div.message-in, div.message-out, [data-id]')
+    );
+    if (!nested) filtered.push(r);
+  }
+  rows = filtered;
+
+  if (spec.incoming) {
+    const inc = [];
+    for (const r of rows) {
+      if (await r.evaluate((el) => !!el.closest('div.message-in'))) inc.push(r);
+    }
+    rows = inc;
+  }
+  if (spec.fromSender) {
+    const want = norm(spec.fromSender);
+    const bySender = [];
+    for (const r of rows) {
+      const meta = await r.evaluate((el) => {
+        const m = el.querySelector('[data-pre-plain-text]');
+        return m ? m.getAttribute('data-pre-plain-text') || '' : '';
+      });
+      // data-pre-plain-text ends with `Sender: `.
+      const mm = meta.match(/\]\s*(.+?):\s*$/);
+      if (mm && norm(mm[1]).includes(want)) bySender.push(r);
+    }
+    rows = bySender;
+  }
+
+  if (spec.containing) {
+    const needle = norm(spec.containing).slice(0, 120);
+    const hits = [];
+    for (const r of rows) {
+      if (norm(await r.innerText().catch(() => '')).includes(needle)) hits.push(r);
+    }
+    if (hits.length === 1) return hits[0];
+    if (hits.length > 1) return 'ambiguous';
+    return null;
+  }
+
+  if (spec.last) return rows.length ? rows[rows.length - 1] : null;
+  return null;
+}
+
+// React to a message with an emoji. The picker opener is language-independent
+// (data-icon); the emoji is matched by the emoji character itself, never a
+// localized label. dry_run stops before applying the reaction.
+async function reactToMessage(page, messageEl, emoji, options = {}) {
+  const dryRun = Boolean(options.dryRun);
+  await messageEl.hover();
+  await page.waitForTimeout(400);
+  const opener =
+    (await messageEl.$('span[data-icon="reaction"]')) ||
+    (await messageEl.$('[aria-label="React"]')) ||
+    (await messageEl.$('[aria-label="Réagir"]'));
+  if (!opener) throw new Error('Reaction button not found (hover controls).');
+  if (dryRun) return { result: 'dry-run-preview', action: 'react', emoji };
+  await opener.click();
+  await page.waitForTimeout(500);
+  // Quick reaction bar: click the button whose text is the emoji (universal).
+  for (const b of await page.$$('[role="button"]')) {
+    const t = (await b.innerText().catch(() => '')) || '';
+    if (t.includes(emoji)) {
+      await b.click();
+      await page.waitForTimeout(400);
+      return { result: 'reacted', emoji };
+    }
+  }
+  throw new Error(`Emoji ${emoji} not in the quick reaction bar.`);
+}
+
+// Reply to a specific message (quoting it), then send `text`. Opener + context
+// menu are language-independent (data-icon); only the "Reply" menu item is text,
+// so it lists EN/FR. Confirms the send like sendMessage; dry_run cancels the quote.
+async function replyToMessage(page, messageEl, text, options = {}) {
+  const dryRun = Boolean(options.dryRun);
+  await messageEl.hover();
+  await page.waitForTimeout(400);
+  const menu =
+    (await messageEl.$('span[data-icon="down-context"]')) ||
+    (await messageEl.$('[aria-label="Context menu"]')) ||
+    (await messageEl.$('[aria-label="Menu contextuel"]')) ||
+    (await messageEl.$('[aria-label="Open chat context menu"]'));
+  if (!menu) throw new Error('Message context menu not found (hover controls).');
+  await menu.click();
+  await page.waitForTimeout(400);
+  const reply =
+    (await page.$('li:has(span[data-icon="reply"]), div[role="button"]:has(span[data-icon="reply"])')) ||
+    (await page.$('li:has-text("Reply"), div[role="button"]:has-text("Reply")')) ||
+    (await page.$('li:has-text("Répondre"), div[role="button"]:has-text("Répondre")'));
+  if (!reply) throw new Error('Reply menu item not found.');
+  await reply.click();
+  await page.waitForTimeout(400);
+
+  const composer = page
+    .locator(
+      'div[contenteditable="true"][data-tab="10"], footer div[contenteditable="true"], [aria-label="Type a message"], [aria-label="Tapez un message"]'
+    )
+    .first();
+  await composer.click();
+  await composer.fill(text);
+  if (norm(await composer.innerText()) === '') await composer.pressSequentially(text, { delay: 10 });
+
+  if (dryRun) {
+    const preview = (await composer.innerText()) || text;
+    await clearComposer(page, composer);
+    const cancelQuote =
+      (await page.$('[aria-label="Cancel reply"]')) ||
+      (await page.$('[aria-label="Annuler la réponse"]')) ||
+      (await page.$('span[data-icon="x"]'));
+    if (cancelQuote) await cancelQuote.click();
+    return { result: 'dry-run-preview', action: 'reply', preview };
+  }
+  return { ...(await submitAndConfirm(page, composer, text)), action: 'reply' };
+}
+
 module.exports = {
   norm,
   rowTitle,
+  findTargetMessage,
+  reactToMessage,
+  replyToMessage,
   waitForReady,
   recover,
   resetChatListView,

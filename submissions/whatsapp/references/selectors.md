@@ -25,6 +25,11 @@ Primary column is language-independent wherever a language-independent hook exis
 | Back / recover | `span[data-icon="back"]` | press Escape | `[aria-label="Back"]` / `[aria-label="Retour"]` | Reset to the chat list when a step is stuck. |
 | New chat | `[data-icon="new-chat-outline"]` | `span[data-icon="chat"]` | `[aria-label="New chat"]` / `[aria-label="Nouvelle discussion"]` | Entry point for New group. |
 | Group name input | `[contenteditable="true"]` in the naming step | - | `[aria-label*="group subject" i]` / `[aria-label*="objet du groupe" i]` | Appears on the second step. |
+| React opener (on hover) | `span[data-icon="reaction"]` | - | `[aria-label="React"]` / `[aria-label="Réagir"]` | Hover the message bubble first. |
+| Emoji in quick bar | button whose text is the emoji char | - | (emoji is universal, no localization) | Match the emoji itself, never a label. |
+| Message context menu | `span[data-icon="down-context"]` | - | `[aria-label="Context menu"]` / `[aria-label="Menu contextuel"]` | Hover first; opens Reply/Forward/etc. |
+| Reply menu item (text only) | `[data-icon="reply"]` in the menu | menu item `Reply` | menu item `Répondre` | Only the label is localized. |
+| Cancel reply quote | `[aria-label="Cancel reply"]` | `[aria-label="Annuler la réponse"]` | `span[data-icon="x"]` | Used by the reply dry-run to leave no quote. |
 | "Use here" dialog (text only) | `button:has-text("Use here")` | `button:has-text("Utiliser ici")` | `button:has-text("Utiliser")` | No language-independent hook; list each language. |
 | No results found (text only) | `:has-text("No results found")` | `:has-text("Aucun résultat")` | empty result pane | Search/participant miss - report, never pick a different chat. |
 | New group entry (text only) | menu item `New group` | menu item `Nouveau groupe` | list item under the menu | No language-independent hook; list each language. |

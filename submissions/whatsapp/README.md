@@ -6,6 +6,7 @@ Read, send, and monitor WhatsApp messages, and create WhatsApp groups, from Micr
 
 - **Read** a chat or group and return who said what, when.
 - **Send** a message to a person or group, with a dry-run mode and a confirmation step before anything leaves your account.
+- **React** to a specific message with an emoji, and **reply** to a specific message (quoting it) - always confirming which message first, and listing candidates for you to pick when it is unclear.
 - **Monitor** a chat for new messages in the last N minutes and draft 2-3 reply options for you to approve - it never sends on its own.
 - **Create** a WhatsApp group, adding participants and naming it, with a dry-run stop before the final confirm.
 
@@ -88,6 +89,22 @@ Drop "dry run" (or say "send it") and the skill confirms the target once, sends,
 
 ```
 Sent to Alex: "running 10 min late, start without me"
+```
+
+**React or reply to a specific message**
+
+```
+reply to Priya's last message in "Weekend Trip": "I'm in, booking now"
+```
+
+```
+Which message? Priya, 09:40 - "what's the budget per person?"
+Reply to send: "I'm in, booking now"
+Confirm to send, or point me at a different message.
+```
+
+```
+react with 👍 to the message about the cabin in "Weekend Trip"
 ```
 
 **Monitor a chat for new messages**
