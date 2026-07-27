@@ -1,0 +1,11 @@
+{
+  "name": "Expense Policy Checker",
+  "description": "Checks an expense claim against your organization's own expense policy documents before submission: flags missing receipts, over-limit items, and vague business justifications, without ever approving or rejecting the claim.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["expenses", "finance", "policy", "compliance", "rag", "productivity"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
