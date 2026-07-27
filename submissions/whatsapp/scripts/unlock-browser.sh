@@ -59,7 +59,7 @@ kill_browser() {
   # with that file open) does not carry the flag. -u limits the sweep to our own
   # processes, and the Node driver is skipped by name so it is never a target.
   local pid
-  for pid in $(pgrep -u "$(id -u)" -f -- '--user-data-dir=[^[:space:]]*ms-playwright' 2>/dev/null); do
+  for pid in $(pgrep -u "$(id -u)" -f 'user-data-dir=.*ms-playwright' 2>/dev/null); do
     case "$(ps -o comm= -p "$pid" 2>/dev/null)" in
       *node*|*Node*) continue ;;
       *) kill "$pid" 2>/dev/null || true ;;
