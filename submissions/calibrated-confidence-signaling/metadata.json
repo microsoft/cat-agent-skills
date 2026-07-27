@@ -1,0 +1,11 @@
+{
+  "name": "Calibrated Confidence Signaling",
+  "description": "Matches how confidently a claim is stated to how sure it actually is, distinguishing verified facts, careful inferences, educated guesses, and speculation instead of flattening everything into the same confident tone.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["agent-quality", "communication", "accuracy", "reasoning", "guardrail"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
