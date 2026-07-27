@@ -27,10 +27,16 @@ param([switch]$Clear, [string]$Release)
 #   (already holding the lock) uses this mid-run when WhatsApp will not load.
 #
 # What separates a Playwright browser from the user's own is the PROFILE on the
-# command line (--user-data-dir under ms-playwright), not the executable: with the
-# msedge channel Playwright launches the very same msedge.exe as the user's normal
-# windows. So the match is on the command line, plus the process name and this
-# logon session. The Node driver is never matched (its name is not a browser).
+# command line (--user-data-dir under an ms-playwright path component), not the
+# executable: with the msedge channel Playwright launches the very same msedge.exe
+# as the user's normal windows. So the match is on the command line, plus the
+# process name and this logon session. The Node driver is never matched (its name
+# is not a browser). Note this matches ANY browser on an ms-playwright profile in
+# this session, not only the one holding WhatsApp, so a concurrent Playwright
+# session is closed as well.
+#
+# The lock needs no uid in its name the way the POSIX helper does: %TEMP% is
+# already per-user on Windows, so two users cannot collide on one lock.
 
 function Write-LockError($message) { [Console]::Error.WriteLine("LOCK_ERROR: $message") }
 
@@ -56,7 +62,7 @@ function Clear-Browser {
   Get-CimInstance Win32_Process `
   | Where-Object {
       $_.SessionId -eq $session -and
-      $_.CommandLine -like '*--user-data-dir=*ms-playwright*' -and
+      $_.CommandLine -match '--user-data-dir=\S*[\\/]ms-playwright[\\/]' -and
       ($_.Name -match '^(msedge|chrome|chromium|headless_shell)\.exe$')
     } `
   | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
@@ -74,7 +80,14 @@ if ($Clear) {
 if ($Release) {
   $held = if (Test-Path $ownerFile) { (Get-Content $ownerFile -TotalCount 1) } else { '' }
   if ($Release -eq $held) {
+    # Do not announce a release that did not happen: a caller told "Lock
+    # released." stops worrying about it, while the next run is blocked until
+    # the TTL with no idea why.
     Remove-Item -LiteralPath $lockDir -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $lockDir) {
+      Write-LockError "owned this lock but could not remove $lockDir; it stays until the TTL expires"
+      exit 2
+    }
     Write-Output 'Lock released.'
   } else {
     Write-Output 'Not the lock owner; left it alone.'
@@ -103,10 +116,20 @@ function Take-Lock {
     if (((Get-Date) - $item.LastWriteTime).TotalSeconds -lt $ttlSec) {
       return 'busy'                               # a recent run holds it: back off
     }
+    # A removal that fails is an environment fault, not contention. Left
+    # unchecked it surfaces as the next New-Item failing with the directory
+    # still present, which reads exactly like another run holding the lock -
+    # the very conflation this function exists to avoid.
     Remove-Item -LiteralPath $lockDir -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $lockDir) {
+      Write-LockError "cannot remove the stale lock at $lockDir (read-only filesystem or permissions)"
+      return 'error'
+    }
     try { New-Item -ItemType Directory -Path $lockDir -ErrorAction Stop | Out-Null }
     catch {
-      if (Test-Path -LiteralPath $lockDir -PathType Container) { return 'busy' }  # another run re-took it
+      # We did remove it, so a directory here now is a run that took it in
+      # between - genuine contention.
+      if (Test-Path -LiteralPath $lockDir -PathType Container) { return 'busy' }
       Write-LockError "cannot recreate $lockDir after clearing a stale lock ($($_.Exception.Message))"
       return 'error'
     }

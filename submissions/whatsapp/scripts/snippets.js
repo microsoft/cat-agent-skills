@@ -373,6 +373,9 @@ async function searchAndOpenChat(page, query) {
   await page.waitForTimeout(1500);
 
   const want = norm(query);
+  // An empty query would make every row a "partial" match, turning a resolution
+  // into noise. Same refusal as the other fingerprint sites.
+  if (want === '') throw new Error('Refusing to resolve a chat from an empty name.');
   const rows = await chatSectionResults(page);   // chats section only
   const exact = rows.filter((r) => norm(r.title) === want);
   const partial = rows.filter((r) => norm(r.title) !== want && norm(r.title).includes(want));
@@ -507,6 +510,14 @@ async function findTargetMessage(page, spec = {}) {
   }
 
   if (spec.containing) {
+    // Same empty-fingerprint trap as the send confirmation, milder here because
+    // it fails safe (an empty needle matches every row, so this returns
+    // 'ambiguous' and the caller stops to ask) - except in a chat holding a
+    // single message, where it would resolve to that one. Refuse it outright so
+    // all three fingerprint sites behave the same way.
+    if (norm(spec.containing) === '') {
+      throw new Error('Refusing to match a message by empty text: say which message you mean.');
+    }
     const needle = norm(spec.containing).slice(0, 120);
     const hits = [];
     for (const r of rows) {

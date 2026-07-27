@@ -14,10 +14,10 @@ set -uo pipefail
 #   so the TTL only matters after a crash. Keep a run shorter than the TTL, or it
 #   may be overridden by the next run.
 #   Exit codes: 0 = lock acquired, or RUN_ALREADY_ACTIVE (another run holds it);
-#   2 = the lock could not be evaluated at all (no permission on /tmp, read-only
-#   or full filesystem, ...), with the cause on stderr as LOCK_ERROR. Contention
-#   and failure are never conflated: a caller that sees exit 2 must report the
-#   error, not back off as if a run were active.
+#   2 = the lock could not be evaluated at all (no permission on the temp
+#   directory, read-only or full filesystem, ...), with the cause on stderr as
+#   LOCK_ERROR. Contention and failure are never conflated: a caller that sees
+#   exit 2 must report the error, not back off as if a run were active.
 #   A stuck browser is cleared ONLY when a stale lock was recovered, so a normal
 #   run reuses the open WhatsApp session with no close/reopen flicker.
 #
@@ -29,7 +29,9 @@ set -uo pipefail
 #
 # Only the browser Playwright is driving is targeted - identified by its profile
 # directory, since with the msedge channel the executable is the user's own Edge -
-# never the Node driver or the user's normal windows.
+# never the Node driver or the user's normal windows. Note this matches ANY
+# browser on an ms-playwright profile for this user, not only the one holding
+# WhatsApp, so a concurrent Playwright session is closed as well.
 #
 # The lock lives under $TMPDIR (falling back to /tmp) and carries the uid in its
 # name, so two users on the same machine do not contend over one lock, and it is
@@ -48,6 +50,8 @@ owner="$lock/owner"
 ttl=600         # 10 minutes: a lock older than this is assumed finished/crashed
 reclaimed=0
 
+lock_error() { echo "LOCK_ERROR: $1" >&2; }
+
 kill_browser() {
   # Match the PROFILE, not the executable. With the msedge channel Playwright
   # launches the system Edge, which does not live under the Playwright install,
@@ -59,7 +63,17 @@ kill_browser() {
   # with that file open) does not carry the flag. -u limits the sweep to our own
   # processes, and the Node driver is skipped by name so it is never a target.
   local pid
-  for pid in $(pgrep -u "$(id -u)" -f 'user-data-dir=.*ms-playwright' 2>/dev/null); do
+  # ms-playwright must be a PATH COMPONENT of the profile, and the flag must be
+  # the real `--user-data-dir=`, not a loose substring: `.*` would span spaces
+  # and match a browser on an unrelated profile that merely mentions
+  # ms-playwright later on its command line, which would close the user's own
+  # windows. A profile named "...ms-playwright-notes" is not a target either.
+  for pid in $(pgrep -u "$(id -u)" -f -- '--user-data-dir=[^[:space:]]*[/\]ms-playwright[/\]' 2>/dev/null); do
+    # Anything that is not the driver gets terminated, including the case where
+    # the name could not be read - the pid already matched the profile flag, and
+    # skipping it would mean recovery quietly leaving the browser holding the
+    # profile, which is the failure this whole path exists to fix. A pid that
+    # has already exited just makes kill a no-op.
     case "$(ps -o comm= -p "$pid" 2>/dev/null)" in
       *node*|*Node*) continue ;;
       *) kill "$pid" 2>/dev/null || true ;;
@@ -79,17 +93,27 @@ fi
 if [ "${1:-}" = "--release" ]; then
   tok="${2:-}"
   if [ -n "$tok" ] && [ "$(head -n1 "$owner" 2>/dev/null)" = "$tok" ]; then
-    rm -rf "$lock"
-    echo "Lock released."
+    # Do not announce a release that did not happen: a caller told "Lock
+    # released." stops worrying about it, while the next run is blocked until
+    # the TTL with no idea why.
+    if rm -rf "$lock" 2>/dev/null && [ ! -d "$lock" ]; then
+      echo "Lock released."
+    else
+      lock_error "owned this lock but could not remove $lock; it stays until the TTL expires"
+      exit 2
+    fi
   else
     echo "Not the lock owner; left it alone."
   fi
   exit 0
 fi
 
+# $RANDOM is not a CSPRNG, and deliberately so: this token is not a security
+# boundary. It exists so a run cannot release a lock it does not own by mistake,
+# and it is unguessable enough for that. Anyone who can read it can already read
+# the lock directory.
 token="$$-$(date +%s)-${RANDOM}${RANDOM}"
 write_owner() { printf '%s\n%s\n' "$token" "$(date -u +%FT%TZ)" > "$owner"; }
-lock_error() { echo "LOCK_ERROR: $1" >&2; }
 
 # 0 = acquired, 1 = another run holds it, 2 = unexpected failure (cause on stderr).
 take_lock() {
@@ -107,9 +131,16 @@ take_lock() {
       || { lock_error "cannot stat $lock"; return 2; }
     age=$(( now - mtime ))
     [ "$age" -lt "$ttl" ] && return 1            # a recent run holds it: back off
-    rm -rf "$lock"
+    # A removal that fails is an environment fault, not contention. Left
+    # unchecked it surfaces as the next mkdir failing with the directory still
+    # present, which reads exactly like another run holding the lock - the very
+    # conflation this function exists to avoid.
+    rm -rf "$lock" 2>/dev/null \
+      || { lock_error "cannot remove the stale lock at $lock (read-only filesystem or permissions)"; return 2; }
     if ! mkdir "$lock" 2>/dev/null; then
-      [ -d "$lock" ] && return 1                 # another run re-took it: back off
+      # We did remove it, so a directory here now is a run that took it in
+      # between - genuine contention.
+      [ -d "$lock" ] && return 1
       lock_error "cannot recreate $lock after clearing a stale lock"
       return 2
     fi
