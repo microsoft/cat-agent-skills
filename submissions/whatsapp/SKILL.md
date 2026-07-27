@@ -28,8 +28,9 @@ On an **unattended** run there is no one to confirm with in-session. A `send` au
 
 Resolve, asking the user only for what is missing:
 
-- `action` - one of `read`, `send`, `monitor`, `create-group`.
+- `action` - one of `read`, `send`, `monitor`, `create-group`, `react`, `reply`.
 - `target` - the chat or group name (for `create-group`, the new group name plus participants).
+- `message target` - **for `react` and `reply` only**: which message in the chat to act on (the last message, the last from a named sender, or a message matched by its text). Resolve and confirm it per "Resolving a target message"; if it is not clear, list candidates and let the user pick rather than proceeding.
 - `language` - output language; default `auto`. See "Language handling" below. A code like `en` or `fr` pins it.
 
 Then take a **run lock** so two WhatsApp runs never share the browser profile at once. Run `scripts/unlock-browser.ps1` (Windows) or `scripts/unlock-browser.sh` (macOS/Linux). Those scripts are the source of truth for the lock - do not re-implement it inline.

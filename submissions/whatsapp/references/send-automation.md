@@ -32,7 +32,7 @@ dry_run: [true for a first test, then false]
 6. Confirm it landed: the composer cleared AND a new outgoing bubble carries the text.
    If both are not present, report `send-unconfirmed` - do not claim success.
 7. If you took the lock, release it with the token step 0 printed (LOCK_TOKEN):
-   unlock-browser.sh --release <token> / unlock-browser.ps1 -Release <token>.
+   scripts/unlock-browser.sh --release <token> / scripts/unlock-browser.ps1 -Release <token>.
    Do not release it on RUN_ALREADY_ACTIVE.
 
 Rules:
