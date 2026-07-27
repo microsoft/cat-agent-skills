@@ -1,0 +1,11 @@
+{
+  "name": "Proactive Clarification Discipline",
+  "description": "Decides when an ambiguous request is worth one focused clarifying question versus a stated, reasonable default, avoiding both silent wrong guesses and stalling on twenty-questions before starting work.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["agent-quality", "communication", "productivity", "guardrail"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
