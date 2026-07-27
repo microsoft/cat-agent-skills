@@ -13,7 +13,9 @@ language: auto
    scripts/unlock-browser.ps1 (Windows) or scripts/unlock-browser.sh (macOS/Linux).
    It takes the lock atomically and clears a leftover browser only if it
    recovered a stale run; otherwise it reuses the open session. If it prints
-   RUN_ALREADY_ACTIVE, stop and do not release the lock.
+   RUN_ALREADY_ACTIVE, stop and do not release the lock. If it exits non-zero
+   with a LOCK_ERROR line, the lock could not be evaluated at all: stop, report
+   that cause verbatim, and do not call it a concurrent run.
 
 1. Open https://web.whatsapp.com and wait for the chat list (#pane-side) up to 120 seconds.
    Do not use a short fixed wait: a cold profile can take 30-60s.

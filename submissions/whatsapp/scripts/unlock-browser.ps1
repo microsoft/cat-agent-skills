@@ -12,6 +12,11 @@ param([switch]$Clear, [string]$Release)
 #   LOCK_TOKEN=...), not a PID. Prints RUN_ALREADY_ACTIVE and exits 0 when it backs
 #   off. Well-behaved runs release the lock at the end, so the TTL only matters
 #   after a crash. Keep a run shorter than the TTL or it may be overridden.
+#   Exit codes: 0 = lock acquired, or RUN_ALREADY_ACTIVE (another run holds it);
+#   2 = the lock could not be evaluated at all (TEMP unset or not writable,
+#   filesystem error, ...), with the cause on stderr as LOCK_ERROR. Contention and
+#   failure are never conflated: a caller that sees exit 2 must report the error,
+#   not back off as if a run were active.
 #   A stuck browser is cleared ONLY when a stale lock was recovered, so a normal
 #   run reuses the open WhatsApp session with no close/reopen flicker.
 #
@@ -23,6 +28,13 @@ param([switch]$Clear, [string]$Release)
 #
 # Only browser binaries launched from the Playwright install are targeted (bundled
 # Chromium or the msedge channel), never the Node driver or the user's normal windows.
+
+function Write-LockError($message) { [Console]::Error.WriteLine("LOCK_ERROR: $message") }
+
+if (-not $env:TEMP) {
+  Write-LockError 'TEMP is not set, so there is nowhere to place the run lock.'
+  exit 2
+}
 
 $lockDir = Join-Path $env:TEMP 'scout-whatsapp.lock'
 $ownerFile = Join-Path $lockDir 'owner'
@@ -58,28 +70,48 @@ if ($Release) {
 }
 
 $token = [guid]::NewGuid().ToString('N')
-function Write-Owner { Set-Content -Path $ownerFile -Value "$token`n$(Get-Date -Format o)" }
+function Write-Owner { Set-Content -Path $ownerFile -Value "$token`n$(Get-Date -Format o)" -ErrorAction Stop }
 
+# 'ok' = acquired, 'busy' = another run holds it, 'error' = unexpected failure
+# (cause already written to stderr as LOCK_ERROR).
 function Take-Lock {
   try {
     New-Item -ItemType Directory -Path $lockDir -ErrorAction Stop | Out-Null
-    Write-Owner
-    return $true
   } catch {
-    $item = Get-Item $lockDir -ErrorAction SilentlyContinue
-    $ageSec = if ($item) { ((Get-Date) - $item.LastWriteTime).TotalSeconds } else { 0 }
-    if ($ageSec -lt $ttlSec) { return $false }   # a recent run holds it: back off
+    # Creation failed. That is contention ONLY if the lock directory really is
+    # there; every other cause (TEMP not writable, filesystem error, a file at
+    # that path) is a real error and must not be reported as an active run.
+    if (-not (Test-Path -LiteralPath $lockDir -PathType Container)) {
+      Write-LockError "cannot create $lockDir ($($_.Exception.Message))"
+      return 'error'
+    }
+    $item = Get-Item -LiteralPath $lockDir -ErrorAction SilentlyContinue
+    if (-not $item) { Write-LockError "cannot stat $lockDir"; return 'error' }
+    if (((Get-Date) - $item.LastWriteTime).TotalSeconds -lt $ttlSec) {
+      return 'busy'                               # a recent run holds it: back off
+    }
     Remove-Item -LiteralPath $lockDir -Recurse -Force -ErrorAction SilentlyContinue
     try { New-Item -ItemType Directory -Path $lockDir -ErrorAction Stop | Out-Null }
-    catch { return $false }                       # lost the re-gate: back off
-    Write-Owner
+    catch {
+      if (Test-Path -LiteralPath $lockDir -PathType Container) { return 'busy' }  # another run re-took it
+      Write-LockError "cannot recreate $lockDir after clearing a stale lock ($($_.Exception.Message))"
+      return 'error'
+    }
     $script:Reclaimed = $true
-    return $true
   }
+  try { Write-Owner } catch {
+    Remove-Item -LiteralPath $lockDir -Recurse -Force -ErrorAction SilentlyContinue
+    Write-LockError "cannot write $ownerFile ($($_.Exception.Message))"
+    return 'error'
+  }
+  return 'ok'
 }
 
 $script:Reclaimed = $false
-if (-not (Take-Lock)) { Write-Output 'RUN_ALREADY_ACTIVE'; exit 0 }
+switch (Take-Lock) {
+  'busy'  { Write-Output 'RUN_ALREADY_ACTIVE'; exit 0 }
+  'error' { exit 2 }                              # cause already on stderr as LOCK_ERROR
+}
 
 # Commit-verify: if a concurrent reclaimer stomped us, back off.
 Start-Sleep -Milliseconds 300

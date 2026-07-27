@@ -13,6 +13,11 @@ set -uo pipefail
 #   when it backs off. Well-behaved runs release the lock at the end (see below),
 #   so the TTL only matters after a crash. Keep a run shorter than the TTL, or it
 #   may be overridden by the next run.
+#   Exit codes: 0 = lock acquired, or RUN_ALREADY_ACTIVE (another run holds it);
+#   2 = the lock could not be evaluated at all (no permission on /tmp, read-only
+#   or full filesystem, ...), with the cause on stderr as LOCK_ERROR. Contention
+#   and failure are never conflated: a caller that sees exit 2 must report the
+#   error, not back off as if a run were active.
 #   A stuck browser is cleared ONLY when a stale lock was recovered, so a normal
 #   run reuses the open WhatsApp session with no close/reopen flicker.
 #
@@ -56,19 +61,31 @@ fi
 
 token="$$-$(date +%s)-${RANDOM}${RANDOM}"
 write_owner() { printf '%s\n%s\n' "$token" "$(date -u +%FT%TZ)" > "$owner"; }
+lock_error() { echo "LOCK_ERROR: $1" >&2; }
 
+# 0 = acquired, 1 = another run holds it, 2 = unexpected failure (cause on stderr).
 take_lock() {
+  local now mtime age
   if mkdir "$lock" 2>/dev/null; then
-    write_owner
+    write_owner || { rm -rf "$lock"; lock_error "cannot write $owner (permissions or disk full)"; return 2; }
   else
-    local now mtime age
+    # mkdir failed. That is contention ONLY if the lock directory really is
+    # there; every other cause (no permission on /tmp, read-only or full
+    # filesystem, a stray file at that path) is a real error and must not be
+    # reported as an active run.
+    [ -d "$lock" ] || { lock_error "cannot create $lock (permissions, read-only filesystem, or a non-directory exists at that path)"; return 2; }
     now=$(date +%s)
-    mtime=$(stat -c %Y "$lock" 2>/dev/null || stat -f %m "$lock" 2>/dev/null || echo "$now")
+    mtime=$(stat -c %Y "$lock" 2>/dev/null || stat -f %m "$lock" 2>/dev/null) \
+      || { lock_error "cannot stat $lock"; return 2; }
     age=$(( now - mtime ))
     [ "$age" -lt "$ttl" ] && return 1            # a recent run holds it: back off
     rm -rf "$lock"
-    mkdir "$lock" 2>/dev/null || return 1        # lost the re-gate: back off
-    write_owner
+    if ! mkdir "$lock" 2>/dev/null; then
+      [ -d "$lock" ] && return 1                 # another run re-took it: back off
+      lock_error "cannot recreate $lock after clearing a stale lock"
+      return 2
+    fi
+    write_owner || { rm -rf "$lock"; lock_error "cannot write $owner (permissions or disk full)"; return 2; }
     reclaimed=1
   fi
   # Commit-verify: if a concurrent reclaimer stomped us, back off.
@@ -77,7 +94,12 @@ take_lock() {
   return 0
 }
 
-if ! take_lock; then echo "RUN_ALREADY_ACTIVE"; exit 0; fi
+take_lock; rc=$?
+case "$rc" in
+  0) ;;
+  1) echo "RUN_ALREADY_ACTIVE"; exit 0 ;;
+  *) exit 2 ;;                                   # cause already on stderr as LOCK_ERROR
+esac
 
 echo "LOCK_TOKEN=$token"   # pass this to `--release <token>` at end of run
 
