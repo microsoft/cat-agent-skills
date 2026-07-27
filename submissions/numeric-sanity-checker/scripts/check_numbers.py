@@ -9,8 +9,8 @@ numbers themselves are correct is not this script's job, only whether the
 arithmetic between the numbers given is consistent.
 
 Usage:
-    python check_numbers.py checks.json
-    echo '[{"type": "sum", ...}]' | python check_numbers.py -
+    python scripts/check_numbers.py checks.json
+    echo '[{"type": "sum", ...}]' | python scripts/check_numbers.py -
 
 Input is a JSON list of check objects:
 
