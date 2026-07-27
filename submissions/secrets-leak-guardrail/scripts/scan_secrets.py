@@ -68,6 +68,8 @@ def scan_text(text: str, source: str) -> list[dict]:
     for line_number, line in enumerate(text.splitlines(), start=1):
         for name, pattern in PATTERNS:
             for match in pattern.finditer(line):
+                if looks_like_placeholder(match.group(0)):
+                    continue
                 findings.append({
                     "source": source,
                     "line": line_number,
@@ -93,10 +95,11 @@ def scan_text(text: str, source: str) -> list[dict]:
 
 
 def _redact_middle(value: str) -> str:
+    # Short values (a short password, a connection-string fragment) get no
+    # characters revealed at all, revealing even 2+2 chars of something
+    # this short exposes too large a fraction of the actual secret.
     if len(value) <= 12:
-        if len(value) <= 2:
-            return "…redacted…"
-        return value[:1] + "…redacted…" + value[-1:]
+        return "…redacted…"
     return value[:6] + "…redacted…" + value[-4:]
 
 

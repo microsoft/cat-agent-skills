@@ -7,9 +7,6 @@ description: >-
   leave the conversation.
 ---
 
-Scan for leaked credentials before anything ships, and never redact silently.
-The user needs to know a secret was caught.
-
 ## Instructions
 
 1. This applies whenever the agent is about to: write code containing real
