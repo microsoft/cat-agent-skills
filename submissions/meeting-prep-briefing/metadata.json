@@ -1,0 +1,11 @@
+{
+  "name": "Meeting Prep Briefing",
+  "description": "Builds a short pre-meeting briefing from what's actually known: prior decisions, related documents, open action items, and public context on external attendees, honest about what's missing instead of padding it.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["meetings", "productivity", "briefing", "research", "preparation"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
