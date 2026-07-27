@@ -1,0 +1,11 @@
+{
+  "name": "Marketing & Sales Brainstorm Lab",
+  "description": "Research-grounded brainstorming for marketing campaigns and sales angles: gathers real market and competitor context first, then generates genuinely varied ideas instead of one polished suggestion.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["marketing", "sales", "brainstorming", "research", "ideation", "campaigns"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
