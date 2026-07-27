@@ -87,7 +87,7 @@ Some targets ("Use here", "No results", "New group") exist only as translated te
 
 ## Resolving a target chat
 
-Every action (`read`, `monitor`, `send`, `create-group`) opens its target the same way, and must handle each outcome rather than guessing:
+Every action (`read`, `monitor`, `send`, `react`, `reply`, `create-group`) opens its target the same way, and must handle each outcome rather than guessing:
 
 - **Exact title match** - proceed.
 - **Ambiguous** (more than one chat shares the title) - stop and ask the user which one; do not pick.
@@ -147,7 +147,7 @@ Because runs are stateless (no record of what was seen last time), a window wide
 `react` and `reply` act on **one specific message** in the open chat, so pinning the right message matters as much as pinning the right chat. Resolve it from the request:
 
 - "the last message" / "his last message" - the last message (optionally the last **incoming** one, or the last from a named sender).
-- "the message about X" / a quote - match recent messages by their text (a fingerprint, like the send confirmation). 
+- "the message about X" / a quote - match recent messages by their text (a fingerprint, like the send confirmation).
 
 **Always confirm the target message with the user before acting** - echo its sender, time, and a short quote - because a reaction is public and a reply sends. If the resolution is ambiguous (several messages match), or the request is vague, **list the candidate recent messages (sender, time, short text) and let the user pick** rather than guessing. This is the same "stop and ask" stance as ambiguous chats, and the user explicitly prefers being asked here.
 

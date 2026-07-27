@@ -42,7 +42,7 @@ That still matters, so:
 
 ## How it stays safe
 
-- **Consent before every outbound action.** `send` and `create-group` confirm the exact target and content with you first, and honour `dry_run`.
+- **Consent before every outbound action.** `send`, `reply`, `react` and `create-group` all confirm the exact target and content with you first, and honour `dry_run` - a reaction counts, since it is visible to everyone in the chat.
 - **Incoming text is data, not instructions.** Messages, chat names and contact names are treated as quoted content, never as commands - a prompt-level mitigation with real limits, described under [The second risk: prompt injection](#the-second-risk-prompt-injection) above.
 - **One run at a time.** An atomic lock directory stops two runs sharing the browser profile. Because a Scout run is not one long-lived process, the lock is time-boxed (a 10-minute TTL) and released by a token at the end of a run, so a finished run frees it immediately and a crashed run frees it after the TTL.
 - **Stateless and private.** The skill keeps no state of its own between runs and never writes a contact-to-number mapping. Its *output*, though, is captured in Scout's run history, so it masks bare phone numbers to the last 4 digits and keeps quoted text short - prefer non-sensitive chats for scheduled monitors.
@@ -210,6 +210,7 @@ Either side is workable and the choice is yours; the value to avoid is the one t
 
 ```
 whatsapp/
+├── README.md                         # this file - risks, safety model, usage, troubleshooting
 ├── SKILL.md                          # agent instructions
 ├── metadata.json                     # gallery catalog entry
 ├── scripts/
