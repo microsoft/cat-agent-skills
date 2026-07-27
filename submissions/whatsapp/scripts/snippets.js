@@ -13,6 +13,18 @@ function norm(s) {
   return (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+// Guard every outbound path: the send confirmation fingerprints the message text,
+// and an EMPTY fingerprint matches anything, because `includes('')` is always
+// true. A whitespace-only message would therefore be reported as `sent` on the
+// strength of an unrelated bubble - one the user sent from their phone inside the
+// 12s confirmation window - having submitted nothing. Reject it up front, before
+// anything is typed into a real chat, rather than papering over it downstream.
+function assertSendable(message) {
+  if (norm(message) === '') {
+    throw new Error('Refusing to send an empty message: there is nothing to submit, and nothing to confirm against.');
+  }
+}
+
 // A chat/contact row's real NAME lives in a title attribute (span[title]), not
 // in the row's full innerText - which also contains the last-message preview and
 // timestamp. Matching innerText lets an incoming message preview hijack the
@@ -197,6 +209,7 @@ async function readMessages(page, limit = 20) {
 // requires BOTH the composer clearing AND a new outgoing bubble carrying the
 // text (composer-clear alone can happen on a reconnect with nothing sent).
 async function submitAndConfirm(page, composer, message) {
+  assertSendable(message);   // an empty fingerprint would confirm against any bubble
   // Baseline count of outgoing bubbles BEFORE sending, so a NEW bubble is what
   // confirms the send - resending text identical to a previous message must not
   // match a pre-existing bubble. A 120-char fingerprint keeps the match specific.
@@ -253,6 +266,7 @@ async function submitAndConfirm(page, composer, message) {
 // recent outgoing bubbles? Use before any manual resend so a message that DID
 // go out (but was reported unconfirmed) is never sent twice.
 async function outgoingExists(page, message) {
+  assertSendable(message);   // an empty fingerprint would report "already sent" against any bubble
   const needle = norm(message).slice(0, 120);
   return page
     .$$eval(
@@ -279,6 +293,7 @@ async function clearComposer(page, composer) {
 // Type a message. On dry_run, capture the preview and CLEAR the composer, then
 // return the preview and whether the clear succeeded. Otherwise submit+confirm.
 async function sendMessage(page, message, options = {}) {
+  assertSendable(message);   // fail before the composer is touched, not after
   const dryRun = Boolean(options.dryRun);
   const composer = page
     .locator(
@@ -537,6 +552,7 @@ async function reactToMessage(page, messageEl, emoji, options = {}) {
 // menu are language-independent (data-icon); only the "Reply" menu item is text,
 // so it lists EN/FR. Confirms the send like sendMessage; dry_run cancels the quote.
 async function replyToMessage(page, messageEl, text, options = {}) {
+  assertSendable(text);   // fail before the quote is attached, not after
   const dryRun = Boolean(options.dryRun);
   await messageEl.hover();
   await page.waitForTimeout(400);
