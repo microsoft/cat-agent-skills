@@ -87,8 +87,8 @@ For reference, the only commands the helper uses:
 
 | OS | Commands |
 |---|---|
-| Windows | `New-Item`, `Get-Item`, `Get-Content`, `Set-Content`, `Test-Path`, `Remove-Item`, `Get-CimInstance`, `Stop-Process`, `Start-Sleep`, `Write-Output` |
-| macOS / Linux | `mkdir`, `head`, `stat`, `date`, `printf`, `pkill`, `sleep`, `rm` |
+| Windows | `Join-Path`, `Get-Process`, `Get-Date`, `New-Item`, `Get-Item`, `Get-Content`, `Set-Content`, `Test-Path`, `Remove-Item`, `Get-CimInstance`, `Where-Object`, `ForEach-Object`, `Stop-Process`, `Start-Sleep`, `Write-Output` |
+| macOS / Linux | `id`, `mkdir`, `head`, `stat`, `date`, `printf`, `pgrep`, `ps`, `kill`, `sleep`, `rm` |
 
 Approval granularity and wording differ between Scout versions. Where the UI lets you choose, approve the helper script invocation rather than each command separately - it is one grant instead of ten, and it is narrower, since it authorises this script rather than `Remove-Item` in general.
 
