@@ -1,0 +1,11 @@
+{
+  "name": "New Hire Onboarding Guide",
+  "description": "Walks a new employee through their first days and weeks using your organization's own onboarding materials, tracks checklist progress, and routes anything sensitive (benefits, visas, legal paperwork) to the right human contact.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["onboarding", "hr", "new-hire", "rag", "employee-self-service", "productivity"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
