@@ -1,0 +1,11 @@
+{
+  "name": "Graceful Tool Failure Handling",
+  "description": "When a tool, connector, or API call fails or misbehaves, states exactly what happened and offers a real fallback, instead of continuing as if it succeeded or fabricating the result it would have returned.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["agent-quality", "reliability", "error-handling", "transparency", "guardrail"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
