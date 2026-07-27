@@ -5,6 +5,8 @@ agentDescription: "Analyzes meetings from pasted text, transcripts, or audio/vid
 platforms: [Copilot Studio, Cowork]
 tags: [meetings, analysis, insights, personas, transcription, productivity, communication]
 author: Michael Ferro Pereira
+authorUrl: "https://github.com/michaelfp"
+authorGithub: michaelfp
 bundle: bundles/meeting-analyzer.zip
 ---
 # Meeting Analyzer

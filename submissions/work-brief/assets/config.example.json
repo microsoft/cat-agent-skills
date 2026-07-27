@@ -1,0 +1,48 @@
+{
+  "timezone": "Europe/Paris",
+  "language": "auto",
+  "lookbackDays": 7,
+  "lookaheadDays": 5,
+  "sources": {
+    "mail": {
+      "enabled": true,
+      "scanMainInbox": true,
+      "additionalFolderIds": [],
+      "useSearch": false
+    },
+    "calendar": {
+      "enabled": true,
+      "scanPastMeetings": true,
+      "agendaThresholdAttendees": 4,
+      "flagBackToBack": true,
+      "flagUnansweredInvites": true
+    },
+    "chat": {
+      "enabled": true,
+      "prioritizeDirectMentions": true
+    }
+  },
+  "priorityPeople": [],
+  "priorityProjects": [],
+  "topTopicsCount": 3,
+  "maxItemsPerSection": 7,
+  "meetingLinkHorizonHours": 48,
+  "delivery": {
+    "mode": "teams-self-chat",
+    "target": "self",
+    "format": "adaptive",
+    "includeSchedule": true,
+    "meetingTypeColors": {
+      "internal": "#5B8DEF",
+      "client": "#E5A33C",
+      "one-on-one": "#5FBF8F",
+      "focus": "#9A8CD6",
+      "personal": "#8A8A8A"
+    },
+    "signature": "Work Brief"
+  },
+  "sensitivity": {
+    "summariseLabelledContent": true
+  },
+  "stateFile": "~/.copilot/work-brief/state.json"
+}
