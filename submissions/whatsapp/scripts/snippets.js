@@ -80,7 +80,7 @@ async function resetChatListView(page) {
       .first();
     if ((await search.count()) && norm(await search.innerText().catch(() => '')) !== '') {
       await search.click();
-      await page.keyboard.press('Control+A');
+      await page.keyboard.press('ControlOrMeta+A');
       await page.keyboard.press('Delete');
     } else {
       await page.keyboard.press('Escape');   // leave search mode if in it
@@ -270,7 +270,7 @@ async function outgoingExists(page, message) {
 // no draft is left in a real chat. Verifies it is actually empty.
 async function clearComposer(page, composer) {
   await composer.click();
-  await page.keyboard.press('Control+A');
+  await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.press('Delete');
   await page.waitForTimeout(200);
   return norm(await composer.innerText()) === '';

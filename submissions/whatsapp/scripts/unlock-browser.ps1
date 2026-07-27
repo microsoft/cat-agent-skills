@@ -1,38 +1,32 @@
-param([switch]$Clear)
+param([switch]$Clear, [string]$Release)
 
 # unlock-browser.ps1
 # Windows helper for WhatsApp automations.
 #
 # Default (no args): take a run lock so two runs never share the browser profile.
-#   The lock is a directory (creation is atomic). The winner writes an `owner`
-#   file (PID + timestamp) immediately. On contention:
-#     - owner empty/non-numeric and the dir is fresh -> another run is
-#       mid-acquire, so back off (grace window) rather than stomp it.
-#     - owner alive and younger than the 30-minute backstop -> back off.
-#     - otherwise stale: remove the dir and re-gate on New-Item.
-#   Then COMMIT-VERIFY: after writing owner, settle briefly and re-read owner; if
-#   a concurrent reclaimer overwrote it, back off. Prints RUN_ALREADY_ACTIVE and
-#   exits 0 on any back-off. A live run past the 30-minute backstop is overridden.
+#   The lock is a directory (creation is atomic). IMPORTANT: in Scout each command
+#   is a short-lived process, so the run is NOT a long-lived PID we can probe. The
+#   lock is therefore TIME-BOXED, not PID-based: a lock younger than the TTL is an
+#   active run and we back off; a lock older than the TTL is assumed finished or
+#   crashed and is overridden. Ownership for release is a random TOKEN (printed as
+#   LOCK_TOKEN=...), not a PID. Prints RUN_ALREADY_ACTIVE and exits 0 when it backs
+#   off. Well-behaved runs release the lock at the end, so the TTL only matters
+#   after a crash. Keep a run shorter than the TTL or it may be overridden.
 #   A stuck browser is cleared ONLY when a stale lock was recovered, so a normal
 #   run reuses the open WhatsApp session with no close/reopen flicker.
 #
+# -Release <token>: remove the lock only if it still holds <token> (the value
+#   printed as LOCK_TOKEN at acquire). Call this at end of run.
+#
 # -Clear: kill a stuck Playwright browser WITHOUT touching the lock. The caller
-#   (already holding the lock) uses this mid-run when WhatsApp will not load and a
-#   reload did not help - the "close it because we saw a problem" path.
+#   (already holding the lock) uses this mid-run when WhatsApp will not load.
 #
 # Only browser binaries launched from the Playwright install are targeted (bundled
 # Chromium or the msedge channel), never the Node driver or the user's normal windows.
-#
-# Release is the caller's job at end of run, owner-checked:
-#   $o = Join-Path $env:TEMP 'scout-whatsapp.lock\owner'
-#   if ((Test-Path $o) -and ((Get-Content $o -First 1) -eq "$PID")) {
-#     Remove-Item (Split-Path $o) -Recurse -Force -ErrorAction SilentlyContinue }
 
 $lockDir = Join-Path $env:TEMP 'scout-whatsapp.lock'
 $ownerFile = Join-Path $lockDir 'owner'
-$backstopSec = 1800   # 30 minutes
-$graceSec = 60        # respect a lock whose owner file is not written yet
-$script:Reclaimed = $false
+$ttlSec = 600   # 10 minutes: a lock older than this is assumed finished/crashed
 
 function Clear-Browser {
   Get-CimInstance Win32_Process `
@@ -44,44 +38,55 @@ function Clear-Browser {
   Start-Sleep -Seconds 3
 }
 
-# On-demand clear (caller already holds the lock).
+# -Clear: on-demand browser kill (caller already holds the lock).
 if ($Clear) {
   Clear-Browser
   Write-Output 'Cleared a stuck browser (on request).'
   exit 0
 }
 
-function Write-Owner { Set-Content -Path $ownerFile -Value "$PID`n$(Get-Date -Format o)" }
+# -Release <token>: token-checked release.
+if ($Release) {
+  $held = if (Test-Path $ownerFile) { (Get-Content $ownerFile -TotalCount 1) } else { '' }
+  if ($Release -eq $held) {
+    Remove-Item -LiteralPath $lockDir -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Output 'Lock released.'
+  } else {
+    Write-Output 'Not the lock owner; left it alone.'
+  }
+  exit 0
+}
+
+$token = [guid]::NewGuid().ToString('N')
+function Write-Owner { Set-Content -Path $ownerFile -Value "$token`n$(Get-Date -Format o)" }
 
 function Take-Lock {
   try {
     New-Item -ItemType Directory -Path $lockDir -ErrorAction Stop | Out-Null
     Write-Owner
+    return $true
   } catch {
-    $ownerPid = if (Test-Path $ownerFile) { (Get-Content $ownerFile -TotalCount 1) } else { '' }
     $item = Get-Item $lockDir -ErrorAction SilentlyContinue
     $ageSec = if ($item) { ((Get-Date) - $item.LastWriteTime).TotalSeconds } else { 0 }
-    $pidNum = 0
-    if ([int]::TryParse($ownerPid, [ref]$pidNum)) {
-      $alive = [bool](Get-Process -Id $pidNum -ErrorAction SilentlyContinue)
-      if ($alive -and $ageSec -lt $backstopSec) { return $false }
-    } elseif ($ageSec -lt $graceSec) {
-      return $false   # empty/non-numeric owner, fresh dir: mid-acquire, back off
-    }
+    if ($ageSec -lt $ttlSec) { return $false }   # a recent run holds it: back off
     Remove-Item -LiteralPath $lockDir -Recurse -Force -ErrorAction SilentlyContinue
     try { New-Item -ItemType Directory -Path $lockDir -ErrorAction Stop | Out-Null }
-    catch { return $false }   # lost the re-gate: back off
+    catch { return $false }                       # lost the re-gate: back off
     Write-Owner
     $script:Reclaimed = $true
+    return $true
   }
-  # Commit-verify: if a concurrent reclaimer stomped us, back off.
-  Start-Sleep -Milliseconds 300
-  $current = if (Test-Path $ownerFile) { (Get-Content $ownerFile -TotalCount 1) } else { '' }
-  if ($current -ne "$PID") { return $false }
-  return $true
 }
 
+$script:Reclaimed = $false
 if (-not (Take-Lock)) { Write-Output 'RUN_ALREADY_ACTIVE'; exit 0 }
+
+# Commit-verify: if a concurrent reclaimer stomped us, back off.
+Start-Sleep -Milliseconds 300
+$current = if (Test-Path $ownerFile) { (Get-Content $ownerFile -TotalCount 1) } else { '' }
+if ($current -ne $token) { Write-Output 'RUN_ALREADY_ACTIVE'; exit 0 }
+
+Write-Output "LOCK_TOKEN=$token"   # pass this to -Release <token> at end of run
 
 if ($script:Reclaimed) {
   Clear-Browser
