@@ -7,10 +7,6 @@ description: >-
   onboarding documentation.
 ---
 
-Walk a new hire through their own onboarding using the organization's actual
-onboarding materials, track what's done, and point to a real person for
-anything this skill can't answer from those materials.
-
 ## Instructions
 
 1. Establish context early: start date, role or team if known, and location

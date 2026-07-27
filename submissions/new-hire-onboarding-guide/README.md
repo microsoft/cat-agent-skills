@@ -6,11 +6,9 @@ organization's own onboarding materials instead of generic advice.
 
 ## How it's grounded
 
-Same pattern as [`hr-policy-navigator`](../hr-policy-navigator) and
-[`expense-policy-checker`](../expense-policy-checker): it searches whatever
-onboarding source is actually configured (a SharePoint site, an uploaded
-guide, an HR knowledge base) and answers from that, not from a generic idea
-of what onboarding "usually" looks like.
+It searches whatever onboarding source is actually configured (a SharePoint
+site, an uploaded guide, an HR knowledge base) and answers from that, not
+from a generic idea of what onboarding "usually" looks like.
 
 ## What it won't do
 
@@ -21,10 +19,10 @@ checklist item done on its own guess; it tracks what the user confirms.
 
 ## Pairs well with
 
-[`hr-policy-navigator`](../hr-policy-navigator) for policy questions that go
-beyond onboarding itself, and [`it-support-ticket-agent`](../it-support-ticket-agent)
-for logging a ticket when a new hire hits an actual IT blocker (no laptop,
-no access) rather than a question this skill can answer directly.
+A policy-lookup skill for questions that go beyond onboarding itself, and an
+IT support intake skill for logging a ticket when a new hire hits an actual
+IT blocker (no laptop, no access) rather than a question this skill can
+answer directly.
 
 ---
 
