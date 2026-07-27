@@ -18,10 +18,10 @@ without asking, so a wrong guess is cheap to correct.
 
 ## Where it applies
 
-Any conversational or task-taking agent. It's especially useful paired with
-[`company-memory-builder`](../company-memory-builder), since a stored
-preference like "just proceed, don't ask" or "always confirm scope first"
-lets this skill stop re-deciding the same question every session.
+Any conversational or task-taking agent. It's especially useful paired with a
+skill that maintains cross-session memory, since a stored preference like
+"just proceed, don't ask" or "always confirm scope first" lets this skill
+stop re-deciding the same question every session.
 
 ---
 
