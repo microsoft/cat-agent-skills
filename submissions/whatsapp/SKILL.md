@@ -83,7 +83,7 @@ Some targets ("Use here", "No results", "New group") exist only as translated te
 
 **UI recovery.** If a step lands in an unexpected state (a chat will not open, a dialog is stuck), attempt recovery once before failing: click Back / press Escape to return to the chat list, or reload `https://web.whatsapp.com` and wait for the chat list again. Recover at most once per run, then fail explicitly - a recovery loop is worse than a clean failure.
 
-**Human pacing.** Insert a short randomised pause (roughly 0.5 to 1.5 seconds) between UI actions rather than firing them instantly. It is gentler on WhatsApp's rate limits and reduces the chance of a run being flagged as automated.
+**Pace the UI actions.** Insert a short randomised pause (roughly 0.5 to 1.5 seconds) between UI actions rather than firing them instantly. WhatsApp Web renders asynchronously, so back-to-back actions race the DOM - a click can land before the element it targets has settled, which is a common source of flaky runs. It is also gentler on WhatsApp's rate limits.
 
 ## Resolving a target chat
 

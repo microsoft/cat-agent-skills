@@ -20,7 +20,13 @@ Read, send, react to, reply to, and monitor WhatsApp messages, and create WhatsA
 
 ## Please read first: Terms of Service and account risk
 
-This skill automates **WhatsApp Web** through a browser. Automating WhatsApp with anything other than its official products can violate the [WhatsApp Terms of Service](https://www.whatsapp.com/legal/terms-of-service) and, in the worst case, get the number **banned**. It also acts on your *real* account: a wrong target or a bad selector can send a real message to a real person. Use it on an account you control, keep `dry_run` on until you trust a flow, and decide for yourself whether the ToS risk is acceptable for your use. This project takes no responsibility for account actions.
+This skill automates **WhatsApp Web** through a browser. Automating WhatsApp with anything other than its official products can violate the [WhatsApp Terms of Service](https://www.whatsapp.com/legal/terms-of-service) and, in the worst case, get the number **banned**.
+
+Rather than leave that vague, here is what it actually touches. The Terms prohibit communications that *"involve sending illegal or impermissible communications such as bulk messaging, **auto-messaging**, auto-dialing, and the like"*, and any *"**non-personal use** of our Services unless otherwise authorized by us"*. Submitting a message from a script rather than a person is auto-messaging, so `send` and `reply` sit squarely under the first clause; whether driving your own account for your own conversations counts as non-personal use is arguable, but WhatsApp's position is that programmatic messaging belongs on the WhatsApp Business Platform, not the consumer web client - and the Terms let them suspend an account for violating *"the letter or spirit"* of them, which is what makes arguing the grey area a poor bet.
+
+What it does **not** do is worth stating too, because it changes the severity: no bulk messaging (one message at a time, to a target you named, and a send automation is one-shot by design), no data collection (it reads your own chats, keeps no state and never writes a name-to-number mapping), no reverse engineering or modified client (it drives the official web UI in an ordinary browser - no protocol reimplementation), no automated account creation, and nothing offered to third parties as a competing API. The friction is the *means of access*, not the abuse patterns those clauses were written for. Which is precisely why the practical risk is not legal but operational: an automated-looking session can get the number banned.
+
+It also acts on your *real* account: a wrong target or a bad selector can send a real message to a real person. Use it on an account you control, keep `dry_run` on until you trust a flow, and decide for yourself whether the ToS risk is acceptable for your use. This project takes no responsibility for account actions.
 
 ## The second risk: prompt injection
 
