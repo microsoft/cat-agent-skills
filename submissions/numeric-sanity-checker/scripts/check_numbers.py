@@ -91,6 +91,9 @@ CHECKERS = {
 def run(checks: list[dict]) -> list[dict]:
     results = []
     for check in checks:
+        if not isinstance(check, dict):
+            results.append({"type": None, "ok": False, "detail": f"expected a check object, got {type(check).__name__}"})
+            continue
         kind = check.get("type")
         checker = CHECKERS.get(kind)
         if checker is None:
@@ -109,8 +112,20 @@ def main() -> int:
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
-    text = sys.stdin.read() if args.path == "-" else open(args.path, encoding="utf-8").read()
-    checks = json.loads(text)
+    try:
+        text = sys.stdin.read() if args.path == "-" else open(args.path, encoding="utf-8").read()
+        checks = json.loads(text)
+    except OSError as error:
+        print(f"Could not read {args.path}: {error}", file=sys.stderr)
+        return 2
+    except json.JSONDecodeError as error:
+        print(f"Invalid JSON in {args.path}: {error}", file=sys.stderr)
+        return 2
+
+    if not isinstance(checks, list):
+        print(f"Expected a JSON list of checks, got {type(checks).__name__}.", file=sys.stderr)
+        return 2
+
     results = run(checks)
 
     if args.json:
