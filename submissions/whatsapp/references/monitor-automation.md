@@ -10,7 +10,11 @@ Monitor the WhatsApp [chat/group] "[TARGET_NAME]" for [USER_NAME] by following t
 language: auto
 
 0. Take the run lock and unlock the browser by running the skill's helper:
-   scripts/unlock-browser.ps1 (Windows) or scripts/unlock-browser.sh (macOS/Linux).
+   Windows:      powershell -NoProfile -File scripts\unlock-browser.ps1
+   macOS/Linux:  bash scripts/unlock-browser.sh
+   Call it through its interpreter as written - a bare path is not reliably
+   executable (a .ps1 is not a command in cmd.exe, and the .sh may arrive
+   without its executable bit).
    It takes the lock atomically and clears a leftover browser only if it
    recovered a stale run; otherwise it reuses the open session. If it prints
    RUN_ALREADY_ACTIVE, stop and do not release the lock. If it exits non-zero
@@ -33,7 +37,8 @@ language: auto
    its last 4 digits and keep quoted text short (the output is saved in run history).
 9. If none: output `No new messages.`
 10. If you took the lock, release it with the token step 0 printed (LOCK_TOKEN):
-    scripts/unlock-browser.sh --release <token> / scripts/unlock-browser.ps1 -Release <token>.
+    bash scripts/unlock-browser.sh --release <token>   (macOS/Linux)
+    powershell -NoProfile -File scripts\unlock-browser.ps1 -Release <token>   (Windows)
     Do not release if step 0 printed RUN_ALREADY_ACTIVE.
 
 Rules:

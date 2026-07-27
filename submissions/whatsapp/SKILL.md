@@ -33,7 +33,14 @@ Resolve, asking the user only for what is missing:
 - `message target` - **for `react` and `reply` only**: which message in the chat to act on (the last message, the last from a named sender, or a message matched by its text). Resolve and confirm it per "Resolving a target message"; if it is not clear, list candidates and let the user pick rather than proceeding.
 - `language` - output language; default `auto`. See "Language handling" below. A code like `en` or `fr` pins it.
 
-Then take a **run lock** so two WhatsApp runs never share the browser profile at once. Run `scripts/unlock-browser.ps1` (Windows) or `scripts/unlock-browser.sh` (macOS/Linux). Those scripts are the source of truth for the lock - do not re-implement it inline.
+Then take a **run lock** so two WhatsApp runs never share the browser profile at once. Those scripts are the source of truth for the lock - do not re-implement it inline.
+
+**Always invoke the helper through its interpreter**, never by path alone:
+
+- Windows: `powershell -NoProfile -File scripts\unlock-browser.ps1`
+- macOS/Linux: `bash scripts/unlock-browser.sh`
+
+A bare path is not reliably executable: a `.ps1` does not run as a command from `cmd.exe`, and the `.sh` may arrive without its executable bit depending on how the skill was unpacked. Naming the interpreter works in every shell and does not depend on file permissions. Use the same form for every call below (`-Clear`/`--clear`, `-Release`/`--release`).
 
 The lock is a **directory** (creation is atomic, so two runs starting together cannot both acquire it). Because a Scout run is not a single long-lived process (each command is short-lived), the lock is **time-boxed, not PID-based**: a lock younger than the 10-minute TTL is treated as an active run and the script backs off; an older lock is assumed finished or crashed and is overridden. The script prints `LOCK_TOKEN=<token>` on success - **capture that token** and pass it to the release at end of run (release is by token, not PID). If the script prints `RUN_ALREADY_ACTIVE`, exit without touching the browser and **do not release the lock** - it belongs to the active run. Keep a run shorter than the TTL, or the next run may override it.
 
@@ -53,7 +60,7 @@ Two caveats: the **login** step (QR scan or phone-pairing) needs a **visible** b
 2. Wait for **state, not time**: wait for the chat list container `#pane-side` to appear (language-independent; fallback `#side`, then the localized `[aria-label]` variants) up to 120 seconds. WhatsApp Web is slow on cold profiles, so a fixed short sleep drops exactly the runs that were about to succeed.
 3. If a "use here" dialog appears (WhatsApp Web open elsewhere), click `Use here` / `Utiliser ici` / `Utiliser`, then wait for the chat list again.
 4. **Reset the chat-list view before scanning it.** If the search box still holds text, or a filter tab other than **All** / **Toutes** is active (Unread, Favorites, Groups) - which is common when reusing an open tab - clear the search and select the All filter, so the list shows every chat. A leftover search or an Unread filter is exactly why a "what did I receive" check wrongly comes back empty. (Opening one specific named chat does not need this, but any scan of the list does.)
-5. **If WhatsApp will not load** (the chat list never appears within 120s, or the page is visibly frozen) and it is not a login screen: reload once. If it still will not load, the browser itself is likely stuck - run the unlock helper in clear mode to kill it (`scripts/unlock-browser.ps1 -Clear` on Windows, `scripts/unlock-browser.sh --clear` on macOS/Linux; you already hold the lock, so this only kills the browser), then reopen `https://web.whatsapp.com` and wait once more. Do this clear **at most once per run**; if it still fails, return a clear failure rather than looping. This is the only in-run browser kill - normal runs never kill the browser.
+5. **If WhatsApp will not load** (the chat list never appears within 120s, or the page is visibly frozen) and it is not a login screen: reload once. If it still will not load, the browser itself is likely stuck - run the unlock helper in clear mode to kill it (`powershell -NoProfile -File scripts\unlock-browser.ps1 -Clear` on Windows, `bash scripts/unlock-browser.sh --clear` on macOS/Linux; you already hold the lock, so this only kills the browser), then reopen `https://web.whatsapp.com` and wait once more. Do this clear **at most once per run**; if it still fails, return a clear failure rather than looping. This is the only in-run browser kill - normal runs never kill the browser.
 6. If the chat list never appears and a QR / login screen is shown instead, WhatsApp is not authenticated on this profile. Do not wait indefinitely: stop and return a clear failure that names both login paths, since the browser is usually headless and nobody can scan a QR:
    - **QR:** open WhatsApp on the phone, Linked Devices, scan the code on this profile.
    - **Phone pairing (no camera needed):** on the login screen choose "Link with phone number instead", enter the number, and type the 8-character code into WhatsApp on the phone.
@@ -179,7 +186,7 @@ Language changes only wording. Never translate message content the user dictated
 
 ## End of run and constraints
 
-- Always release the lock at the end of a run that took it, using the **token** printed as `LOCK_TOKEN` at acquire: run `scripts/unlock-browser.sh --release <token>` (POSIX) or `scripts/unlock-browser.ps1 -Release <token>` (Windows). The script removes the lock only if that token still owns it, so you never delete another run's lock. Never release when you exited on `RUN_ALREADY_ACTIVE`. If the token is lost, do not force-delete the lock - it will expire on its own after the TTL.
+- Always release the lock at the end of a run that took it, using the **token** printed as `LOCK_TOKEN` at acquire: run `bash scripts/unlock-browser.sh --release <token>` (POSIX) or `powershell -NoProfile -File scripts\unlock-browser.ps1 -Release <token>` (Windows). The script removes the lock only if that token still owns it, so you never delete another run's lock. Never release when you exited on `RUN_ALREADY_ACTIVE`. If the token is lost, do not force-delete the lock - it will expire on its own after the TTL.
 - Never store contact-to-number mappings in files or memory. Keep runs stateless. Note that the run's **output** is still captured in Scout's run history: mask bare phone numbers to the last 4 digits, keep quoted message text short, and prefer a brief summary over long verbatim quotes for clearly sensitive chats. "Stateless" means the skill keeps no state of its own between runs, not that the output is unlogged.
 - Only one WhatsApp run may use the shared browser profile at a time (the Step 0 lock enforces this).
 - If WhatsApp is not accessible (not logged in, QR required, browser lock, selector break), return a clear failure message naming the cause. Do not send or create anything on a degraded run.
@@ -190,4 +197,4 @@ Language changes only wording. Never translate message content the user dictated
 - `references/monitor-automation.md` - ready-to-paste prompt for a recurring monitor automation.
 - `references/send-automation.md` - ready-to-paste prompt for a send automation.
 - `scripts/snippets.js` - reference Playwright patterns (see the note at the top: patterns for a Playwright-based browser tool, not a standalone Node script).
-- `scripts/unlock-browser.ps1`, `scripts/unlock-browser.sh` - run-lock + browser-unlock helpers.
+- `scripts/unlock-browser.ps1`, `scripts/unlock-browser.sh` - run-lock + browser-unlock helpers. Always call them through their interpreter (see Step 0), never by path alone.

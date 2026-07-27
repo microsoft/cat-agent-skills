@@ -17,7 +17,11 @@ language: auto
 dry_run: [true for a first test, then false]
 
 0. Take the run lock and unlock the browser by running the skill's helper:
-   scripts/unlock-browser.ps1 (Windows) or scripts/unlock-browser.sh (macOS/Linux).
+   Windows:      powershell -NoProfile -File scripts\unlock-browser.ps1
+   macOS/Linux:  bash scripts/unlock-browser.sh
+   Call it through its interpreter as written - a bare path is not reliably
+   executable (a .ps1 is not a command in cmd.exe, and the .sh may arrive
+   without its executable bit).
    It clears a leftover browser only if it recovered a stale run; otherwise it
    reuses the open session. If it prints RUN_ALREADY_ACTIVE, stop and do not
    release the lock. If it exits non-zero with a LOCK_ERROR line, the lock could
@@ -34,7 +38,8 @@ dry_run: [true for a first test, then false]
 6. Confirm it landed: the composer cleared AND a new outgoing bubble carries the text.
    If both are not present, report `send-unconfirmed` - do not claim success.
 7. If you took the lock, release it with the token step 0 printed (LOCK_TOKEN):
-   scripts/unlock-browser.sh --release <token> / scripts/unlock-browser.ps1 -Release <token>.
+   bash scripts/unlock-browser.sh --release <token>   (macOS/Linux)
+   powershell -NoProfile -File scripts\unlock-browser.ps1 -Release <token>   (Windows)
    Do not release it on RUN_ALREADY_ACTIVE.
 
 Rules:

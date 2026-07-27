@@ -77,7 +77,14 @@ WhatsApp Web changes its DOM frequently and has dropped most `data-testid` hooks
 
 ## Scout permissions to allow
 
-Everything this skill does outside the browser goes through **one** helper script - `scripts/unlock-browser.ps1` on Windows, `scripts/unlock-browser.sh` on macOS/Linux - so that single invocation is the only thing you need to approve. Scout gates its shell tool per command, so the first run will ask.
+Everything this skill does outside the browser goes through **one** helper script, so that single invocation is the only thing you need to approve. It is always called through its interpreter:
+
+```
+Windows:      powershell -NoProfile -File scripts\unlock-browser.ps1
+macOS/Linux:  bash scripts/unlock-browser.sh
+```
+
+That form is deliberate. A bare path is not reliably runnable - a `.ps1` is not a command in `cmd.exe`, and the `.sh` may arrive without its executable bit depending on how the skill was unpacked - so naming the interpreter is what makes it work everywhere, and it keeps the string you approve stable. Scout gates its shell tool per command, so the first run will ask.
 
 **Approve it before you schedule anything.** This is the trap worth knowing about: an unattended run has nobody to answer a permission prompt, so a scheduled monitor whose helper is not yet approved does not pause and wait for you - it returns blocked and does nothing, every single interval, silently. Run the automation once **interactively** first, approve the helper with the always-allow option so the grant is persisted, and only then let the schedule take over. If a scheduled run comes back with a "blocked / command not allowed" result and no WhatsApp output, this is why - the shell tool being *enabled* is not the same as this command being *approved*.
 
@@ -201,6 +208,8 @@ Either side is workable and the choice is yours; the value to avoid is the one t
 **Every run asks for access to the process list.** That prompt comes from stale-lock recovery, so it means the previous run never released its lock. The usual cause is an automation prompt whose release step does not pass the real token: the helper prints `LOCK_TOKEN=<token>` when it acquires the lock, and the release must pass that exact value back. Called with no token, or the wrong one, the helper correctly refuses to release someone else's lock and says so - `Not the lock owner; left it alone`. Check that your prompt captures the token in step 0 and reuses it at the end, as the templates in `references/` do.
 
 **Every run says `RUN_ALREADY_ACTIVE` and nothing happens.** A previous run crashed while holding the lock. Wait for the 10-minute TTL: the next run after that reclaims it automatically. Do not delete the lock directory by hand while a run might still be using it - that is exactly the collision the lock exists to prevent.
+
+**The helper will not start at all: "is not recognized", "cannot be loaded", or permission denied.** This is the invocation, not the lock. Call it through its interpreter - `powershell -NoProfile -File scripts\unlock-browser.ps1`, `bash scripts/unlock-browser.sh` - rather than by path. On Windows, a script extracted from a downloaded archive can also be blocked by the execution policy ("cannot be loaded because running scripts is disabled"); clear the web mark with `Unblock-File scripts\unlock-browser.ps1` rather than loosening the policy machine-wide.
 
 **The helper exits non-zero with a `LOCK_ERROR:` line.** This is not contention, and it will not resolve itself by waiting. Something is wrong with the environment - the temp directory is not writable, the filesystem is full or read-only, or something else is occupying the lock path. The message names the cause; fix that rather than retrying.
 
