@@ -1,0 +1,11 @@
+{
+  "name": "QR Code Kit",
+  "description": "Generate scannable, standard QR codes fully offline from one JSON spec — URLs, WiFi, contact cards, email, phone, SMS, geo, calendar events, and SEPA payments.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["qr-code", "generator", "offline", "wifi", "vcard", "payments", "productivity"],
+  "author": "Rafael Lopez Alcaraz",
+  "authorUrl": "https://github.com/rafalcaraz",
+  "version": "1.0.0",
+  "createdAt": "2026-07-28",
+  "updatedAt": "2026-07-28"
+}
