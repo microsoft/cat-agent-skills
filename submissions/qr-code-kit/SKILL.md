@@ -100,7 +100,7 @@ All specs are one JSON object with `"type"` plus these fields:
 Success looks like:
 ```json
 { "ok": true, "type": "wifi", "payload": "WIFI:T:WPA;S:Café Net;P:p@ss\\;word;;",
-  "file": "C:\\...\\qr.png", "format": "png", "version": 4, "error": "Q",
+  "file": "/.../qr.png", "format": "png", "version": 4, "error": "Q",
   "designator": "4-Q", "modules": 33, "image_pixels": {"width": 410, "height": 410},
   "engine": "segno (BSD-3, vendored)", "preview": "…block-character preview…" }
 ```
