@@ -1,6 +1,6 @@
 ---
 name: institutional-knowledge
-description: Extract and preserve a departing senior leader's institutional knowledge — projects, decisions, rationale, relationships, tribal knowledge — into a structured, multi-phase archive built from M365 signals (emails, Teams, meetings, SharePoint/OneDrive). Resumable across multiple sessions. Use when the user mentions "institutional knowledge", "knowledge extraction", "executive handoff", "leadership transition", "departing leader", "retire", "leaving", or asks to capture/preserve a leader's expertise before they leave.
+description: Extract and preserve a departing senior leader's institutional knowledge — projects, decisions, rationale, relationships, tribal knowledge — into a structured, multi-phase archive built from M365 signals (emails, Teams, meetings, SharePoint/OneDrive). Resumable across multiple sessions. Use when the user asks to "build an institutional knowledge archive", "preserve institutional knowledge", "capture a departing leader's knowledge", "run a knowledge extraction for an executive handoff", "document a leadership transition before someone retires", or otherwise to capture/preserve a specific leader's decision history and expertise before they leave. Do not trigger on incidental mentions of someone retiring, leaving, or being out of office.
 ---
 
 # /institutional-knowledge — Executive Knowledge Preservation
@@ -24,7 +24,7 @@ This skill is **resumable**. Each invocation reads `manifest.md` and continues w
 
 ## 1. First-run bootstrap
 
-Default archive path: `$env:USERPROFILE\Documents\institutional-knowledge` (Windows), `~/Documents/institutional-knowledge` elsewhere. Detection: an `AGENTS.md` containing the marker `institutional-knowledge-schema-v1` in its first 200 chars.
+Default archive path: `$env:USERPROFILE\Documents\institutional-knowledge` on Windows/PowerShell hosts, `~/Documents/institutional-knowledge` elsewhere. Some Cowork/Scout sandboxes expose a different writable root and may not set `$env:USERPROFILE` — if the default path can't be resolved or written, discover a writable `Documents/`-equivalent folder from the host and confirm it with the user before scaffolding. Detection: an `AGENTS.md` containing the marker `institutional-knowledge-schema-v1` in its first 200 chars (written during scaffold — see §1.4).
 
 **If no archive exists, run bootstrap.**
 
@@ -63,6 +63,16 @@ Each source becomes a row in `manifest.md` with status `pending` / `in_progress`
 ### 1.4 Scaffold the archive
 
 Create the layout (Section 2) and seed files: `AGENTS.md`, `index.md`, `log.md`, `manifest.md`, `phase-1-inventory.md`, `relationships.md`, `decisions.md`. Other files are created on first need.
+
+**`AGENTS.md` must begin with the detection marker so future sessions can recognize this archive (see §1).** Write the literal string `institutional-knowledge-schema-v1` within the first 200 characters of `AGENTS.md` — the recommended first line is an HTML comment so it renders invisibly:
+
+```markdown
+<!-- institutional-knowledge-schema-v1 -->
+# Institutional Knowledge Archive — <Leader name>
+<!-- schema + conventions for this archive; do not delete the marker above -->
+```
+
+Do not scaffold `AGENTS.md` without this marker: resumability (§11 "continue") depends on it.
 
 ### 1.5 Propose phase plan
 
@@ -441,7 +451,7 @@ For each month within the horizon, most-recent first:
 
 ### 8.2 Teams chat ingest
 
-1. `m365_list_chat_messages(chatId, top: 50, orderBy: 'createdDateTime desc')`. Page until older than horizon or last ingested ID.
+1. `m365_list_chat_messages(chatId, top: 50, orderBy: 'createdDateTime desc')`. Page until older than horizon or last ingested ID. *(Note: `m365_list_chat_messages` accepts `orderBy`; the chat-**listing** tool `m365_list_chats` in §1.3 does not — don't pass `orderBy` there.)*
 2. De-noise: system messages, reactions-only, join/leave.
 3. Write `raw/chat-<slug>/YYYY-MM.md`. Lift to relationships/projects/decisions.
 
@@ -465,7 +475,7 @@ For each month within the horizon, most-recent first:
 
 - Archive lives on the user's machine inside their M365 trust boundary. Never send outbound messages (email/Teams) referencing archive content during the build.
 - 1:1 chats and private emails ARE in scope — this is the leader's own data, for their own knowledge-preservation use.
-- HR, performance, compensation, health content is OUT of scope. If encountered, skip silently and note in `log.md` *without quoting*.
+- HR, performance, compensation, health content is OUT of scope. If encountered, skip silently and note in `log.md` *without quoting*. **This exclusion is best-effort:** it relies on folder-name heuristics (§1.3) plus content judgment, not a guaranteed classifier — when a signal is ambiguous, err toward excluding it and flag borderline items with `[Review Required]` rather than silently including them.
 - When the archive is eventually shared with successors or org leadership, the leader reviews `relationships.md`, `historical-context.md`, and the Phase 2 "Successor guidance" sections line-by-line — these are the most likely to contain content appropriate for the leader but not for broader distribution.
 - Confidential vendor/partner content gets `[Confidential]` markers; sensitive personal observations get `[Review Required]`.
 
