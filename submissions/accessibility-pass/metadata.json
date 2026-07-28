@@ -1,0 +1,11 @@
+{
+  "name": "Accessibility Pass",
+  "description": "Check a PowerPoint deck, Word document, HTML page, or Markdown file against Microsoft's Accessibility Checker rules (missing alt text, untitled slides, headerless tables, low contrast, illogical reading order) and fix what it finds.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["accessibility", "documents", "presentations", "powerpoint", "quality", "scripts"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
