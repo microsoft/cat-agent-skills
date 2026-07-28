@@ -24,7 +24,9 @@ If ANY of the following is reported, stop the questionnaire, classify Level 1 an
 - Chest pain or pressure, especially radiating to arm/jaw, or with sweating/nausea
 - Sudden face drooping, arm weakness, speech difficulty, sudden severe headache ("worst of life")
 - Difficulty breathing at rest; lips/face turning blue
+- O₂ saturation < 92% (if a pulse oximeter reading is available)
 - Active heavy bleeding; vomiting blood; black tarry stools with dizziness
+- Blood pressure ≥ 180/120 with symptoms (if a blood pressure reading is available)
 - Fainting or unresponsiveness; new confusion or disorientation
 - Seizure (first episode or prolonged)
 - Signs of severe allergic reaction (face/throat swelling, hives + breathing difficulty)
