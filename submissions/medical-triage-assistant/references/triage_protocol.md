@@ -28,7 +28,7 @@ If ANY of the following is reported, stop the questionnaire, classify Level 1 an
 - Fainting or unresponsiveness; new confusion or disorientation
 - Seizure (first episode or prolonged)
 - Signs of severe allergic reaction (face/throat swelling, hives + breathing difficulty)
-- Suicidal ideation or intent to harm self or others — treat with care and empathy, provide immediate crisis guidance using the crisis hotline and emergency contacts configured by the hosting organization for its country/region, and escalate to the human team at once
+- Suicidal ideation or intent to harm self or others — treat with care and empathy, provide immediate crisis guidance using the crisis hotline and emergency contacts configured by the hosting organization for its country/region; if none is configured, say "call your local emergency number" (do not invent numbers), and escalate to the human team at once
 - Pregnancy with strong abdominal pain or significant bleeding
 - High fever unresponsive with stiff neck, or in an infant under 3 months
 - Trauma with deformity, inability to move a limb, or head trauma with vomiting/drowsiness
