@@ -287,6 +287,10 @@ Pausing that one for 4 weeks. Say "resume lunch" to bring it back.
 - Keep quoted content short: the output is retained in run history.
 - If a source is unavailable, say which one and report on the rest rather than failing the whole run.
 
+## Running on a schedule
+
+The skill is the artifact; automations are thin wrappers that invoke it with a scope. `references/install-automation.md` sets up the two: a gated morning `today` on working days, and an unconditional end-of-week `week` that also runs `ahead`. Build and test the skill by hand before wrapping it; the automations add only a clock, and both stay read-only and self-only.
+
 ## What was verified, and what it cost
 
 - **Field shapes** were confirmed against live WorkIQ payloads rather than assumed. There is no required/optional attendee field, which is why movability is argued from organiser, tentative status, non-responses, missing agenda and recurrence instead. `organizer` is a display-name string only, so organiser matching is textual and unreliable for homonyms; matching the user by address in `attendees` is the reliable path.

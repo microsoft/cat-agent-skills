@@ -131,6 +131,10 @@ The output follows the language you write in. The structure never changes, only 
 
 Calendar and mail are needed; Teams adds the evening and weekend signal and can be left off. Nothing else is required: no shell, no filesystem, no browser. The skill only reads, so there is no write to approve.
 
+## Running on a schedule
+
+It works on demand, but the point of a mirror is that it catches you before the week is gone, so it is built to run on its own. Two thin automations do that: a **morning check** on working days that stays quiet unless the day is genuinely dense, and an **end-of-week** note that always lands, with the coming week folded in while there is still time to act. Both only read and only ever look at you. The paste-ready setup is in `references/install-automation.md`.
+
 ## Config reference
 
 | Setting | Default | What it changes |
