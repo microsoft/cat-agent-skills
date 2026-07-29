@@ -1,0 +1,135 @@
+# Breathing Room
+
+Some weeks you can feel the density before you can name it. Six meetings a day, no window between them, mail going out at 22:00, and a Saturday that quietly turned into a working day. By the time it is obvious, the week is already gone.
+
+Breathing Room reports that in numbers, from your own calendar and what you actually send. It tells you where the room is, where it is not, and which single meeting is the most movable when there is one worth moving. Then it stops.
+
+It is a mirror on rhythm, not a productivity tool. It never rates your output, never tells you to work more or less, and there is no "you should" anywhere in what it writes.
+
+## Three scopes
+
+**`today`** looks at the day ahead and names slots. A five-hour back-to-back run is a fact you can act on this morning, so this scope is precise and imperative.
+
+**`week`** looks back over one to four weeks. It is descriptive and numeric, names almost nothing, and carries at most one suggestion. Recurrence is required here: one mail at 22:00 is nothing, three evenings out of five is a pattern.
+
+**`ahead`** looks three to ten days out, while declining is still possible. This is the scope that earns the skill its place. The other two describe what already happened.
+
+## What it will not do
+
+**It reports on you and nobody else.** Every signal comes from the calendar and sent items of the person running it. There is no mode, no setting and no phrasing that makes it look at a colleague or a team. Ask it how loaded someone else is and it will decline. This is a boundary in the instructions, not a preference.
+
+**It says nothing about health.** No sleep, no stress, no fatigue, no advice. A calendar shows density, not a state of mind, and inferring one from the other would be both wrong and unwelcome.
+
+**It never acts.** It does not decline, move, create or send anything. It reports; you decide.
+
+## Only what you emit
+
+Receiving forty emails on a Sunday says nothing about your own boundary. Sending one at 23:00 does.
+
+So the skill counts meetings you organise or accepted, mail you sent, and Teams threads you started. It never counts inbound volume, unread anything, or meetings you declined. That single rule is what keeps it a mirror rather than a report on how busy other people are being at you.
+
+## Three things it gets right that are easy to get wrong
+
+**Most calendar hours are not load.** On a real calendar, all-day markers and free-marked events came to roughly two thirds of raw event hours. An out-of-office block spanning a week is not 120 hours of meetings. Everything is filtered before anything is counted: all-day, free, cancelled, and anything you declined. Skip that step and every number is wrong by a factor of three, which is worse than having no numbers at all.
+
+**"Movable" has to be argued.** A suggestion that just says "move this meeting" is a calendar reminder. So each one carries its reason: you are not the organiser, the event is marked tentative, three of six invitees never responded, there is no agenda, it is a recurring series rather than a one-off. Note what is absent from that list: whether attendees were marked optional. That field is not available in the data, so the skill does not claim it. An invented justification is worse than a thinner one.
+
+**Every observation carries a number.** "+38% versus your four-week average" does work that "you have been busy" never will. A finding with no number does not ship.
+
+## The quiet-day line
+
+`today` is gated. When the day is unremarkable you get exactly one line with a number and no suggestion, and nothing else.
+
+That line exists because of a platform constraint rather than a design choice, and it is worth being straight about it. The intended behaviour was complete silence on a normal day, on the principle that silence is what gives weight to the days the skill does speak. In practice a scheduled run notifies you whether or not it wrote anything, and a notification that opens on nothing is the most irritating outcome available: it spends the interruption and returns nothing. One line with a number at least pays for it.
+
+## Staying bearable for more than a week
+
+This is what usually decides whether something like this survives, so it is deliberate rather than incidental.
+
+At most two observations on a day, four on a week; beyond that they are ranked and cut. The same suggestion is never repeated on the same slot within a week. A suggestion ignored three times running snoozes itself for four weeks and **says so**, because a rule that goes quiet without announcing it reads as a bug. And weekend activity is reported as a trend with no suggestion attached: there is nothing useful to propose there, and proposing something anyway would be preachy.
+
+## What it stores
+
+Almost nothing. The four-week baseline is recomputed from your calendar on every run rather than stored, which means it works on the first run and stays correct after two weeks of leave.
+
+The only persisted state is what cannot be recomputed: which suggestions were made and whether they were followed, which rules are snoozed, and four settings.
+
+```json
+{
+  "config": { "workStart": "09:00", "workEnd": "18:30", "workDays": [1,2,3,4,5],
+              "sources": { "calendar": true, "mail": true, "teams": true } },
+  "suggestions": [ { "ruleId": "lunch_gap", "date": "2026-07-24", "action": "move 12:30 sync", "outcome": "ignored" } ],
+  "snoozed": { "weekend_activity": "2026-08-24" }
+}
+```
+
+Four settings, sane defaults, nothing to configure before first use. Every additional setting is a user lost.
+
+## What it looks like
+
+`today`, gate fired:
+
+```
+Breathing Room - Monday
+
+5h20 back-to-back, 9:00 to 14:20, no gap over 10 minutes.
+No lunch window today.
+
+- "Oltiva storyboard review" (11:00-11:30) is the most movable:
+  you are not the organiser and 3 of 6 invitees have not responded
+- Otherwise 15:30-16:15 is your only real gap - 45 min, still free
+```
+
+`today`, gate not fired:
+
+```
+Nothing worth flagging - 4h10 of meetings, two blocks over 45 min, lunch clear.
+```
+
+`week`:
+
+```
+Breathing Room - week of July 20
+
+Meetings: 26h30, +38% vs your 4-week average.
+Deep work blocks over 45 min: 3 this week, 7 on average.
+
+Evening sends 4 days out of 5 (after 18:30, 11 emails, 6 Teams threads).
+Wednesday and Thursday both past 22:00.
+
+Two weekends out of the last four had sent activity.
+
+Next week is already at 22h of meetings with 3 days still open.
+```
+
+`ahead`:
+
+```
+Breathing Room - looking ahead
+
+Week of August 3 is at 24h of meetings, 8 days out.
+Your average at this distance is 11h.
+
+Thursday is already full: 6 meetings, 3 of them marked tentative.
+```
+
+Note that `ahead` proposes nothing. Stating the fact is enough, and leaving the decision open keeps the skill from appearing to tell you what to decline.
+
+## Language
+
+The output follows the language you write in. The structure never changes, only the words. Two things are never translated: meeting titles and people's names, which come straight from your calendar and become unfindable if reworded, and the time format, which follows your locale.
+
+## Permissions
+
+Calendar and mail are needed; Teams adds the evening and weekend signal and can be left off. Nothing else is required: no shell, no filesystem, no browser. The skill only reads, so there is no write to approve.
+
+## Config reference
+
+| Setting | Default | What it changes |
+|---|---|---|
+| `workStart` | `09:00` | Before this counts as outside hours |
+| `workEnd` | `18:30` | After this counts as outside hours |
+| `workDays` | `[1,2,3,4,5]` | Days not listed count as non-working |
+| `sources` | all on | Turn off any of calendar, mail, Teams |
+
+Ask for a change in plain language, for example "my day ends at 17:30" or "stop looking at Teams".
