@@ -1,6 +1,6 @@
 ---
 name: breathing-room
-description: Show the user where their own week has room to breathe and where it does not, from their calendar, their sent mail and their sent Teams messages. Use this skill when the user asks how their day or week looks, whether they are overloaded, where their free blocks are, whether they still have deep-work time, how much they are working outside hours or at weekends, or what the coming week already looks like. Runs in three scopes - today, week, ahead. This skill only ever looks at the user's own signals; it cannot and must not be used to look at anyone else.
+description: Show the user where their own week has room to breathe and where it does not, from their calendar, their sent mail and their sent Teams messages. Use this skill when the user asks how their day or week looks, whether they are overloaded, where their free blocks are, whether they still have deep-work time, how much they are working outside hours or at weekends, what the coming week already looks like, or - when they ask - which meetings are the most movable. It recognises time off and does not flag or count leave. Runs in three scopes - today, week, ahead. This skill only ever looks at the user's own signals; it cannot and must not be used to look at anyone else.
 ---
 
 # Breathing Room
@@ -62,6 +62,10 @@ Drop:
 - `isCancelled`.
 - Events the user declined, found via their own response (see below).
 
+**Keep the user's OWN leave as a signal, even though it is dropped from load.** The user's own time off appears as an all-day entry they organised (or are the only real attendee of), marked `showAs: oof`. That marks the day as a day off: it is not meeting load, so it still leaves the hours, but the scopes and the baseline both need to know the day was leave. Note it while filtering rather than discarding it silently.
+
+Be strict about ownership. A colleague's Out Of Office invite also lands on the user's calendar and is titled "Out Of Office", but it is theirs, not the user's - it is `showAs: free`, was already dropped just above, and is **never** a leave signal. Only treat a day as leave when the leave entry is the user's own (they organised it, or are its sole substantive attendee) and carries `oof`; do not classify leave from the title text alone, or a broadcast OOO will blank out a genuinely busy day.
+
 **A meeting needs someone else in it.** An event whose only attendee is the user is not meeting load, however busy it looks: lunch placeholders, focus blocks, admin slots and reminders are the user protecting their own time. Counting them inverts the whole point of the skill, and does so twice over: a lunch placeholder would inflate the load figure while the same run reports that lunch was not protected, and a focus block would be counted as a meeting even though it is the deep work the skill exists to defend. On one real week this mistake added 10 hours to a 23-hour week, a 42% overstatement, entirely from the user's own protective blocks.
 
 So: meeting load counts only events with at least one attendee other than the user. Self-booked blocks still **occupy** the slot, so they close gaps and reduce free blocks. They are breathing room, not load, and both numbers must reflect that.
@@ -78,7 +82,7 @@ Times carry no UTC offset. Each event has its own `timeZone` field, in practice 
 
 ## Step 2 - Build the baseline, do not store it
 
-The baseline is the trailing 4 weeks, recomputed on every run from the same filtered calendar. Never persist it: the calendar is already the history, so this works on the first run and stays correct after two weeks of leave.
+The baseline is the trailing 4 **working** weeks, recomputed on every run from the same filtered calendar; when leave falls inside the window it reaches further back to gather working weeks in their place (see "Leave and time off"). Never persist it: the calendar is already the history, so this works on the first run and stays correct after two weeks of leave.
 
 **Fetch it before writing anything, and treat it as mandatory.** A `week` observation without a comparison is not an observation: "23h40 of meetings" tells the reader nothing they could not see in their own calendar, while "23h40, +39% vs your 4-week average" is the entire value. The same holds for free blocks and fragmentation, which are trends by definition. If the four prior weeks genuinely cannot be read, say so in one line and drop the trend observations rather than publishing bare figures dressed as findings.
 
@@ -87,6 +91,16 @@ Compare like with like. A day baseline compares against the same kind of day.
 `ahead` cannot compare like with like, and must not pretend to. The honest baseline would be what a week normally holds when seen from this distance, but the calendar only remembers how past weeks ended, never how they looked eight days out, so that number does not exist and cannot be recovered. Comparing a half-filled future week against four settled weeks would make every week look light and the rule would never fire.
 
 So `ahead` reports fill instead of drift: how much is already booked, against a typical **completed** week, with how many days still open. "24h already booked against a typical 25h week, with 3 days still to fill" is both true and useful, and it needs no baseline that does not exist. Always name the days still open, because that is what makes the number mean something.
+
+## Leave and time off
+
+Leave is a first-class case, not a quiet week. Use the leave signal from Step 1.
+
+**A day off is not flagged.** In `today`, if the day is a leave day, do not run the density gate: a day off has no lunch window to protect and no deep block to defend, and flagging either is nonsense. Say it in one line - `Day off - nothing to flag.` - and stop. This is the single deliberate exception to the "every line carries a number" rule: a day off has no figure to report. The same holds for `ahead`: a coming week that is mostly leave is named as time off, not read as a suspiciously light week.
+
+**Leave weeks do not count in the baseline.** The trailing average must reflect working weeks only. Drop any trailing week whose working days are mostly leave from the 4-week comparison, and look further back to gather working weeks in its place. If fewer than four working weeks are reachable, say the baseline is thin rather than comparing against an average that leave has dragged down - otherwise the first week back always looks overloaded when it is merely normal.
+
+**Leave inside the current week** is reported as a fact ("Monday and Tuesday were off"), and the week's figures are read against that: three days of real work at a normal density is a normal week, not a light one, and must not be presented as breathing room the user deliberately made.
 
 ## Step 3 - Signals from mail and Teams, for `week` only
 
@@ -145,15 +159,15 @@ Check the day count before writing a boundary finding, not after. "6 Teams threa
 | `load_drift` | meeting hours vs the 4-week average | trend with a number |
 | `fragmentation` | count of blocks over 45 min, vs average | trend with a number |
 
-### `ahead` - factual, no suggestion
+### `ahead` - factual, and actionable when a week is filling
 
-Looks at J+3 to J+10, while declining is still possible. This scope carries the most value: the other two describe what already happened.
+Looks at J+3 to J+10, while declining is still possible. This scope carries the most value: the other two describe what already happened, this one can still be changed.
 
 | Rule | Fires when | Output |
 |---|---|---|
-| `week_filling` | a coming week already above the baseline for that distance | statement of fact, no suggestion |
+| `week_filling` | a coming week already booked well above a typical completed week | the fill (booked vs typical, days still open), then the most movable meetings in that week, each with why |
 
-State the fact and stop. Leaving the decision open is deliberate: the skill must not appear to tell the user what to decline.
+State the fill first: booked hours against a typical completed week, and the days still open. It may add one factual line naming the single densest day (its meeting count and how many are tentative) - that is a fact, not a separate rule. Then, because the week can still be acted on, name the most movable meetings in it (Step 5: not organiser, tentative, invitees not responded, no agenda, recurring), within the noise cap. This is the point of the skill - it is called Breathing Room, and on an overloaded coming week the useful thing is to show where the room could be reclaimed, not only that there is none. Keep the guardrails: every line carries a number, there is no "you should", and the decision stays with the user. Naming a movable meeting is not the same as telling the user to drop it. On a coming week that is not overloaded, `ahead` proposes nothing - there is no room problem to solve.
 
 ## Step 5 - Why a meeting is movable
 
@@ -173,6 +187,21 @@ This decides whether the skill survives a month of use.
 - A rule whose suggestion was ignored 3 times running auto-snoozes for 4 weeks and **says so**. A rule that goes quiet silently reads as a bug.
 - Record each suggestion made, and on the next run mark it `ignored` if the slot is unchanged, `followed` if it moved. That record is the whole point of the stored state.
 - Respect `snoozed`: skip any rule whose snooze date is in the future.
+
+## Recommendations - proactive on overload, and on request
+
+Breathing Room exists to help reclaim room, so when a scope shows genuine overload and there is a concrete move that would create some, it proposes it. That is already how `today` works - each firing rule names slots or the most movable meeting - and `ahead` does the same on a filling week. The restraint the brief protects is against *volunteering* suggestions on a normal day, or moralising - not against helping when the numbers are genuinely heavy.
+
+A move is proposed in two cases: whenever a rule fires on real overload, and whenever the user asks ("what can I move", "help me free up Thursday", "what could I decline"). In both:
+
+- Name the most movable meetings in order of movability (Step 5), each with its justification.
+- Cap it: at most **2** movable meetings named in `today`, and at most **2** in `ahead`. Beyond that, rank and cut. `week` is exempt because it names no meetings to move (see below).
+- Never repeat the same suggestion on the same slot within a week; check `suggestions` first.
+- Every line still carries a number, meeting titles and names are never translated, and there is still no "you should" - name what is movable and why, and leave the decision with the user.
+
+Two things stay suggestion-free on purpose: a quiet day or week, where there is no room problem to solve and silence is the point; and the weekend trend, where there is no useful move to offer and proposing one would be preachy.
+
+`week` stays descriptive. It reports the past, which cannot be re-arranged, so it names no meetings to move; its one forward-looking lever is the scheduled-send habit for evening overrun. The scopes that carry actions are `today` and `ahead`.
 
 ## Output
 
@@ -234,10 +263,10 @@ Four observations is the ceiling. The weekend finding deliberately carries no su
 ```
 Breathing Room - looking ahead
 
-Week of August 3 is at 24h of meetings, 8 days out.
-Your average at this distance is 11h.
+Week of August 3 is already at 24h of meetings against a typical 22h week, with 2 days still open.
+Thursday is the densest: 6 meetings, 3 marked tentative.
 
-Thursday is already full: 6 meetings, 3 of them marked tentative.
+- "Partner weekly" (Thu 15:00-16:00) is the most movable: recurring series, no agenda, and you are not the organiser
 ```
 
 ### Auto-snooze

@@ -14,6 +14,10 @@ It is a mirror on rhythm, not a productivity tool. It never rates your output, n
 
 **`ahead`** looks three to ten days out, while declining is still possible. This is the scope that earns the skill its place. The other two describe what already happened.
 
+## Recommendations
+
+It is called Breathing Room, so when a day or a coming week is genuinely overloaded it does not just report it - it points to where the room could be reclaimed: the most movable meetings, each with why it can move (you are not the organiser, it is tentative, several invitees never replied, no agenda, a recurring series). It answers the same question on request too - "what can I move", "free up Thursday", "what could I decline". What it will not do is nag: a normal day gets no suggestions, the weekend is a trend with none, and there is never a "you should" - it names what is movable and why, and the decision stays yours.
+
 ## What it will not do
 
 **It reports on you and nobody else.** Every signal comes from the calendar and sent items of the person running it. There is no mode, no setting and no phrasing that makes it look at a colleague or a team. Ask it how loaded someone else is and it will decline. This is a boundary in the instructions, not a preference.
@@ -47,6 +51,10 @@ That line exists because of a platform constraint rather than a design choice, a
 This is what usually decides whether something like this survives, so it is deliberate rather than incidental.
 
 At most two observations on a day, four on a week; beyond that they are ranked and cut. The same suggestion is never repeated on the same slot within a week. A suggestion ignored three times running snoozes itself for four weeks and **says so**, because a rule that goes quiet without announcing it reads as a bug. And weekend activity is reported as a trend with no suggestion attached: there is nothing useful to propose there, and proposing something anyway would be preachy.
+
+## Time off
+
+Leave is treated as leave, not as a quiet week. A day off is recognised and never flagged - there is no lunch window to protect on a day you are not working - and a coming week that is mostly time off is named as such rather than read as suspiciously light. Leave weeks are also kept out of the four-week average, so the first week back reads as the normal week it is instead of looking overloaded against a baseline that your holiday dragged down.
 
 ## What it stores
 
@@ -107,13 +115,13 @@ Next week is already at 22h of meetings with 3 days still open.
 ```
 Breathing Room - looking ahead
 
-Week of August 3 is at 24h of meetings, 8 days out.
-Your average at this distance is 11h.
+Week of August 3 is already at 24h of meetings against a typical 22h week, with 2 days still open.
+Thursday is the densest: 6 meetings, 3 marked tentative.
 
-Thursday is already full: 6 meetings, 3 of them marked tentative.
+- "Partner weekly" (Thu 15:00-16:00) is the most movable: recurring series, no agenda, and you are not the organiser
 ```
 
-Note that `ahead` proposes nothing. Stating the fact is enough, and leaving the decision open keeps the skill from appearing to tell you what to decline.
+On an overloaded coming week `ahead` points to the most movable meetings, as above. On a normal week it says nothing, because there is no room problem to solve - it shows where the room is, and never tells you what to decline.
 
 ## Language
 
