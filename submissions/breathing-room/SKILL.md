@@ -194,7 +194,8 @@ Breathing Room exists to help reclaim room, so when a scope shows genuine overlo
 
 A move is proposed in two cases: whenever a rule fires on real overload, and whenever the user asks ("what can I move", "help me free up Thursday", "what could I decline"). In both:
 
-- Name the most movable meetings in order of movability (Step 5), each with its justification.
+- **Candidates come ONLY from the Step 1 filtered real-meeting set.** A movable suggestion is always a real meeting with someone else in it. Never propose moving a `free`-marked event, a `Following:` item, an all-day or out-of-hours artifact (a 00:00 entry, a cross-timezone invite), a meeting the user declined, or - most important - the user's own protective blocks: lunch placeholders, focus time, admin holds. Those are breathing room to keep, not load to shed, and proposing to move them is the exact inversion of the skill's job. Apply the Step 1 filter first, then rank what survives; do not scan the raw calendar.
+- Name the most movable meetings in order of movability (Step 5: not organiser, tentative, invitees not responded, no agenda, recurring), each with its justification. Rank by that logic, not by whichever event happens to be `free` or tentative.
 - Cap it: at most **2** movable meetings named in `today`, and at most **2** in `ahead`. Beyond that, rank and cut. `week` is exempt because it names no meetings to move (see below).
 - Never repeat the same suggestion on the same slot within a week; check `suggestions` first.
 - Every line still carries a number, meeting titles and names are never translated, and there is still no "you should" - name what is movable and why, and leave the decision with the user.
