@@ -5,8 +5,8 @@ agentDescription: "Use this skill whenever the user submits a product descriptio
 platforms: [Copilot Studio, Cowork, Scout]
 tags: [compliance, sustainability, greenwashing, eu-regulation, marketing-review, esg]
 author: Remi Dyon
-authorUrl: "https://github.com/remidyon"
-authorGithub: remidyon
+authorUrl: "https://github.com/raemone"
+authorGithub: raemone
 version: 1.0.0
 createdAt: 2026-07-21
 featured: true
