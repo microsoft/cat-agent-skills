@@ -32,7 +32,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from typing import Any, Mapping, MutableMapping, Optional, Sequence, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 
 import matplotlib
 
@@ -56,18 +56,26 @@ def _as_payload(source: PayloadLike) -> dict[str, Any]:
         return dict(source)
     if isinstance(source, str):
         text = source.strip()
-        if text.startswith("{") or text.startswith("["):
-            return json.loads(text)
+        if text.startswith("{"):
+            parsed = json.loads(text)
+            if not isinstance(parsed, dict):
+                raise TypeError("JSON payload must be an object, not an array.")
+            return parsed
+        if text.startswith("["):
+            raise TypeError("JSON payload must be an object {…}, not an array […].")
         with open(source, encoding="utf-8") as fh:
-            return json.load(fh)
+            parsed = json.load(fh)
+        if not isinstance(parsed, dict):
+            raise TypeError(f"JSON file must contain an object, got {type(parsed).__name__}.")
+        return parsed
     raise TypeError(
         f"Unsupported payload: {type(source)!r}. "
         "Pass a dict, JSON string, or path to a .json file."
     )
 
 
-def sample_outcomes(data: MutableMapping[str, Any]) -> np.ndarray:
-    """Draw Monte Carlo samples from the requested distribution."""
+def sample_outcomes(data: Mapping[str, Any]) -> tuple[np.ndarray, str]:
+    """Draw Monte Carlo samples. Returns (outcomes, normalised distribution name)."""
     simulations = int(data.get("simulations", 10_000))
     if simulations < 1:
         raise ValueError("`simulations` must be a positive integer.")
@@ -85,7 +93,7 @@ def sample_outcomes(data: MutableMapping[str, Any]) -> np.ndarray:
         if not (low <= peak <= high):
             raise ValueError("Triangular requires low <= peak <= high.")
         raw = np.random.triangular(low, peak, high, simulations)
-        return raw + base_modifier
+        return raw + base_modifier, distribution
 
     if distribution == "normal":
         if "mean" not in data or "std_dev" not in data:
@@ -96,8 +104,8 @@ def sample_outcomes(data: MutableMapping[str, Any]) -> np.ndarray:
             raise ValueError("`std_dev` must be >= 0.")
         raw = np.random.normal(mean, std_dev, simulations)
         if base_modifier > 0:
-            return base_modifier * (1.0 + raw)
-        return raw
+            return base_modifier * (1.0 + raw), distribution
+        return raw, distribution
 
     if distribution in ("log-normal", "lognormal"):
         if "mean" not in data or "sigma" not in data:
@@ -108,8 +116,8 @@ def sample_outcomes(data: MutableMapping[str, Any]) -> np.ndarray:
             raise ValueError("`sigma` must be >= 0.")
         raw = np.random.lognormal(mean, sigma, simulations)
         if base_modifier > 0:
-            return base_modifier * raw
-        return raw
+            return base_modifier * raw, "log-normal"
+        return raw, "log-normal"
 
     if distribution == "uniform":
         if "low" not in data or "high" not in data:
@@ -117,7 +125,7 @@ def sample_outcomes(data: MutableMapping[str, Any]) -> np.ndarray:
         low, high = float(data["low"]), float(data["high"])
         if high < low:
             raise ValueError("Uniform requires high >= low.")
-        return np.random.uniform(low, high, simulations) + base_modifier
+        return np.random.uniform(low, high, simulations) + base_modifier, distribution
 
     raise ValueError(
         f"Distribution type '{distribution}' is unsupported. "
@@ -420,25 +428,25 @@ def _fan_chart_js(
     steps: int,
     seed_start: Optional[float],
 ) -> str:
-    """Build translucent path lines from sampled terminal growth rates."""
+    """Build translucent path lines from sampled terminal values.
+
+    Uses additive linear interpolation so the chart works for any distribution,
+    including those with negative or near-zero values (normal, uniform). A
+    geometric / fractional-power approach would crash on negative outcomes.
+    """
     rng = np.random.default_rng(42)
     n_paths = max(1, min(int(paths), 200))
     n_steps = max(2, int(steps))
     start = float(seed_start) if seed_start is not None else float(np.median(outcomes))
 
-    # Treat each sample as a relative end-factor vs start; interpolate geometric path.
-    factors = outcomes / max(start, 1e-12)
-    pick = rng.choice(factors, size=n_paths, replace=True)
+    pick = rng.choice(outcomes, size=n_paths, replace=True)
 
     series = []
-    for f in pick:
-        # Constant per-step growth that lands at factor f after n_steps.
-        step_g = float(f) ** (1.0 / n_steps) - 1.0
-        vals = [start]
-        cur = start
-        for _ in range(n_steps):
-            cur = cur * (1.0 + step_g)
-            vals.append(float(cur))
+    for end_val in pick:
+        # Linear interpolation from start to the sampled terminal value.
+        end_val = float(end_val)
+        per_step = (end_val - start) / n_steps
+        vals = [start + per_step * i for i in range(n_steps + 1)]
         series.append(vals)
 
     year_labels = [f"Step {i}" for i in range(n_steps + 1)]
@@ -485,7 +493,7 @@ def _js_str(value: str) -> str:
 def simulate(payload: PayloadLike) -> dict[str, Any]:
     """Run a full Monte Carlo job and write artefacts. Returns a summary dict."""
     data = _as_payload(payload)
-    outcomes = sample_outcomes(data)
+    outcomes, distribution = sample_outcomes(data)
     stats = summarise(outcomes)
 
     prefix = str(data.get("out_prefix", "simulation"))
@@ -501,7 +509,7 @@ def simulate(payload: PayloadLike) -> dict[str, Any]:
     )
     save_csv(outcomes, csv_path)
 
-    distribution = str(data.get("distribution", "triangular")).lower()
+    # `distribution` already normalised by sample_outcomes (e.g. "log-normal" not "lognormal")
     result: dict[str, Any] = {
         "mean": stats["mean"],
         "p5": stats["p5"],
@@ -633,6 +641,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             f"distribution={result['distribution']}  n={result['simulations']}\n"
             f"mean={result['mean']:.4g}  p5={result['p5']:.4g}  "
             f"p50={result['p50']:.4g}  p95={result['p95']:.4g}\n"
+            f"summary: {result['brief_summary']}\n"
             f"chart={result['chart_path']}\n"
             f"csv={result['csv_path']}"
         )
