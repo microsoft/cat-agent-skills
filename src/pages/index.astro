@@ -5,6 +5,7 @@ import { getCollection } from "astro:content";
 import { PLATFORMS, PLATFORM_COLORS, initials, coverGradient } from "../lib/skills";
 import { authorKey, normalizeLogin } from "../lib/badges";
 import { getRating } from "../lib/ratings";
+import { getDownloads } from "../lib/downloads";
 
 const isSample = (s: { data: { tags: string[] } }) =>
   s.data.tags.includes("sample");
@@ -386,6 +387,7 @@ const allContributors = [...contributorMap.entries()]
           >
             <option value="featured">Featured</option>
             <option value="rating">Top rated</option>
+            <option value="downloads">Most downloaded</option>
             <option value="name">Name (A–Z)</option>
             <option value="newest">Newest</option>
           </select>
@@ -410,6 +412,7 @@ const allContributors = [...contributorMap.entries()]
             data-author-login={normalizeLogin(skill.data.authorGithub)}
             data-author-key={authorKey(skill.data.authorGithub, skill.data.author)}
             data-rating={getRating(skill.id)}
+            data-downloads={getDownloads(skill.id)}
             data-featured={skill.data.featured ? "1" : "0"}
             data-sample={skill.data.tags.includes("sample") ? "1" : "0"}
             data-updated={(
@@ -430,6 +433,7 @@ const allContributors = [...contributorMap.entries()]
               hasBundle={Boolean(skill.data.bundle)}
               isInstaller={skill.data.type === "automation" && Boolean(skill.data.bundle?.endsWith(".zip"))}
               rating={getRating(skill.id)}
+              downloads={getDownloads(skill.id)}
               featured={skill.data.featured}
             />
           </div>
@@ -495,7 +499,7 @@ const allContributors = [...contributorMap.entries()]
   const sentinel = document.getElementById("scroll-sentinel")!;
   const sortSelect = document.getElementById("sort-select") as HTMLSelectElement;
 
-  const SORTS = ["featured", "rating", "name", "newest"] as const;
+  const SORTS = ["featured", "rating", "downloads", "name", "newest"] as const;
   type SortMode = (typeof SORTS)[number];
 
   let query = "";
@@ -535,6 +539,8 @@ const allContributors = [...contributorMap.entries()]
       switch (sortMode) {
         case "rating":
           return num(b, "rating") - num(a, "rating") || byName(a, b);
+        case "downloads":
+          return num(b, "downloads") - num(a, "downloads") || byName(a, b);
         case "name":
           return byName(a, b);
         case "newest":

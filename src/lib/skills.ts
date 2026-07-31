@@ -92,6 +92,7 @@ export type SkillSummary = {
   hasBundle: boolean;
   featured: boolean;
   rating: number;
+  downloads: number;
   gradient: string;
   initials: string;
 };

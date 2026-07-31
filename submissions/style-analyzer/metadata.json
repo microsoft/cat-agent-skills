@@ -1,0 +1,11 @@
+{
+  "name": "Communication Style Analyzer",
+  "description": "Analyzes your Teams chats and emails to build a reusable profile of your writing voice — greetings, tone, length, punctuation, sign-offs, common phrases, and quirks — and saves it to memory for other assistants to use.",
+  "platforms": ["Cowork", "Scout"],
+  "tags": ["writing", "style", "teams", "email", "memory", "productivity"],
+  "author": "Srinivas Varukala",
+  "authorUrl": "https://github.com/svarukala",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
