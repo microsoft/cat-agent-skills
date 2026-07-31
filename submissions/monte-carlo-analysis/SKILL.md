@@ -40,7 +40,9 @@ Offer an interactive HTML chart when the user asks for it.
    - CSV of all iterations (opens in Excel)
 
    Also produce when asked:
-   - Interactive HTML (Chart.js histogram, or fan/time-series paths)
+   - Interactive HTML — self-contained Chart.js page with live sliders per
+     distribution parameter, a simulations count slider, and a P-threshold
+     calculator (`P(outcome < X) = ?`)
    - `.xlsx` workbook (requires `openpyxl`; otherwise point them to the CSV)
 
 ```python

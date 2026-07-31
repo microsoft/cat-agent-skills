@@ -19,11 +19,26 @@ Or:
 
 You get:
 
-1. **P5 / P50 / P95 / mean** in your domain units  
-2. A short **brief summary** of what the spread means for planning  
-3. **PNG histogram** with percentile marker lines  
-4. **CSV** of every iteration (opens in Excel)  
-5. Optional **interactive HTML** (Chart.js) and **.xlsx** when you ask
+1. **P5 / P50 / P95 / mean** in your domain units
+2. A short **brief summary** of what the spread means for planning
+3. **PNG histogram** with P5 / P50 / P95 marker lines
+4. **CSV** of every iteration (opens in Excel)
+5. Optional **interactive HTML** with live controls — see below
+6. Optional **.xlsx** with a Summary + Iterations sheet
+
+## Interactive HTML
+
+When you ask for `html: True`, the skill writes a self-contained browser page.
+No server needed — everything runs in JavaScript:
+
+- **Live sliders** for each distribution parameter (Min / Most Likely / Max for
+  triangular; Mean + Std Dev for normal; etc.)
+- **Simulations slider** from 500 to 50,000 — drag to see the curve stabilise
+- Stats cards (P5, P50, P95, Mean, Std dev, N) update instantly on every drag
+- **P-threshold calculator** — type any value to get `P(outcome < X) = …%`
+
+Open the `.html` file in any browser and hand it to a stakeholder for
+self-serve exploration.
 
 ## Distributions supported
 
@@ -35,7 +50,7 @@ You get:
 | Skewed positive risk (log mean + sigma) | Log-normal |
 
 If you only say "simulate our supply chain delays" with no numbers, the agent
-should ask which shape and which parameters — it will not invent them.
+will ask which shape and which parameters — it will not invent them.
 
 ## Dependencies
 

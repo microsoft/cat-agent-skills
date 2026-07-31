@@ -426,21 +426,28 @@ function boxMuller() {{
 
 function sampleOne(p) {{
   if (DIST === 'triangular') {{
-    const u = Math.random(), fc = (p.peak-p.low)/(p.high-p.low);
+    // Clamp params so low <= peak <= high even when sliders drift out of sync.
+    const lo = Math.min(p.low, p.peak, p.high);
+    const hi = Math.max(p.low, p.peak, p.high);
+    const pk = Math.max(lo, Math.min(p.peak, hi));
+    const span = hi - lo;
+    if (span < 1e-12) return lo;
+    const u = Math.random(), fc = (pk - lo) / span;
     return u < fc
-      ? p.low  + Math.sqrt(u*(p.high-p.low)*(p.peak-p.low))
-      : p.high - Math.sqrt((1-u)*(p.high-p.low)*(p.high-p.peak));
+      ? lo + Math.sqrt(u * span * (pk - lo))
+      : hi - Math.sqrt((1 - u) * span * (hi - pk));
   }}
   if (DIST === 'normal') {{
-    const raw = p.mean + p.std_dev * boxMuller();
+    const raw = p.mean + Math.max(p.std_dev, 0) * boxMuller();
     return BASE > 0 ? BASE * (1 + raw) : raw;
   }}
   if (DIST === 'log-normal' || DIST === 'lognormal') {{
-    const raw = Math.exp(p.mean + p.sigma * boxMuller());
+    const raw = Math.exp(p.mean + Math.max(p.sigma, 1e-9) * boxMuller());
     return BASE > 0 ? BASE * raw : raw;
   }}
   if (DIST === 'uniform') {{
-    return p.low + Math.random() * (p.high - p.low);
+    const lo = Math.min(p.low, p.high), hi = Math.max(p.low, p.high);
+    return lo + Math.random() * (hi - lo);
   }}
   return 0;
 }}
@@ -530,11 +537,18 @@ function updateChart(labels, counts, st) {{
   if (!chart) {{ initChart(labels, counts, st); return; }}
   chart.data.labels = labels;
   chart.data.datasets[0].data = counts;
-  // Vertical marker lines: overlay as single-point line datasets spanning full height.
-  // We encode them as vertical annotations via a dataset per marker using the bar's
-  // x-axis position. Use null-gap lines: one point at the marker x, height = max count.
-  const maxCount = Math.max(...counts);
-  const mkLine = (val) => labels.map((l) => (Math.abs(parseFloat(l) - val) < (parseFloat(labels[1]||labels[0])-parseFloat(labels[0]))*0.6 ? maxCount : null));
+  // Vertical marker lines: find the bin closest to each percentile and place a
+  // full-height spike there. Using "closest bin" guarantees exactly one bar per
+  // marker regardless of bin width or where the percentile lands.
+  const maxCount = Math.max(...counts, 1);
+  const mkLine = (val) => {{
+    let minDist = Infinity, minIdx = 0;
+    labels.forEach((l, i) => {{
+      const d = Math.abs(parseFloat(l) - val);
+      if (d < minDist) {{ minDist = d; minIdx = i; }}
+    }});
+    return labels.map((_, i) => i === minIdx ? maxCount : null);
+  }};
   chart.data.datasets[1].data = mkLine(st.p5);
   chart.data.datasets[2].data = mkLine(st.p50);
   chart.data.datasets[3].data = mkLine(st.p95);
@@ -679,9 +693,6 @@ def _escape(text: str) -> str:
         .replace('"', "&quot;")
     )
 
-
-def _js_str(value: str) -> str:
-    return json.dumps(value)
 
 
 def simulate(payload: PayloadLike) -> dict[str, Any]:
