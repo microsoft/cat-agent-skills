@@ -1,0 +1,12 @@
+{
+  "name": "Awaiting Reply",
+  "description": "A weekday-morning Scout automation that finds emails you sent that asked for something and never got an answer, reports how many are waiting, and prepares follow-up drafts in each thread's own language that it never sends.",
+  "platforms": ["Scout"],
+  "tags": ["email", "follow-up", "automation", "productivity", "inbox", "reminder", "multilingual"],
+  "author": "Allan De Castro",
+  "authorUrl": "https://github.com/allandecastro",
+  "authorGithub": "allandecastro",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
