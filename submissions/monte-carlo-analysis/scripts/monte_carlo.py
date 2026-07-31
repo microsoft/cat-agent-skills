@@ -503,26 +503,71 @@ const ctx = document.getElementById('mcChart').getContext('2d');
 let chart = null;
 let lastSamples = null;
 
-function initChart(labels, counts, st) {{
+// Current percentile values — written by updateCards(), read by the plugin.
+const MARKERS = {{ p5: 0, p50: 0, p95: 0 }};
+
+// afterDraw plugin: draws true vertical dashed lines for P5/P50/P95.
+// Avoids the null-gap line-dataset hack (single isolated points are invisible
+// when pointRadius=0 because there is nothing to draw a stroke between).
+const percentilePlugin = {{
+  id: 'percentileLines',
+  afterDraw(ch) {{
+    if (!ch.chartArea) return;
+    const {{ ctx: c, chartArea: {{ top, bottom }}, scales: {{ x }} }} = ch;
+    const defs = [
+      {{ key: 'p5',  color: '#C44E52', label: 'P5' }},
+      {{ key: 'p50', color: '#DD8452', label: 'P50' }},
+      {{ key: 'p95', color: '#55A868', label: 'P95' }},
+    ];
+    defs.forEach(({{ key, color, label }}) => {{
+      const val = MARKERS[key];
+      const labels = ch.data.labels;
+      if (!labels || !labels.length) return;
+      // Find the label (bin centre) closest to this percentile value.
+      let minDist = Infinity, bestLabel = labels[0];
+      labels.forEach(l => {{
+        const d = Math.abs(parseFloat(l) - val);
+        if (d < minDist) {{ minDist = d; bestLabel = l; }}
+      }});
+      const px = x.getPixelForValue(bestLabel);
+      // Draw the vertical line.
+      c.save();
+      c.beginPath();
+      c.setLineDash([5, 4]);
+      c.strokeStyle = color;
+      c.lineWidth = 2;
+      c.moveTo(px, top);
+      c.lineTo(px, bottom);
+      c.stroke();
+      // Draw the label just above the chart area.
+      c.font = 'bold 10px "Segoe UI", system-ui, sans-serif';
+      c.fillStyle = color;
+      c.textAlign = 'center';
+      c.textBaseline = 'bottom';
+      c.fillText(`${{label}}: ${{parseFloat(val.toPrecision(4)).toLocaleString()}}`, px, top - 2);
+      c.restore();
+    }});
+  }}
+}};
+
+function initChart(labels, counts) {{
+  Chart.register(percentilePlugin);
   chart = new Chart(ctx, {{
     type: 'bar',
     data: {{
       labels,
       datasets: [
         {{ label: 'Frequency', data: counts, backgroundColor: 'rgba(76,114,176,0.75)', borderWidth: 0 }},
-        {{ label: 'P5',  data: [], borderColor: '#C44E52', borderWidth: 2, type: 'line', pointRadius: 0, borderDash: [4,3] }},
-        {{ label: 'P50', data: [], borderColor: '#DD8452', borderWidth: 2, type: 'line', pointRadius: 0, borderDash: [4,3] }},
-        {{ label: 'P95', data: [], borderColor: '#55A868', borderWidth: 2, type: 'line', pointRadius: 0, borderDash: [4,3] }},
       ]
     }},
     options: {{
       responsive: true, maintainAspectRatio: false, animation: {{ duration: 120 }},
+      layout: {{ padding: {{ top: 24 }} }},
       plugins: {{
-        legend: {{ display: true, labels: {{ boxWidth: 14, font: {{ size: 11 }} }} }},
+        legend: {{ display: false }},
         tooltip: {{ callbacks: {{
-          label: (ctx) => ctx.dataset.label === 'Frequency'
-            ? `Count: ${{ctx.parsed.y}}`
-            : `${{ctx.dataset.label}}: ${{ctx.parsed.x?.toPrecision(5) ?? ''}}`,
+          label: (c) => `Count: ${{c.parsed.y}}`,
+          title: (items) => `~${{items[0].label}}`,
         }} }}
       }},
       scales: {{
@@ -534,24 +579,9 @@ function initChart(labels, counts, st) {{
 }}
 
 function updateChart(labels, counts, st) {{
-  if (!chart) {{ initChart(labels, counts, st); return; }}
+  if (!chart) {{ initChart(labels, counts); }}
   chart.data.labels = labels;
   chart.data.datasets[0].data = counts;
-  // Vertical marker lines: find the bin closest to each percentile and place a
-  // full-height spike there. Using "closest bin" guarantees exactly one bar per
-  // marker regardless of bin width or where the percentile lands.
-  const maxCount = Math.max(...counts, 1);
-  const mkLine = (val) => {{
-    let minDist = Infinity, minIdx = 0;
-    labels.forEach((l, i) => {{
-      const d = Math.abs(parseFloat(l) - val);
-      if (d < minDist) {{ minDist = d; minIdx = i; }}
-    }});
-    return labels.map((_, i) => i === minIdx ? maxCount : null);
-  }};
-  chart.data.datasets[1].data = mkLine(st.p5);
-  chart.data.datasets[2].data = mkLine(st.p50);
-  chart.data.datasets[3].data = mkLine(st.p95);
   chart.update();
 }}
 
@@ -562,9 +592,12 @@ function fmt(v) {{
 }}
 
 function updateCards(st) {{
-  document.getElementById('s-p5').textContent  = fmt(st.p5);
-  document.getElementById('s-p50').textContent = fmt(st.p50);
-  document.getElementById('s-p95').textContent = fmt(st.p95);
+  MARKERS.p5  = st.p5;
+  MARKERS.p50 = st.p50;
+  MARKERS.p95 = st.p95;
+  document.getElementById('s-p5').textContent   = fmt(st.p5);
+  document.getElementById('s-p50').textContent  = fmt(st.p50);
+  document.getElementById('s-p95').textContent  = fmt(st.p95);
   document.getElementById('s-mean').textContent = fmt(st.mean);
   document.getElementById('s-std').textContent  = fmt(st.std);
   document.getElementById('s-n').textContent    = st.n.toLocaleString();
