@@ -51,10 +51,10 @@ The model fills the spec; the pinned script does the exact encoding. `file` is t
 
 ## Credits & license
 
-Encoding by [**segno**](https://github.com/heuer/segno) (Lars Heuer), **BSD-3-Clause**, vendored **unmodified** under `assets/vendor/segno/` with its license included. The payload-builder, validation, and agent integration are this skill's original contribution.
+Encoding by [**segno**](https://github.com/heuer/segno) (Lars Heuer), **BSD-3-Clause**, vendored under `assets/vendor/segno/` with its license file included and Lars Heuer's copyright notices retained (the year range aligned to the author's current LICENSE). The payload-builder, validation, and agent integration are this skill's original contribution.
 
 ## Files
 
 - `SKILL.md` — agent-facing trigger, type-selection, and result-handling instructions.
 - `scripts/qr_generate.py` — the payload builder + validation layer that drives the engine.
-- `assets/vendor/segno/` — the vendored, unmodified segno engine (BSD-3) and its license.
+- `assets/vendor/segno/` — the vendored segno engine (BSD-3) and its license.

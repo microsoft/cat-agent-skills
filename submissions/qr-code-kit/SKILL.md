@@ -121,4 +121,4 @@ the user for the missing/invalid field. Do **not** pretend a QR was created.
   validate that a URL, IBAN, phone number, or email actually exists or is safe.
 - Larger data ⇒ denser codes. For long payloads prefer a short URL as the target.
 - The encoding engine is **segno** (BSD-3-Clause, © Lars Heuer), vendored under
-  `assets/vendor/segno` and used unmodified; its license ships with it.
+  `assets/vendor/segno` with its license and copyright notices retained.
