@@ -82,6 +82,15 @@ def sample_outcomes(data: Mapping[str, Any]) -> tuple[np.ndarray, str]:
     distribution = str(data.get("distribution", "triangular")).lower().replace("_", "-")
     base_modifier = float(data.get("base_modifier", 0.0))
 
+    if base_modifier:
+        if distribution not in ("triangular", "uniform", "normal", "log-normal", "lognormal"):
+            raise ValueError(
+                "`base_modifier` is only supported for triangular/uniform (offset) "
+                "and normal/log-normal (base scaling)."
+            )
+        if distribution in ("normal", "log-normal", "lognormal") and base_modifier <= 0:
+            raise ValueError("`base_modifier` must be > 0 for normal/log-normal base scaling.")
+
     if distribution == "triangular":
         for key in ("low", "peak", "high"):
             if key not in data:
