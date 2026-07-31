@@ -54,7 +54,7 @@ result = simulate({
     "simulations": 10000,
     "chart_title": "Cloud migration duration (days)",
     "x_axis_label": "Days",
-    "html": True,          # optional interactive Chart.js page
+    "html": True,          # optional interactive Chart.js page with live controls
     "excel": True,         # optional .xlsx (falls back to CSV if openpyxl missing)
     "out_prefix": "simulation",
 })

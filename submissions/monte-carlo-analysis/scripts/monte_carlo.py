@@ -262,14 +262,6 @@ def save_excel(
     return out
 
 
-def _histogram_bins(outcomes: np.ndarray, bins: int = 50) -> tuple[list[str], list[int]]:
-    counts, edges = np.histogram(outcomes, bins=bins)
-    labels = [
-        f"{(edges[i] + edges[i + 1]) / 2:.4g}" for i in range(len(counts))
-    ]
-    return labels, [int(c) for c in counts]
-
-
 def save_html(
     outcomes: np.ndarray,
     stats: Mapping[str, float],
@@ -277,27 +269,28 @@ def save_html(
     title: str,
     xlabel: str,
     out: str,
-    mode: str = "histogram",
-    paths: int = 50,
-    steps: int = 10,
-    seed_start: Optional[float] = None,
+    distribution: str = "triangular",
+    params: Optional[Mapping[str, Any]] = None,
     summary_text: str = "",
 ) -> str:
-    """Write a self-contained Chart.js HTML page (histogram or fan paths)."""
-    mode = (mode or "histogram").lower()
-    if mode == "fan":
-        chart_block = _fan_chart_js(
-            outcomes, title=title, xlabel=xlabel,
-            paths=paths, steps=steps, seed_start=seed_start,
-        )
-    else:
-        labels, counts = _histogram_bins(outcomes)
-        chart_block = _histogram_chart_js(
-            labels, counts, stats, title=title, xlabel=xlabel,
-        )
+    """Write a fully interactive Chart.js page with live parameter controls.
+
+    Users can drag sliders to change distribution parameters and simulations;
+    the histogram and all statistics update instantly in the browser via JS
+    resampling — no server round-trip needed.
+    """
+    params = dict(params or {})
+    dist = distribution.lower().replace("_", "-")
+    n_sims = int(params.get("simulations", len(outcomes)))
+    base_mod = float(params.get("base_modifier", 0.0))
+
+    # Build distribution-specific controls and the JS param object.
+    controls_html, js_params = _build_controls(dist, params, xlabel)
 
     summary_html = (
-        f'<p class="summary">{_escape(summary_text)}</p>' if summary_text else ""
+        f'<p class="summary" id="summaryText">{_escape(summary_text)}</p>'
+        if summary_text else
+        '<p class="summary" id="summaryText"></p>'
     )
 
     html = f"""<!DOCTYPE html>
@@ -308,58 +301,374 @@ def save_html(
   <title>{_escape(title)}</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
+    *, *::before, *::after {{ box-sizing: border-box; }}
     body {{
       font-family: "Segoe UI", system-ui, sans-serif;
       margin: 0; padding: 24px;
       background: #f4f6f9; color: #222;
     }}
     .wrap {{
-      max-width: 960px; margin: 0 auto; background: #fff;
+      max-width: 980px; margin: 0 auto; background: #fff;
       padding: 24px 28px; border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     }}
-    h1 {{ font-size: 1.35rem; margin: 0 0 8px; }}
-    .meta {{ color: #555; font-size: 0.95rem; margin-bottom: 16px; }}
+    h1 {{ font-size: 1.35rem; margin: 0 0 4px; }}
+    .meta {{ color: #666; font-size: 0.9rem; margin: 0 0 14px; }}
     .summary {{
       background: #eef3f9; border-left: 4px solid #4C72B0;
-      padding: 12px 14px; margin: 0 0 18px; line-height: 1.45;
-      font-size: 0.95rem;
+      padding: 10px 14px; margin: 0 0 16px; line-height: 1.5;
+      font-size: 0.92rem; border-radius: 0 4px 4px 0;
     }}
+    /* ── Controls ── */
+    .controls {{
+      background: #f8f9fb; border: 1px solid #e3e7ee;
+      border-radius: 6px; padding: 16px 18px; margin-bottom: 18px;
+    }}
+    .controls h2 {{
+      font-size: 0.95rem; margin: 0 0 12px; color: #444; font-weight: 600;
+    }}
+    .control-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px 20px;
+    }}
+    .control-item label {{
+      display: flex; justify-content: space-between;
+      font-size: 0.85rem; color: #555; margin-bottom: 4px;
+    }}
+    .control-item label .val {{
+      font-weight: 600; color: #222; min-width: 50px; text-align: right;
+    }}
+    .control-item input[type=range] {{
+      width: 100%; accent-color: #4C72B0; cursor: pointer;
+    }}
+    /* ── Threshold calculator ── */
+    .threshold {{
+      margin-top: 12px; padding-top: 12px;
+      border-top: 1px solid #e3e7ee;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      font-size: 0.88rem; color: #555;
+    }}
+    .threshold input[type=number] {{
+      width: 100px; padding: 4px 6px; border: 1px solid #ccc;
+      border-radius: 4px; font-size: 0.88rem;
+    }}
+    .threshold .pct-result {{
+      font-weight: 700; color: #4C72B0; font-size: 0.95rem;
+    }}
+    /* ── Stats cards ── */
     .stats {{
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px; margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px; margin-bottom: 18px;
     }}
     .stat {{
       background: #f4f6f9; border-radius: 6px; padding: 10px 12px;
     }}
-    .stat span {{ display: block; font-size: 0.75rem; color: #666; }}
-    .stat strong {{ font-size: 1.1rem; }}
-    .chart-box {{ position: relative; height: 420px; }}
+    .stat span {{ display: block; font-size: 0.75rem; color: #777; margin-bottom: 2px; }}
+    .stat strong {{ font-size: 1.05rem; font-weight: 700; }}
+    /* ── Chart ── */
+    .chart-box {{ position: relative; height: 380px; }}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>{_escape(title)}</h1>
-    <p class="meta">Interactive Monte Carlo view — Chart.js. Open this file in a browser.</p>
-    {summary_html}
-    <div class="stats">
-      <div class="stat"><span>P5</span><strong>{stats['p5']:.4g}</strong></div>
-      <div class="stat"><span>P50</span><strong>{stats['p50']:.4g}</strong></div>
-      <div class="stat"><span>P95</span><strong>{stats['p95']:.4g}</strong></div>
-      <div class="stat"><span>Mean</span><strong>{stats['mean']:.4g}</strong></div>
-      <div class="stat"><span>Iterations</span><strong>{len(outcomes):,}</strong></div>
+<div class="wrap">
+  <h1>{_escape(title)}</h1>
+  <p class="meta">Interactive Monte Carlo — adjust parameters to see the distribution update live.</p>
+  {summary_html}
+
+  <div class="controls">
+    <h2>Parameters</h2>
+    <div class="control-grid">
+{controls_html}
+      <div class="control-item">
+        <label>Simulations <span class="val" id="val-simulations">{n_sims:,}</span></label>
+        <input type="range" id="ctrl-simulations"
+          min="500" max="50000" step="500" value="{n_sims}"
+          oninput="syncLabel('simulations',this.value,true);resample()">
+      </div>
     </div>
-    <div class="chart-box"><canvas id="mcChart"></canvas></div>
+    <div class="threshold">
+      <span>P(outcome &lt;</span>
+      <input type="number" id="thresholdVal" placeholder="enter value"
+        oninput="updateThreshold()">
+      <span>) =</span>
+      <span class="pct-result" id="thresholdPct">—</span>
+    </div>
   </div>
-  <script>
-{chart_block}
-  </script>
+
+  <div class="stats">
+    <div class="stat"><span>P5 (downside)</span><strong id="s-p5">{stats['p5']:.4g}</strong></div>
+    <div class="stat"><span>P50 (median)</span><strong id="s-p50">{stats['p50']:.4g}</strong></div>
+    <div class="stat"><span>P95 (upside)</span><strong id="s-p95">{stats['p95']:.4g}</strong></div>
+    <div class="stat"><span>Mean</span><strong id="s-mean">{stats['mean']:.4g}</strong></div>
+    <div class="stat"><span>Std dev</span><strong id="s-std">{float(np.std(outcomes)):.4g}</strong></div>
+    <div class="stat"><span>Iterations</span><strong id="s-n">{len(outcomes):,}</strong></div>
+  </div>
+
+  <div class="chart-box"><canvas id="mcChart"></canvas></div>
+</div>
+
+<script>
+// ── Configuration injected by Python ──────────────────────────────────────
+const DIST   = {json.dumps(dist)};
+const PARAMS = {json.dumps(js_params)};
+const XLABEL = {json.dumps(xlabel)};
+const BASE   = {json.dumps(base_mod)};
+const BINS   = 50;
+
+// ── Random samplers ───────────────────────────────────────────────────────
+function boxMuller() {{
+  let u, v, s;
+  do {{ u = Math.random()*2-1; v = Math.random()*2-1; s = u*u+v*v; }}
+  while (s >= 1 || s === 0);
+  return u * Math.sqrt(-2 * Math.log(s) / s);
+}}
+
+function sampleOne(p) {{
+  if (DIST === 'triangular') {{
+    const u = Math.random(), fc = (p.peak-p.low)/(p.high-p.low);
+    return u < fc
+      ? p.low  + Math.sqrt(u*(p.high-p.low)*(p.peak-p.low))
+      : p.high - Math.sqrt((1-u)*(p.high-p.low)*(p.high-p.peak));
+  }}
+  if (DIST === 'normal') {{
+    const raw = p.mean + p.std_dev * boxMuller();
+    return BASE > 0 ? BASE * (1 + raw) : raw;
+  }}
+  if (DIST === 'log-normal' || DIST === 'lognormal') {{
+    const raw = Math.exp(p.mean + p.sigma * boxMuller());
+    return BASE > 0 ? BASE * raw : raw;
+  }}
+  if (DIST === 'uniform') {{
+    return p.low + Math.random() * (p.high - p.low);
+  }}
+  return 0;
+}}
+
+function generateSamples(n, p) {{
+  const a = new Float64Array(n);
+  for (let i = 0; i < n; i++) a[i] = sampleOne(p);
+  return a;
+}}
+
+// ── Statistics ────────────────────────────────────────────────────────────
+function percentile(sorted, pct) {{
+  const idx = (pct / 100) * (sorted.length - 1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}}
+
+function computeStats(arr) {{
+  const sorted = Float64Array.from(arr).sort();
+  let sum = 0, sum2 = 0;
+  for (const v of arr) {{ sum += v; sum2 += v*v; }}
+  const n = arr.length, mean = sum/n;
+  return {{
+    p5:  percentile(sorted, 5),
+    p50: percentile(sorted, 50),
+    p95: percentile(sorted, 95),
+    mean,
+    std: Math.sqrt(Math.max(0, sum2/n - mean*mean)),
+    n,
+    sorted,
+  }};
+}}
+
+// ── Histogram binning ─────────────────────────────────────────────────────
+function makeBins(arr, nBins) {{
+  let mn = Infinity, mx = -Infinity;
+  for (const v of arr) {{ if (v < mn) mn = v; if (v > mx) mx = v; }}
+  if (mn === mx) {{ mx = mn + 1; }}
+  const w = (mx - mn) / nBins;
+  const counts = new Array(nBins).fill(0);
+  const labels = [];
+  for (let i = 0; i < nBins; i++) labels.push((mn + (i+0.5)*w).toPrecision(4));
+  for (const v of arr) {{
+    let b = Math.floor((v - mn) / w);
+    if (b >= nBins) b = nBins - 1;
+    counts[b]++;
+  }}
+  return {{ labels, counts }};
+}}
+
+// ── Chart ─────────────────────────────────────────────────────────────────
+const ctx = document.getElementById('mcChart').getContext('2d');
+let chart = null;
+let lastSamples = null;
+
+function initChart(labels, counts, st) {{
+  chart = new Chart(ctx, {{
+    type: 'bar',
+    data: {{
+      labels,
+      datasets: [
+        {{ label: 'Frequency', data: counts, backgroundColor: 'rgba(76,114,176,0.75)', borderWidth: 0 }},
+        {{ label: 'P5',  data: [], borderColor: '#C44E52', borderWidth: 2, type: 'line', pointRadius: 0, borderDash: [4,3] }},
+        {{ label: 'P50', data: [], borderColor: '#DD8452', borderWidth: 2, type: 'line', pointRadius: 0, borderDash: [4,3] }},
+        {{ label: 'P95', data: [], borderColor: '#55A868', borderWidth: 2, type: 'line', pointRadius: 0, borderDash: [4,3] }},
+      ]
+    }},
+    options: {{
+      responsive: true, maintainAspectRatio: false, animation: {{ duration: 120 }},
+      plugins: {{
+        legend: {{ display: true, labels: {{ boxWidth: 14, font: {{ size: 11 }} }} }},
+        tooltip: {{ callbacks: {{
+          label: (ctx) => ctx.dataset.label === 'Frequency'
+            ? `Count: ${{ctx.parsed.y}}`
+            : `${{ctx.dataset.label}}: ${{ctx.parsed.x?.toPrecision(5) ?? ''}}`,
+        }} }}
+      }},
+      scales: {{
+        x: {{ title: {{ display: true, text: XLABEL }}, ticks: {{ maxTicksLimit: 12 }} }},
+        y: {{ title: {{ display: true, text: 'Frequency' }}, beginAtZero: true }},
+      }}
+    }}
+  }});
+}}
+
+function updateChart(labels, counts, st) {{
+  if (!chart) {{ initChart(labels, counts, st); return; }}
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = counts;
+  // Vertical marker lines: overlay as single-point line datasets spanning full height.
+  // We encode them as vertical annotations via a dataset per marker using the bar's
+  // x-axis position. Use null-gap lines: one point at the marker x, height = max count.
+  const maxCount = Math.max(...counts);
+  const mkLine = (val) => labels.map((l) => (Math.abs(parseFloat(l) - val) < (parseFloat(labels[1]||labels[0])-parseFloat(labels[0]))*0.6 ? maxCount : null));
+  chart.data.datasets[1].data = mkLine(st.p5);
+  chart.data.datasets[2].data = mkLine(st.p50);
+  chart.data.datasets[3].data = mkLine(st.p95);
+  chart.update();
+}}
+
+// ── Stats cards ───────────────────────────────────────────────────────────
+function fmt(v) {{
+  if (Math.abs(v) >= 1e6 || (Math.abs(v) < 0.001 && v !== 0)) return v.toExponential(3);
+  return parseFloat(v.toPrecision(5)).toLocaleString();
+}}
+
+function updateCards(st) {{
+  document.getElementById('s-p5').textContent  = fmt(st.p5);
+  document.getElementById('s-p50').textContent = fmt(st.p50);
+  document.getElementById('s-p95').textContent = fmt(st.p95);
+  document.getElementById('s-mean').textContent = fmt(st.mean);
+  document.getElementById('s-std').textContent  = fmt(st.std);
+  document.getElementById('s-n').textContent    = st.n.toLocaleString();
+}}
+
+// ── Threshold P(X < t) ────────────────────────────────────────────────────
+function updateThreshold() {{
+  const t = parseFloat(document.getElementById('thresholdVal').value);
+  const el = document.getElementById('thresholdPct');
+  if (!lastSamples || isNaN(t)) {{ el.textContent = '—'; return; }}
+  let below = 0;
+  for (const v of lastSamples) {{ if (v < t) below++; }}
+  el.textContent = (below / lastSamples.length * 100).toFixed(1) + '%';
+}}
+
+// ── Label sync ────────────────────────────────────────────────────────────
+function syncLabel(id, val, isInt) {{
+  const el = document.getElementById('val-' + id);
+  if (!el) return;
+  const n = parseFloat(val);
+  el.textContent = isInt ? Math.round(n).toLocaleString() : parseFloat(n.toPrecision(5)).toLocaleString();
+}}
+
+// ── Read current params from sliders ─────────────────────────────────────
+function readParams() {{
+  const p = {{}};
+  Object.keys(PARAMS).forEach(k => {{
+    const el = document.getElementById('ctrl-' + k);
+    p[k] = el ? parseFloat(el.value) : PARAMS[k];
+  }});
+  return p;
+}}
+
+// ── Main resample + redraw ────────────────────────────────────────────────
+function resample() {{
+  const p = readParams();
+  const n = parseInt(document.getElementById('ctrl-simulations').value, 10);
+  lastSamples = generateSamples(n, p);
+  const st  = computeStats(lastSamples);
+  const {{ labels, counts }} = makeBins(lastSamples, BINS);
+  updateCards(st);
+  updateChart(labels, counts, st);
+  updateThreshold();
+}}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+resample();
+</script>
 </body>
 </html>
 """
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(html)
     return out
+
+
+def _build_controls(
+    dist: str,
+    params: Mapping[str, Any],
+    xlabel: str,
+) -> tuple[str, dict[str, Any]]:
+    """Return (controls_html, js_params) for the given distribution."""
+
+    def slider(ctrl_id: str, label: str, val: float, lo: float, hi: float,
+               step: float = 0.01, is_int: bool = False) -> str:
+        fmt_val = str(int(val)) if is_int else f"{val:g}"
+        onchange = f"syncLabel('{ctrl_id}',this.value,{str(is_int).lower()});resample()"
+        return (
+            f'      <div class="control-item">\n'
+            f'        <label>{_escape(label)}'
+            f' <span class="val" id="val-{ctrl_id}">{fmt_val}</span></label>\n'
+            f'        <input type="range" id="ctrl-{ctrl_id}"'
+            f' min="{lo}" max="{hi}" step="{step}" value="{val}"'
+            f' oninput="{onchange}">\n'
+            f'      </div>'
+        )
+
+    lines: list[str] = []
+    js_params: dict[str, Any] = {}
+
+    if dist == "triangular":
+        low  = float(params.get("low",  0))
+        peak = float(params.get("peak", 5))
+        high = float(params.get("high", 10))
+        span = high - low or 1.0
+        lo_min, hi_max = low - span, high + span
+        step = max(0.1, round(span / 100, 2))
+        lines.append(slider("low",  f"Min ({xlabel})", low,  lo_min, peak, step))
+        lines.append(slider("peak", f"Most likely ({xlabel})", peak, low, high, step))
+        lines.append(slider("high", f"Max ({xlabel})", high, peak, hi_max, step))
+        js_params = {"low": low, "peak": peak, "high": high}
+
+    elif dist == "normal":
+        mean    = float(params.get("mean",    0))
+        std_dev = float(params.get("std_dev", 1))
+        span = max(std_dev * 5, abs(mean) * 0.5, 1.0)
+        step = max(0.01, round(span / 200, 4))
+        lines.append(slider("mean",    f"Mean ({xlabel})", mean,    mean - span, mean + span, step))
+        lines.append(slider("std_dev", "Std dev",          std_dev, 0.001,       std_dev * 4, max(step, 0.001)))
+        js_params = {"mean": mean, "std_dev": std_dev}
+
+    elif dist in ("log-normal", "lognormal"):
+        mean  = float(params.get("mean",  0))
+        sigma = float(params.get("sigma", 1))
+        lines.append(slider("mean",  "Log mean (μ)",      mean,  mean - 3,  mean + 3,  0.05))
+        lines.append(slider("sigma", "Log sigma (σ)",     sigma, 0.05, sigma * 4, 0.05))
+        js_params = {"mean": mean, "sigma": sigma}
+
+    else:  # uniform
+        low  = float(params.get("low",  0))
+        high = float(params.get("high", 10))
+        span = high - low or 1.0
+        step = max(0.1, round(span / 100, 2))
+        lines.append(slider("low",  f"Min ({xlabel})", low,  low - span, high,     step))
+        lines.append(slider("high", f"Max ({xlabel})", high, low,        high + span, step))
+        js_params = {"low": low, "high": high}
+
+    return "\n".join(lines), js_params
 
 
 def _escape(text: str) -> str:
@@ -369,121 +678,6 @@ def _escape(text: str) -> str:
         .replace(">", "&gt;")
         .replace('"', "&quot;")
     )
-
-
-def _histogram_chart_js(
-    labels: Sequence[str],
-    counts: Sequence[int],
-    stats: Mapping[str, float],
-    *,
-    title: str,
-    xlabel: str,
-) -> str:
-    return f"""
-const labels = {json.dumps(list(labels))};
-const counts = {json.dumps(list(counts))};
-const ctx = document.getElementById('mcChart').getContext('2d');
-new Chart(ctx, {{
-  type: 'bar',
-  data: {{
-    labels,
-    datasets: [{{
-      label: 'Frequency',
-      data: counts,
-      backgroundColor: 'rgba(76, 114, 176, 0.75)',
-      borderWidth: 0
-    }}]
-  }},
-  options: {{
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {{
-      title: {{ display: true, text: {_js_str(title)} }},
-      legend: {{ display: false }},
-      tooltip: {{
-        callbacks: {{
-          afterBody: () => [
-            'P5: {stats["p5"]:.4g}',
-            'P50: {stats["p50"]:.4g}',
-            'P95: {stats["p95"]:.4g}'
-          ]
-        }}
-      }}
-    }},
-    scales: {{
-      x: {{ title: {{ display: true, text: {_js_str(xlabel)} }}, ticks: {{ maxTicksLimit: 12 }} }},
-      y: {{ title: {{ display: true, text: 'Frequency' }}, beginAtZero: true }}
-    }}
-  }}
-}});
-"""
-
-
-def _fan_chart_js(
-    outcomes: np.ndarray,
-    *,
-    title: str,
-    xlabel: str,
-    paths: int,
-    steps: int,
-    seed_start: Optional[float],
-) -> str:
-    """Build translucent path lines from sampled terminal values.
-
-    Uses additive linear interpolation so the chart works for any distribution,
-    including those with negative or near-zero values (normal, uniform). A
-    geometric / fractional-power approach would crash on negative outcomes.
-    """
-    rng = np.random.default_rng(42)
-    n_paths = max(1, min(int(paths), 200))
-    n_steps = max(2, int(steps))
-    start = float(seed_start) if seed_start is not None else float(np.median(outcomes))
-
-    pick = rng.choice(outcomes, size=n_paths, replace=True)
-
-    series = []
-    for end_val in pick:
-        # Linear interpolation from start to the sampled terminal value.
-        end_val = float(end_val)
-        per_step = (end_val - start) / n_steps
-        vals = [start + per_step * i for i in range(n_steps + 1)]
-        series.append(vals)
-
-    year_labels = [f"Step {i}" for i in range(n_steps + 1)]
-    datasets_js = []
-    for i, path in enumerate(series):
-        datasets_js.append({
-            "label": "Simulated paths" if i == 0 else "",
-            "data": path,
-            "borderColor": "rgba(0, 120, 212, 0.18)",
-            "borderWidth": 1.5,
-            "fill": False,
-            "pointRadius": 0,
-        })
-
-    return f"""
-const labels = {json.dumps(year_labels)};
-const datasets = {json.dumps(datasets_js)};
-const ctx = document.getElementById('mcChart').getContext('2d');
-new Chart(ctx, {{
-  type: 'line',
-  data: {{ labels, datasets }},
-  options: {{
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {{
-      title: {{ display: true, text: {_js_str(title)} }},
-      legend: {{
-        labels: {{ filter: (item) => item.text !== '' }}
-      }}
-    }},
-    scales: {{
-      x: {{ title: {{ display: true, text: {_js_str(xlabel or 'Timeline')} }} }},
-      y: {{ title: {{ display: true, text: 'Value' }} }}
-    }}
-  }}
-}});
-"""
 
 
 def _js_str(value: str) -> str:
@@ -536,10 +730,8 @@ def simulate(payload: PayloadLike) -> dict[str, Any]:
             title=title,
             xlabel=xlabel,
             out=html_path,
-            mode=str(data.get("html_mode", "histogram")),
-            paths=int(data.get("fan_paths", 50)),
-            steps=int(data.get("fan_steps", 10)),
-            seed_start=data.get("fan_start"),
+            distribution=distribution,
+            params=data,
             summary_text=result["brief_summary"],
         )
         result["html_path"] = os.path.abspath(html_path)
@@ -585,13 +777,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--title", default=None, dest="chart_title")
     p.add_argument("--xlabel", default=None, dest="x_axis_label")
     p.add_argument("--out-prefix", default="simulation", dest="out_prefix")
-    p.add_argument("--html", action="store_true", help="Also write interactive HTML.")
-    p.add_argument(
-        "--html-mode",
-        choices=["histogram", "fan"],
-        default="histogram",
-        help="HTML chart style (default: histogram).",
-    )
+    p.add_argument("--html", action="store_true", help="Also write interactive HTML with live parameter controls.")
     p.add_argument("--excel", action="store_true", help="Also write .xlsx if openpyxl is available.")
     p.add_argument("--json-out", action="store_true", help="Print the result payload as JSON.")
     return p
@@ -624,7 +810,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.html:
         data["html"] = True
-        data["html_mode"] = args.html_mode
     if args.excel:
         data["excel"] = True
 

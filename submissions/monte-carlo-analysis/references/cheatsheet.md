@@ -18,8 +18,7 @@ result = simulate({ ... })
 | `base_modifier` | no | offset (triangular/uniform) or scale base (normal/log-normal) |
 | `chart_title` | no | PNG / HTML title |
 | `x_axis_label` | no | axis label in domain units |
-| `html` | no | `true` → write Chart.js HTML |
-| `html_mode` | no | `histogram` (default) or `fan` (path fan chart) |
+| `html` | no | `true` → write interactive Chart.js HTML with live parameter sliders |
 | `excel` | no | `true` → try `.xlsx` (needs `openpyxl`) |
 | `out_prefix` | no | default `simulation` → `simulation_density.png`, etc. |
 
@@ -78,11 +77,7 @@ python scripts/monte_carlo.py \
 python scripts/monte_carlo.py \
   --distribution log-normal --mean 1.5 --sigma 0.75 \
   --title "Ransomware recovery (hours)" --xlabel "Hours" \
-  --html --html-mode histogram
-
-# Fan / time-series style interactive view
-python scripts/monte_carlo.py --payload assets/sample_triangular.json \
-  --html --html-mode fan
+  --html
 ```
 
 ---
