@@ -5,6 +5,8 @@ agentDescription: "Responde dúvidas de legislação trabalhista brasileira (CLT
 platforms: [Copilot Studio, Cowork, Scout]
 tags: [rh, folha, clt, brasil, trabalhista, rescisao, inss, irrf, verbas-rescisorias, departamento-pessoal]
 author: Michael Ferro Pereira
+authorUrl: "https://github.com/michaelfp"
+authorGithub: michaelfp
 bundle: bundles/clt-hr-assistant.zip
 ---
 # Assistente CLT para RH
