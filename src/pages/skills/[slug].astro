@@ -12,6 +12,7 @@ import { formatDate, PLATFORM_COLORS, initials, coverGradient } from "../../lib/
 import { withBase } from "../../lib/url";
 import { authorKey, normalizeLogin } from "../../lib/badges";
 import { getRating } from "../../lib/ratings";
+import { getDownloads } from "../../lib/downloads";
 import { ANALYTICS_ENABLED } from "../../lib/analytics-config";
 import {
   RATINGS_ENABLED,
@@ -77,6 +78,7 @@ if (isAutomation && d.bundle && d.bundle.endsWith(".json")) {
 const updated = formatDate(d.updatedAt ?? d.createdAt);
 const created = formatDate(d.createdAt);
 const rating = getRating(skill.id);
+const downloads = getDownloads(skill.id);
 const isSample = d.tags.includes("sample");
 
 const meta: Array<[string, string, string?]> = [];
@@ -234,6 +236,30 @@ const authorProfileUrl =
             <span>{rating}</span>
             <span class="text-muted">{rating === 1 ? "rating" : "ratings"}</span>
           </a>
+          {
+            downloads > 0 && (
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-fg"
+                title={`${downloads.toLocaleString("en-US")} all-time ${downloads === 1 ? "download" : "downloads"}`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="h-3.5 w-3.5"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+                </svg>
+                <span>{downloads.toLocaleString("en-US")}</span>
+                <span class="text-muted">{downloads === 1 ? "download" : "downloads"}</span>
+              </span>
+            )
+          }
         </div>
 
         {

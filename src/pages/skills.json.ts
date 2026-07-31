@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { coverGradient, initials, type SkillSummary } from "../lib/skills";
 import { getRating } from "../lib/ratings";
+import { getDownloads } from "../lib/downloads";
 
 export const GET: APIRoute = async () => {
   const skills = await getCollection("skills");
@@ -23,6 +24,7 @@ export const GET: APIRoute = async () => {
         hasBundle: Boolean(d.bundle),
         featured: d.featured,
         rating: getRating(skill.id),
+        downloads: getDownloads(skill.id),
         gradient: coverGradient(skill.id, d.coverColor),
         initials: initials(d.name),
       };
