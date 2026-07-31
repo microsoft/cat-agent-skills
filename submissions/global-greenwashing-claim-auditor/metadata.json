@@ -1,0 +1,26 @@
+{
+  "name": "Global Greenwashing Claim Auditor",
+  "description": "Audit environmental claims in CSV, XLSX, DOCX, PPTX, conversational text, and public websites with separate ANY, CA, EU, and UK findings.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "greenwashing",
+    "environmental claims",
+    "sustainability",
+    "compliance",
+    "canada",
+    "european union",
+    "united kingdom",
+    "documents",
+    "spreadsheets",
+    "web"
+  ],
+  "author": "Chris Garty",
+  "authorUrl": "https://github.com/ChrisGarty",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-28"
+}

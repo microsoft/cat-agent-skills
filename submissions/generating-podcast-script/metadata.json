@@ -1,0 +1,11 @@
+{
+  "name": "Podcast Script Generator",
+  "description": "Turn a topic or a pile of source material \u2014 a newsletter, news digest, or set of articles \u2014 into a two-host, NotebookLM-style podcast episode, with multi-voice SSML and optional Azure Text-to-Speech audio.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["content", "podcast", "audio", "text-to-speech", "ssml", "news"],
+  "author": "Remi Dyon",
+  "authorUrl": "https://github.com/raemone",
+  "version": "1.1.0",
+  "createdAt": "2026-07-28",
+  "updatedAt": "2026-07-28"
+}
