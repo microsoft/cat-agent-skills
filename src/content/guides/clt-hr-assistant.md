@@ -59,12 +59,13 @@ Todo janeiro, após o novo decreto (salário mínimo), a portaria (INSS) e a pub
 1. Atualize `assets/tables_2026.json` (e os campos de ano de referência).
 2. Rode `python scripts/fetch_current_values.py` — ele deve reportar `OK`.
 
-## Fontes oficiais utilizadas (valores de 2026)
+## Fontes oficiais utilizadas (valores de 2026 — todas do governo)
 
-- Salário mínimo R$ 1.621,00 — [Agência Brasil](https://agenciabrasil.ebc.com.br/economia/noticia/2026-02/salario-minimo-de-r-1621-comeca-ser-pago-nesta-segunda) / Banco Central, série SGS 1619
-- Tabela e teto do INSS (R$ 8.475,55) — [Contabilizei — Tabela INSS 2026](https://www.contabilizei.com.br/contabilidade-online/tabela-inss/)
-- Tabela do IRRF, dedução por dependente e desconto simplificado — [Contabilizei — Tabela IR 2026](https://www.contabilizei.com.br/contabilidade-online/tabela-imposto-de-renda/)
-- Fórmula do redutor da Lei 15.270/2025 e exemplo oficial — [Receita Federal — orientação oficial](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2025/dezembro/receita-federal-orienta-fontes-pagadoras-e-contribuintes-a-calcular-a-reducao-do-imposto-de-renda-a-partir-de-1o-de-janeiro-de-2026)
+- Salário mínimo R$ 1.621,00 — [Decreto nº 12.797/2025 (Planalto)](https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/decreto/d12797.htm) e [Banco Central, série SGS 1619](https://api.bcb.gov.br/dados/serie/bcdata.sgs.1619/dados/ultimos/1?formato=json)
+- Tabela e teto do INSS (R$ 8.475,55) — Portaria Interministerial MPS/MF nº 13, de 09/01/2026; [tabela oficial no gov.br/INSS](https://www.gov.br/inss/pt-br/direitos-e-deveres/inscricao-e-contribuicao/tabela-de-contribuicao-mensal)
+- Tabela progressiva mensal do IRRF — [Lei nº 15.191/2025 (Câmara dos Deputados)](https://www2.camara.leg.br/legin/fed/lei/2025/lei-15191-11-agosto-2025-797839-publicacaooriginal-176105-pl.html)
+- Redutor do IR 2026 (isenção até R$ 5.000) — [Lei nº 15.270/2025 (Câmara dos Deputados)](https://www2.camara.leg.br/legin/fed/lei/2025/lei-15270-26-novembro-2025-798354-publicacaooriginal-177117-pl.html) e [orientação de cálculo da Receita Federal](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2025/dezembro/receita-federal-orienta-fontes-pagadoras-e-contribuintes-a-calcular-a-reducao-do-imposto-de-renda-a-partir-de-1o-de-janeiro-de-2026)
+- Dedução por dependente (R$ 189,59/mês) — Lei nº 9.250/1995, art. 4º, III (redação da Lei nº 13.149/2015)
 
 ## Aviso legal
 
