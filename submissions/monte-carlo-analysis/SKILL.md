@@ -1,14 +1,6 @@
 ---
 name: monte-carlo-analysis
-description: >-
-  Use this skill whenever the user asks to run a Monte Carlo simulation, model
-  risk or uncertainty with random sampling, estimate P5/P50/P95 outcomes, or
-  produce a probability distribution for project timelines, portfolio returns,
-  downtime, costs, or similar uncertain variables. Trigger on phrases like
-  "run a Monte Carlo", "simulate outcomes", "probability chart for best and
-  worst case", or when they give min/most-likely/max (or mean/std) and want
-  thousands of iterations. Do NOT trigger for deterministic forecasts with no
-  uncertainty, or for generic charts unrelated to simulation.
+description: "Use this skill whenever the user asks to run a Monte Carlo simulation, model risk or uncertainty with random sampling, estimate P5/P50/P95 outcomes, or produce a probability distribution for project timelines, portfolio returns, downtime, costs, or similar uncertain variables. Trigger on phrases like 'run a Monte Carlo', 'simulate outcomes', 'probability chart for best and worst case', or when they give min/most-likely/max (or mean/std) and want thousands of iterations. Do NOT trigger for deterministic forecasts with no uncertainty, or for generic charts unrelated to simulation."
 ---
 
 Convert an unstructured risk question into a structured Monte Carlo run via the
