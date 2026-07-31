@@ -22,6 +22,14 @@ Offer an interactive HTML chart when the user asks for it.
    - **Uniform** — every value between Minimum and Maximum is equally likely.
    - **Log-normal** — non-negative, right-skewed risks; user gives log-scale
      `mean` and `sigma`. Highlight the Mean vs P50 gap when skew is large.
+   - **Poisson** — count of rare events in a fixed interval; user gives `lambda`
+     (expected count per interval, e.g. outages per month).
+   - **Weibull** — time-to-failure / reliability; user gives `shape` (k) and
+     `scale` (λ). Shape < 1 → infant mortality, = 1 → exponential, > 1 → wear-out.
+   - **Beta** — bounded probability [0, 1] or percentage; user gives `alpha` and
+     `beta`. Useful for proportions, conversion rates, or task-completion estimates.
+   - **Exponential** — memoryless inter-arrival times; user gives `scale` (mean =
+     1 / rate). Good for time between random events (calls, failures, requests).
 
 3. **Defaults.** If simulations are unspecified, use `10000`. Prefer a clear
    `chart_title` and `x_axis_label` in the user's domain units (days, USD, hours).
@@ -100,3 +108,6 @@ Raw iterations: {csv_path}
 - `assets/sample_triangular.json` — demo payload (project timeline)
 - `assets/sample_normal.json` — demo payload (portfolio returns)
 - `assets/sample_lognormal.json` — demo payload (skewed downtime)
+- `assets/sample_poisson.json` — demo payload (event count per interval)
+- `assets/sample_weibull.json` — demo payload (component lifetime)
+- `assets/sample_exponential.json` — demo payload (time between arrivals)

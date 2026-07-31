@@ -110,6 +110,10 @@ self-serve "what-if" exploration without needing to re-run the agent.
 | Mean and standard deviation | Normal |
 | Flat range min–max | Uniform |
 | Skewed positive risk (log mean + sigma) | Log-normal |
+| Expected count of events in an interval (λ) | Poisson |
+| Time-to-failure / reliability (shape k, scale λ) | Weibull |
+| A proportion or completion rate (α, β) | Beta |
+| Time between random arrivals (mean = scale) | Exponential |
 
 ## Dependencies
 

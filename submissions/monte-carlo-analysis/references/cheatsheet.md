@@ -13,7 +13,7 @@ result = simulate({ ... })
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `distribution` | yes | `triangular` \| `normal` \| `uniform` \| `log-normal` |
+| `distribution` | yes | `triangular` \| `normal` \| `uniform` \| `log-normal` \| `poisson` \| `weibull` \| `beta` \| `exponential` |
 | `simulations` | no | default `10000` |
 | `base_modifier` | no | offset (triangular/uniform) or scale base (normal/log-normal) |
 | `chart_title` | no | PNG / HTML title |
@@ -24,12 +24,16 @@ result = simulate({ ... })
 
 ### Per distribution
 
-| Distribution | Required keys |
-| --- | --- |
-| `triangular` | `low`, `peak`, `high` |
-| `normal` | `mean`, `std_dev` (+ optional `base_modifier` for portfolio value) |
-| `uniform` | `low`, `high` |
-| `log-normal` | `mean`, `sigma` (log-scale) |
+| Distribution | Required keys | Notes |
+| --- | --- | --- |
+| `triangular` | `low`, `peak`, `high` | low ≤ peak ≤ high |
+| `normal` | `mean`, `std_dev` | + optional `base_modifier` for portfolio compounding |
+| `uniform` | `low`, `high` | |
+| `log-normal` | `mean`, `sigma` | log-scale parameters |
+| `poisson` | `lambda` | expected count per interval; must be > 0 |
+| `weibull` | `shape` | `scale` defaults to 1.0; shape < 1 = infant mortality, > 1 = wear-out |
+| `beta` | `alpha`, `beta` | outputs in [0, 1]; both must be > 0 |
+| `exponential` | `scale` | mean = scale = 1 / rate; must be > 0 |
 
 ---
 
@@ -76,8 +80,27 @@ python scripts/monte_carlo.py \
 # Log-normal downtime
 python scripts/monte_carlo.py \
   --distribution log-normal --mean 1.5 --sigma 0.75 \
-  --title "Ransomware recovery (hours)" --xlabel "Hours" \
-  --html
+  --title "Unplanned outage recovery (hours)" --xlabel "Hours" --html
+
+# Poisson — outages per month
+python scripts/monte_carlo.py \
+  --distribution poisson --lambda 3.5 \
+  --title "Outages per month" --xlabel "Count" --html
+
+# Weibull — component lifetime
+python scripts/monte_carlo.py \
+  --distribution weibull --shape 2.5 --scale 1000 \
+  --title "Bearing lifetime (hours)" --xlabel "Hours" --html
+
+# Beta — task completion probability
+python scripts/monte_carlo.py \
+  --distribution beta --alpha 2 --beta 5 \
+  --title "Task completion rate" --xlabel "Proportion" --html
+
+# Exponential — time between support tickets
+python scripts/monte_carlo.py \
+  --distribution exponential --scale 4.2 \
+  --title "Hours between tickets" --xlabel "Hours" --html
 ```
 
 ---
@@ -102,7 +125,31 @@ Expect: `normal`, `base_modifier=5000000`, default 10000 sims, dollar thresholds
 
 Expect: `log-normal`, P95 ≫ P50, right-skew called out.
 
-### 4. Disambiguation (do not run)
+### 4. Poisson — failure count
+
+> We average 3.5 server outages per month. How many should I plan capacity for at P95?
+
+Expect: `poisson`, `lambda=3.5`, integer outputs, P95 count highlighted.
+
+### 5. Weibull — reliability
+
+> Component shape factor 2.5, characteristic life 1000 hours. Model lifetime distribution.
+
+Expect: `weibull`, `shape=2.5`, `scale=1000`, wear-out pattern noted (shape > 1).
+
+### 6. Beta — conversion rate
+
+> Our landing page conversion is somewhere between 5% and 25%, prior belief alpha 2 beta 5.
+
+Expect: `beta`, outputs in [0, 1], P50 ≈ 0.28.
+
+### 7. Exponential — inter-arrival
+
+> Support tickets arrive on average every 4.2 hours. Simulate time between arrivals.
+
+Expect: `exponential`, `scale=4.2`, memoryless note, P95 well above mean.
+
+### 8. Disambiguation (do not run)
 
 > Run a simulation chart for our manufacturing supply chain delays next month.
 
@@ -114,5 +161,5 @@ Expect: ask for triangular (min/likely/max) or normal (mean/std) — **no script
 
 1. **PNG histogram** — always produced  
 2. **CSV** — always produced (open in Excel)  
-3. **Interactive HTML** — set `html: true` (`histogram` or `fan`)  
+3. **Interactive HTML** — set `html: true` (live sliders, P-threshold calculator)  
 4. **Excel `.xlsx`** — set `excel: true` (install `openpyxl` if missing)

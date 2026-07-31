@@ -1,0 +1,9 @@
+{
+  "distribution": "weibull",
+  "shape": 2.5,
+  "scale": 1000,
+  "simulations": 10000,
+  "chart_title": "Bearing lifetime (hours)",
+  "x_axis_label": "Hours",
+  "html": true
+}

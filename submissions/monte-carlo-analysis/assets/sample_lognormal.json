@@ -3,7 +3,7 @@
   "mean": 1.5,
   "sigma": 0.75,
   "simulations": 10000,
-  "chart_title": "Ransomware recovery time (hours)",
+  "chart_title": "Unplanned outage recovery time (hours)",
   "x_axis_label": "Hours",
   "out_prefix": "sample_lognormal"
 }

@@ -127,9 +127,47 @@ def sample_outcomes(data: Mapping[str, Any]) -> tuple[np.ndarray, str]:
             raise ValueError("Uniform requires high >= low.")
         return np.random.uniform(low, high, simulations) + base_modifier, distribution
 
+    if distribution == "poisson":
+        lam = data.get("lambda", data.get("lam"))
+        if lam is None:
+            raise ValueError("Poisson distribution requires `lambda` (mean rate, > 0).")
+        lam = float(lam)
+        if lam <= 0:
+            raise ValueError("`lambda` must be > 0.")
+        return np.random.poisson(lam, simulations).astype(float) + base_modifier, distribution
+
+    if distribution == "weibull":
+        if "shape" not in data:
+            raise ValueError("Weibull distribution requires `shape` (k > 0).")
+        shape = float(data["shape"])
+        scale = float(data.get("scale", 1.0))
+        if shape <= 0:
+            raise ValueError("`shape` must be > 0.")
+        if scale <= 0:
+            raise ValueError("`scale` must be > 0.")
+        return np.random.weibull(shape, simulations) * scale + base_modifier, distribution
+
+    if distribution == "beta":
+        if "alpha" not in data or "beta" not in data:
+            raise ValueError("Beta distribution requires `alpha` and `beta` (both > 0).")
+        alpha = float(data["alpha"])
+        beta_val = float(data["beta"])
+        if alpha <= 0 or beta_val <= 0:
+            raise ValueError("`alpha` and `beta` must be > 0.")
+        return np.random.beta(alpha, beta_val, simulations) + base_modifier, distribution
+
+    if distribution == "exponential":
+        if "scale" not in data:
+            raise ValueError("Exponential distribution requires `scale` (mean = 1/rate, > 0).")
+        scale = float(data["scale"])
+        if scale <= 0:
+            raise ValueError("`scale` must be > 0.")
+        return np.random.exponential(scale, simulations) + base_modifier, distribution
+
     raise ValueError(
         f"Distribution type '{distribution}' is unsupported. "
-        "Use triangular, normal, uniform, or log-normal."
+        "Use: triangular, normal, uniform, log-normal, "
+        "poisson, weibull, beta, or exponential."
     )
 
 
@@ -424,9 +462,31 @@ function boxMuller() {{
   return u * Math.sqrt(-2 * Math.log(s) / s);
 }}
 
+// Gamma sampler (Marsaglia & Tsang 2000) — required by Beta.
+function gammaRng(shape) {{
+  if (shape < 1) return gammaRng(1 + shape) * Math.pow(Math.random(), 1 / shape);
+  const d = shape - 1/3, c = 1 / Math.sqrt(9 * d);
+  for (;;) {{
+    let z, v;
+    do {{ z = boxMuller(); v = 1 + c * z; }} while (v <= 0);
+    v = v * v * v;
+    const u = Math.random();
+    if (u < 1 - 0.0331 * z*z*z*z) return d * v;
+    if (Math.log(u) < 0.5*z*z + d*(1 - v + Math.log(v))) return d * v;
+  }}
+}}
+
+// Poisson sampler (Knuth for λ ≤ 30; normal approx otherwise).
+function poissonRng(lam) {{
+  if (lam > 30) return Math.max(0, Math.round(lam + Math.sqrt(lam) * boxMuller()));
+  const L = Math.exp(-lam);
+  let k = 0, p = 1;
+  do {{ k++; p *= Math.random(); }} while (p > L);
+  return k - 1;
+}}
+
 function sampleOne(p) {{
   if (DIST === 'triangular') {{
-    // Clamp params so low <= peak <= high even when sliders drift out of sync.
     const lo = Math.min(p.low, p.peak, p.high);
     const hi = Math.max(p.low, p.peak, p.high);
     const pk = Math.max(lo, Math.min(p.peak, hi));
@@ -448,6 +508,21 @@ function sampleOne(p) {{
   if (DIST === 'uniform') {{
     const lo = Math.min(p.low, p.high), hi = Math.max(p.low, p.high);
     return lo + Math.random() * (hi - lo);
+  }}
+  if (DIST === 'poisson') {{
+    return poissonRng(Math.max(1e-9, p.lambda));
+  }}
+  if (DIST === 'weibull') {{
+    const shape = Math.max(1e-6, p.shape), scale = Math.max(1e-9, p.scale);
+    return scale * Math.pow(-Math.log(Math.random()), 1 / shape);
+  }}
+  if (DIST === 'beta') {{
+    const a = Math.max(1e-6, p.alpha), b = Math.max(1e-6, p.beta);
+    const x = gammaRng(a);
+    return x / (x + gammaRng(b));
+  }}
+  if (DIST === 'exponential') {{
+    return Math.max(1e-9, p.scale) * (-Math.log(Math.random()));
   }}
   return 0;
 }}
@@ -706,14 +781,51 @@ def _build_controls(
         lines.append(slider("sigma", "Log sigma (σ)",     sigma, 0.05, sigma * 4, 0.05))
         js_params = {"mean": mean, "sigma": sigma}
 
-    else:  # uniform
+    elif dist == "uniform":
         low  = float(params.get("low",  0))
         high = float(params.get("high", 10))
         span = high - low or 1.0
         step = max(0.1, round(span / 100, 2))
-        lines.append(slider("low",  f"Min ({xlabel})", low,  low - span, high,     step))
+        lines.append(slider("low",  f"Min ({xlabel})", low,  low - span, high,        step))
         lines.append(slider("high", f"Max ({xlabel})", high, low,        high + span, step))
         js_params = {"low": low, "high": high}
+
+    elif dist == "poisson":
+        lam = float(params.get("lambda", params.get("lam", 5.0)))
+        step = max(0.1, round(lam / 20, 1))
+        lines.append(slider("lambda", f"Mean rate λ ({xlabel})", lam,
+                            max(0.1, lam * 0.1), max(lam * 5, 20), step))
+        js_params = {"lambda": lam}
+
+    elif dist == "weibull":
+        shape = float(params.get("shape", 2.0))
+        scale = float(params.get("scale", 1.0))
+        step_sh = max(0.05, round(shape / 40, 2))
+        step_sc = max(0.01, round(scale / 50, 4))
+        lines.append(slider("shape", "Shape (k)",          shape, 0.2,
+                            max(shape * 4, 10), step_sh))
+        lines.append(slider("scale", f"Scale λ ({xlabel})", scale,
+                            max(0.01, scale * 0.1), scale * 5, step_sc))
+        js_params = {"shape": shape, "scale": scale}
+
+    elif dist == "beta":
+        alpha  = float(params.get("alpha", 2.0))
+        beta_v = float(params.get("beta",  2.0))
+        lines.append(slider("alpha", "Alpha (α)", alpha,  0.1,
+                            max(alpha * 5, 20),  max(0.05, round(alpha  / 20, 2))))
+        lines.append(slider("beta",  "Beta (β)",  beta_v, 0.1,
+                            max(beta_v * 5, 20), max(0.05, round(beta_v / 20, 2))))
+        js_params = {"alpha": alpha, "beta": beta_v}
+
+    elif dist == "exponential":
+        scale = float(params.get("scale", 1.0))
+        step  = max(0.01, round(scale / 50, 4))
+        lines.append(slider("scale", f"Mean / scale ({xlabel})", scale,
+                            max(0.01, scale * 0.1), scale * 5, step))
+        js_params = {"scale": scale}
+
+    else:
+        js_params = {}
 
     return "\n".join(lines), js_params
 
@@ -807,7 +919,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--payload", default=None, help="Path to a JSON payload file.")
     p.add_argument(
         "--distribution",
-        choices=["triangular", "normal", "uniform", "log-normal", "lognormal"],
+        choices=["triangular", "normal", "uniform", "log-normal", "lognormal",
+                 "poisson", "weibull", "beta", "exponential"],
         default=None,
     )
     p.add_argument("--simulations", type=int, default=None)
@@ -817,6 +930,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--mean", type=float, default=None)
     p.add_argument("--std-dev", type=float, default=None, dest="std_dev")
     p.add_argument("--sigma", type=float, default=None)
+    p.add_argument("--lambda", type=float, default=None, dest="lam")
+    p.add_argument("--shape", type=float, default=None)
+    p.add_argument("--scale", type=float, default=None)
+    p.add_argument("--alpha", type=float, default=None)
+    p.add_argument("--beta", type=float, default=None)
     p.add_argument("--base-modifier", type=float, default=None, dest="base_modifier")
     p.add_argument("--title", default=None, dest="chart_title")
     p.add_argument("--xlabel", default=None, dest="x_axis_label")
@@ -843,6 +961,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "mean": args.mean,
         "std_dev": args.std_dev,
         "sigma": args.sigma,
+        "lambda": args.lam,
+        "shape": args.shape,
+        "scale": args.scale,
+        "alpha": args.alpha,
+        "beta": args.beta,
         "base_modifier": args.base_modifier,
         "chart_title": args.chart_title,
         "x_axis_label": args.x_axis_label,
