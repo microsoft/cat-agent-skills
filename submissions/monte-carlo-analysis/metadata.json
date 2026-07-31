@@ -1,0 +1,20 @@
+{
+  "name": "Monte Carlo Analysis",
+  "description": "Run Monte Carlo simulations from natural-language risk inputs — triangular, normal, uniform, or log-normal — and return percentiles, a histogram PNG, optional interactive HTML, and a downloadable results spreadsheet.",
+  "platforms": ["Copilot Studio"],
+  "tags": [
+    "monte-carlo",
+    "risk-assessment",
+    "python",
+    "simulation",
+    "matplotlib",
+    "charts",
+    "csv",
+    "analysis"
+  ],
+  "author": "Nazish Qasim",
+  "authorUrl": "https://github.com/nazishqassim",
+  "version": "1.0.0",
+  "createdAt": "2026-07-31",
+  "updatedAt": "2026-07-31"
+}
