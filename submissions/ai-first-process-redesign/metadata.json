@@ -4,5 +4,6 @@
   "platforms": ["Cowork", "Copilot Studio"],
   "tags": ["productivity", "process-improvement", "agentic-workflow"],
   "author": "Tim Sparks",
-  "version": "2.1.0"
+  "authorUrl": "https://github.com/SparkyT",
+  "version": "2.1.1"
 }
