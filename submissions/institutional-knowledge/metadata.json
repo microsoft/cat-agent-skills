@@ -1,0 +1,11 @@
+{
+  "name": "Institutional Knowledge Archivist",
+  "description": "Preserve a departing senior leader's institutional knowledge — decisions, rationale, relationships, and tribal knowledge — by mining their M365 signals into a structured, multi-phase archive a successor can ground on.",
+  "platforms": ["Cowork", "Scout"],
+  "tags": ["knowledge", "handoff", "leadership", "m365", "offboarding", "documentation", "productivity"],
+  "author": "Srinivas Varukala",
+  "authorUrl": "https://github.com/svarukala",
+  "version": "1.0.1",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-28"
+}
