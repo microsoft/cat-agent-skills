@@ -1,7 +1,7 @@
 {
   "name": "Medical Triage Assistant",
-  "description": "Pre-appointment triage support for medical teams and health insurance providers. Conducts structured triage conversations with patients, receives prior exam documents (photo or PDF), flags out-of-range results against reference values, assigns a 5-level urgency classification, and produces a pre-report to support the physician. It NEVER diagnoses, prescribes, or recommends treatment — every output requires review by a licensed medical professional.",
-  "platforms": ["Copilot Studio", "Cowork", "Scout"],
+  "description": "DEMONSTRATION skill (not for clinical use as authored): shows how a pre-appointment triage-support agent for medical teams and health plans could work. Conducts structured triage conversations, receives prior exam documents (photo or PDF), flags out-of-range results, assigns a 5-level urgency classification, and produces a pre-report for the physician. It NEVER diagnoses, prescribes, or recommends treatment — every output requires review by a licensed medical professional. Real-patient deployment may constitute a regulated SaMD/CDS function and requires clearance the host platforms do not provide.",
+  "platforms": ["Copilot Studio", "Cowork"],
   "tags": ["healthcare", "triage", "medical", "health-insurance", "pre-report", "lab-results", "patient-intake", "clinical-support"],
   "author": "Michael Ferro Pereira",
   "authorUrl": "https://github.com/michaelfp"

@@ -1,6 +1,9 @@
 # Medical Triage Assistant
 
-A Copilot Studio / Cowork / Scout skill that supports medical teams and health insurance providers with **pre-appointment triage**. It interviews the patient with a structured (non-specialty-specific) questionnaire, receives prior exam documents as photo or PDF, flags out-of-range values descriptively, assigns a 5-level urgency classification (Manchester-inspired), and delivers a **pre-report** that helps the physician prepare the consultation.
+> ⚠️ **DEMONSTRATION ONLY — NOT FOR CLINICAL USE AS AUTHORED.**
+> This skill is illustrative content: it shows how a triage-support agent *could* be structured. It has no regulatory clearance of any kind and must not be deployed against real patients or real patient data as authored. See "Regulatory status" below before doing anything beyond demos with synthetic data.
+
+A Copilot Studio / Cowork skill that demonstrates how an agent could support medical teams and health insurance providers with **pre-appointment triage**. It interviews the patient with a structured (non-specialty-specific) questionnaire, receives prior exam documents as photo or PDF, flags out-of-range values descriptively, assigns a 5-level urgency classification (Manchester-inspired), and delivers a **pre-report** that helps the physician prepare the consultation.
 
 ## What it does
 
