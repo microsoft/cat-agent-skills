@@ -39,7 +39,7 @@ Python 3 is required only when using the bundled credit estimator.
 
 For **Detailed** assessments, select **GPT-5.6** and use **High** reasoning
 effort if your Cowork tenant exposes that control. If GPT-5.6 has not reached
-your tenant, use **Claude Opus 4.8**. High is the recommended balance for this
+your tenant, use **Claude Opus 5**. High is the recommended balance for this
 skill: the architecture comparison benefits from deeper reasoning, but the
 highest possible setting is unlikely to justify extra latency for every run.
 

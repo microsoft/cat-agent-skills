@@ -14,7 +14,7 @@ Use the official Microsoft Learn and licensing sources for product and commercia
 
 ## Copilot Cowork models
 
-- [Choose a model for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-models) — Auto behavior, tenant-dependent model availability, Claude Sonnet 5, Claude Opus 4.8, GPT 5.5 (Frontier), Claude Fable 5 (Preview), Sonnet + Opus Advisor, and data-retention notices.
+- [Choose a model for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-models) — Auto behavior, tenant-dependent model availability and data-retention notices.
 - [Available today: OpenAI's GPT-5.6 in Microsoft 365 Copilot](https://techcommunity.microsoft.com/blog/microsoft365copilotblog/available-today-openai%E2%80%99s-gpt-5-6-in-microsoft-365-copilot/4533152) — GPT-5.6 rollout to Cowork and its positioning for agentic, multistep work; availability can vary by region and tenant.
 
 ## Channels, authentication, and sharing
