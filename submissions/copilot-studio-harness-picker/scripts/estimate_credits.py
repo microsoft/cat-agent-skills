@@ -117,6 +117,8 @@ def price_scenarios(
     payg_rate = decimal_value(pricing["pay_as_you_go_per_credit"], "PAYG rate")
     pack = pricing["capacity_pack"]
     pack_credits = decimal_value(pack["credits_per_month"], "pack credits")
+    if pack_credits == 0:
+        raise InputError("pack credits must be greater than zero")
     pack_price = decimal_value(pack["list_price_per_month"], "pack price")
     capacity_applicable = period.strip().lower() in {"month", "monthly", "one month", "1 month"}
     low_packs = required_units(low, pack_credits, low_exclusive) if capacity_applicable else None
@@ -491,7 +493,12 @@ def main() -> int:
     try:
         workload = load_json(args.input)
         rates = load_rates(args.rates)
-        result = build_result(workload, rates)
+        try:
+            result = build_result(workload, rates)
+        except KeyError as exc:
+            raise InputError(f"rates file is missing required field: {exc.args[0]}") from exc
+        except (AttributeError, TypeError) as exc:
+            raise InputError(f"rates file has an invalid structure: {exc}") from exc
     except (InputError, OSError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
