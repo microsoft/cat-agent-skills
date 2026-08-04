@@ -1,6 +1,6 @@
 ---
 name: copilot-studio-harness-picker
-description: "Assess business, experience, channel, identity, orchestration, governance, maturity, and cost requirements to recommend the right Microsoft Copilot Studio harness: GitHub Copilot, standard, or Copilot chat. Use when asked which harness to choose, what to build something with, agent versus workflow, classic versus new experience, whether to migrate or rebuild an existing agent, multi-channel architecture, licensing or Copilot Credit estimates, or whether a Microsoft platform outside Copilot Studio fits better. Supports Quick and Detailed modes and produces an evidence-labelled Harness Decision Brief. In Copilot Cowork, prefer GPT-5.6 with High reasoning effort when offered for Detailed mode; otherwise choose Claude Opus 4.8, and use Auto for Quick mode."
+description: "Assess business, experience, channel, identity, orchestration, governance, maturity, and cost requirements to recommend the right Microsoft Copilot Studio harness: GitHub Copilot, standard, or Copilot chat. Use when asked which harness to choose, what to build something with, agent versus workflow, classic versus new experience, whether to migrate or rebuild an existing agent, multi-channel architecture, licensing or Copilot Credit estimates, or whether a Microsoft platform outside Copilot Studio fits better. Supports Quick and Detailed modes and produces an evidence-labelled Harness Decision Brief. In Copilot Cowork, prefer GPT-5.6 with High reasoning effort when offered for Detailed mode; otherwise choose Claude Opus 5, and use Auto for Quick mode."
 ---
 
 # Copilot Studio Harness Picker
@@ -11,7 +11,7 @@ Recommend a harness only after testing hard constraints, runtime fit, channel an
 
 When running this skill in Copilot Cowork and manual model selection is available:
 
-- For **Detailed** mode, prefer **GPT-5.6** and set reasoning effort to **High** if the tenant exposes that control. If GPT-5.6 has not reached the tenant, use **Claude Opus 4.8**. High is the default recommendation because the assessment benefits from deeper comparison and challenge; do not assume a higher setting is always worth the added latency.
+- For **Detailed** mode, prefer **GPT-5.6** and set reasoning effort to **High** if the tenant exposes that control. If GPT-5.6 has not reached the tenant, use **Claude Opus 5**. High is the default recommendation because the assessment benefits from deeper comparison and challenge; do not assume a higher setting is always worth the added latency.
 - For an important decision brief that merits a second review, use **Sonnet + Opus Advisor** where enabled.
 - For **Quick** mode, leave the picker on **Auto**. Select **Claude Sonnet 5** manually only when a faster response cycle matters more than maximum depth.
 - Do not recommend **Claude Fable 5 (Preview)** by default. It is a preview option, is off by default, and has additional data-retention implications.
