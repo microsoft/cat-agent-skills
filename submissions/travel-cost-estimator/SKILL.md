@@ -103,25 +103,26 @@ inputs directly with the native setter and dispatch the events the framework
 listens for:
 
 ```js
-await page.evaluate(() => {
+await page.evaluate(({ depart, ret }) => {
   function setVal(name, value) {
     const el = document.querySelector(`input[name="${name}"]`);
     if (!el) return;
     const setter = Object.getOwnPropertyDescriptor(
       window.HTMLInputElement.prototype, 'value'
-    ).set;
+    )?.set;
+    if (!setter) return;
     setter.call(el, String(value));
     ['input', 'change', 'blur'].forEach(e =>
       el.dispatchEvent(new Event(e, { bubbles: true }))
     );
   }
-  setVal('air-departure-date-month', 8);
-  setVal('air-departure-date-day', 26);
-  setVal('air-departure-date-year', 2026);
-  setVal('air-return-date-month', 8);
-  setVal('air-return-date-day', 27);
-  setVal('air-return-date-year', 2026);
-});
+  setVal('air-departure-date-month', depart.month);
+  setVal('air-departure-date-day', depart.day);
+  setVal('air-departure-date-year', depart.year);
+  setVal('air-return-date-month', ret.month);
+  setVal('air-return-date-day', ret.day);
+  setVal('air-return-date-year', ret.year);
+}, { depart: { month: 8, day: 26, year: 2026 }, ret: { month: 8, day: 27, year: 2026 } });
 ```
 
 Field names vary by tool — inspect once and reuse. The **technique** transfers even
