@@ -5,7 +5,9 @@ agentDescription: "Facilitates a zero-based AI-first process redesign session th
 platforms: [Cowork, Copilot Studio]
 tags: [productivity, process-improvement, agentic-workflow]
 author: Tim Sparks
-version: 2.1.0
+authorUrl: "https://github.com/SparkyT"
+authorGithub: SparkyT
+version: 2.1.1
 bundle: bundles/ai-first-process-redesign.zip
 ---
 # AI-First Process Redesign (Zero-Based)
