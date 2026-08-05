@@ -84,7 +84,7 @@ Work this checklist against the complete YAML before requesting approval. This s
 State one of these outcomes before emitting the YAML:
 
 - `passed`: no critical defects; requirements and coding-agent contract are both ready;
-- `passed, build blocked`: requirements are approved, but listed deployment/governance prerequisites block execution;
-- `not passed`: critical requirements or architecture gaps remain; do not mark the specification approved.
+- `passed_build_blocked`: requirements are approved, but listed deployment/governance prerequisites block execution;
+- `not_passed`: critical requirements or architecture gaps remain; do not mark the specification approved.
 
 Finally, verify that the complete YAML can be delivered without truncation. A missing closing fence, omitted tail section or channel-limited partial response is `not passed` regardless of content quality.
