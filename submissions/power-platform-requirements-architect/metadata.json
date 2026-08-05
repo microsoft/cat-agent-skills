@@ -1,0 +1,17 @@
+{
+  "name": "Power Platform Requirements Architect",
+  "description": "Interview stakeholders and turn a Power Platform solution idea into an approved, implementation-ready YAML specification for a coding agent.",
+  "platforms": ["Copilot Studio"],
+  "tags": [
+    "power-platform",
+    "requirements",
+    "architecture",
+    "copilot-studio",
+    "handoff"
+  ],
+  "author": "Jan Düver",
+  "authorUrl": "https://github.com/Jndvr",
+  "version": "1.0.0",
+  "createdAt": "2026-08-05",
+  "updatedAt": "2026-08-05"
+}

@@ -1,0 +1,347 @@
+# Starter skeleton for the single coding-agent handoff produced in Copilot Studio.
+# Fill it, delete sections that genuinely do not apply, and move relevant gaps
+# into open_items. Keep build_contract because this artifact targets a coding agent.
+---
+POWER_PLATFORM_SOLUTION_SPEC_V1:
+
+  build_contract:
+    status: draft             # draft | ready; the coding agent may execute only ready
+    audience: "Power Platform coding agent"
+    target:
+      environment: SET_AT_BUILD
+      solution_unique_name: SET_AT_BUILD
+      scope_boundary: "Only objects inside the named solution and environment"
+    authority:
+      may:
+        - "Create and modify components required by the current work item inside the named solution"
+        - "Read existing metadata needed to verify dependencies"
+      may_not:
+        - "Change environments, DLP policies, tenant settings, licences or Entra membership"
+        - "Grant consent, deploy to production, or touch objects outside the named solution"
+        - "Delete or bulk-modify existing data"
+    stop_and_report_when:
+      - "A dependency or deployment input is unresolved"
+      - "The environment contradicts the spec or a required action is unsupported"
+      - "The spec is ambiguous, the work item is human-gated, or an action falls under may_not"
+    on_stop: "Report the work item, expected state, observed state and decision needed; do not continue."
+    verification: "Verify every acceptance criterion; a successful save is not proof of completion."
+
+  meta:
+    spec_version: "1.0"
+    status: draft            # draft | in_review | approved | superseded
+    tier: M                  # S | M | L
+    revision: 1
+    date: "YYYY-MM-DD"
+    author: ""
+    grounded_in: []          # what Phase 0 discovered in the real environment
+    capability_snapshot:
+      verified_on: ""
+      verified_by: ""
+      notes: []              # verified tool capabilities, preview status, licensing assumptions
+      sources: []            # current Microsoft Learn or authoritative tenant URLs
+    change_log:
+      - revision: 1
+        note: "Initial draft"
+    approval:
+      approved_by: ""
+      approver_role: ""
+      approved_on: ""          # YYYY-MM-DD; required when status is approved
+      statement: ""
+
+  solution:
+    display_name: ""
+    unique_name: ""          # no spaces; PAC CLI uses this
+    publisher:
+      name: ""
+      prefix: "{prefix}"     # replace through DEP-001; never invent it
+    description: ""
+    version: "1.0.0.0"
+    environments:
+      dev: ""
+      test: ""
+      prod: ""
+    managed_strategy: "unmanaged in dev, managed in test/prod"
+    deployment_method: ""    # pipelines | pac solution import | manual
+
+  business:
+    problem: ""
+    outcome: ""
+    success_measures:
+      - id: GOAL-001
+        text: ""
+        baseline: ""
+        target: ""
+        measured_by: ""
+    scope:
+      in_scope: []
+      out_of_scope:
+        - id: OOS-001
+          text: ""
+          reason: ""
+      future_scope: []
+    stakeholders: []
+
+  actors:
+    - id: ACT-001
+      name: ""
+      entra_group: ""
+      approximate_users: 0
+      goals: []
+      permissions_summary: ""
+      row_access: ""              # own | team | business unit | all
+      license_assumption: ""
+      device: ""
+
+  journeys:
+    - id: JRN-001
+      name: ""
+      actor: ACT-001
+      trigger: ""
+      main_flow: []
+      decisions: []
+      exceptions: []
+      outcome: ""
+      frequency: ""
+
+  requirements:
+    - id: FR-001
+      priority: must              # must | should | could | wont
+      actor: ACT-001
+      text: ""
+      acceptance_criteria: []
+      covered_by: []              # WI ids, filled in Phase 5
+
+  business_rules:
+    - id: BR-001
+      condition: ""
+      consequence: ""
+      enforced_in: ""             # FLW-xxx | plugin | business_rule | power_fx
+      enforcement_rationale: ""
+
+  architecture_decisions:
+    - id: AD-001
+      question: ""
+      decision: ""
+      alternatives_considered: []
+      rationale: ""
+      consequences: []
+      confirmed_by_user: false    # must be true before status: approved
+
+  data:
+    platform: dataverse           # dataverse | sharepoint | sql | hybrid
+    tables:
+      - id: TBL-001
+        display_name: ""
+        display_collection_name: ""
+        schema_name: ""
+        ownership: user_or_team    # user_or_team | organization — permanent
+        primary_name_column:
+          display_name: ""
+          schema_name: ""
+          type: text
+        audit_enabled: false
+        offline_enabled: false
+        volumes:
+          initial_rows: 0
+          annual_growth: 0
+          retention: ""
+        columns:
+          - display_name: ""
+            schema_name: ""
+            type: ""              # text|choice|lookup|decimal|datetime|boolean|...
+            requirement_level: optional
+            description: ""
+        alternate_keys: []
+        indexes_note: ""
+    choices:
+      - id: CHO-001
+        display_name: ""
+        schema_name: ""
+        scope: local              # global | local
+        options:
+          - { label: "", value: 100000000 }
+    relationships: []        # add REL entries only after both tables exist
+    reference_data: []
+    migration: []
+
+  security:
+    row_ownership_model: ""
+    business_units: []
+    roles:
+      - id: SEC-001
+        name: ""
+        assigned_to: ACT-001
+        privileges:
+          - table: TBL-001
+            create: user
+            read: business_unit
+            write: user
+            delete: none
+            append: user
+            append_to: user
+        notes: ""
+    column_security: []
+    sharing_model: ""
+    app_share_targets: []
+
+  connection_references:
+    - id: CR-001
+      logical_name: ""
+      connector: ""
+      tier: standard              # standard | premium | custom
+      auth: ""
+      used_by: []
+      consent_required: true
+      human_gate: true
+
+  environment_variables:
+    - id: EV-001
+      display_name: ""
+      schema_name: ""
+      type: string                # string|number|boolean|json|secret|datasource
+      purpose: ""
+      values:
+        dev: ""
+        test: ""
+        prod: "SET_AT_DEPLOY"
+      used_by: []
+
+  integrations: []
+
+  automations:
+    - id: FLW-001
+      name: ""                    # "<Area> - <Verb phrase>"
+      kind: cloud_flow
+      flow_type: automated        # automated | instant | scheduled
+      solution_aware: true
+      trigger:
+        type: ""
+        detail: ""
+        condition: ""
+      run_as: ""
+      steps: []
+      concurrency: ""
+      idempotency: ""
+      error_handling:
+        pattern: "Try/Catch scope with result() aggregation"
+        retry: ""
+        on_failure: ""            # who or what finds out — never nothing
+      expected_volume: ""
+      connection_references: []
+      environment_variables: []
+      implements: []
+      test_cases: []
+
+  apps:
+    - id: APP-001
+      name: ""
+      type: canvas                # canvas|model_driven|code_app|power_pages
+      rationale: ""
+      target_devices: []
+      offline: ""
+      data_sources: []
+      navigation: ""
+      theme:
+        direction: ""
+        delegated_to_coding_agent: false
+      screens:
+        - id: SCR-001
+          name: ""
+          purpose: ""
+          actors: [ACT-001]
+          primary_content: []
+          primary_actions: []
+          states:
+            loading: ""
+            empty: ""
+            error: ""
+            success: ""
+          role_variants: ""
+          delegation_note: ""
+
+  agents: []
+
+  nonfunctional_requirements:
+    - id: NFR-001
+      category: performance
+      requirement: ""
+      measure: ""
+
+  accessibility:
+    - id: ACC-001
+      text: ""
+      standard: ""
+
+  governance:
+    - id: GOV-001
+      topic: licensing            # licensing|dlp|capacity|consumption|approval
+      detail: ""
+      status: open
+      owner: ""
+      human_gate: true
+
+  constraints:
+    - id: CON-001
+      text: ""
+      type: ""                    # deadline | capability | policy | budget
+
+  work_items:
+    - id: WI-001
+      title: ""
+      status: not_started         # not_started|blocked|in_progress|done|waived
+      surface: manual             # see references/coding-agent-handoff.md
+      owner: human                # coding_agent | human
+      depends_on: []
+      implements: []
+      spec_refs: []               # TBL-/FLW-/SCR-/SEC- ids this item builds
+      acceptance: []
+      human_gate: true
+      notes: ""
+
+  build_order:
+    - phase: 1
+      name: "Foundation"
+      work_items: [WI-001]
+      gate: ""
+
+  deployment_inputs:
+    - id: DEP-001
+      needs: "Publisher prefix"
+      used_as: "Replace {prefix} in schema names"
+      supplied_by: "Platform or governance team"
+      value: SET_AT_BUILD
+    - id: DEP-002
+      needs: "Target development environment"
+      used_as: "build_contract.target.environment"
+      supplied_by: "Platform team"
+      constraint: "Must not be production"
+      value: SET_AT_BUILD
+    - id: DEP-003
+      needs: "Final solution unique name"
+      used_as: "build_contract.target.solution_unique_name and solution.unique_name"
+      supplied_by: "Solution architect"
+      value: SET_AT_BUILD
+
+  open_items:
+    unresolved_critical: []       # unique OI- ids; must be empty before status: approved
+    assumptions: []
+    unresolved_noncritical: []    # use ref: DEP-/GOV-/... for an existing object
+    risks: []
+
+  handoff:
+    recipient: "Power Platform coding agent"
+    delivery_format: single_yaml
+    build_mode: mixed             # mixed | autonomous; human gates may still exist
+    source_of_truth: "This complete POWER_PLATFORM_SOLUTION_SPEC_V1 document"
+    first_work_item: null         # set to a WI id only when build_contract.status is ready
+    blocking_ids: [DEP-001, DEP-002, DEP-003]
+    manual_self_check:
+      status: not_passed         # passed | passed_build_blocked | not_passed
+      findings: []
+    instructions:
+      - "Execute only when build_contract.status is ready"
+      - "Follow build_order and depends_on; complete one work item at a time"
+      - "Do not invent missing business logic or tenant values"
+      - "Stop at human gates, contradictions, unresolved inputs or actions outside authority"
+      - "Verify every work item's acceptance criteria and report platform deviations by stable id"
+    do_not_reopen: []
