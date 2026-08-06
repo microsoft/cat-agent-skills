@@ -12,6 +12,7 @@ on:
     - cron: "0 6 * * *"
 
 permissions:
+  actions: read
   contents: write # commit the refreshed ratings snapshot back to main
   pages: write
   id-token: write
@@ -95,37 +96,66 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
-        continue-on-error: true
-      # deploy-pages hard-caps its polling at 10 minutes and cancels at that
-      # boundary, even when Pages finishes the deployment shortly afterward.
-      - name: Verify Pages deployment after action timeout
-        if: steps.deployment.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for attempt in {1..120}; do
+          artifact_id="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" \
+              --jq '[.artifacts[] | select(.name == "github-pages")] | if length == 1 then .[0].id else empty end'
+          )"
+          if [ -z "$artifact_id" ]; then
+            echo "::error::Expected exactly one github-pages artifact for this workflow attempt."
+            exit 1
+          fi
+
+          oidc_token="$(
+            curl --fail --silent --show-error \
+              --header "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+              "${ACTIONS_ID_TOKEN_REQUEST_URL}" |
+              jq --raw-output '.value // empty'
+          )"
+          if [ -z "$oidc_token" ]; then
+            echo "::error::GitHub Actions did not issue a Pages OIDC token."
+            exit 1
+          fi
+          echo "::add-mask::$oidc_token"
+
+          deployment="$(
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/deployments" \
+              -F artifact_id="$artifact_id" \
+              -f pages_build_version="$GITHUB_SHA" \
+              -f oidc_token="$oidc_token"
+          )"
+          page_url="$(jq --raw-output '.page_url // empty' <<< "$deployment")"
+          echo "page_url=$page_url" >> "$GITHUB_OUTPUT"
+
+          for attempt in {1..240}; do
             if ! status="$(gh api "repos/${GITHUB_REPOSITORY}/pages/deployments/${GITHUB_SHA}" --jq '.status')"; then
-              echo "::warning::Could not read Pages deployment status (attempt ${attempt}/120)."
+              echo "::warning::Could not read Pages deployment status (attempt ${attempt}/240)."
               sleep 5
               continue
             fi
 
             case "$status" in
               succeed)
-                echo "Pages deployment succeeded after the action timeout."
+                echo "Pages deployment succeeded."
                 exit 0
                 ;;
-              deployment_failed|deployment_perms_error|deployment_content_failed|deployment_lost)
+              deployment_queued|deployment_in_progress|deployment_attempt_error|unknown_status|not_found)
+                echo "Pages deployment status: $status (attempt ${attempt}/240)"
+                sleep 5
+                ;;
+              deployment_failed|deployment_perms_error|deployment_content_failed|deployment_cancelled|deployment_lost)
                 echo "::error::Pages deployment ended with status: $status"
                 exit 1
                 ;;
               *)
-                echo "Pages deployment status: $status (attempt ${attempt}/120)"
-                sleep 5
+                echo "::error::Pages deployment returned unexpected status: $status"
+                exit 1
                 ;;
             esac
           done
 
-          echo "::error::Pages deployment did not succeed within 10 additional minutes."
+          echo "::error::Pages deployment did not succeed within 20 minutes."
           exit 1
