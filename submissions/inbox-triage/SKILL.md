@@ -199,4 +199,4 @@ For any labelled item that also carries a flag or has an active thread, both rea
 - `references/tools.md` - capabilities the skill binds to per-platform tools, calling patterns, and what to do when a capability is missing.
 - `references/classification-rules.md` - bucket tests, sender-domain lists, unsubscribe detection, and worked examples.
 - `references/safety.md` - the protection layer in detail, why each rule exists, and how to extend it in config.
-- `assets/config.example.json` - annotated example config; copy to `~/.copilot/inbox-triage/config.json` and edit.
+- `assets/config.example.json` - example config schema loaded at Step 0 when present at `~/.copilot/inbox-triage/config.json`.
