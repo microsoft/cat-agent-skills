@@ -140,15 +140,21 @@ def main() -> int:
 
     soffice_present = shutil.which("soffice") or shutil.which("libreoffice")
     do_render = args.render or (soffice_present and not args.no_render)
+
+    if do_render:
+        ok, msg = render_check(path)
         result["render"] = {"passed": ok, "detail": msg}
         if ok is False:
             errors = errors + [f"render: {msg}"]
+    else:
+        if args.no_render:
+            result["render"] = {"passed": None, "detail": "render disabled (--no-render)"}
+        elif not soffice_present:
+            result["render"] = {"passed": None, "detail": "soffice not available; render check skipped"}
+        else:
+            result["render"] = {"passed": None, "detail": "render check skipped"}
 
-    result["ok"] = len(errors) == 0 and result.get("render", {}) is not None \
-        and result["render"].get("passed") in (True, None) \
-        if do_render else (len(errors) == 0)
-    # Simpler, explicit final decision:
-    render_failed = do_render and result["render"] and result["render"]["passed"] is False
+    render_failed = do_render and result["render"]["passed"] is False
     result["ok"] = (len(errors) == 0) and (not render_failed)
 
     if args.json:
