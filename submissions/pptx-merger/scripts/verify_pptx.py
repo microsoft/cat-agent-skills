@@ -92,7 +92,7 @@ def structural_checks(path: Path):
             # collect layout ids from every master for global-uniqueness check
             for n in names:
                 if n.startswith("ppt/slideMasters/slideMaster") and n.endswith(".xml"):
-                    m = etree.fromstring(z.read(n))
+                    m = etree.fromstring(z.read(n), _SAFE_PARSER)
                     ll = m.find(f".//{{{NS_P}}}sldLayoutIdLst")
                     if ll is not None:
                         for e in ll:
