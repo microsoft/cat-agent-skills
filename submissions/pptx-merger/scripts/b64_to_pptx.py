@@ -31,10 +31,11 @@ from pathlib import Path
 
 def _load_b64_text(arg: str) -> str:
     p = Path(arg)
-    if p.exists() and p.is_file():
-        raw = p.read_text(encoding="utf-8", errors="strict")
-    else:
-        raw = arg
+    try:
+        is_file = p.exists() and p.is_file()
+    except OSError:
+        is_file = False
+    raw = p.read_text(encoding="utf-8", errors="strict") if is_file else arg
     # Strip whitespace/newlines and an optional data-URI prefix.
     raw = raw.strip()
     if raw.startswith("data:") and "," in raw:
