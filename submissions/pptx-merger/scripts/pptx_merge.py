@@ -137,6 +137,11 @@ class PptxMerger:
         for i, inp in enumerate(inputs):
             d = self.tmp / f"s{i}"
             with zipfile.ZipFile(inp) as z:
+                base = d.resolve()
+                for info in z.infolist():
+                    dest = (d / info.filename).resolve()
+                    if not str(dest).startswith(str(base) + os.sep):
+                        sys.exit(f"Unsafe path in PPTX zip entry: {info.filename}")
                 z.extractall(d)
             srcs.append(d)
 
