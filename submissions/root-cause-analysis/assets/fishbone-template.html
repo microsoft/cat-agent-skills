@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fishbone Diagram Template</title>
+<style>
+  body { font-family: sans-serif; margin: 2rem; background: #f8f9fa; color: #212529; }
+  h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+  .problem { font-weight: bold; text-align: center; margin-bottom: 2rem; padding: 0.5rem; border: 2px solid #333; display: inline-block; }
+  .diagram { position: relative; height: 420px; margin-bottom: 2rem; }
+  .spine { position: absolute; top: 210px; left: 4%; right: 4%; height: 4px; background: #333; }
+  .head { position: absolute; right: 2%; top: 210px; transform: translateY(-50%); width: 0; height: 0; border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-left: 30px solid #333; }
+  .category { position: absolute; width: 110px; text-align: center; }
+  .category .label { font-weight: bold; font-size: 0.85rem; margin-bottom: 0.25rem; }
+  .category .causes { font-size: 0.75rem; color: #495057; }
+  .cat-top { top: 40px; }
+  .cat-bottom { top: 310px; }
+  .c1 { left: 10%; } .c2 { left: 30%; } .c3 { left: 50%; } .c4 { left: 10%; } .c5 { left: 30%; } .c6 { left: 50%; }
+  .bone { position: absolute; height: 2px; background: #666; transform-origin: left center; }
+  .bone-top { top: 115px; width: 140px; transform: rotate(35deg); }
+  .bone-bottom { top: 275px; width: 140px; transform: rotate(-35deg); }
+  .notes { margin-top: 1rem; }
+  .notes textarea { width: 100%; min-height: 120px; border: 1px solid #ced4da; border-radius: 0.25rem; padding: 0.5rem; }
+</style>
+</head>
+<body>
+  <h1>Fishbone Diagram Template</h1>
+  <div class="problem" contenteditable="true">PROBLEM STATEMENT</div>
+
+  <div class="diagram">
+    <div class="spine"></div>
+    <div class="head"></div>
+
+    <div class="bone bone-top" style="left: 10%;"></div>
+    <div class="bone bone-top" style="left: 30%;"></div>
+    <div class="bone bone-top" style="left: 50%;"></div>
+    <div class="bone bone-bottom" style="left: 10%;"></div>
+    <div class="bone bone-bottom" style="left: 30%;"></div>
+    <div class="bone bone-bottom" style="left: 50%;"></div>
+
+    <div class="category c1 cat-top"><div class="label">People</div><div class="causes" contenteditable="true">skills, training, staffing</div></div>
+    <div class="category c2 cat-top"><div class="label">Process</div><div class="causes" contenteditable="true">steps, policies, approvals</div></div>
+    <div class="category c3 cat-top"><div class="label">Technology</div><div class="causes" contenteditable="true">tools, infra, config</div></div>
+    <div class="category c4 cat-bottom"><div class="label">Data</div><div class="causes" contenteditable="true">quality, completeness</div></div>
+    <div class="category c5 cat-bottom"><div class="label">Environment</div><div class="causes" contenteditable="true">external conditions</div></div>
+    <div class="category c6 cat-bottom"><div class="label">Management</div><div class="causes" contenteditable="true">priorities, resources</div></div>
+  </div>
+
+  <div class="notes">
+    <label><strong>Notes / Evidence:</strong></label><br>
+    <textarea placeholder="Add supporting facts, timestamps, logs, or observations for each category..."></textarea>
+  </div>
+</body>
+</html>
