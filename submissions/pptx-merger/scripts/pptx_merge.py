@@ -64,8 +64,13 @@ MEDIA_CT = {
 
 # ── XML helpers ─────────────────────────────────────────────────────────────
 def _parser():
-    return etree.XMLParser(remove_blank_text=False, recover=True)
-
+    return etree.XMLParser(
+        remove_blank_text=False,
+        recover=True,
+        resolve_entities=False,
+        load_dtd=False,
+        no_network=True,
+    )
 def parse_xml(path: Path):
     return etree.parse(str(path), _parser()).getroot()
 
