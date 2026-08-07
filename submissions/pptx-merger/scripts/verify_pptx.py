@@ -49,7 +49,7 @@ def structural_checks(path: Path):
             errors.append("[Content_Types].xml missing")
         else:
             ct_bytes = z.read("[Content_Types].xml")
-            root = etree.fromstring(ct_bytes)
+            root = etree.fromstring(ct_bytes, _SAFE_PARSER)
             # The Types element MUST be in the default (unprefixed) namespace.
             if root.prefix is not None:
                 errors.append(
