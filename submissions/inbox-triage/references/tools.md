@@ -6,7 +6,9 @@ The skill runs on both Cowork and Scout. Tool names differ by platform - Scout t
 
 ## Capabilities the skill needs
 
-At the start of every run, inspect the tools available in the session and bind these capabilities. If a required capability has no available tool binding, do not silently continue - report which capability is missing and stop. A triage skill that skips org-chart protection because a lookup tool was missing is much worse than one that says "profile lookup unavailable, aborting". The whole safety promise of the skill is the protection layer; a triage run without it is a foot-gun.
+Bind these capabilities to whichever concrete tools the running session exposes. The **collection + protection** capabilities (get profile, list emails, list mail folders, get manager, get direct reports) are required upfront - at the start of every run, inspect the tools available in the session and bind them. If any of those has no available tool binding, do not silently continue - report which capability is missing and stop. A triage skill that skips org-chart protection because a lookup tool was missing is much worse than one that says "profile lookup unavailable, aborting". The whole safety promise of the skill is the protection layer; a triage run without it is a foot-gun.
+
+The **execution-only** capabilities (move email, create mail folder) are not required upfront: they are checked at Step 6 with a documented fallback to instructing the user manually if a create tool is unavailable. Do not stop the run because a create tool is missing at Step 1.
 
 | Capability | Purpose | Typical Scout name | Typical Cowork name |
 |---|---|---|---|
@@ -25,8 +27,10 @@ At the start of every run, inspect the tools available in the session and bind t
 The "list mail folders" capability is read-only, so folder creation is handled separately:
 
 - On **Cowork**, most builds expose a mail-folder create tool (typical name `m365_create_mail_folder`). Bind to whichever create tool is present.
-- On **Scout**, no MCP-level create tool is currently exposed, but the platform ships a CLI at `~/.scout/bin/workiq.cmd` (Windows) or `~/.scout/bin/workiq` (macOS/Linux) that can call any Microsoft Graph endpoint. Invoke it directly as an executable (not through a shell interpreter that would try to parse quotes):
-  - Command: `workiq`
+- On **Scout**, no MCP-level create tool is currently exposed, but the platform ships a CLI that can call any Microsoft Graph endpoint. Invoke it directly as an executable (not through a shell interpreter that would try to parse quotes):
+  - Command (absolute path, since the CLI is not guaranteed to be on `PATH`):
+    - Windows: `~/.scout/bin/workiq.cmd` (resolve `~` via the runtime)
+    - macOS/Linux: `~/.scout/bin/workiq` (resolve `~` via the runtime)
   - Arguments (each as a separate argv entry, no shell quoting):
     1. `create`
     2. `--path`

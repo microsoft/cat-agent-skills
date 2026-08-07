@@ -22,12 +22,12 @@ These are non-negotiable and take precedence over everything else in this file.
 
 ## Step 0 - Resolve run parameters
 
-The skill runs on both Cowork and Scout. Tool names differ by platform - Scout typically exposes them under `workiq_*`, Cowork typically under `m365_*`. **Do not hardcode a specific tool name**; before Step 1, inspect the tools available in the session and bind each capability listed in `references/tools.md`. If any required capability has no binding, report which one is missing and stop.
+The skill runs on both Cowork and Scout. Tool names differ by platform - Scout typically exposes them under `workiq_*`, Cowork typically under `m365_*`. **Do not hardcode a specific tool name**; before Step 1, inspect the tools available in the session and bind each **collection + protection** capability listed in `references/tools.md` (get profile, list emails, list mail folders, get manager, get direct reports). If any of those has no binding, report which one is missing and stop. Execution-only capabilities (move email, create mail folder) are checked at Step 6 with a documented fallback - do not require them here.
 
 Resolve each parameter in this order, taking the first available:
 
 1. **What the invoking prompt says.**
-2. **The config file** at `~/.copilot/inbox-triage/config.json`, if present. `assets/config.example.json` is a complete example config - copy it to that path and edit it. If the file exists but is unreadable or fails to parse as JSON, stop and report - do not fall back to defaults silently, since silent fallback is the exact failure mode that would move mail with settings the user never approved.
+2. **The config file** at `~/.copilot/inbox-triage/config.json`, if present. If the file exists but is unreadable or fails to parse as JSON, stop and report - do not fall back to defaults silently, since silent fallback is the exact failure mode that would move mail with settings the user never approved. (Setup guidance for creating this file lives in the submission README, not here.)
 3. **The defaults below.**
 
 | Parameter | Default |
@@ -88,8 +88,8 @@ Assign each surviving candidate to exactly one bucket. **Skip any bucket whose `
 
 | Bucket | Positive signals | Destination folder (`config.folders.*`) |
 |---|---|---|
-| `newsletters` | Presence of `List-Unsubscribe` header, or sender domain in a known bulk-mail list (substack, mailchimp, marketo, sendgrid, mailerlite, convertkit, hubspot marketing, ...), or sender local part matches `newsletter\|digest\|weekly\|updates\|marketing\|hello\|news`. | `folders.newsletters` (default `Inbox Triage/Newsletters`) |
-| `notifications` | Sender address starts with `noreply\|no-reply\|notifications\|alerts\|donotreply\|automated\|system\|robot\|bot`. Or sender is a known automation platform (Jira, Azure DevOps, GitHub, GitLab, ServiceNow, PagerDuty, Datadog, Snyk, Dependabot, ...). | `folders.notifications` (default `Inbox Triage/Notifications`) |
+| `newsletters` | Presence of `List-Unsubscribe` header, or sender domain in a known bulk-mail list (substack, mailchimp, marketo, sendgrid, mailerlite, convertkit, hubspot marketing, ...), or sender local part matches `newsletter|digest|weekly|updates|marketing|hello|news`. | `folders.newsletters` (default `Inbox Triage/Newsletters`) |
+| `notifications` | Sender address starts with `noreply|no-reply|notifications|alerts|donotreply|automated|system|robot|bot`. Or sender is a known automation platform (Jira, Azure DevOps, GitHub, GitLab, ServiceNow, PagerDuty, Datadog, Snyk, Dependabot, ...). | `folders.notifications` (default `Inbox Triage/Notifications`) |
 | `past-events` | Subject starts with `Accepted:`, `Declined:`, `Tentative:`, `Canceled:`, `Updated invitation:` - or a localised prefix listed in `config.meetingResponsePrefixes` - AND the message is older than `pastEventMinAgeDays` (default 7 days). | `folders.pastEvents` (default `Inbox Triage/Past events`) |
 | `resolved` | Across the Inbox and Sent listings from Step 1, the newest message for this `conversationId` is FROM the user, the newest message is older than `resolvedThreadMinAgeDays` (default 60 days), and no newer inbound reply exists. If thread state cannot be verified from the collected listings, leave in inbox. | `folders.resolved` (default `Inbox Triage/Resolved`) |
 | `duplicates` | Older message in a thread where a newer message on the same `conversationId` is present in the inbox. The older ones are the duplicates; the newest stays. | `folders.duplicates` (default `Inbox Triage/Duplicates`) |
@@ -161,7 +161,11 @@ Only after explicit per-bucket approval, and only for the buckets the user appro
    - Use the resulting bucket folder ID as `destination` for the moves.
 2. **Create a folder when it does not exist.** Bind to whichever mail-folder create capability the running session exposes:
    - On **Cowork**, use the M365 folder-create tool bound in Step 0. Names vary by build - inspect the tool list. Treat a "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing.
-   - On **Scout**, invoke the WorkIQ CLI directly as an executable (not through a shell interpreter that would try to parse quotes). The CLI is at `~/.scout/bin/workiq.cmd` on Windows and `~/.scout/bin/workiq` on macOS/Linux. Pass these arguments, each as a separate argv entry:
+   - On **Scout**, invoke the WorkIQ CLI directly as an executable (not through a shell interpreter that would try to parse quotes). Use the absolute path since the CLI is not guaranteed to be on `PATH`:
+     - Windows: `~/.scout/bin/workiq.cmd`
+     - macOS/Linux: `~/.scout/bin/workiq`
+     
+     Resolve `~` via the runtime. Pass these arguments, each as a separate argv entry:
      1. `create`
      2. `--path`
      3. `/me/mailFolders/{parent-id}/childFolders`
