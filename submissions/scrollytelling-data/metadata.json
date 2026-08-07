@@ -1,0 +1,11 @@
+{
+  "name": "Scrollytelling Data",
+  "description": "Turns data into a scroll-driven HTML story.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["data", "visualization", "storytelling", "reporting"],
+  "author": "AndrewHessMSFT",
+  "authorUrl": "https://github.com/AndrewHessMSFT",
+  "version": "1.0.0",
+  "createdAt": "2026-07-21",
+  "updatedAt": "2026-07-21"
+}

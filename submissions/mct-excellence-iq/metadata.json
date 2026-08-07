@@ -1,0 +1,32 @@
+{
+  "name": "MCT Excellence IQ",
+  "description": "An AI-powered Instructional Intelligence Skill that helps Microsoft Certified Trainers design, deliver, assess, localize, and continuously improve world-class Microsoft learning experiences across Azure, Business Applications, Data & AI, Modern Work, and Security.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": [
+    "mct",
+    "instructional-intelligence",
+    "microsoft-learning",
+    "courseware",
+    "microsoft-learn",
+    "azure",
+    "business-applications",
+    "data-ai",
+    "modern-work",
+    "security",
+    "instructional-design",
+    "learning-experience",
+    "workshops",
+    "hands-on-labs",
+    "demonstrations",
+    "assessment",
+    "surveys",
+    "learning-analytics",
+    "localization",
+    "responsible-ai"
+  ],
+  "author": "Faride Ilanda",
+  "authorUrl": "https://github.com/farideilanda",
+  "version": "1.0.0",
+  "createdAt": "2026-07-25",
+  "updatedAt": "2026-07-25"
+}

@@ -1,0 +1,27 @@
+{
+  "staleAfterDays": 365,
+  "nearDuplicateThreshold": 0.86,
+  "relatedContentThreshold": 0.68,
+  "conflictCandidateThreshold": 0.72,
+  "minimumExtractedCharacters": 80,
+  "maximumFileBytes": 100000000,
+  "maximumRetainedTextCharacters": 5000000,
+  "maximumOfficeEntries": 10000,
+  "maximumOfficeExpandedBytes": 100000000,
+  "maximumOfficeCompressionRatio": 200.0,
+  "maximumEmbeddingCharacters": 12000,
+  "maximumPairwiseDocuments": 500,
+  "useEmbeddings": false,
+  "embeddingModel": "BAAI/bge-small-en-v1.5",
+  "directiveTerms": [
+    "must",
+    "must not",
+    "should",
+    "should not",
+    "required",
+    "prohibited",
+    "never",
+    "always",
+    "optional"
+  ]
+}

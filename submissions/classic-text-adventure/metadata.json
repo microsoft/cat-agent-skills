@@ -1,0 +1,11 @@
+{
+  "name": "Classic Text Adventure",
+  "description": "Play a deterministic, resumable Colossal Cave adventure with exact game output and built-in diagnostics.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["adventure", "game", "python"],
+  "author": "Andreas Adner",
+  "authorUrl": "https://github.com/Adner",
+  "version": "0.1.0",
+  "createdAt": "2026-07-22",
+  "updatedAt": "2026-07-22"
+}

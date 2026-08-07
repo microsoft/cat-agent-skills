@@ -8,14 +8,33 @@
   KEYNOTE-STYLE HTML PRESENTATION TEMPLATE
   ----------------------------------------
   HOW TO USE:
-  1. Keep the <style> block and the <script> block VERBATIM — that is the design system
+  1. Keep the <style> block and ALL FIVE <script> blocks VERBATIM — that is the design system
      and the navigation/theme engine. Do not restyle from scratch.
   2. Replace ONLY the <section class="slide">…</section> blocks in the deck with your content.
      Each <section class="slide"> is one slide. The first slide must keep class="slide title-slide active".
      Every OTHER slide is just class="slide" (no "active").
   3. Update <title> and the .brand text.
-  4. The slide counter total is computed automatically from the number of .slide elements — no need to edit it.
+  4. Set <span id="tot"> to your real slide count. The nav script sets it too, but hardcoding
+     the truth means a deck whose script was blocked shows broken navigation rather than
+     looking like a deliberate one-slide deck.
   5. One idea per slide. Aim ~1.5–2 min per slide (a 25-min talk ≈ 15–20 slides).
+
+  WHY THE ENGINE IS SPLIT INTO FIVE SCRIPTS — do not merge them:
+  Embedded preview surfaces (Teams / Outlook / SharePoint file preview) rewrite the page
+  before rendering. They (a) silently skip any inline script over ~2000 chars, and (b) give
+  each script its own global object, so neither top-level const/let nor window.foo crosses
+  a block boundary. Each block is therefore under ~1600 chars and fully self-contained;
+  the swipe block signals the nav block with a synthetic key event rather than a call.
+  Merging them, or adding a shared global, kills navigation for anyone using a preview —
+  and does it silently, because the CSS still renders perfectly.
+
+  SPEAKER NOTES (the fifth block) are OPTIONAL. Author a slide's notes as
+  <div class="spk">…</div> inside its <section class="slide">; the tray shows the note for
+  whichever slide is active. N toggles, Esc collapses, and the Hide link on the collapsed
+  bar clears it off screen for presenting (N brings it back). For a deck with no notes,
+  delete the .tray markup, the speaker-notes CSS block, and the fifth script block.
+  Notes ship inside the file and are readable in source — strip them before sharing a deck
+  whose notes are not for the recipient.
   Controls: ← / → (or PageUp/Down, Space) navigate · Home/End jump · F fullscreen · T theme.
   Theme: dark by default, follows the OS setting on load, toggle top-right.
   See components.md for the full component catalog.
@@ -66,7 +85,7 @@
   @keyframes drift2{50%{transform:translate(-5vw,-4vh) scale(1.12)}}
 
   .deck{position:relative;z-index:1;height:100vh;width:100vw}
-  .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:7vh 8vw;
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;justify-content:safe center;padding:7vh 8vw;
     opacity:0;visibility:hidden;transform:translateY(22px) scale(.995);
     transition:opacity .55s ease,transform .55s ease,visibility .55s;overflow:auto}
   .slide.active{opacity:1;visibility:visible;transform:none}
@@ -239,6 +258,74 @@
     .tf-row{grid-template-columns:1fr}
     .bar-row{grid-template-columns:120px 1fr}
   }
+  /* ===== short-viewport fit =====
+     The type scale above is width-based (h1 6vw, h2 4.4vw), so a wide but
+     SHORT viewport - an embedded Teams/Outlook preview pane, a small laptop,
+     a projector at 4:3 - renders huge text with no vertical room. These
+     queries step the scale down by height. Keep them. */
+  @media (max-height:860px){
+    .slide{padding:4.5vh 7vw}
+    h1{font-size:clamp(2rem,4.2vw,3.4rem)}
+    h2{font-size:clamp(1.5rem,3.1vw,2.35rem);margin-bottom:1rem}
+    .eyebrow{font-size:.72rem;margin-bottom:.85rem}
+    .lead{font-size:clamp(.95rem,1.35vw,1.14rem)}
+    .grid,.timeline,.bars,.tf,.steps{margin-top:1.15rem;gap:.85rem}
+    .card{padding:1rem 1.1rem;border-radius:13px}
+    .card h3{font-size:1rem}
+    .card p{font-size:.87rem;line-height:1.4}
+    .callout{padding:1rem 1.2rem}
+  }
+  @media (max-height:700px){
+    .slide{padding:3.2vh 6vw}
+    h1{font-size:clamp(1.7rem,3.4vw,2.6rem)}
+    h2{font-size:clamp(1.25rem,2.5vw,1.85rem);margin-bottom:.75rem}
+    .eyebrow{margin-bottom:.6rem}
+    .lead{font-size:.95rem;line-height:1.42}
+    .grid,.timeline,.bars,.tf,.steps{margin-top:.85rem;gap:.7rem}
+    .card{padding:.8rem .9rem;border-radius:11px}
+    .card h3{font-size:.94rem}
+    .card p{font-size:.82rem;line-height:1.35}
+  }
+  /* ===== end short-viewport fit ===== */
+  /* ===== speaker notes tray =====
+     Optional. Author notes for a slide as <div class="spk">...</div> inside
+     the <section class="slide">. They never render inline - the tray pulls
+     them in for whichever slide is active. Delete this block and the .tray
+     markup if a deck should carry no notes at all. */
+  .spk{display:none}
+  .tray{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bg);
+    border-top:1px solid var(--line-hi);box-shadow:0 -18px 44px rgba(0,0,0,.34);
+    transform:translateY(calc(100% - 42px));transition:transform .34s cubic-bezier(.22,1,.36,1);
+    height:34vh;display:flex;flex-direction:column}
+  .tray.open{transform:translateY(0)}
+  .tray.gone{transform:translateY(100%)}
+  .tray-bar{height:42px;flex:0 0 42px;display:flex;align-items:center;gap:.7rem;padding:0 1.2rem;
+    cursor:pointer;user-select:none;font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);font-weight:600}
+  .tray-bar:hover{color:var(--ink)}
+  .tray-bar .chev{transition:transform .34s;font-size:.9rem;color:var(--violet)}
+  .tray.open .tray-bar .chev{transform:rotate(180deg)}
+  .tray-bar .sp{margin-left:auto;font-size:.7rem;letter-spacing:.08em;color:var(--faint);text-transform:none}
+  .tray-bar .hide{font-size:.7rem;letter-spacing:.08em;text-transform:none;color:var(--faint);
+    text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:.2rem .1rem}
+  .tray-bar .hide:hover{color:var(--ink)}
+  .tray.open .tray-bar .hide{display:none}
+  .tray-body{flex:1 1 auto;overflow-y:auto;padding:.2rem 1.4rem 1.4rem;border-top:1px solid var(--line)}
+  .tray-body p{color:var(--muted);font-size:.92rem;line-height:1.55;margin-bottom:.6rem;max-width:82ch}
+  .tray-body b{color:var(--ink)}
+  .tray-body i{color:var(--ink);font-style:italic}
+  .tray-body .none{color:var(--faint);font-style:italic}
+  /* The tray reserves vertical space rather than covering the deck, so the
+     counter and nav stay visible in every state. --tray-h is the single
+     source of truth for how much room the tray occupies. */
+  :root{--tray-h:42px}
+  body.tray-open{--tray-h:34vh}
+  body.tray-gone{--tray-h:0px}
+  .deck{height:calc(100vh - var(--tray-h))}
+  .counter{bottom:calc(var(--tray-h) + 1.2rem)}
+  .nav{bottom:calc(var(--tray-h) + 1rem)}
+  @media print{.tray{display:none}}
+  /* ===== end speaker notes tray ===== */
 </style>
 </head>
 <body>
@@ -273,6 +360,13 @@
         <div class="card"><div class="stat-num">Text</div><h3>Label</h3><p>One supporting sentence.</p></div>
       </div>
       <p class="lead" style="margin-top:1.8rem">A closing takeaway line for the slide.</p>
+    </div>
+      <div class="spk">
+      <p><b>Example speaker note.</b> Notes live inside the slide as
+      <i>div class="spk"</i> and never render on the slide itself - the tray
+      shows the note for whichever slide is active.</p>
+      <p>Delete the tray entirely if a deck shouldn't carry notes, and strip
+      these blocks before sharing a deck whose notes are internal-only.</p>
     </div>
   </section>
 
@@ -385,78 +479,176 @@
 
 </div>
 
+<!-- Speaker notes tray. Delete this block (and the matching CSS + script)
+     for a deck that carries no notes. -->
+<div class="tray" id="tray">
+  <div class="tray-bar" id="trayBar">
+    <span class="chev">&#9650;</span><span>Speaker notes</span>
+    <span class="sp">N to toggle</span>
+    <span class="hide" id="trayHide" role="button" tabindex="0"
+          title="Hide the notes bar - press N to bring it back">Hide</span>
+  </div>
+  <div class="tray-body" id="trayBody"></div>
+</div>
+
 <button class="theme-btn" id="theme" aria-label="Toggle theme" title="Toggle light/dark (T)">☀</button>
-<div class="counter"><b id="cur">01</b> / <span id="tot">01</span></div>
+<!-- Set the total below to the REAL slide count. The nav script also
+     sets it, but hardcoding the truth means a deck whose script was
+     blocked shows "01 / 08" (obviously broken navigation) instead of
+     "01 / 01" (which looks like a deliberate one-slide deck). -->
+<div class="counter"><b id="cur">01</b> / <span id="tot">08</span></div>
 <div class="nav">
   <button id="prev" aria-label="Previous slide">‹</button>
   <button id="next" aria-label="Next slide">›</button>
 </div>
 
+<!--
+  NAVIGATION / THEME ENGINE - keep VERBATIM, and keep it SPLIT.
+
+  These four blocks are deliberately separate and deliberately self-contained.
+  Embedded preview surfaces (Teams / Outlook file preview) skip any inline
+  script over ~2000 characters AND give each script its own global object, so
+  a single large block never runs and shared state never crosses a boundary.
+  Each block re-reads what it needs from the DOM; the swipe block talks to the
+  nav block by dispatching a key event, not by calling a function.
+
+  If you extend this engine: add another SMALL, self-contained block. Do not
+  merge these back together, and do not introduce a shared global.
+-->
 <script>
-  const slides = Array.from(document.querySelectorAll('.slide'));
-  const total = slides.length;
-  let i = 0;
-  const prog = document.getElementById('progress');
-  const cur = document.getElementById('cur');
-  const tot = document.getElementById('tot');
-  const prevBtn = document.getElementById('prev');
-  const nextBtn = document.getElementById('next');
-  const pad = n => String(n).padStart(2,'0');
-  tot.textContent = pad(total);
-
-  const root = document.documentElement;
-  const themeBtn = document.getElementById('theme');
-  const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
-  let userSet = false;
-  function applyTheme(t){
+(function(){
+  var root = document.documentElement, btn = document.getElementById('theme');
+  var mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+  var userSet = false;
+  function apply(t){
     root.setAttribute('data-theme', t);
-    themeBtn.textContent = t==='dark' ? '☀' : '☾';
-    themeBtn.setAttribute('aria-label', t==='dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    btn.textContent = t === 'dark' ? '\u2600' : '\u263e';
+    btn.setAttribute('aria-label',
+      t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
   }
-  applyTheme(mql && mql.matches ? 'light' : 'dark');
-  themeBtn.addEventListener('click', ()=>{ userSet=true; applyTheme(root.getAttribute('data-theme')==='dark'?'light':'dark'); });
-  if(mql && mql.addEventListener){ mql.addEventListener('change', e=>{ if(!userSet) applyTheme(e.matches?'light':'dark'); }); }
-
+  function toggle(){
+    userSet = true;
+    apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  }
+  apply(mql && mql.matches ? 'light' : 'dark');
+  btn.addEventListener('click', toggle);
+  if (mql && mql.addEventListener) {
+    mql.addEventListener('change', function(e){
+      if (!userSet) apply(e.matches ? 'light' : 'dark');
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if (e.key === 't' || e.key === 'T') toggle();
+  });
+})();
+</script>
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length, i = 0;
+  var prog = document.getElementById('progress');
+  var cur = document.getElementById('cur'), tot = document.getElementById('tot');
+  var pb = document.getElementById('prev'), nb = document.getElementById('next');
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+  tot.textContent = pad(total);
   function show(n, push){
-    i = Math.max(0, Math.min(total-1, n));
-    slides.forEach((s,idx)=>s.classList.toggle('active', idx===i));
-    prog.style.width = ((i+1)/total*100) + '%';
-    cur.textContent = pad(i+1);
-    prevBtn.disabled = i===0;
-    nextBtn.disabled = i===total-1;
-    if(push!==false){ try{ history.replaceState(null,'','#'+(i+1)); }catch(e){} }
+    i = Math.max(0, Math.min(total - 1, n));
+    for (var k = 0; k < total; k++) slides[k].classList.toggle('active', k === i);
+    prog.style.width = ((i + 1) / total * 100) + '%';
+    cur.textContent = pad(i + 1);
+    pb.disabled = i === 0;
+    nb.disabled = i === total - 1;
+    if (push !== false) {
+      try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
+    }
   }
-  const next = ()=>show(i+1);
-  const prev = ()=>show(i-1);
-
-  document.addEventListener('keydown', e=>{
-    switch(e.key){
+  nb.addEventListener('click', function(){ show(i + 1); });
+  pb.addEventListener('click', function(){ show(i - 1); });
+  document.addEventListener('keydown', function(e){
+    switch (e.key) {
       case 'ArrowRight': case 'PageDown': case ' ': case 'Spacebar':
-        e.preventDefault(); next(); break;
+        e.preventDefault(); show(i + 1); break;
       case 'ArrowLeft': case 'PageUp':
-        e.preventDefault(); prev(); break;
+        e.preventDefault(); show(i - 1); break;
       case 'Home': e.preventDefault(); show(0); break;
-      case 'End': e.preventDefault(); show(total-1); break;
-      case 'f': case 'F':
-        if(!document.fullscreenElement){ document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }
-        else { document.exitFullscreen && document.exitFullscreen(); }
-        break;
-      case 't': case 'T':
-        userSet=true; applyTheme(root.getAttribute('data-theme')==='dark'?'light':'dark'); break;
+      case 'End': e.preventDefault(); show(total - 1); break;
     }
   });
-  nextBtn.addEventListener('click', next);
-  prevBtn.addEventListener('click', prev);
-
-  let tx=0;
-  addEventListener('touchstart', e=>{ tx = e.changedTouches[0].clientX; }, {passive:true});
-  addEventListener('touchend', e=>{
-    const dx = e.changedTouches[0].clientX - tx;
-    if(Math.abs(dx) > 50){ dx < 0 ? next() : prev(); }
+  var s = parseInt((location.hash || '').replace('#', ''), 10);
+  show(isFinite(s) && s >= 1 ? s - 1 : 0, false);
+})();
+</script>
+<script>
+(function(){
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'f' && e.key !== 'F') return;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen &&
+        document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen && document.exitFullscreen();
+    }
+  });
+})();
+</script>
+<script>
+(function(){
+  var tx = 0;
+  window.addEventListener('touchstart', function(e){
+    tx = e.changedTouches[0].clientX;
   }, {passive:true});
-
-  const start = parseInt((location.hash||'').replace('#',''),10);
-  show(Number.isFinite(start) && start>=1 ? start-1 : 0, false);
+  window.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) {
+      document.dispatchEvent(new KeyboardEvent('keydown', {
+        key: dx < 0 ? 'ArrowRight' : 'ArrowLeft', bubbles: true
+      }));
+    }
+  }, {passive:true});
+})();
+</script>
+<script>
+(function(){
+  var tray = document.getElementById('tray');
+  if (!tray) return;
+  var bar = document.getElementById('trayBar');
+  var hideBtn = document.getElementById('trayHide');
+  var body = document.getElementById('trayBody');
+  var B = document.body;
+  function render(){
+    var s = document.querySelector('.slide.active');
+    var n = s ? s.querySelector('.spk') : null;
+    body.innerHTML = n ? n.innerHTML : '<p class="none">No notes for this slide.</p>';
+    body.scrollTop = 0;
+  }
+  function setOpen(v){
+    tray.classList.toggle('open', v);
+    B.classList.toggle('tray-open', v);
+  }
+  function setGone(v){
+    tray.classList.toggle('gone', v);
+    B.classList.toggle('tray-gone', v);
+    if (v) setOpen(false);
+  }
+  bar.addEventListener('click', function(){
+    setOpen(!tray.classList.contains('open'));
+  });
+  function doHide(e){ e.stopPropagation(); e.preventDefault(); setGone(true); }
+  hideBtn.addEventListener('click', doHide);
+  hideBtn.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') doHide(e);
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'n' || e.key === 'N') {
+      e.preventDefault();
+      if (tray.classList.contains('gone')) { setGone(false); setOpen(true); }
+      else setOpen(!tray.classList.contains('open'));
+    } else if (e.key === 'Escape') setOpen(false);
+  });
+  new MutationObserver(render).observe(document.getElementById('deck'),
+    {subtree:true, attributes:true, attributeFilter:['class']});
+  render();
+})();
 </script>
 </body>
 </html>

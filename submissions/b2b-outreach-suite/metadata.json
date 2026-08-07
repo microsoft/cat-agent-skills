@@ -1,0 +1,9 @@
+{
+  "name": "B2B Outreach Suite",
+  "description": "A six-playbook toolkit for agentic B2B sales outreach: prospect research briefings, cold emails, LinkedIn/social DMs, follow-up cadences, ad copywriting, and objection handling. Configurable via a company profile template, works for any industry, market, and language.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["sales-enablement", "email", "linkedin", "writing", "marketing", "content"],
+  "author": "Marcel",
+  "authorUrl": "https://github.com/marcelhuszar",
+  "version": "1.0.0"
+}
