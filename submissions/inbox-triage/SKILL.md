@@ -17,10 +17,12 @@ This matters because an inbox tool reads inbound content from anyone who can ema
 
 These are non-negotiable and take precedence over everything else in this file.
 
-1. **Never delete.** Moves only. Every proposed action moves mail into a named folder inside the same mailbox. The user can restore anything by dragging it back. Even for "past-event meeting logistics" or "obvious junk", the action is *move to `Inbox Triage/Past events`*, never `workiq_delete_email`.
+1. **Never delete.** Moves only. Every proposed action moves mail into a named folder inside the same mailbox. The user can restore anything by dragging it back. Even for "past-event meeting logistics" or "obvious junk", the action is *move to `Inbox Triage/Past events`* - the skill never calls any delete-email capability.
 2. **Never act without per-bucket approval.** Present the plan first as a proposal grouped by bucket, with counts and sample senders. Wait for the user to approve each bucket individually. Do not batch-execute all buckets on one "approve" - the user must be able to skip a bucket without skipping the whole run.
 
 ## Step 0 - Resolve run parameters
+
+The skill runs on both Cowork and Scout. Tool names differ by platform - Scout typically exposes them under `workiq_*`, Cowork typically under `m365_*`. **Do not hardcode a specific tool name**; before Step 1, inspect the tools available in the session and bind each capability listed in `references/tools.md`. If any required capability has no binding, report which one is missing and stop.
 
 Resolve each parameter in this order, taking the first available:
 
@@ -32,7 +34,7 @@ Resolve each parameter in this order, taking the first available:
 |---|---|
 | Lookback window | 90 days ending now |
 | Scope | Inbox only (never Sent, Drafts, or subfolders, except Sent listings for active-thread detection and `resolved` bucket verification) |
-| Destination folders | Under `Inbox Triage/` in the user's Inbox. Created automatically on first run via the runtime's mail-folder create capability (Scout uses the `workiq` CLI; Cowork uses the platform's M365 folder tool). If creation is not possible, the skill stops the affected bucket and instructs the user to create the folder in Outlook. See Step 6. |
+| Destination folders | Under `Inbox Triage/` in the user's Inbox. Created automatically on first run via the bound mail-folder create capability. See Step 6. |
 | Sample senders per bucket | 5 |
 | Unsubscribe handling | Extract and display link, never click |
 | Active-thread window | 14 days |
@@ -41,26 +43,26 @@ Resolve each parameter in this order, taking the first available:
 
 Paths in this skill are written home-relative with `~`. Resolve `~` to the user's home directory through the runtime so the skill works on Windows, macOS, and Linux alike - do not assume a shell-specific variable like `%USERPROFILE%` or `$HOME`.
 
-Use `workiq_get_my_profile` to resolve the user's display name and work address. You need the identity to tell direct mail from broadcast mail and to identify the user's own domain for protection rules. If the profile call fails, stop and report - the protection layer depends on knowing who the user is.
+Call the bound "get my profile" capability to resolve the user's display name and work address. You need the identity to tell direct mail from broadcast mail and to identify the user's own domain for protection rules. If the profile call fails, stop and report - the protection layer depends on knowing who the user is.
 
 ## Step 1 - Collect
 
-Tool names and calling patterns are in `references/scout-tools.md`. Read it before the first call. If an expected tool is unavailable, do not silently continue - report it and stop; a partial triage that skips protection lookups is worse than none.
+The skill runs on both Cowork and Scout, and tool names differ. Bind each capability described below to whichever concrete tool the running session exposes - do not hardcode a specific name. See `references/tools.md` for the capabilities the skill needs, typical tool-name patterns per platform, and how to handle an unavailable capability. Read that file before the first call. If a required capability has no available tool binding, do not silently continue - report which capability is missing and stop; a partial triage that skips protection lookups is worse than none.
 
-**Mail.** `workiq_list_emails` on the inbox over the lookback window. For every message pull: `id`, `conversationId`, subject, sender address, sender display name, received time, `isRead`, `flag.flagStatus`, folder ID, sensitivity label, `hasAttachments`, and the header material needed to detect `List-Unsubscribe` (`internetMessageHeaders`). **Do not open message bodies** unless a message survives all buckets and needs disambiguation - bodies are expensive and unnecessary for classification.
+**Mail.** Using the bound "list emails" capability, list the inbox over the lookback window. For every message pull: `id`, `conversationId`, subject, sender address, sender display name, received time, `isRead`, `flag.flagStatus`, folder ID, sensitivity label, `hasAttachments`, and the header material needed to detect `List-Unsubscribe` (`internetMessageHeaders`). **Do not open message bodies** unless a message survives all buckets and needs disambiguation - bodies are expensive and unnecessary for classification.
 
 Paginate as required by the tool. If the tool returns a truncation marker or hits a hard cap, do not proceed as though the inbox is fully covered - stop and tell the user the size and ask whether to run over a narrower window instead. Silent truncation would leave protected mail unaccounted for.
 
-**Sent, for the active-thread test.** One `workiq_list_emails` call on the Sent folder over the active-thread window (default 14 days). Pull `id`, `conversationId`, To/Cc recipient addresses, and sent time. Do not pull bodies. You use this to answer: "has the user emailed anyone at this address recently?"
+**Sent, for the active-thread test.** One additional list-emails call on the Sent folder over the active-thread window (default 14 days). Pull `id`, `conversationId`, To/Cc recipient addresses, and sent time. Do not pull bodies. You use this to answer: "has the user emailed anyone at this address recently?"
 
-**Sent, for the `resolved` bucket.** A second `workiq_list_emails` call on the Sent folder over the full lookback window. Pull `id`, `conversationId`, and sent time only. You need this to determine whether the newest message in a thread (across Inbox and Sent) is from the user; the Inbox listing alone cannot answer that.
+**Sent, for the `resolved` bucket.** A second list-emails call on the Sent folder over the full lookback window. Pull `id`, `conversationId`, and sent time only. You need this to determine whether the newest message in a thread (across Inbox and Sent) is from the user; the Inbox listing alone cannot answer that.
 
 **Org context, for the protection layer.**
 
-- `workiq_get_my_manager` - once.
-- `workiq_get_my_direct_reports` - once.
+- Call the bound "get my manager" capability - once.
+- Call the bound "get my direct reports" capability - once.
 
-Cache both for the run. Never call again per-message. Distinguish an empty *successful* result from a *failed* call: an empty result (a user without a manager, or a user with no direct reports) is a normal response - proceed with the other protection rules and note in the plan which parts of the org-chart rule contributed. A failed call, timeout, or unavailable tool aborts the run - see `references/scout-tools.md`.
+Cache both for the run. Never call again per-message. Distinguish an empty *successful* result from a *failed* call: an empty result (a user without a manager, or a user with no direct reports) is a normal response - proceed with the other protection rules and note in the plan which parts of the org-chart rule contributed. A failed call, timeout, or unavailable tool aborts the run - see `references/tools.md`.
 
 **Calendar.** Not called. Past-event meeting logistics are detected from the mail subject line and received date; calendar access adds cost without adding accuracy.
 
@@ -154,27 +156,34 @@ Wait for the user before doing anything. The plan is the deliverable; execution 
 Only after explicit per-bucket approval, and only for the buckets the user approved:
 
 1. **Resolve the destination folder ID, creating parent and child as needed.** Values under `config.folders.*` are folder path/name strings (never raw IDs). For each bucket:
-   - List Inbox child folders with `workiq_list_mail_folders` (`folder: "Inbox"`, `recursive: false`) and look for the parent named by the leading segment of the configured path (default `Inbox Triage`). If missing, create it as a child of Inbox (Step 6.2).
+   - Using the bound "list mail folders" capability, list Inbox child folders and look for the parent named by the leading segment of the configured path (default `Inbox Triage`). If missing, create it as a child of Inbox (Step 6.2).
    - List that parent's child folders and look for the bucket name (default `Newsletters`, `Notifications`, `Past events`, `Resolved`, `Duplicates`). If missing, create it as a child of the parent (Step 6.2).
    - Use the resulting bucket folder ID as `destination` for the moves.
 2. **Create a folder when it does not exist.** Bind to whichever mail-folder create capability the running session exposes:
-   - On **Scout**, shell out to the WorkIQ CLI: `workiq create --path "/me/mailFolders/{parent-id}/childFolders" --json '{"displayName": "<Folder Name>"}'`. Discover `{parent-id}` from the listing in Step 6.1 (for the parent, use Inbox's ID from the folders list). The `workiq` CLI is at `~/.scout/bin/workiq.cmd` on Windows and `~/.scout/bin/workiq` on macOS/Linux; do not assume a global PATH entry. Treat a Graph "folder already exists" or "conflict" response as success and re-resolve the folder ID from a fresh listing. On any other failure, fall through to the user-instruction path below.
-   - On **Cowork**, bind to the M365 mail-folder create tool exposed in the session. Names vary by build - inspect the tool list and use whichever matches "create mail folder". Same "already exists" and "on other failure" handling.
+   - On **Cowork**, use the M365 folder-create tool bound in Step 0. Names vary by build - inspect the tool list. Treat a "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing.
+   - On **Scout**, invoke the WorkIQ CLI directly as an executable (not through a shell interpreter that would try to parse quotes). The CLI is at `~/.scout/bin/workiq.cmd` on Windows and `~/.scout/bin/workiq` on macOS/Linux. Pass these arguments, each as a separate argv entry:
+     1. `create`
+     2. `--path`
+     3. `/me/mailFolders/{parent-id}/childFolders`
+     4. `--json`
+     5. The JSON body as one argv value, e.g. `{"displayName":"Inbox Triage"}`
+     
+     Because the JSON body is passed as a single argv entry, no shell-specific quoting is required and the invocation works the same under `cmd.exe`, PowerShell, `bash`, and `zsh`. Discover `{parent-id}` from the listing in Step 6.1 (for the parent, use Inbox's ID from the folders list). Treat a Graph "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing. On any other failure, fall through to the user-instruction path below.
 3. **If folder creation is not possible in the session** (no CLI, no matching MCP tool, or the create call failed for a reason other than already-exists), stop the affected bucket and tell the user to create the folder manually in Outlook, giving them the exact folder name. Never fall back to a different destination folder, and never guess at a create-tool name that is not confirmed available in the running session.
-4. **Handle already-moved messages gracefully.** A retried run may find that some approved message IDs are no longer in Inbox (a prior run moved them, or the user moved them manually). Attempt the move; if `workiq_move_email` reports the message is not found in Inbox, count it as already-moved and continue. Do not re-list the Inbox and do not rebuild the plan.
-5. **Move via `workiq_move_email`** using the resolved folder ID as `destination`. Execute one bucket to completion before starting the next; do not parallelise moves across buckets. If the tool supports only one message per call in the current build, move serially and report progress ("moved 50 of 312").
+4. **Handle already-moved messages gracefully.** A retried run may find that some approved message IDs are no longer in Inbox (a prior run moved them, or the user moved them manually). Attempt the move; if the bound "move email" capability reports the message is not found in Inbox, count it as already-moved and continue. Do not re-list the Inbox and do not rebuild the plan.
+5. **Move via the bound "move email" capability** using the resolved folder ID as `destination`. Execute one bucket to completion before starting the next; do not parallelise moves across buckets. If the tool supports only one message per call in the current build, move serially and report progress ("moved 50 of 312").
 6. **On any move failure other than not-found, stop the bucket, keep what already moved, and report** the failure with the specific message and error. Do not retry silently.
-7. **Never `workiq_delete_email`.** Even for the `duplicates` bucket. Even if the user says "just delete them". Point the user to the destination folder and let them empty it manually - the safety guarantee ("this skill never deletes") is the whole promise.
+7. **Never delete.** Do not call any delete-email capability, even for the `duplicates` bucket. Even if the user says "just delete them". Point the user to the destination folder and let them empty it manually - the safety guarantee ("this skill never deletes") is the whole promise.
 
 After a bucket is executed, report exact counts moved, the folder they went to, and how to reverse ("drag from `Inbox Triage/Newsletters` back to Inbox").
 
 ## Delivery
 
-This skill is interactive. It does not send anything outbound - no reply, no forward, no RSVP, no calendar write, no chat post. The only writes are `workiq_move_email` calls and, where the runtime exposes it, one-time creation of the destination folders under `Inbox Triage/`. Any calendar or chat action is out of scope, and deleting mail is never done.
+This skill is interactive. It does not send anything outbound - no reply, no forward, no RSVP, no calendar write, no chat post. The only writes are calls to the bound "move email" capability and, where the runtime exposes it, one-time creation of the destination folders under `Inbox Triage/`. Any calendar or chat action is out of scope, and deleting mail is never done.
 
 ## Idempotence
 
-Retries are safe because Step 6.4 lets already-moved messages fail their `workiq_move_email` call as "not found" and continue - a message already in a triage folder from a prior run is not re-processed. Folder creation is idempotent by nature: a "folder already exists" response from `workiq create` (or the platform equivalent) is treated as success, not as an error. A partially-executed bucket resumes from where it stopped without re-listing or rebuilding the plan.
+Retries are safe because Step 6.4 lets already-moved messages fail their move call as "not found" and continue - a message already in a triage folder from a prior run is not re-processed. Folder creation is idempotent by nature: a "folder already exists" response from the bound create capability (Scout CLI or Cowork MCP tool) is treated as success, not as an error. A partially-executed bucket resumes from where it stopped without re-listing or rebuilding the plan.
 
 The plan itself is not persisted between runs. A second invocation always builds a fresh plan from a fresh Inbox listing - which is correct, because the inbox has changed since the last run.
 
@@ -186,7 +195,7 @@ For any labelled item that also carries a flag or has an active thread, both rea
 
 ## References
 
-- `references/scout-tools.md` - Work IQ tools, calling patterns, and what to do when one is missing.
+- `references/tools.md` - capabilities the skill binds to per-platform tools, calling patterns, and what to do when a capability is missing.
 - `references/classification-rules.md` - bucket tests, sender-domain lists, unsubscribe detection, and worked examples.
 - `references/safety.md` - the protection layer in detail, why each rule exists, and how to extend it in config.
 - `assets/config.example.json` - annotated example config; copy to `~/.copilot/inbox-triage/config.json` and edit.
