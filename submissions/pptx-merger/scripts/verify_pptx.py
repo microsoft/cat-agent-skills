@@ -63,8 +63,12 @@ def structural_checks(path: Path):
         zip_names = set(names)
         for n in names:
             if n.endswith(".rels"):
-                root = etree.fromstring(z.read(n), _SAFE_PARSER)
-                part_folder = "/".join(n.split("/")[:-2])  # strip _rels/<file>.rels
+                try:
+                    root = etree.fromstring(z.read(n), _SAFE_PARSER)
+                except etree.XMLSyntaxError as exc:
+                    errors.append(f"{n}: malformed XML — {exc}")
+                    continue
+                part_folder = "/".join(n.split("/")[:-2])  
                 for rel in root:
                     tgt = rel.get("Target", "")
                     mode = rel.get("TargetMode", "")
@@ -74,7 +78,8 @@ def structural_checks(path: Path):
                         errors.append(f"{n}: absolute internal Target '{tgt}' "
                                       "(needs relative path or TargetMode=External)")
                         continue
-                    resolved = "/".join(filter(None, [part_folder, tgt])).lstrip("/")
+                    import posixpath
+                    resolved = posixpath.normpath(part_folder + "/" + tgt).lstrip("/")
                     if resolved not in zip_names:
                         errors.append(f"{n}: Target '{tgt}' resolves to '{resolved}' which is missing from ZIP")
 
