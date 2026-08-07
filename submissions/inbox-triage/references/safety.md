@@ -10,7 +10,7 @@ The protection layer is the reason this skill is safe to run. Every rule below e
 
 **How it can go wrong without it.** A manager who Cc's the user on a broad announcement gets classified as broadcast-notification and moved. The user misses it. Trust is gone.
 
-**Scope note.** The skill uses `workiq_get_my_manager` and `workiq_get_my_direct_reports`, which return one hop only. Managers of managers are not resolved automatically because no single WorkIQ tool exposes that lookup reliably. If that extra layer of protection matters, add those addresses explicitly to `protection.allowlist`.
+**Scope note.** The skill's org-chart lookup returns one hop only (immediate manager and immediate direct reports). Managers of managers are not resolved automatically because no single mail-capability tool exposes that lookup reliably across platforms. If that extra layer of protection matters, add those addresses explicitly to `protection.allowlist`.
 
 ## Rule: Active thread
 
