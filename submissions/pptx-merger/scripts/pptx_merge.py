@@ -29,8 +29,11 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from lxml import etree
-
+try:
+    from lxml import etree
+except ImportError:
+    import sys
+    sys.exit("ERROR: lxml is required. Install it with: pip install lxml")
 
 # ── Namespaces ──────────────────────────────────────────────────────────────
 NS_P   = "http://schemas.openxmlformats.org/presentationml/2006/main"
