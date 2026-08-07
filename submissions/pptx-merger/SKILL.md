@@ -105,17 +105,6 @@ Use `--out` to write the base64 to a file (recommended for large decks). It
 refuses to export anything that is not a valid PPTX and verifies a decode
 round-trip so a truncated encoding is caught here, not in the user's PowerPoint.
 
-## Delivering the result (Copilot Studio)
-
-Keep the out-of-the-box SharePoint tools as-is. The base64 from step 4 is what you
-hand to your upload path. **Never read, print, chunk, or reconstruct the base64 in
-the model** — pass it as a variable reference from export straight into the upload
-action. The recommended upload is a Power Automate flow whose input is a
-`contentBase64` string and whose *Create file* action sets File Content to
-`base64ToBinary(triggerBody()?['contentBase64'])`, so the decode happens
-server-side and the bytes never travel through the model by value. Return the
-file's `webUrl` (and its `Length`, to compare against the exported byte count as a
-final integrity check) and give the user the link.
 
 ## Suggested agent step order
 
@@ -128,10 +117,3 @@ final integrity check) and give the user the link.
 5. `pptx_to_b64.py merged.pptx --out merged.b64`.
 6. Upload via the flow (passing the base64 by reference) and return the link.
 
-## Requirements
-
-`lxml` for the merge and validate steps (`pip install lxml --break-system-packages`
-if not already present in the sandbox). LibreOffice (`soffice`) for the render
-gate in step 3 — if unavailable, validation runs structural-only and says so.
-Ingest and export use the Python standard library only. No network calls; the
-skill never uploads or downloads anything itself.
