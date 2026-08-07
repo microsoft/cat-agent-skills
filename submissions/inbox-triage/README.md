@@ -61,17 +61,19 @@ The plan shows how many messages were protected by each reason, so you can see t
 
 The skill runs with sensible defaults on the first try. To personalise, copy `assets/config.example.json` to `~/.copilot/inbox-triage/config.json` and set your priority allowlist, custom sensitive domains, folder names, localised meeting-response prefixes, and lookback window.
 
-## Setup: none required
+## Setup
 
-The skill creates the destination folders under `Inbox Triage/` in your mailbox automatically on first run - Scout via the `workiq` CLI, Cowork via the platform's M365 folder tool. If for some reason creation is not possible in your session (permissions, tool unavailability, ...), the skill will stop the affected bucket and tell you exactly which folder to create in Outlook manually.
+Zero setup on Cowork and on macOS/Linux Scout - the skill creates the destination folders under `Inbox Triage/` automatically on first run.
 
-Default folders (customisable via `config.folders.*`):
+On Windows Scout, folder creation is skipped because the WorkIQ CLI's `.cmd` wrapper cannot safely pass JSON payloads through `cmd.exe`. Create these folders once in Outlook (or set alternate names in `config.folders.*`):
 
 - `Inbox Triage/Newsletters`
 - `Inbox Triage/Notifications`
 - `Inbox Triage/Past events`
 - `Inbox Triage/Resolved`
 - `Inbox Triage/Duplicates`
+
+If a folder is missing at execution time and the runtime cannot create it, the skill stops that bucket and tells you the exact name to create - it never falls back to a different destination.
 
 ## Undo
 

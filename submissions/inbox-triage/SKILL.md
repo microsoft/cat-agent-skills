@@ -161,18 +161,15 @@ Only after explicit per-bucket approval, and only for the buckets the user appro
    - Use the resulting bucket folder ID as `destination` for the moves.
 2. **Create a folder when it does not exist.** Bind to whichever mail-folder create capability the running session exposes:
    - On **Cowork**, use the M365 folder-create tool bound in Step 0. Names vary by build - inspect the tool list. Treat a "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing.
-   - On **Scout**, invoke the WorkIQ CLI directly as an executable (not through a shell interpreter that would try to parse quotes). Use the absolute path since the CLI is not guaranteed to be on `PATH`:
-     - Windows: `~/.scout/bin/workiq.cmd`
-     - macOS/Linux: `~/.scout/bin/workiq`
-     
-     Resolve `~` via the runtime. Pass these arguments, each as a separate argv entry:
+   - On **Scout (macOS/Linux)**, invoke the WorkIQ CLI directly - POSIX shells preserve argv cleanly and JSON passes through unmodified. Path: `~/.scout/bin/workiq` (resolve `~` via the runtime). Pass these arguments, each as a separate argv entry:
      1. `create`
-     2. `--path`
+     2. `-u` (short form of `--url`)
      3. `/me/mailFolders/{parent-id}/childFolders`
-     4. `--json`
+     4. `-b` (short form of `--body`)
      5. The JSON body as one argv value, e.g. `{"displayName":"Inbox Triage"}`
      
-     Because the JSON body is passed as a single argv entry, no shell-specific quoting is required and the invocation works the same under `cmd.exe`, PowerShell, `bash`, and `zsh`. Discover `{parent-id}` from the listing in Step 6.1 (for the parent, use Inbox's ID from the folders list). Treat a Graph "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing. On any other failure, fall through to the user-instruction path below.
+     Discover `{parent-id}` from the listing in Step 6.1 (for the parent, use Inbox's ID). Treat a Graph "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing. On any other failure, fall through to the user-instruction path below.
+   - On **Scout (Windows)**, the WorkIQ CLI is a `.cmd` batch wrapper (`~/.scout/bin/workiq.cmd`) that requires `cmd.exe` to interpret it. `cmd.exe` cannot reliably pass JSON containing double quotes via argv (the quotes are stripped or mangled), and the CLI does not currently accept the body via a file or stdin. **Treat auto-create as unavailable on Windows Scout and fall through to the user-instruction path.** Do not attempt to work around cmd.exe quoting - the failure modes are silent and would create folders with wrong names.
 3. **If folder creation is not possible in the session** (no CLI, no matching MCP tool, or the create call failed for a reason other than already-exists), stop the affected bucket and tell the user to create the folder manually in Outlook, giving them the exact folder name. Never fall back to a different destination folder, and never guess at a create-tool name that is not confirmed available in the running session.
 4. **Handle already-moved messages gracefully.** A retried run may find that some approved message IDs are no longer in Inbox (a prior run moved them, or the user moved them manually). Attempt the move; if the bound "move email" capability reports the message is not found in Inbox, count it as already-moved and continue. Do not re-list the Inbox and do not rebuild the plan.
 5. **Move via the bound "move email" capability** using the resolved folder ID as `destination`. Execute one bucket to completion before starting the next; do not parallelise moves across buckets. If the tool supports only one message per call in the current build, move serially and report progress ("moved 50 of 312").
