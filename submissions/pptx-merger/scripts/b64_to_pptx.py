@@ -47,7 +47,11 @@ def _has_replacement_chars(arg: str) -> bool:
     # Its presence means corruption already happened upstream of this script.
     p = Path(arg)
     try:
-        txt = p.read_text(encoding="utf-8", errors="strict") if (p.exists() and p.is_file()) else arg
+        is_file = p.exists() and p.is_file()
+    except OSError:
+        is_file = False
+    try:
+        txt = p.read_text(encoding="utf-8", errors="strict") if is_file else arg
     except UnicodeDecodeError:
         return True
     return "\ufffd" in txt
