@@ -138,9 +138,8 @@ def main() -> int:
     result["structural_errors"] = errors
     result["warnings"] = warnings
 
-    do_render = not args.no_render
-    if do_render:
-        ok, msg = render_check(path)
+    soffice_present = shutil.which("soffice") or shutil.which("libreoffice")
+    do_render = args.render or (soffice_present and not args.no_render)
         result["render"] = {"passed": ok, "detail": msg}
         if ok is False:
             errors = errors + [f"render: {msg}"]
