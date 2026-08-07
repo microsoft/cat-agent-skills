@@ -1,0 +1,9 @@
+{
+  "name": "PPTX Merger",
+  "description": "Merge two or more base64-delivered PowerPoint decks into a single file that PowerPoint opens cleanly — decode safely, merge, validate by real render, and export back to base64 for upload.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["pptx", "powerpoint", "merge", "sharepoint", "documents", "python"],
+  "author": "Sandeep Angara",
+  "authorUrl": "https://github.com/hisandeepangara",
+  "version": "1.0.0"
+}
