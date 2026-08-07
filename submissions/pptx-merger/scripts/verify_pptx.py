@@ -25,7 +25,12 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from lxml import etree
+try:
+    from lxml import etree
+except ImportError:
+    import sys
+    sys.exit("ERROR: lxml is required. Install it with: pip install lxml")
+_SAFE_PARSER = etree.XMLParser(resolve_entities=False, no_network=True)
 
 NS_CT = "http://schemas.openxmlformats.org/package/2006/content-types"
 NS_P  = "http://schemas.openxmlformats.org/presentationml/2006/main"
@@ -54,9 +59,11 @@ def structural_checks(path: Path):
             defaults = {d.get("Extension", "").lower() for d in root.findall(f"{{{NS_CT}}}Default")}
 
         # Every part referenced by a .rels must exist; no absolute internal targets.
+
+        zip_names = set(names)
         for n in names:
             if n.endswith(".rels"):
-                root = etree.fromstring(z.read(n))
+                root = etree.fromstring(z.read(n), _SAFE_PARSER)
                 part_folder = "/".join(n.split("/")[:-2])  # strip _rels/<file>.rels
                 for rel in root:
                     tgt = rel.get("Target", "")
@@ -65,11 +72,15 @@ def structural_checks(path: Path):
                         continue
                     if tgt.startswith("/"):
                         errors.append(f"{n}: absolute internal Target '{tgt}' "
-                                     "(needs relative path or TargetMode=External)")
+                                      "(needs relative path or TargetMode=External)")
+                        continue
+                    resolved = "/".join(filter(None, [part_folder, tgt])).lstrip("/")
+                    if resolved not in zip_names:
+                        errors.append(f"{n}: Target '{tgt}' resolves to '{resolved}' which is missing from ZIP")
 
         # presentation.xml sanity: masters and slides have required ids.
         if "ppt/presentation.xml" in names:
-            pr = etree.fromstring(z.read("ppt/presentation.xml"))
+            pr = etree.fromstring(z.read("ppt/presentation.xml"), _SAFE_PARSER)
             gids = []
             ml = pr.find(f".//{{{NS_P}}}sldMasterIdLst")
             if ml is not None:
@@ -141,7 +152,10 @@ def main() -> int:
     soffice_present = shutil.which("soffice") or shutil.which("libreoffice")
     do_render = args.render or (soffice_present and not args.no_render)
 
-    if do_render:
+    if args.render and not soffice_present:
+        errors = errors + ["render: soffice/libreoffice not found but --render was explicitly requested"]
+        result["render"] = {"passed": False, "detail": "soffice not available"}
+    elif do_render:
         ok, msg = render_check(path)
         result["render"] = {"passed": ok, "detail": msg}
         if ok is False:
@@ -154,6 +168,7 @@ def main() -> int:
         else:
             result["render"] = {"passed": None, "detail": "render check skipped"}
 
+    
     render_failed = do_render and result["render"]["passed"] is False
     result["ok"] = (len(errors) == 0) and (not render_failed)
 
