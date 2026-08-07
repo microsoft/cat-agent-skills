@@ -40,8 +40,14 @@ def main() -> int:
     # Confirm we are exporting a real package, not something already broken.
     try:
         with zipfile.ZipFile(path) as z:
-            if z.testzip() is not None or "[Content_Types].xml" not in z.namelist():
+            names = z.namelist()
+            if (
+                z.testzip() is not None
+                or "[Content_Types].xml" not in names
+                or not any(n.startswith("ppt/") for n in names)
+            ):
                 raise zipfile.BadZipFile("not a valid PPTX package")
+
     except Exception as e:  # noqa: BLE001
         meta["error"] = f"refusing to export invalid package: {e}"
         print(json.dumps(meta, indent=2) if args.json else meta["error"])
