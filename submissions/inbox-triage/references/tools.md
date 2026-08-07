@@ -27,21 +27,19 @@ The **execution-only** capabilities (move email, create mail folder) are not req
 The "list mail folders" capability is read-only, so folder creation is handled separately:
 
 - On **Cowork**, most builds expose a mail-folder create tool (typical name `m365_create_mail_folder`). Bind to whichever create tool is present.
-- On **Scout**, no MCP-level create tool is currently exposed, but the platform ships a CLI that can call any Microsoft Graph endpoint. Invoke it directly as an executable (not through a shell interpreter that would try to parse quotes):
-  - Command (absolute path, since the CLI is not guaranteed to be on `PATH`):
-    - Windows: `~/.scout/bin/workiq.cmd` (resolve `~` via the runtime)
-    - macOS/Linux: `~/.scout/bin/workiq` (resolve `~` via the runtime)
-  - Arguments (each as a separate argv entry, no shell quoting):
+- On **Scout (macOS/Linux)**, no MCP-level create tool is currently exposed, but the platform ships a CLI at `~/.scout/bin/workiq` that can call any Microsoft Graph endpoint. POSIX shells preserve argv cleanly, so the CLI works reliably:
+  - Command (absolute path, resolve `~` via the runtime): `~/.scout/bin/workiq`
+  - Arguments (each as a separate argv entry):
     1. `create`
-    2. `--path`
+    2. `-u` (short form of `--url`)
     3. `/me/mailFolders/{parent-id}/childFolders`
-    4. `--json`
+    4. `-b` (short form of `--body`)
     5. The JSON body as a single argv value, e.g. `{"displayName":"Inbox Triage"}`
-  - Because the JSON is passed as one argv entry, no shell-specific quoting is required; this works the same under `cmd.exe`, PowerShell, `bash`, and `zsh`.
-  - Discover `{parent-id}` from a prior `list mail folders` call. When creating `Inbox Triage` under Inbox, use Inbox's folder ID; when creating a bucket child under the `Inbox Triage` parent, use that parent's folder ID.
-  - Treat a Graph "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing.
+- On **Scout (Windows)**, the CLI is a `.cmd` batch wrapper (`~/.scout/bin/workiq.cmd`) that requires `cmd.exe`. `cmd.exe` cannot safely pass JSON with double quotes through argv, and the CLI does not accept the body via a file or stdin. **Do not attempt auto-create on Windows Scout** - treat the create capability as unavailable and use the manual-folder fallback. The failure modes of trying (folder created with wrong name because `displayName` was mangled) are silent and worse than simply asking the user to create the folder.
 
-Regardless of platform, if folder creation truly fails for a reason other than already-exists (no CLI on Scout, no matching MCP tool on Cowork, permissions error, etc.), fall through to instructing the user to create the folder manually in Outlook. Never fall back to a different destination folder.
+Discover `{parent-id}` from a prior `list mail folders` call. When creating `Inbox Triage` under Inbox, use Inbox's folder ID; when creating a bucket child under the `Inbox Triage` parent, use that parent's folder ID. Treat a Graph "folder already exists" or HTTP 409 response as success and re-resolve the folder ID from a fresh listing.
+
+Regardless of platform, if folder creation truly fails for a reason other than already-exists (no CLI on Scout non-Windows, Windows Scout entirely, no matching MCP tool on Cowork, permissions error, etc.), fall through to instructing the user to create the folder manually in Outlook. Never fall back to a different destination folder.
 
 ## Capabilities this skill deliberately does not use
 
