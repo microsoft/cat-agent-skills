@@ -13,42 +13,6 @@ base64 in ──▶ 1. ingest ──▶ 2. merge ──▶ 3. validate ──▶
               (verify)       (build)       (render gate)     (encode)
 ```
 
-### 1. Ingest — `scripts/b64_to_pptx.py`
-
-Decodes the connector's base64 (ASCII, corruption-proof in transit) to bytes,
-writes them with a **binary** handle, and proves the result is a readable OOXML
-package before anything else runs.
-
-
-### 2. Merge — `scripts/pptx_merge.py`
-
-- writes `[Content_Types].xml` and all `.rels` in the **default (unprefixed)**
-  OPC namespace (the prefixed form is the classic "can't read this file" cause);
-- gives every `<p:sldMasterId>` its required `id`, drawing master and layout IDs
-  from one shared counter so they are globally unique together;
-- normalizes absolute OPC targets (e.g. `/ppt/charts/chart1.xml`) to relative
-  paths;
-- copies media, charts, and embeddings with a source-index prefix so identical
-  filenames across decks can't collide;
-- re-points slide → layout → master → theme chains and carries speaker notes;
-- rebuilds `[Content_Types].xml` from what is actually on disk.
-
-### 3. Validate — `scripts/verify_pptx.py`
-
-The "does it actually open" gate. Structural checks **plus** a real LibreOffice
-render — a structural pass alone can still leave a file PowerPoint won't open.
-
-Checks ZIP integrity, default-namespace `[Content_Types].xml`, no absolute
-internal `.rels` targets, present `sldMasterId` IDs, globally-unique master/layout
-IDs, and a successful render. Exit `0` only when every enabled check passes. If
-LibreOffice is absent, the render check is skipped and clearly flagged rather than
-claimed as a pass.
-
-### 4. Export — `scripts/pptx_to_b64.py`
-
-Encodes the verified file back to base64 for the return trip, refusing to export
-anything that isn't a valid PPTX and verifying a decode round-trip.
-
 ## Requirements
 
 - **`lxml`** — merge and validate steps
