@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 264" width="240" height="264" role="img" aria-label="SHELF CLEARER badge">
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3a5c"/>
+      <stop offset="1" stop-color="#16233f"/>
+    </linearGradient>
+  </defs>
+  <path d="M120 12 222 52v98q0 60-102 102Q18 210 18 150V52Z" fill="url(#shield)"/>
+  <path d="m120 26 88 36v86q0 52-88 88-88-36-88-88V62Z" fill="#f5f0e6" stroke="#4f74b0" stroke-width="4"/>
+  <rect x="60" y="6" width="120" height="26" rx="6" fill="#16233f"/>
+  <text x="120" y="23" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="9" font-weight="700" fill="#f5f0e6" letter-spacing=".5">CAT AGENT SKILLS</text>
+  <path d="M59 145h122M59 101h122" stroke="#9c6c20" stroke-width="7" stroke-linecap="round"/>
+  <path d="M73 76h24v21H73zm31 5h21v16h-21zm29-9h31v25h-31z" fill="#4f74b0"/>
+  <path d="m89 119 31 29 31-29h-18v-16h-26v16Z" fill="#e8b64a" stroke="#16233f" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M67 154q53 22 106 0" fill="none" stroke="#4f74b0" stroke-width="4" stroke-dasharray="7 6"/>
+  <path d="m104 171 2-18 8 6h12l8-6 2 18q-16 12-32 0Z" fill="#16233f"/>
+  <path d="m111 166 5 2m13-2-5 2" fill="none" stroke="#e8b64a" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="m117 173 3 2 3-2" fill="none" stroke="#f5f0e6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="20" y="182" width="200" height="34" rx="5" fill="#16233f"/>
+  <text x="120" y="205" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="14.5" font-weight="800" fill="#f5f0e6" letter-spacing=".5">SHELF CLEARER</text>
+  <rect x="92" y="210" width="56" height="3" rx="1.5" fill="#e8b23a"/>
+  <circle cx="120" cy="236" r="13" fill="#16233f" stroke="#4f74b0" stroke-width="3"/>
+  <text x="120" y="241" text-anchor="middle" font-size="13" fill="#f5f0e6">✓</text>
+</svg>
