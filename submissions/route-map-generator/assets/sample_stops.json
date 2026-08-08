@@ -1,0 +1,33 @@
+{
+  "kind": "route",
+  "title": "Sydney field visits",
+  "profile": "driving",
+  "round_trip": true,
+  "start": 0,
+  "html": true,
+  "geojson": true,
+  "kml": true,
+  "out_prefix": "sydney_visits",
+  "stops": [
+    {
+      "name": "Office",
+      "address": "1 Macquarie Street, Sydney NSW, Australia"
+    },
+    {
+      "name": "Circular Quay",
+      "address": "Circular Quay, Sydney NSW, Australia"
+    },
+    {
+      "name": "Bondi Beach",
+      "address": "Bondi Beach, NSW, Australia"
+    },
+    {
+      "name": "Newtown",
+      "address": "King Street, Newtown NSW, Australia"
+    },
+    {
+      "name": "Pyrmont",
+      "address": "Pyrmont, NSW, Australia"
+    }
+  ]
+}

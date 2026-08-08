@@ -1,0 +1,18 @@
+{
+  "kind": "route",
+  "title": "Inner Sydney loop (coords)",
+  "profile": "driving",
+  "round_trip": true,
+  "html": true,
+  "geojson": true,
+  "kml": true,
+  "map_links": true,
+  "out_prefix": "sydney_coords",
+  "stops": [
+    {"name": "Opera House", "lat": -33.8568, "lon": 151.2153},
+    {"name": "Harbour Bridge", "lat": -33.8523, "lon": 151.2108},
+    {"name": "Darling Harbour", "lat": -33.8749, "lon": 151.2009},
+    {"name": "Central Station", "lat": -33.8832, "lon": 151.2070},
+    {"name": "Surry Hills", "lat": -33.8861, "lon": 151.2110}
+  ]
+}

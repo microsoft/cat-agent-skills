@@ -1,0 +1,25 @@
+{
+  "name": "Route Map Generator",
+  "description": "Plot locations or optimise multi-stop routes. Produces PNG map + markdown table; optional Leaflet HTML (road-following via OSRM), GeoJSON, KML, CSV, deep links (Google Maps / Apple Maps / Bing Maps), and QR code sheets. Fully offline Python engine — accepts lat/lon from user input, prior tools (Dataverse, CRM, SharePoint), or agent web search.",
+  "platforms": ["Copilot Studio"],
+  "tags": [
+    "maps",
+    "routing",
+    "openstreetmap",
+    "python",
+    "leaflet",
+    "weather",
+    "geojson",
+    "kml",
+    "csv",
+    "html",
+    "deep-links",
+    "qr-codes",
+    "logistics"
+  ],
+  "author": "Nazish Qasim",
+  "authorUrl": "https://github.com/nazishqassim",
+  "version": "1.2.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-07"
+}
