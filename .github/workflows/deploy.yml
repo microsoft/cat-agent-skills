@@ -96,3 +96,36 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+      # deploy-pages hard-caps its polling at 10 minutes and cancels at that
+      # boundary, even when Pages finishes the deployment shortly afterward.
+      - name: Verify Pages deployment after action timeout
+        if: steps.deployment.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in {1..120}; do
+            if ! status="$(gh api "repos/${GITHUB_REPOSITORY}/pages/deployments/${GITHUB_SHA}" --jq '.status')"; then
+              echo "::warning::Could not read Pages deployment status (attempt ${attempt}/120)."
+              sleep 5
+              continue
+            fi
+
+            case "$status" in
+              succeed)
+                echo "Pages deployment succeeded after the action timeout."
+                exit 0
+                ;;
+              deployment_failed|deployment_perms_error|deployment_content_failed|deployment_lost)
+                echo "::error::Pages deployment ended with status: $status"
+                exit 1
+                ;;
+              *)
+                echo "Pages deployment status: $status (attempt ${attempt}/120)"
+                sleep 5
+                ;;
+            esac
+          done
+
+          echo "::error::Pages deployment did not succeed within 10 additional minutes."
+          exit 1
