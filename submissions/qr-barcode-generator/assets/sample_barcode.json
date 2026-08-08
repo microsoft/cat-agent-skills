@@ -1,0 +1,17 @@
+{
+  "kind": "barcode",
+  "barcode_type": "code128",
+  "title": "Warehouse SKUs",
+  "layout": "grid",
+  "size": "medium",
+  "items": [
+    { "label": "Widget A — Red",   "data": "WGT-001-R" },
+    { "label": "Widget A — Blue",  "data": "WGT-001-B" },
+    { "label": "Widget B — Red",   "data": "WGT-002-R" },
+    { "label": "Widget B — Blue",  "data": "WGT-002-B" },
+    { "label": "Gadget X",         "data": "GDG-010" },
+    { "label": "Gadget Y",         "data": "GDG-011" },
+    { "label": "Component Alpha",  "data": "CMP-100" },
+    { "label": "Component Beta",   "data": "CMP-101" }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "kind": "qr",
+  "title": "Product Links",
+  "items": [
+    { "label": "Laptop Pro 15",     "data": "https://shop.contoso.com/products/laptop-pro-15" },
+    { "label": "Ultra Monitor 27",  "data": "https://shop.contoso.com/products/monitor-ultra-27" },
+    { "label": "Mechanical Keyboard","data": "https://shop.contoso.com/products/keyboard-mech" },
+    { "label": "Wireless Mouse",    "data": "https://shop.contoso.com/products/mouse-wireless" },
+    { "label": "USB-C Hub",         "data": "https://shop.contoso.com/products/usb-c-hub" },
+    { "label": "Webcam HD",         "data": "https://shop.contoso.com/products/webcam-hd" }
+  ]
+}
