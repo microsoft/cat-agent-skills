@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import io
 import json
 import math
 import os
@@ -140,12 +139,87 @@ def _qr_to_pil(data: str, box: int = 8, border: int = 4, ec: str = "M"):
     return img
 
 
-# ── 1-D barcode rendering (reportlab createBarcodeDrawing + renderPM) ─────────
+# ── 1-D barcode rendering (reportlab SVG + Pillow rect parser) ───────────────
+
+def _svg_barcode_to_pil(svg_str: str, scale: float = 1.8):
+    """Convert a reportlab barcode SVG to a Pillow RGB Image.
+
+    Parses the black-filled ``<rect>`` elements (bars) and renders them
+    directly with Pillow — no C extension required.
+    """
+    import xml.etree.ElementTree as ET
+    import re
+    from PIL import Image, ImageDraw
+
+    NS = "http://www.w3.org/2000/svg"
+    root = ET.fromstring(svg_str)
+
+    svg_w = float(root.get("width",  "200"))
+    svg_h = float(root.get("height", "100"))
+
+    # The barcode group uses transform="scale(1,-1) translate(0,-H)"
+    # to flip the y-axis.  Extract H from the translate value.
+    group_h = svg_h
+    for g in root.iter(f"{{{NS}}}g"):
+        m = re.search(r"translate\(\s*[^,]+,\s*(-?\d+\.?\d*)\s*\)", g.get("transform", ""))
+        if m:
+            group_h = abs(float(m.group(1)))
+            break
+
+    img_w = max(int(svg_w * scale) + 2, 60)
+    img_h = max(int(svg_h * scale) + 2, 40)
+    img   = Image.new("RGB", (img_w, img_h), "white")
+    draw  = ImageDraw.Draw(img)
+
+    # Render black bars — rects with fill: rgb(0%,0%,0%)
+    for el in root.iter(f"{{{NS}}}rect"):
+        if "fill: rgb(0%,0%,0%)" not in el.get("style", ""):
+            continue
+        rx = float(el.get("x", 0))
+        ry = float(el.get("y", 0))
+        rw = float(el.get("width",  0))
+        rh = float(el.get("height", 0))
+        # Apply group y-flip: screen_y = group_h - local_y
+        sx0 = rx                    * scale
+        sy0 = (group_h - (ry + rh)) * scale
+        sx1 = (rx + rw)             * scale
+        sy1 = (group_h - ry)        * scale
+        draw.rectangle([sx0, sy0, sx1, sy1], fill=(0, 0, 0))
+
+    # Render HRI text (human-readable) from SVG <text> elements.
+    for el in root.iter(f"{{{NS}}}text"):
+        text_content = (el.text or "").strip()
+        if not text_content:
+            continue
+        tx_svg = float(el.get("x", 0))
+        ty_svg = float(el.get("y", 0))  # local y (usually negative in flipped space)
+
+        # Element has transform="translate(0,dt) scale(1,-1)"
+        dt = 0.0
+        m  = re.search(r"translate\(\s*[^,]+,\s*(-?\d+\.?\d*)\s*\)", el.get("transform", ""))
+        if m:
+            dt = float(m.group(1))
+        y_after_elem = -(ty_svg + dt)
+        y_screen     = (group_h - y_after_elem) * scale
+
+        font_sz = 10
+        ms = re.search(r"font-size:\s*(\d+\.?\d*)px", el.get("style", ""))
+        if ms:
+            font_sz = max(8, int(float(ms.group(1)) * scale * 0.75))
+
+        font = _load_font(font_sz)
+        bbox = draw.textbbox((0, 0), text_content, font=font)
+        tw   = bbox[2] - bbox[0]
+        draw.text((tx_svg * scale - tw / 2, y_screen), text_content,
+                  fill=(0, 0, 0), font=font)
+
+    return img
+
 
 def _barcode_to_pil(data: str, btype: str, bar_width: float, bar_height_mm: float):
-    """Render a 1D barcode to a Pillow RGB Image."""
+    """Render a 1D barcode to a Pillow RGB Image via reportlab SVG."""
     from reportlab.graphics.barcode import createBarcodeDrawing
-    from reportlab.graphics import renderPM
+    from reportlab.graphics import renderSVG
     from reportlab.lib.units import mm
 
     rl_name = _RL_TYPE.get(btype, "Code128")
@@ -158,9 +232,8 @@ def _barcode_to_pil(data: str, btype: str, bar_width: float, bar_height_mm: floa
         kwargs["humanReadable"] = True
 
     drawing = createBarcodeDrawing(rl_name, **kwargs)
-    png_bytes = renderPM.drawToString(drawing, fmt="PNG")
-    from PIL import Image
-    return Image.open(io.BytesIO(png_bytes)).convert("RGB")
+    svg_str = renderSVG.drawToString(drawing)
+    return _svg_barcode_to_pil(svg_str)
 
 
 # ── Error placeholder cell ────────────────────────────────────────────────────
@@ -467,7 +540,8 @@ def generate(payload: dict) -> dict:
 
     # ── Determine layout ──────────────────────────────────────────────────────
     n         = len(items)
-    dominant  = max(items, key=lambda x: items.count(x))["_kind"]  # most common kind
+    from collections import Counter
+    dominant = Counter(it["_kind"] for it in items).most_common(1)[0][0]
 
     if layout == "single" or n == 1:
         n_cols = 1
@@ -549,6 +623,10 @@ def _build_cli() -> argparse.ArgumentParser:
 
 
 def _main() -> None:
+    # Ensure UTF-8 output on all platforms (e.g. Windows console)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     args = _build_cli().parse_args()
 
     with open(args.payload, encoding="utf-8") as f:

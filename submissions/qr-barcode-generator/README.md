@@ -7,6 +7,16 @@ sheet, optional individual PNGs per code, and an optional CSV.
 Runs **fully offline** in the Python sandbox. No extra `pip install` — uses
 `reportlab` and `Pillow`, both pre-installed.
 
+## Sample output
+
+**QR code sheet** — 6 product page URLs, auto-detected as QR:
+
+![QR sheet sample](assets/sample_qr_sheet.png)
+
+**Barcode sheet** — 8 warehouse SKUs, Code128:
+
+![Barcode sheet sample](assets/sample_barcode_sheet.png)
+
 ## What you get
 
 | Output | Flag | Notes |
