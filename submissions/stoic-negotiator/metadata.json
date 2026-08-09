@@ -1,0 +1,25 @@
+{
+  "name": "Stoic Negotiator",
+  "description": "A principled negotiation intelligence skill that combines Stoic decision disciplines with evidence-backed research to help individuals, executives, and analyst agents prepare, analyze, and execute high-quality negotiations. Supports interactive scoping workflows, Deep Research sourcing (citations and source URLs), and audit-ready outputs.",
+  "platforms": [
+    "Copilot Studio",
+    "Cowork"
+  ],
+  "tags": [
+    "negotiation",
+    "decision-making",
+    "offers",
+    "salary",
+    "sales",
+    "commerce",
+    "BATNA",
+    "ZOPA",
+    "deals",
+    "stoicism"
+  ],
+  "author": "Faride Ilanda",
+  "authorUrl": "https://github.com/farideilanda",
+  "version": "1.0.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-09"
+}
