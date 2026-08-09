@@ -1,5 +1,6 @@
 import { getCollection } from "astro:content";
 import { getRating } from "./ratings";
+import { getDownloads } from "./downloads";
 import type { BadgeSkill } from "./badges";
 
 /**
@@ -17,6 +18,7 @@ export async function loadBadgeSkills(): Promise<BadgeSkill[]> {
     authorGithub: s.data.authorGithub ?? null,
     featured: s.data.featured,
     rating: getRating(s.id),
+    downloads: getDownloads(s.id),
     createdAt: s.data.createdAt ?? null,
     platforms: s.data.platforms,
     type: s.data.type,

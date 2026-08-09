@@ -1,0 +1,10 @@
+{
+  "distribution": "normal",
+  "mean": 0.06,
+  "std_dev": 0.14,
+  "base_modifier": 5000000,
+  "simulations": 10000,
+  "chart_title": "Portfolio value after one year (USD)",
+  "x_axis_label": "USD",
+  "out_prefix": "sample_normal"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Harness Picker",
+  "description": "Choose the right Copilot Studio harness and build shape; in Cowork, use GPT-5.6 with High effort for Detailed mode, Claude Opus 5 as fallback, or Auto for Quick mode.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["copilot-studio", "cowork", "architecture", "agent-design", "governance", "licensing"],
+  "author": "Liam O'Grady",
+  "authorUrl": "https://github.com/ogradyliam5",
+  "version": "1.1.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-04"
+}

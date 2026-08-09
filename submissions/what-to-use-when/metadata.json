@@ -1,0 +1,15 @@
+{
+  "name": "What to Use When",
+  "description": "Routes single-output requests to the best-fit included Microsoft 365 Copilot 1p agents and reserves Cowork for long-running or multi-output work.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "productivity",
+    "automation",
+    "copilot",
+    "routing"
+  ],
+  "author": "Gaurav Mahajan",
+  "version": "1.0.0"
+}

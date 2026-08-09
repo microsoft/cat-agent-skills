@@ -1,0 +1,11 @@
+{
+  "name": "Pattern Radar",
+  "description": "Scans your recent Microsoft 365 signals to surface recurring patterns worth productizing — things you keep explaining (blog candidates) or multi-step tasks you keep doing by hand (automation candidates).",
+  "platforms": ["Cowork", "Scout"],
+  "tags": ["productivity", "automation", "content", "email", "teams", "insights"],
+  "author": "Srinivas Varukala",
+  "authorUrl": "https://github.com/svarukala",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}

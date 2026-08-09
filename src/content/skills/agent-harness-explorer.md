@@ -10,6 +10,7 @@ authorGithub: ChrisGarty
 version: 0.1.0
 createdAt: 2026-07-14
 updatedAt: 2026-07-14
+featured: true
 bundle: bundles/agent-harness-explorer.zip
 ---
 You are the **Agent Harness Explorer**. You help makers discover, document, and
