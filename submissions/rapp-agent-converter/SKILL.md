@@ -47,8 +47,9 @@ python3 scripts/toast.py selftest                                    # prove eve
 ```
 
 Always pass `-o` with a path that is not an existing file you care about; the
-tool refuses to overwrite its own source file and refuses existing targets
-without `--force`. Never target this skill's own `SKILL.md`. Without `-o`,
+tool refuses to overwrite its own source file or an existing target with
+different bytes without `--force`. A byte-identical existing target is an
+idempotent success. Never target this skill's own `SKILL.md`. Without `-o`,
 output lands next to the source file (the tool prints the absolute path).
 
 Exit codes: 0 = verified, 1 = drift or refusal (message says which), 2 =
@@ -56,13 +57,15 @@ Exit codes: 0 = verified, 1 = drift or refusal (message says which), 2 =
 convert it to an agent first, or pass `--allow-raw` to measure
 capability-level fidelity only. Treat only exit 1 as drift.
 
-The full lifecycle: the FIRST conversion of a hand-written SKILL.md lays down
-its deterministic layer as a runnable agent.py (typed parameters + steps
-interpreted from the prose). Converting that agent back embeds the layer
-literally inside a new SKILL.md — single-file shareable — with the agent.py
-linked beside it, and it still maps back to the identical agent.py. Both
-platforms are served by the same pair, and the Python is preserved byte-exact
-at every hop.
+The full lifecycle: the FIRST conversion of a hand-written SKILL.md creates a
+runnable launchpad agent without inventing behavior. Instructions travel
+verbatim; an explicit `## Parameters` JSON-Schema fence supplies the typed
+contract; an explicit deterministic Python fence supplies implementation when
+present. A prose-only skill remains prose-only in the launchpad. Converting
+that agent back embeds it literally inside a new SKILL.md — single-file
+shareable — with the agent.py linked beside it, and it still maps back to the
+identical agent.py. Both platforms are served by the same pair, and the Python
+is preserved byte-exact at every hop.
 
 ## Converting agent.py → Agent Skill
 
@@ -87,14 +90,15 @@ at every hop.
      (sha256-verified; a checksum mismatch aborts — never bypass it).
    - If it is a plain hand-written SKILL.md (no capsule), a launchpad agent is
      **synthesised**: instructions travel verbatim in `INSTRUCTIONS`, typed
-     parameters come from a `## Parameters` fence when present, and `perform()`
-     is a planner that resolves parameters into ordered steps without executing
-     anything. Say so explicitly — a synthesis is a capability projection, not
-     a restoration. A prose-only skill (no Parameters fence) synthesises an
-     agent with an EMPTY parameter schema — the contract is untyped and
-     nothing is validatable as required; tell the user so, and offer to add a
-     `## Parameters` JSON-Schema fence to the source skill first if they want
-     a typed contract.
+     parameters come from a `## Parameters` fence when present, and an explicit
+     deterministic Python fence is preserved when present. Otherwise
+     `perform()` returns the original instructions plus the supplied inputs;
+     it does not infer commands from prose. Say so explicitly — a synthesis is
+     a capability projection, not a restoration. A prose-only skill (no
+     Parameters fence) synthesises an agent with an EMPTY parameter schema —
+     the contract is untyped and nothing is validatable as required; tell the
+     user so, and offer to add a `## Parameters` JSON-Schema fence to the source
+     skill first if they want a typed contract.
 2. The emitted filename ends `_agent.py` (snake_case) so RAPP Brainstem
    auto-discovery loads it unchanged. Contract details:
    [references/rapp-agent-contract.md](references/rapp-agent-contract.md).
@@ -117,9 +121,11 @@ at every hop.
 
 - **Copilot Studio / Cowork** (sandbox execution): run the linked agent file
   directly — `--tool` for the contract, one JSON object for arguments; if the
-  linked file is missing, materialize it verbatim from the fence first. Use
-  its output verbatim. This earns the EXEC tier and makes the host a
-  first-party user of the agent.py itself.
+  linked file is missing, materialize it verbatim from the fence first. Treat
+  stdout as a tool result: collect missing inputs, execute returned `steps` in
+  order, follow returned `instructions`, or otherwise use the result verbatim.
+  This earns the EXEC tier and makes the host a first-party user of the
+  agent.py itself.
 - **Scout** and other instruction-driven hosts (no sanctioned script execution
   today): the same SKILL.md still works — treat the Parameters schema and the
   fenced code as the exact specification and never paraphrase a step (CODE

@@ -29,10 +29,11 @@ code and link the runnable file beside it, and make every conversion provable.
   promotion, not a port.**
 
 It also works starting from an existing skill: the first SKILL.md → agent.py
-conversion lays down the deterministic layer (typed parameters + steps
-interpreted from the prose into a runnable launchpad agent); converting that
-agent back embeds the layer literally in a new SKILL.md that still maps back to
-the identical agent.py.
+conversion creates a runnable launchpad without inventing behavior.
+Instructions travel verbatim, and explicit Parameters or deterministic Python
+fences are preserved when present. A prose-only skill stays prose-only in the
+launchpad. Converting that agent back embeds it literally in a new SKILL.md
+that still maps back to the identical agent.py.
 
 ## A universal pattern, not a Copilot Studio exclusive
 
