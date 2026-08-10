@@ -124,6 +124,7 @@ def restore(rci: dict, fmt: str):
 def pack_capsule(rci: dict) -> str:
     # Underscore keys are in-process state (e.g. which format was read) and
     # never travel.
+    _validate_rci_fields(rci)
     payload = json.dumps({k: v for k, v in rci.items() if not k.startswith("_")},
                          sort_keys=True, separators=(",", ":")).encode()
     return "rci-capsule:v1:" + base64.b64encode(_gz(payload)).decode()
@@ -141,8 +142,57 @@ def _safe_agent_filename(value: str) -> str:
     return value
 
 
+def _validate_parameters(value):
+    if not isinstance(value, dict) or value.get("type") != "object":
+        raise ValueError("parameters must be a JSON-Schema object")
+    if not isinstance(value.get("properties", {}), dict):
+        raise ValueError("parameters.properties must be an object")
+    required = value.get("required", [])
+    if not isinstance(required, list) \
+            or not all(isinstance(item, str) for item in required):
+        raise ValueError("parameters.required must be a list of strings")
+    return value
+
+
+def _validate_rci_fields(value):
+    if not isinstance(value, dict):
+        raise ValueError("RCI record must be an object")
+    for key in ("name", "slug", "version", "description", "instructions"):
+        if not isinstance(value.get(key, ""), str):
+            raise ValueError(f"RCI {key} must be a string")
+    for key in ("system_context", "author", "license"):
+        if value.get(key) is not None and not isinstance(value.get(key), str):
+            raise ValueError(f"RCI {key} must be a string or null")
+    for key in ("tags", "examples"):
+        if not isinstance(value.get(key, []), list):
+            raise ValueError(f"RCI {key} must be a list")
+    if not all(isinstance(tag, str) for tag in value.get("tags", [])):
+        raise ValueError("RCI tags must contain strings")
+    if not all(isinstance(example, dict) for example in value.get("examples", [])):
+        raise ValueError("RCI examples must contain objects")
+    _validate_parameters(
+        value.get("parameters")
+        or {"type": "object", "properties": {}, "required": []}
+    )
+    if not isinstance(value.get("platform", {}), dict):
+        raise ValueError("RCI platform must be an object")
+    impl = value.get("impl")
+    if impl is not None:
+        if not isinstance(impl, dict):
+            raise ValueError("RCI impl must be an object or null")
+        for key in ("perform", "perform_body", "system_context"):
+            if impl.get(key) is not None and not isinstance(impl.get(key), str):
+                raise ValueError(f"RCI impl.{key} must be a string")
+        if impl.get("steps") is not None and not isinstance(impl.get("steps"), list):
+            raise ValueError("RCI impl.steps must be a list")
+    if not isinstance(value.get("provenance", []), list):
+        raise ValueError("RCI provenance must be a list")
+    return value
+
+
 def _validate_capsule(value):
-    if not isinstance(value, dict) or value.get("rci") != RCI_VERSION:
+    _validate_rci_fields(value)
+    if value.get("rci") != RCI_VERSION:
         raise ValueError("capsule is not an RCI 1.0 object")
     preserved = value.get("preserved", {})
     if not isinstance(preserved, dict):
@@ -156,11 +206,6 @@ def _validate_capsule(value):
             raise ValueError("capsule preserved payload is invalid")
         if not isinstance(entry.get("filename"), str):
             raise ValueError("capsule preserved filename is invalid")
-    if not isinstance(value.get("provenance", []), list):
-        raise ValueError("capsule provenance must be a list")
-    if value.get("parameters") is not None \
-            and not isinstance(value.get("parameters"), dict):
-        raise ValueError("capsule parameters must be an object")
     return value
 
 
@@ -219,6 +264,43 @@ def _generated_agent_fences(text: str) -> list[str]:
     for block in GENERATED_BLOCK_RE.findall(text):
         found.extend(match.group(2) for match in DET_FENCE.finditer(block))
     return found
+
+
+def _generated_markers_are_top_level(text: str) -> bool:
+    """Reject generated markers hidden inside Markdown fences or HTML comments."""
+    in_fence = None
+    fence_len = 0
+    in_html = False
+    for line in text.splitlines():
+        marker = line.rstrip()
+        if marker in (GENERATED_BEGIN, GENERATED_END):
+            if in_fence or in_html or line != marker:
+                return False
+            continue
+
+        if in_fence:
+            close = re.match(r"^ {0,3}([`~]{3,})[ \t]*$", line)
+            if close and close.group(1)[0] == in_fence \
+                    and len(close.group(1)) >= fence_len:
+                in_fence = None
+                fence_len = 0
+            continue
+
+        if in_html:
+            if "-->" in line:
+                in_html = False
+            continue
+
+        fence = re.match(r"^ {0,3}([`~]{3,})", line)
+        if fence:
+            in_fence = fence.group(1)[0]
+            fence_len = len(fence.group(1))
+            continue
+
+        start = line.find("<!--")
+        if start != -1 and "-->" not in line[start + 4:]:
+            in_html = True
+    return True
 
 
 def _capsule_or_reparse(raw: bytes, filename: str, fmt: str):
@@ -366,11 +448,10 @@ def read_agent(raw: bytes, filename: str) -> dict:
               file=sys.stderr)
 
     params = metadata.get("parameters")
-    if not (isinstance(params, dict) and params.get("type") == "object"):
-        if params is not None:
-            print(f"[WARN] metadata['parameters'] is not a JSON-Schema object in "
-                  f"{filename}", file=sys.stderr)
+    if params is None:
         params = {"type": "object", "properties": {}, "required": []}
+    else:
+        _validate_parameters(params)
 
     # The FILE always defines the capability; a capsule is ledger (provenance,
     # vault, host extras), never an override. A synthesized agent has no way
@@ -400,6 +481,7 @@ def read_agent(raw: bytes, filename: str) -> dict:
     if isinstance(env.get("STEPS"), list) and env["STEPS"]:
         rci["impl"]["steps"] = env["STEPS"]
 
+    _validate_rci_fields(rci)
     preserve(rci, "agent", raw, filename)
     rci.setdefault("provenance", []).append(f"read:agent:{os.path.basename(filename)}")
     rci["_read_fmt"] = "agent"
@@ -445,6 +527,29 @@ def _next_indented_line(lines, start: int):
     return None, None
 
 
+def _read_block_scalar(lines, start: int, parent_indent: int, style: str):
+    block = []
+    i = start
+    while i < len(lines):
+        line = lines[i]
+        if line.strip() and _indent_of(line) <= parent_indent:
+            break
+        block.append(line.strip())
+        i += 1
+    if style.startswith("|"):
+        return "\n".join(block).strip(), i
+    paragraphs, current = [], []
+    for value in block:
+        if value:
+            current.append(value)
+        elif current:
+            paragraphs.append(" ".join(current))
+            current = []
+    if current:
+        paragraphs.append(" ".join(current))
+    return "\n".join(paragraphs), i
+
+
 def _parse_yaml_node(lines, start: int, indent: int):
     first, _ = _next_indented_line(lines, start)
     is_list = first is not None and lines[first][indent:].startswith("- ")
@@ -482,6 +587,9 @@ def _parse_yaml_node(lines, start: int, indent: int):
             raise ValueError(f"unsupported YAML frontmatter line: {token}")
         key, value = match.group(1), match.group(2).strip()
         i += 1
+        if value in (">", ">-", "|", "|-"):
+            out[key], i = _read_block_scalar(lines, i, indent, value)
+            continue
         if value:
             out[key] = _yaml_scalar(value)
             continue
@@ -509,25 +617,7 @@ def split_frontmatter(text: str):
             continue
         key, val = km.group(1), km.group(2).strip()
         if val in (">", ">-", "|", "|-"):  # block scalar: consume indented lines
-            block = []
-            i += 1
-            while i < len(lines) and (lines[i].startswith("  ") or not lines[i].strip()):
-                block.append(lines[i].strip())
-                i += 1
-            if val.startswith("|"):
-                fm[key] = "\n".join(block).strip()
-            else:
-                # folded: blank lines separate paragraphs, which stay newlines
-                paras, cur = [], []
-                for b in block:
-                    if b:
-                        cur.append(b)
-                    elif cur:
-                        paras.append(" ".join(cur))
-                        cur = []
-                if cur:
-                    paras.append(" ".join(cur))
-                fm[key] = "\n".join(paras)
+            fm[key], i = _read_block_scalar(lines, i + 1, 0, val)
             continue
         if not val:
             child_index, child_indent = _next_indented_line(lines, i + 1)
@@ -549,6 +639,10 @@ def read_skill(raw: bytes, filename: str) -> dict:
     got = _capsule_or_reparse(raw, filename, "skill")
     cap = got[1] if got and got[0] == "ok" else None
     has_generated_markers = GENERATED_BEGIN in text or GENERATED_END in text
+    if has_generated_markers and not _generated_markers_are_top_level(text):
+        raise ValueError(
+            "generated skill markers must be top-level Markdown blocks"
+        )
     if has_generated_markers and not cap:
         raise ValueError(
             "generated skill content requires a valid current capsule"
@@ -581,8 +675,11 @@ def read_skill(raw: bytes, filename: str) -> dict:
         if pm:
             try:
                 rci["parameters"] = json.loads(pm.group(1))
-            except Exception:
-                pass
+            except Exception as exc:
+                raise ValueError(
+                    "Parameters fence is not valid JSON"
+                ) from exc
+            _validate_parameters(rci["parameters"])
         dm = DET_FENCE.search(body)
         if dm:
             rci["impl"] = {"lang": "python",
@@ -605,6 +702,7 @@ def read_skill(raw: bytes, filename: str) -> dict:
         if metadata:
             platform["metadata"] = metadata
 
+    _validate_rci_fields(rci)
     if cap and (cap.get("preserved") or {}).get("agent"):
         # Generated regions are deterministic output, not editable prose.
         # Regenerate them from the current authored surfaces + vaulted agent
@@ -641,6 +739,7 @@ def _fence_for(code: str) -> str:
 
 
 def write_skill(rci: dict) -> bytes:
+    _validate_rci_fields(rci)
     # The skill is the PROJECTION: restore only when this very skill was the
     # source (the fixed-point path). Converting an agent always projects the
     # file in hand -- an heirloom skill vaulted generations ago must neither
@@ -680,7 +779,17 @@ def write_skill(rci: dict) -> bytes:
     out = [emit_frontmatter(pairs), "\n", body, "\n"]
 
     params = rci.get("parameters") or {}
-    if params.get("properties") and not PARAM_FENCE.search(body):
+    authored_params = PARAM_FENCE.search(body)
+    if authored_params:
+        try:
+            documented = json.loads(authored_params.group(1))
+        except Exception as exc:
+            raise ValueError("authored Parameters fence is not valid JSON") from exc
+        if documented != params:
+            raise ValueError(
+                "authored Parameters fence conflicts with the agent tool schema"
+            )
+    if params.get("properties") and not authored_params:
         out += [f"\n{GENERATED_BEGIN}\n"
                 "\n## Parameters\n\nThe typed contract this capability answers to "
                 "(JSON Schema — the deterministic layer):\n\n```json\n",
@@ -867,6 +976,7 @@ DEFAULT_PERFORM = f"""    def perform(self, **kwargs):  {GENERATED_PERFORM_MARK}
 
 
 def write_agent(rci: dict) -> bytes:
+    _validate_rci_fields(rci)
     # The agent is the HOME format: a vaulted agent is the implementation of
     # record, so restoring it is always right. (An agent file that evolved
     # past its own capsule is caught at read time and reparsed fresh.)
@@ -956,6 +1066,17 @@ def default_out(rci: dict, fmt: str, src_path: str) -> str:
     )
 
 
+def _same_target(left: str, right: str) -> bool:
+    if os.path.normcase(os.path.realpath(left)) == \
+            os.path.normcase(os.path.realpath(right)):
+        return True
+    try:
+        return os.path.exists(left) and os.path.exists(right) \
+            and os.path.samefile(left, right)
+    except OSError:
+        return False
+
+
 def cmd_convert(a) -> int:
     src_fmt = a.from_fmt or detect(a.path)
     if a.to == src_fmt:
@@ -968,7 +1089,7 @@ def cmd_convert(a) -> int:
         rci.setdefault("provenance", []).append(f"convert:{src_fmt}->{a.to}")
     out_bytes = render(rci, a.to)
     out_path = a.out or default_out(rci, a.to, a.path)
-    if os.path.abspath(out_path) == os.path.abspath(a.path):
+    if _same_target(out_path, a.path):
         raise SystemExit("[FAIL] refusing to overwrite the source file with a "
                          "different format -- pass -o with another path")
 
@@ -980,6 +1101,11 @@ def cmd_convert(a) -> int:
                 os.path.dirname(os.path.abspath(out_path)),
                 linked_agent_name(rci),
             )
+            if _same_target(out_path, side):
+                raise SystemExit(
+                    "[FAIL] SKILL.md and linked-agent destinations resolve "
+                    "to the same file"
+                )
 
     # Preflight the complete pair before writing either artifact. A conflicting
     # linked file must not leave behind a SKILL.md that tells hosts to run it.
@@ -1258,6 +1384,26 @@ def cmd_selftest(_a) -> int:
                                             allow_raw=False)) != 1:
             failures.append("generated command tampering was NOT detected")
 
+        wrapped = open(skill_path, "rb").read()
+        wrapped = wrapped.replace(
+            GENERATED_BEGIN.encode(),
+            b"`````\n" + GENERATED_BEGIN.encode(),
+            1,
+        )
+        last_end = wrapped.rfind(GENERATED_END.encode())
+        wrapped = (
+            wrapped[:last_end]
+            + GENERATED_END.encode()
+            + b"\n`````"
+            + wrapped[last_end + len(GENERATED_END):]
+        )
+        wrapped_path = os.path.join(td, "WRAPPED.md")
+        with open(wrapped_path, "wb") as f:
+            f.write(wrapped)
+        if cmd_roundtrip(argparse.Namespace(path=wrapped_path, cycles=1,
+                                            allow_raw=False)) != 1:
+            failures.append("generated regions hidden in a fence were accepted")
+
         # Changing prose must not disable the structural inline check.
         reworded = open(skill_path, "rb").read().replace(
             b"deterministic implementation is a RAPP single-file agent",
@@ -1309,6 +1455,9 @@ def cmd_selftest(_a) -> int:
                 "    - rapp\n"
                 "  custom:\n"
                 "    owner: scout\n"
+                "    changelog: >-\n"
+                "      first release\n"
+                "      keeps fidelity\n"
                 "---\n\nProse.\n"
             )
         metadata_rci = load(metadata_path, "skill")
@@ -1316,7 +1465,10 @@ def cmd_selftest(_a) -> int:
                 or metadata_rci.get("version") != "2.0.0" \
                 or metadata_rci.get("tags") != ["conversion", "rapp"] \
                 or metadata_rci.get("platform", {}).get("metadata", {}) \
-                .get("custom", {}).get("owner") != "scout":
+                .get("custom", {}).get("owner") != "scout" \
+                or metadata_rci.get("platform", {}).get("metadata", {}) \
+                .get("custom", {}).get("changelog") \
+                != "first release keeps fidelity":
             failures.append("block-form metadata was not preserved")
 
         traversing = load(agent_path, "agent")
@@ -1336,6 +1488,74 @@ def cmd_selftest(_a) -> int:
             load(shaped_path, "skill")
             failures.append("non-object capsule shape was accepted")
         except ValueError:
+            pass
+
+        bad_impl = load(agent_path, "agent")
+        bad_impl["impl"] = "not-an-object"
+        bad_impl_payload = base64.b64encode(
+            _gz(
+                json.dumps(
+                    {k: v for k, v in bad_impl.items()
+                     if not k.startswith("_")},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
+            )
+        ).decode()
+        bad_impl_path = os.path.join(td, "BAD_IMPL.md")
+        with open(bad_impl_path, "w") as f:
+            f.write(
+                "---\nname: bad-impl\ndescription: bad\n---\n\n"
+                f"<!-- rci-capsule:v1:{bad_impl_payload} -->\n"
+            )
+        try:
+            load(bad_impl_path, "skill")
+            failures.append("capsule with invalid impl type was accepted")
+        except ValueError:
+            pass
+
+        conflict_agent = SAMPLE_AGENT.replace(
+            '\n"""\n\nfrom agents.basic_agent',
+            '\n\n## Parameters\n\n```json\n'
+            '{"type":"object","properties":{"wrong":{"type":"string"}},'
+            '"required":["wrong"]}\n```\n'
+            '"""\n\nfrom agents.basic_agent',
+        )
+        conflict_rci = read_agent(conflict_agent.encode(), "conflict_agent.py")
+        try:
+            write_skill(conflict_rci)
+            failures.append("conflicting authored Parameters fence was accepted")
+        except ValueError:
+            pass
+
+        invalid_params_path = os.path.join(td, "INVALID_PARAMS.md")
+        with open(invalid_params_path, "w") as f:
+            f.write(
+                "---\nname: invalid-params\ndescription: bad schema\n---\n\n"
+                "## Parameters\n\n```json\n"
+                '{"type":"array","items":{"type":"string"}}\n'
+                "```\n"
+            )
+        try:
+            load(invalid_params_path, "skill")
+            failures.append("non-object parameter schema was accepted")
+        except ValueError:
+            pass
+
+        alias_dir = os.path.join(td, "alias")
+        os.makedirs(alias_dir)
+        try:
+            cmd_convert(
+                argparse.Namespace(
+                    path=agent_path,
+                    from_fmt=None,
+                    to="skill",
+                    out=os.path.join(alias_dir, "echo_agent.py"),
+                    force=False,
+                )
+            )
+            failures.append("pair destinations resolving to one file were accepted")
+        except SystemExit:
             pass
 
         latin1_path = os.path.join(td, "latin1_agent.py")
