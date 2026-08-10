@@ -1,0 +1,19 @@
+{
+  "name": "Copilot Studio Knowledge Readiness",
+  "description": "Assess whether an uploaded or exported document set is ready to power a Copilot Studio agent. Produces a corpus-based readiness score, prioritized cleanup backlog, chunking and metadata guidance, and a test-prompt suite, while calling out any evidence gaps that require live system review.",
+  "platforms": ["Copilot Studio"],
+  "tags": [
+    "copilot-studio",
+    "knowledge",
+    "rag",
+    "sharepoint",
+    "dataverse",
+    "governance",
+    "readiness",
+    "assessment"
+  ],
+  "author": "Jay Padimiti",
+  "version": "1.0.0",
+  "createdAt": "2026-06-22",
+  "updatedAt": "2026-06-22"
+}

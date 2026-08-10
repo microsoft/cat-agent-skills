@@ -16,6 +16,7 @@ interface Props {
   /** True when an automation ships as an installer `.zip` (vs an importable `.json`). */
   isInstaller?: boolean;
   rating?: number;
+  downloads?: number;
   featured?: boolean;
 }
 
@@ -31,6 +32,7 @@ const {
   hasBundle = false,
   isInstaller = false,
   rating = 0,
+  downloads = 0,
   featured = false,
 } = Astro.props;
 
@@ -181,6 +183,29 @@ const wrapperProps = isInteractive
           >
             <span aria-hidden="true">👍</span>
             {rating}
+          </span>
+        )
+      }
+      {
+        downloads > 0 && (
+          <span
+            class="flex items-center gap-1"
+            title={`${downloads.toLocaleString("en-US")} ${downloads === 1 ? "download" : "downloads"}`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-3.5 w-3.5"
+              aria-hidden="true"
+            >
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+            </svg>
+            {downloads.toLocaleString("en-US")}
           </span>
         )
       }

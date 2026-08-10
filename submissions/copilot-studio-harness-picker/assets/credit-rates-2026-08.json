@@ -1,0 +1,61 @@
+{
+  "as_of": "2026-08-04",
+  "currency": "USD",
+  "sources": {
+    "copilot_credits_guide": "https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/bade/documents/products-and-services/en-us/ai/Microsoft-Copilot-Credits-Guide.pdf",
+    "copilot_studio_licensing_guide": "https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/bade/documents/products-and-services/en-us/ai/Microsoft-Copilot-Studio-Licensing-Guide-August-26.pdf",
+    "copilot_credit_p3": "https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/copilot-credit-p3",
+    "copilot_studio_rates": "https://learn.microsoft.com/en-us/microsoft-copilot-studio/requirements-messages-management",
+    "ai_builder_rates": "https://learn.microsoft.com/en-us/ai-builder/message-management"
+  },
+  "pricing": {
+    "pay_as_you_go_per_credit": 0.01,
+    "capacity_pack": {
+      "credits_per_month": 25000,
+      "list_price_per_month": 200,
+      "billing_note": "Commercial list-price snapshot; annual billing. Unused monthly capacity does not roll over."
+    },
+    "pre_purchase_plan": {
+      "term_months": 12,
+      "billing_note": "One-year pay-upfront pool. Unused credits expire at term end; validate overage, renewal, scope, discount interaction, and purchase restrictions.",
+      "tiers": [
+        {"credits": 300000, "discount_percent": 5},
+        {"credits": 1500000, "discount_percent": 6},
+        {"credits": 3000000, "discount_percent": 7},
+        {"credits": 15000000, "discount_percent": 8},
+        {"credits": 30000000, "discount_percent": 10},
+        {"credits": 75000000, "discount_percent": 12},
+        {"credits": 150000000, "discount_percent": 14},
+        {"credits": 225000000, "discount_percent": 17},
+        {"credits": 300000000, "discount_percent": 20}
+      ]
+    }
+  },
+  "github_copilot": {
+    "authoring": {
+      "light": {"minimum": 1, "maximum": 20, "unit": "session", "guide": "1-2 turns"},
+      "medium": {"minimum": 21, "maximum": 60, "unit": "session", "guide": "3-5 turns"},
+      "heavy": {"minimum": 61, "maximum": null, "unit": "session", "guide": "6 or more turns"}
+    },
+    "task": {
+      "light": {"minimum": 100, "maximum": 300, "unit": "task", "guide": "few sources, light reasoning, no more than one artifact"},
+      "medium": {"minimum": 300, "maximum": 500, "unit": "task", "guide": "many sources, structured reasoning, two or more artifacts"},
+      "heavy": {"minimum": 500, "lower_inclusive": false, "maximum": null, "unit": "task", "guide": "broad aggregation, deep reasoning, many artifacts"}
+    }
+  },
+  "standard": {
+    "classic_answers": {"label": "Classic answers", "credits": 1, "per": 1, "unit": "answer"},
+    "generative_answers": {"label": "Generative answers", "credits": 2, "per": 1, "unit": "answer"},
+    "agent_actions": {"label": "Agent actions", "credits": 5, "per": 1, "unit": "action"},
+    "tenant_graph_groundings": {"label": "Tenant graph groundings", "credits": 10, "per": 1, "unit": "grounding"},
+    "agent_flow_actions": {"label": "Copilot Studio agent flow actions", "credits": 13, "per": 100, "unit": "agent-flow action"},
+    "ai_tools_basic_units": {"label": "AI tools - basic", "credits": 0.1, "per": 1, "unit": "defined 1K/image/page unit"},
+    "ai_tools_standard_units": {"label": "AI tools - standard", "credits": 1.5, "per": 1, "unit": "defined unit"},
+    "ai_tools_premium_units": {"label": "AI tools - premium", "credits": 10, "per": 1, "unit": "defined unit"},
+    "content_processing_pages": {"label": "Content processing", "credits": 8, "per": 1, "unit": "image or page"},
+    "voice_classic_minutes": {"label": "Voice - classic orchestration", "credits": 10, "per": 1, "unit": "minute"},
+    "voice_genai_minutes": {"label": "Voice - generative AI", "credits": 35, "per": 1, "unit": "minute"},
+    "voice_premium_genai_minutes": {"label": "Voice - premium generative AI", "credits": 75, "per": 1, "unit": "minute"}
+  },
+  "disclaimer": "Planning snapshot only. Verify current Microsoft documentation, agreement pricing, currency, geography, entitlements, fair-use terms, and feature-specific metering before commitment."
+}

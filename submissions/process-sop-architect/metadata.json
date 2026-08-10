@@ -1,0 +1,17 @@
+{
+  "name": "Process & SOP Architect",
+  "description": "Turn process notes and transcripts into an editable SOP, process map, RACI, control register, improvement backlog, and polished PowerPoint briefing.",
+  "platforms": ["Copilot Studio"],
+  "tags": [
+    "process-improvement",
+    "sop",
+    "operations",
+    "powerpoint",
+    "productivity"
+  ],
+  "author": "Parag Dessai",
+  "version": "1.1.0",
+  "createdAt": "2026-07-24",
+  "updatedAt": "2026-07-24",
+  "coverColor": "#0F6CBD"
+}

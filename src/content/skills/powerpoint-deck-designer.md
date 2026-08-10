@@ -9,13 +9,6 @@ authorUrl: "https://www.linkedin.com/in/fchopo"
 authorGithub: fchopo
 version: 1.0.0
 bundle: bundles/powerpoint-deck-designer.zip
-slug: powerpoint-deck-designer
-license: MIT
-runtime: python>=3.10
-runtime_target: copilot-studio-skill-container
-entrypoint: scripts/generate_presentation.py
-dependencies: [python-pptx>=0.6.23, Pillow>=10.0.0]
-capabilities: [deck-generation, theming, layout-composition, content-validation, charts]
 ---
 # PowerPoint Deck Designer
 

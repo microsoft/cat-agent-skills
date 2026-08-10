@@ -1,0 +1,9 @@
+{
+  "name": "Competitive Battlecard Builder",
+  "description": "Build an interactive comparison app, either a sales battlecard advocating for your product against named competitors, or a neutral, unbiased comparison across two or more peer items with no side taken. Filterable by item and category, with live search, a compact scorecard, and copy-to-clipboard talking points. Every claim is tagged verified or unverified so nothing invented ends up in front of a customer. Exports to PowerPoint on request, with support for a real branding template.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["sales-enablement", "productivity", "comparison"],
+  "author": "Michael Heath",
+  "authorUrl": "https://github.com/GetAutomating",
+  "version": "1.0.0"
+}

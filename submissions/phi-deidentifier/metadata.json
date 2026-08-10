@@ -1,0 +1,24 @@
+{
+  "name": "PHI De-identifier",
+  "description": "Redact the 18 HIPAA Safe Harbor identifiers from clinical text (or produce a Limited Data Set) with consistent pseudonym tokens and an audit manifest of what was removed.",
+  "platforms": [
+    "Cowork",
+    "Copilot Studio",
+    "Scout"
+  ],
+  "tags": [
+    "healthcare",
+    "hls",
+    "phi",
+    "privacy",
+    "redaction",
+    "hipaa",
+    "compliance",
+    "scripts"
+  ],
+  "author": "Rafael Lopez Alcaraz",
+  "authorUrl": "https://github.com/rafalcaraz",
+  "version": "1.0.0",
+  "createdAt": "2026-07-19",
+  "updatedAt": "2026-07-19"
+}

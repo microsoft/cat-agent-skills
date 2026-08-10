@@ -1,0 +1,11 @@
+{
+  "name": "Agent Evaluation Designer",
+  "description": "Design a rigorous, platform-aware evaluation for an AI agent - define what good looks like, pick the right grading method, build a test set, and turn results into a defensible go/no-go decision.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["evaluation", "testing", "quality-assurance", "go-live", "decision-making"],
+  "author": "James Papadimitriou",
+  "authorUrl": "https://github.com/jpapadimitriou",
+  "version": "1.0.0",
+  "createdAt": "2026-07-23",
+  "updatedAt": "2026-07-23"
+}

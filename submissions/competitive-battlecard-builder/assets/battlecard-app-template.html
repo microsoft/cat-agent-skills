@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Comparison</title>
+<style>
+  :root {
+    --blue: #3a6ea5;
+    --blue-light: #eaf1f8;
+    --green: #2e8b57;
+    --green-light: #eaf6ef;
+    --red: #b3261e;
+    --red-light: #fbeceb;
+    --amber: #b8770a;
+    --amber-light: #fbf1e0;
+    --ink: #1c1f24;
+    --muted: #6b7280;
+    --border: #e2e5ea;
+    --bg: #fafbfc;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: var(--ink); background: var(--bg); margin: 0; line-height: 1.5; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+  header.top { margin-bottom: 4px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .tagline { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 24px; }
+  .filter-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .filter-group-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin-right: 4px; }
+  .chip { border: 1px solid var(--border); background: #fff; border-radius: 16px; padding: 5px 12px; font-size: 13px; cursor: pointer; user-select: none; }
+  .chip.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .search-group { margin-left: auto; }
+  #search-input { border: 1px solid var(--border); border-radius: 16px; padding: 6px 14px; font-size: 13px; width: 220px; font-family: inherit; }
+  #search-input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+  #scorecard-strip { margin-bottom: 20px; }
+  .scorecard-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .scorecard-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #fff; border: 1px solid var(--border); white-space: nowrap; }
+  .scorecard-pill .pill-icon { font-weight: 700; }
+  .scorecard-pill.us-pill .pill-icon { color: var(--green); }
+  .scorecard-pill.them-pill .pill-icon { color: var(--red); }
+  .scorecard-pill.even-pill .pill-icon { color: var(--muted); }
+  .scorecard-pill.neutral-pill .pill-icon { color: var(--blue); }
+
+  .coverage-badge { display: inline-block; font-size: 11px; font-weight: 600; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 2px 9px; margin-left: 8px; vertical-align: middle; }
+
+  .row-copy-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 2px 6px; border-radius: 4px; vertical-align: middle; }
+  .row-copy-btn:hover { background: var(--bg); color: var(--blue); }
+  .row-copy-btn.copied { color: var(--green); }
+
+  .competitor-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .competitor-name { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+  .pitch-box { background: var(--bg); border-left: 3px solid var(--muted); padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; margin-bottom: 18px; }
+  .pitch-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+
+  table.compare { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 8px; }
+  table.compare th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); font-weight: 700; padding: 6px 10px; border-bottom: 2px solid var(--border); }
+  table.compare td { padding: 10px; vertical-align: top; border-bottom: 1px solid var(--border); }
+  table.compare .dim-cell { font-weight: 600; width: 18%; color: var(--ink); }
+  table.compare .edge-us { background: var(--green-light); }
+  table.compare .edge-them { background: var(--red-light); }
+  table.compare .edge-neutral { background: var(--blue-light); }
+  .edge-star { font-size: 11px; font-weight: 700; }
+  .edge-star.us-star { color: var(--green); }
+  .edge-star.them-star { color: var(--red); }
+  .edge-star.neutral-star { color: var(--blue); }
+  .category-group-row td { padding: 14px 10px 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--blue); border-bottom: none; }
+
+  .unverified-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--amber); background: var(--amber-light); border: 1px solid var(--amber); border-radius: 4px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; white-space: nowrap; }
+
+  .section-label { font-size: 13px; font-weight: 700; margin: 18px 0 8px; color: var(--blue); }
+  .objection-block { background: var(--blue-light); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+  .objection-q { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .objection-a { font-size: 14px; }
+
+  .empty-state { color: var(--muted); font-size: 14px; padding: 20px; text-align: center; }
+
+  .item-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+  .item-legend-card { flex: 1; min-width: 200px; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .item-legend-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .item-legend-text { font-size: 13px; color: var(--ink); }
+
+  @media print {
+    .filter-bar { display: none !important; }
+    .row-copy-btn { display: none !important; }
+    body { background: #fff; }
+    .competitor-card, .item-legend-card, table.compare { break-inside: avoid; }
+    .wrap { padding: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1 id="page-title">Comparison</h1>
+    <div class="tagline" id="page-tagline"></div>
+  </header>
+
+  <div id="scorecard-strip"></div>
+
+  <div id="item-legend"></div>
+
+  <div class="filter-bar">
+    <div class="filter-group" id="competitor-filter">
+      <span class="filter-group-label" id="competitor-filter-label">Competitors</span>
+    </div>
+    <div class="filter-group" id="category-filter">
+      <span class="filter-group-label">Categories</span>
+    </div>
+    <div class="filter-group" id="edge-filter">
+      <span class="filter-group-label">Show</span>
+    </div>
+    <div class="search-group">
+      <input type="text" id="search-input" placeholder="Search dimensions or claims…" autocomplete="off">
+    </div>
+  </div>
+
+  <div id="cards-container"></div>
+
+</div>
+
+<!--
+  DATA SCHEMA (replace the JSON below with real data before opening). Two shapes depending on "mode":
+
+  BATTLECARD MODE:
+  {
+    "mode": "battlecard",
+    "us": { "name": "string", "tagline": "string" },
+    "categories": ["Pricing", "Security", "..."],
+    "competitors": [
+      {
+        "id": "slug", "name": "Display name",
+        "theirPitch": { "text": "string", "source": "user|web", "verified": true },
+        "comparison": [
+          { "category": "one of categories[]", "dimension": "string",
+            "us": { "text": "string", "source": "user|web", "verified": true },
+            "them": { "text": "string", "source": "user|web", "verified": true },
+            "edge": "us|them|even" }
+        ],
+        "objections": [{ "objection": "string", "response": "string", "source": "user|web", "verified": true }]
+      }
+    ]
+  }
+
+  NEUTRAL MODE (a real matrix, no privileged "us" item, never call anything a "competitor"):
+  {
+    "mode": "neutral",
+    "tagline": "string (optional, describes the comparison itself)",
+    "items": [
+      { "id": "slug", "name": "Display name", "positioning": { "text": "string", "source": "user|web", "verified": true } }
+    ],
+    "categories": ["Pricing", "Security", "..."],
+    "matrix": [
+      { "category": "one of categories[]", "dimension": "string",
+        "values": { "item-id-1": { "text": "string", "source": "user|web", "verified": true }, "item-id-2": { "...": "..." } },
+        "best": "item-id-of-leader-or-null" }
+    ]
+  }
+-->
+<script type="application/json" id="battlecard-data">{{BATTLECARD_DATA_JSON}}</script>
+
+<script>
+(function () {
+  function showFatalError(text) {
+    document.body.textContent = '';
+    var msg = document.createElement('p');
+    msg.style.padding = '24px';
+    msg.style.fontFamily = '-apple-system, Segoe UI, Roboto, Arial, sans-serif';
+    msg.textContent = text;
+    document.body.appendChild(msg);
+  }
+
+  var data;
+  try {
+    data = JSON.parse(document.getElementById('battlecard-data').textContent);
+  } catch (e) {
+    showFatalError('This file is a template and has not been filled in with real comparison data yet.');
+    return;
+  }
+  if (!data || typeof data !== 'object') {
+    showFatalError('Invalid comparison data: expected a JSON object.');
+    return;
+  }
+
+  var isNeutral = data.mode === 'neutral';
+
+  // ---------- shared helpers ----------
+  function normSide(s) {
+    if (!s || typeof s !== 'object') return { text: '', source: 'unknown', verified: false };
+    return {
+      text: typeof s.text === 'string' ? s.text : '',
+      source: typeof s.source === 'string' ? s.source : 'unknown',
+      verified: s.verified === true
+    };
+  }
+
+  function makeChip(label, isActive, onClick) {
+    var chip = document.createElement('span');
+    chip.className = 'chip' + (isActive ? ' active' : '');
+    chip.textContent = label;
+    chip.addEventListener('click', onClick);
+    return chip;
+  }
+
+  function copyToClipboard(text, btn) {
+    function showCopied() {
+      var original = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(function () { btn.textContent = original; btn.classList.remove('copied'); }, 1400);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(showCopied).catch(function () {
+        window.prompt('Copy this line:', text);
+      });
+    } else {
+      window.prompt('Copy this line:', text);
+    }
+  }
+
+  function buildSectionLabel(text) {
+    var label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = text;
+    return label;
+  }
+
+  var categories = Array.isArray(data.categories) ? data.categories.filter(function (c) { return typeof c === 'string' && c.trim(); }) : [];
+  var allCategoriesActive = true;
+  var activeCategories = {};
+  categories.forEach(function (cat) { activeCategories[cat] = true; });
+  var searchQuery = '';
+
+  function isCategoryVisible(cat) {
+    if (allCategoriesActive) return true;
+    if (!cat) return true;
+    return !!activeCategories[cat];
+  }
+
+  var renderAll; // assigned per-mode below
+
+  function renderCategoryFilter() {
+    var el = document.getElementById('category-filter');
+    Array.from(el.querySelectorAll('.chip')).forEach(function (n) { n.remove(); });
+    if (categories.length === 0) return;
+    var allChip = makeChip('All', allCategoriesActive, function () {
+      allCategoriesActive = true;
+      categories.forEach(function (cat) { activeCategories[cat] = true; });
+      renderCategoryFilter();
+      renderAll();
+    });
+    el.appendChild(allChip);
+    categories.forEach(function (cat) {
+      var isActive = allCategoriesActive || activeCategories[cat];
+      var chip = makeChip(cat, isActive, function () {
+        if (allCategoriesActive) {
+          allCategoriesActive = false;
+          categories.forEach(function (c) { activeCategories[c] = false; });
+          activeCategories[cat] = true;
+        } else {
+          activeCategories[cat] = !activeCategories[cat];
+          var anySelected = categories.some(function (c) { return activeCategories[c]; });
+          var allSelected = categories.every(function (c) { return activeCategories[c]; });
+          if (!anySelected || allSelected) {
+            allCategoriesActive = true;
+            categories.forEach(function (c) { activeCategories[c] = true; });
+          }
+        }
+        renderCategoryFilter();
+        renderAll();
+      });
+      el.appendChild(chip);
+    });
+  }
+
+  document.getElementById('search-input').addEventListener('input', function (e) {
+    searchQuery = e.target.value;
+    renderAll();
+  });
+
+  // =========================================================================
+  // NEUTRAL MODE: a real matrix, every item a peer, no "competitor" language
+  // =========================================================================
+  if (isNeutral) {
+    if (!Array.isArray(data.items) || data.items.length < 2 || !Array.isArray(data.matrix)) {
+      showFatalError('Invalid comparison data: expected an "items" array with at least two entries and a "matrix" array.');
+      return;
+    }
+
+    var items = data.items.map(function (it) {
+      return {
+        id: typeof it.id === 'string' && it.id ? it.id : Math.random().toString(36).slice(2),
+        name: typeof it.name === 'string' ? it.name : 'Unnamed item',
+        positioning: normSide(it.positioning)
+      };
+    });
+    var itemIds = {};
+    items.forEach(function (it) { itemIds[it.id] = true; });
+
+    var matrixRows = data.matrix.map(function (r) {
+      if (!r || typeof r !== 'object') return null;
+      var values = {};
+      items.forEach(function (it) {
+        values[it.id] = normSide(r.values && r.values[it.id]);
+      });
+      var best = (typeof r.best === 'string' && itemIds[r.best]) ? r.best : null;
+      return {
+        category: typeof r.category === 'string' ? r.category : null,
+        dimension: typeof r.dimension === 'string' ? r.dimension : '',
+        values: values,
+        best: best
+      };
+    }).filter(Boolean);
+
+    document.getElementById('page-title').textContent = items.map(function (it) { return it.name; }).join(' vs ');
+    document.getElementById('page-tagline').textContent = typeof data.tagline === 'string' ? data.tagline : '';
+
+    document.getElementById('competitor-filter-label').textContent = 'Items';
+    document.getElementById('edge-filter').style.display = 'none';
+
+    var activeItems = {};
+    items.forEach(function (it) { activeItems[it.id] = true; });
+
+    function renderItemFilter() {
+      var el = document.getElementById('competitor-filter');
+      el.style.display = '';
+      Array.from(el.querySelectorAll('.chip')).forEach(function (n) { n.remove(); });
+      items.forEach(function (it) {
+        var chip = makeChip(it.name, activeItems[it.id], function () {
+          activeItems[it.id] = !activeItems[it.id];
+          renderItemFilter();
+          renderAll();
+        });
+        el.appendChild(chip);
+      });
+    }
+
+    function rowVisible(row) {
+      if (!isCategoryVisible(row.category)) return false;
+      if (!searchQuery) return true;
+      var q = searchQuery.toLowerCase();
+      if ((row.dimension || '').toLowerCase().indexOf(q) !== -1) return true;
+      return items.some(function (it) {
+        return (row.values[it.id].text || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+
+    function buildItemLegend() {
+      var el = document.getElementById('item-legend');
+      el.textContent = '';
+      el.className = 'item-legend';
+      items.forEach(function (it) {
+        if (!activeItems[it.id]) return;
+        var card = document.createElement('div');
+        card.className = 'item-legend-card';
+        var name = document.createElement('div');
+        name.className = 'item-legend-name';
+        name.appendChild(document.createTextNode(it.name));
+
+        var allClaims = [it.positioning].concat(
+          matrixRows.map(function (r) { return r.values[it.id]; })
+        ).filter(function (c) { return c && c.text; });
+        var verifiedCount = allClaims.filter(function (c) { return c.verified; }).length;
+        if (allClaims.length) {
+          var coverage = document.createElement('span');
+          coverage.className = 'coverage-badge';
+          coverage.textContent = verifiedCount + ' of ' + allClaims.length + ' claims verified';
+          name.appendChild(coverage);
+        }
+        card.appendChild(name);
+
+        if (it.positioning.text) {
+          var text = document.createElement('div');
+          text.className = 'item-legend-text';
+          text.appendChild(document.createTextNode(it.positioning.text));
+          if (!it.positioning.verified) {
+            var badge = document.createElement('span');
+            badge.className = 'unverified-badge';
+            badge.textContent = 'Unverified';
+            text.appendChild(badge);
+          }
+          card.appendChild(text);
+        }
+        el.appendChild(card);
+      });
+    }
+
+    function buildMatrixCell(value, isBest) {
+      var td = document.createElement('td');
+      td.className = 'side-cell' + (isBest ? ' edge-neutral' : '');
+      if (isBest) {
+        var star = document.createElement('span');
+        star.className = 'edge-star neutral-star';
+        star.textContent = '\u25B2 ';
+        td.appendChild(star);
+      }
+      td.appendChild(document.createTextNode(value.text));
+      if (!value.verified) {
+        var badge = document.createElement('span');
+        badge.className = 'unverified-badge';
+        badge.textContent = 'Unverified';
+        td.appendChild(badge);
+      }
+      return td;
+    }
+
+    function buildMatrixTable(rows, visibleItems) {
+      var table = document.createElement('table');
+      table.className = 'compare';
+
+      var thead = document.createElement('thead');
+      var headRow = document.createElement('tr');
+      var dimTh = document.createElement('th');
+      dimTh.textContent = 'Dimension';
+      headRow.appendChild(dimTh);
+      visibleItems.forEach(function (it) {
+        var th = document.createElement('th');
+        th.textContent = it.name;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      var tbody = document.createElement('tbody');
+      var lastCategory = null;
+      rows.forEach(function (r) {
+        if (r.category && r.category !== lastCategory) {
+          lastCategory = r.category;
+          var groupRow = document.createElement('tr');
+          groupRow.className = 'category-group-row';
+          var groupCell = document.createElement('td');
+          groupCell.colSpan = 1 + visibleItems.length;
+          groupCell.textContent = r.category;
+          groupRow.appendChild(groupCell);
+          tbody.appendChild(groupRow);
+        }
+        var tr = document.createElement('tr');
+        var dimCell = document.createElement('td');
+        dimCell.className = 'dim-cell';
+        dimCell.appendChild(document.createTextNode(r.dimension));
+        var copyBtn = document.createElement('button');
+        copyBtn.className = 'row-copy-btn';
+        copyBtn.type = 'button';
+        copyBtn.title = 'Copy as a talking point';
+        copyBtn.textContent = '\u2398 Copy';
+        copyBtn.addEventListener('click', function () {
+          var line = r.dimension + ': ' + visibleItems.map(function (it) {
+            return it.name + ' \u2014 ' + r.values[it.id].text;
+          }).join(' | ');
+          copyToClipboard(line, copyBtn);
+        });
+        dimCell.appendChild(document.createElement('br'));
+        dimCell.appendChild(copyBtn);
+        tr.appendChild(dimCell);
+        visibleItems.forEach(function (it) {
+          tr.appendChild(buildMatrixCell(r.values[it.id], r.best === it.id));
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      return table;
+    }
+
+    function buildScorecard(visibleItems, visibleRows) {
+      var strip = document.getElementById('scorecard-strip');
+      strip.textContent = '';
+      if (visibleRows.length === 0) return;
+
+      var pills = document.createElement('div');
+      pills.className = 'scorecard-pills';
+
+      function pill(icon, count, label) {
+        var el = document.createElement('span');
+        el.className = 'scorecard-pill neutral-pill';
+        var iconEl = document.createElement('span');
+        iconEl.className = 'pill-icon';
+        iconEl.textContent = icon;
+        el.appendChild(iconEl);
+        el.appendChild(document.createTextNode(count + ' ' + label));
+        return el;
+      }
+
+      var evenCount = 0;
+      var perItem = {};
+      visibleItems.forEach(function (it) { perItem[it.id] = 0; });
+      visibleRows.forEach(function (r) {
+        if (r.best && perItem.hasOwnProperty(r.best)) {
+          perItem[r.best]++;
+        } else {
+          evenCount++;
+        }
+      });
+      visibleItems.forEach(function (it) {
+        pills.appendChild(pill('\u2713', perItem[it.id], it.name + ' leads'));
+      });
+      pills.appendChild(pill('\u2014', evenCount, 'even'));
+      strip.appendChild(pills);
+    }
+
+    renderAll = function () {
+      var visibleItems = items.filter(function (it) { return activeItems[it.id]; });
+      var container = document.getElementById('cards-container');
+      container.textContent = '';
+
+      buildItemLegend();
+
+      if (visibleItems.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No items selected. Choose at least one above.';
+        container.appendChild(empty);
+        document.getElementById('scorecard-strip').textContent = '';
+        return;
+      }
+
+      var visibleRows = matrixRows.filter(rowVisible);
+      if (visibleRows.length === 0) {
+        var noneEl = document.createElement('div');
+        noneEl.className = 'empty-state';
+        noneEl.textContent = 'No comparison points match the current filters.';
+        container.appendChild(noneEl);
+      } else {
+        container.appendChild(buildMatrixTable(visibleRows, visibleItems));
+      }
+
+      buildScorecard(visibleItems, visibleRows);
+    };
+
+    function updateFilterBarVisibility() {
+      var bar = document.querySelector('.filter-bar');
+      var hasItemFilter = items.length > 1;
+      var hasCategoryFilter = categories.length > 0;
+      bar.style.display = (hasItemFilter || hasCategoryFilter) ? '' : 'none';
+    }
+
+    renderItemFilter();
+    renderCategoryFilter();
+    updateFilterBarVisibility();
+    renderAll();
+    return;
+  }
+
+  // =========================================================================
+  // BATTLECARD MODE: pairwise, "us" vs each named competitor
+  // =========================================================================
+  if (
+    typeof data.us !== 'object' || !data.us || typeof data.us.name !== 'string' || !data.us.name.trim() ||
+    !Array.isArray(data.competitors) || data.competitors.length === 0
+  ) {
+    showFatalError('Invalid battlecard data: expected "us.name" and a non-empty "competitors" array in the embedded JSON.');
+    return;
+  }
+
+  function normComparisonRow(r) {
+    if (!r || typeof r !== 'object') return null;
+    var edge = (r.edge === 'us' || r.edge === 'them' || r.edge === 'even') ? r.edge : 'even';
+    return {
+      category: typeof r.category === 'string' ? r.category : null,
+      dimension: typeof r.dimension === 'string' ? r.dimension : '',
+      us: normSide(r.us),
+      them: normSide(r.them),
+      edge: edge
+    };
+  }
+  function normObjection(o) {
+    if (!o || typeof o !== 'object') return { objection: '', response: '', source: 'unknown', verified: false };
+    return {
+      objection: typeof o.objection === 'string' ? o.objection : '',
+      response: typeof o.response === 'string' ? o.response : '',
+      source: typeof o.source === 'string' ? o.source : 'unknown',
+      verified: o.verified === true
+    };
+  }
+
+  var competitors = data.competitors.map(function (c) {
+    return {
+      id: typeof c.id === 'string' && c.id ? c.id : Math.random().toString(36).slice(2),
+      name: typeof c.name === 'string' ? c.name : 'Unnamed competitor',
+      theirPitch: normSide(c.theirPitch),
+      comparison: Array.isArray(c.comparison) ? c.comparison.map(normComparisonRow).filter(Boolean) : [],
+      objections: Array.isArray(c.objections) ? c.objections.map(normObjection) : []
+    };
+  });
+
+  document.getElementById('page-title').textContent = data.us.name + ' vs ' + competitors.map(function (c) { return c.name; }).join(', ');
+  document.getElementById('page-tagline').textContent = typeof data.us.tagline === 'string' ? data.us.tagline : '';
+  document.getElementById('item-legend').textContent = '';
+
+  var activeCompetitors = {};
+  competitors.forEach(function (c) { activeCompetitors[c.id] = true; });
+  var edgeFilter = 'all'; // 'all' | 'us' | 'them'
+
+  function renderCompetitorFilter() {
+    var el = document.getElementById('competitor-filter');
+    document.getElementById('competitor-filter-label').textContent = 'Competitors';
+    if (competitors.length <= 1) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = '';
+    Array.from(el.querySelectorAll('.chip')).forEach(function (n) { n.remove(); });
+    competitors.forEach(function (c) {
+      var chip = makeChip(c.name, activeCompetitors[c.id], function () {
+        activeCompetitors[c.id] = !activeCompetitors[c.id];
+        renderCompetitorFilter();
+        renderAll();
+      });
+      el.appendChild(chip);
+    });
+  }
+
+  function renderEdgeFilter() {
+    var el = document.getElementById('edge-filter');
+    el.style.display = '';
+    Array.from(el.querySelectorAll('.chip')).forEach(function (n) { n.remove(); });
+    [['all', 'All'], ['us', 'Where we win'], ['them', "Where we're behind"]].forEach(function (pair) {
+      var chip = makeChip(pair[1], edgeFilter === pair[0], function () {
+        edgeFilter = pair[0];
+        renderEdgeFilter();
+        renderAll();
+      });
+      el.appendChild(chip);
+    });
+  }
+
+  function edgeVisible(edge) {
+    if (edgeFilter === 'all') return true;
+    return edge === edgeFilter;
+  }
+
+  function searchVisible(row) {
+    if (!searchQuery) return true;
+    var q = searchQuery.toLowerCase();
+    return (
+      (row.dimension || '').toLowerCase().indexOf(q) !== -1 ||
+      (row.us.text || '').toLowerCase().indexOf(q) !== -1 ||
+      (row.them.text || '').toLowerCase().indexOf(q) !== -1
+    );
+  }
+
+  function rowVisibleBC(row) {
+    return isCategoryVisible(row.category) && edgeVisible(row.edge) && searchVisible(row);
+  }
+
+  function sideCell(side, edgeSide, rowEdge) {
+    var td = document.createElement('td');
+    var winning = rowEdge === edgeSide;
+    td.className = 'side-cell' + (winning ? ' edge-' + edgeSide : '');
+    if (winning) {
+      var star = document.createElement('span');
+      star.className = 'edge-star ' + edgeSide + '-star';
+      star.textContent = '\u25B2 ';
+      td.appendChild(star);
+    }
+    td.appendChild(document.createTextNode(side.text));
+    if (!side.verified) {
+      var badge = document.createElement('span');
+      badge.className = 'unverified-badge';
+      badge.textContent = 'Unverified';
+      td.appendChild(badge);
+    }
+    return td;
+  }
+
+  function buildComparisonTable(rows, usName, competitorName) {
+    var table = document.createElement('table');
+    table.className = 'compare';
+
+    var thead = document.createElement('thead');
+    var headRow = document.createElement('tr');
+    ['Dimension', usName, competitorName].forEach(function (label) {
+      var th = document.createElement('th');
+      th.textContent = label;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    var lastCategory = null;
+    rows.forEach(function (r) {
+      if (r.category && r.category !== lastCategory) {
+        lastCategory = r.category;
+        var groupRow = document.createElement('tr');
+        groupRow.className = 'category-group-row';
+        var groupCell = document.createElement('td');
+        groupCell.colSpan = 3;
+        groupCell.textContent = r.category;
+        groupRow.appendChild(groupCell);
+        tbody.appendChild(groupRow);
+      }
+      var tr = document.createElement('tr');
+      var dimCell = document.createElement('td');
+      dimCell.className = 'dim-cell';
+      dimCell.appendChild(document.createTextNode(r.dimension));
+      var copyBtn = document.createElement('button');
+      copyBtn.className = 'row-copy-btn';
+      copyBtn.type = 'button';
+      copyBtn.title = 'Copy as a talking point';
+      copyBtn.textContent = '\u2398 Copy';
+      copyBtn.addEventListener('click', function () {
+        var line = r.dimension + ': ' + usName + ' \u2014 ' + r.us.text + ' | ' + competitorName + ' \u2014 ' + r.them.text;
+        copyToClipboard(line, copyBtn);
+      });
+      dimCell.appendChild(document.createElement('br'));
+      dimCell.appendChild(copyBtn);
+      tr.appendChild(dimCell);
+      tr.appendChild(sideCell(r.us, 'us', r.edge));
+      tr.appendChild(sideCell(r.them, 'them', r.edge));
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    return table;
+  }
+
+  function buildObjectionBlock(o) {
+    var block = document.createElement('div');
+    block.className = 'objection-block';
+    var q = document.createElement('div');
+    q.className = 'objection-q';
+    q.appendChild(document.createTextNode('"' + o.objection + '"'));
+    if (!o.verified) {
+      var badge = document.createElement('span');
+      badge.className = 'unverified-badge';
+      badge.textContent = 'Unverified';
+      q.appendChild(badge);
+    }
+    var a = document.createElement('div');
+    a.className = 'objection-a';
+    a.textContent = o.response;
+    block.appendChild(q);
+    block.appendChild(a);
+    return block;
+  }
+
+  function buildScorecardBC(perCompetitorRows) {
+    var strip = document.getElementById('scorecard-strip');
+    strip.textContent = '';
+    var allRows = [];
+    perCompetitorRows.forEach(function (p) { allRows = allRows.concat(p.rows); });
+    if (allRows.length === 0) return;
+
+    var visibleCompetitors = perCompetitorRows.filter(function (p) { return p.rows.length > 0; }).map(function (p) { return p.competitor; });
+    var usCount = allRows.filter(function (r) { return r.edge === 'us'; }).length;
+    var themCount = allRows.filter(function (r) { return r.edge === 'them'; }).length;
+    var evenCount = allRows.length - usCount - themCount;
+    var themLabel = visibleCompetitors.length === 1 ? visibleCompetitors[0].name : 'Competitors';
+
+    function pill(icon, count, label, cls) {
+      var el = document.createElement('span');
+      el.className = 'scorecard-pill ' + cls;
+      var iconEl = document.createElement('span');
+      iconEl.className = 'pill-icon';
+      iconEl.textContent = icon;
+      el.appendChild(iconEl);
+      el.appendChild(document.createTextNode(count + ' ' + label));
+      return el;
+    }
+
+    var pills = document.createElement('div');
+    pills.className = 'scorecard-pills';
+    pills.appendChild(pill('\u2713', usCount, data.us.name + ' wins', 'us-pill'));
+    pills.appendChild(pill('\u2014', evenCount, 'even', 'even-pill'));
+    pills.appendChild(pill('\u2717', themCount, themLabel + ' wins', 'them-pill'));
+    strip.appendChild(pills);
+  }
+
+  renderAll = function () {
+    var container = document.getElementById('cards-container');
+    container.textContent = '';
+    var visible = competitors.filter(function (c) { return activeCompetitors[c.id]; });
+
+    if (visible.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'No competitors selected. Choose at least one above.';
+      container.appendChild(empty);
+      document.getElementById('scorecard-strip').textContent = '';
+      return;
+    }
+
+    var perCompetitorRows = [];
+
+    visible.forEach(function (c) {
+      var card = document.createElement('div');
+      card.className = 'competitor-card';
+
+      var name = document.createElement('div');
+      name.className = 'competitor-name';
+      name.appendChild(document.createTextNode(c.name));
+
+      var allClaims = [c.theirPitch].concat(
+        c.comparison.map(function (r) { return r.us; }),
+        c.comparison.map(function (r) { return r.them; }),
+        c.objections
+      ).filter(function (claim) { return claim && (claim.text || claim.objection); });
+      var verifiedCount = allClaims.filter(function (claim) { return claim.verified; }).length;
+      if (allClaims.length) {
+        var coverage = document.createElement('span');
+        coverage.className = 'coverage-badge';
+        coverage.textContent = verifiedCount + ' of ' + allClaims.length + ' claims verified';
+        name.appendChild(coverage);
+      }
+      card.appendChild(name);
+
+      if (c.theirPitch.text) {
+        var pitchBox = document.createElement('div');
+        pitchBox.className = 'pitch-box';
+        var pitchLabel = document.createElement('div');
+        pitchLabel.className = 'pitch-label';
+        pitchLabel.textContent = 'Their pitch';
+        var pitchText = document.createElement('div');
+        pitchText.appendChild(document.createTextNode(c.theirPitch.text));
+        if (!c.theirPitch.verified) {
+          var pb = document.createElement('span');
+          pb.className = 'unverified-badge';
+          pb.textContent = 'Unverified';
+          pitchText.appendChild(pb);
+        }
+        pitchBox.appendChild(pitchLabel);
+        pitchBox.appendChild(pitchText);
+        card.appendChild(pitchBox);
+      }
+
+      var visibleRows = c.comparison.filter(rowVisibleBC);
+      perCompetitorRows.push({ competitor: c, rows: visibleRows });
+      if (visibleRows.length) {
+        card.appendChild(buildComparisonTable(visibleRows, data.us.name, c.name));
+      } else if (c.comparison.length) {
+        var noneInCat = document.createElement('div');
+        noneInCat.className = 'empty-state';
+        noneInCat.textContent = 'No comparison points match the current filters.';
+        card.appendChild(noneInCat);
+      }
+
+      if (c.objections.length) {
+        card.appendChild(buildSectionLabel('Objection handling'));
+        c.objections.forEach(function (o) { card.appendChild(buildObjectionBlock(o)); });
+      }
+
+      container.appendChild(card);
+    });
+
+    buildScorecardBC(perCompetitorRows);
+  };
+
+  function updateFilterBarVisibility() {
+    var bar = document.querySelector('.filter-bar');
+    var hasCompetitorFilter = competitors.length > 1;
+    var hasCategoryFilter = categories.length > 0;
+    bar.style.display = (hasCompetitorFilter || hasCategoryFilter || true) ? '' : 'none';
+  }
+
+  renderCompetitorFilter();
+  renderCategoryFilter();
+  renderEdgeFilter();
+  updateFilterBarVisibility();
+  renderAll();
+})();
+</script>
+</body>
+</html>

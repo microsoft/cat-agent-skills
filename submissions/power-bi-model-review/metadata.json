@@ -1,0 +1,11 @@
+{
+  "name": "Power BI Model Review",
+  "description": "Review a Power BI or Analysis Services semantic model (TMDL, BIM/JSON, or a pasted table/measure list) for relationship, DAX, date-handling, and naming issues, with corrected DAX for anything flagged.",
+  "platforms": ["Copilot Studio", "Cowork", "Scout"],
+  "tags": ["power-bi", "dax", "semantic-model", "data", "review", "fabric"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Vendor Contract Risk Review",
+  "description": "First-pass review of a vendor contract or SOW for the clauses that commonly cause problems (auto-renewal, liability caps, termination, IP ownership), flagged by risk level to prepare for legal review, not replace it.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["contracts", "legal", "procurement", "risk", "vendor-management", "review"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}

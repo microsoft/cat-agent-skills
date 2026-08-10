@@ -2,7 +2,7 @@
 
 A **skill** is a reusable instruction set for an AI agent — targeting one or more
 of **Cowork**, **Copilot Studio**, and **Scout** — published in this gallery
-with an optional `.zip` of helper scripts.
+with optional helper `scripts/` (and `references/` / `assets/`).
 
 You contribute every skill the same way: **add a submission to the
 [`../submissions/`](../submissions/) folder and open a PR.** CI validates the
@@ -11,22 +11,21 @@ edit `src/content/skills/` by hand.
 
 ## 1. The submission shape
 
-Every submission is a self-contained unit with the same layout, whether you add
-it as a folder or as a zip of that folder:
+Every submission is a self-contained **unpacked** folder with the same layout:
 
 ```
-submissions/<slug>/            (or submissions/<slug>.zip containing the same)
-├── skill.md          # the agent skill — frontmatter (name + agent description) + instructions
+submissions/<slug>/
+├── SKILL.md          # the agent skill — frontmatter (name + agent description) + instructions
 ├── metadata.json     # OR metadata.yaml — catalog details for this gallery
 └── scripts/          # optional helper files (bundled for download)
     └── summarize.py
 ```
 
 Copy [`../submissions/_template/`](../submissions/_template) to start. The
-`<slug>` is the folder/zip name (lowercase, hyphenated), e.g.
-`meeting-summarizer` → `/skills/meeting-summarizer`. Anything other than
-`skill.md`/`metadata.*` is packaged into the downloadable bundle, and the detail
-page shows a **Download bundle** button.
+`<slug>` is the folder name (lowercase, hyphenated), e.g.
+`meeting-summarizer` → `/skills/meeting-summarizer`. Everything except the
+`metadata.*` and optional `README.md` sidecars is packaged into the downloadable
+bundle, and the detail page shows a **Download bundle** button.
 
 ## 2. Two descriptions (catalog vs. agent)
 
@@ -34,15 +33,15 @@ A skill carries two distinct descriptions:
 
 | | Lives in | Read by | Write it as |
 | --- | --- | --- | --- |
-| **Agent description** | `skill.md` frontmatter `description` | the model, to decide *when to invoke* | a precise trigger |
+| **Agent description** | `SKILL.md` frontmatter `description` | the model, to decide *when to invoke* | a precise trigger |
 | **Catalog description** | `metadata.json` `description` | people browsing the gallery | a friendly one-liner |
 
 The gallery card, search, and the top of the detail page show the **catalog**
 description. The detail page also surfaces the **agent** description in its own
-labeled block, and the downloadable `skill.md` ships the agent description in its
+labeled block, and the downloadable `SKILL.md` ships the agent description in its
 frontmatter.
 
-## 3. `skill.md`
+## 3. `SKILL.md`
 
 The canonical Agent Skills file — `name`, the agent-facing `description`, and the
 instructions body are all required:
@@ -99,7 +98,7 @@ npm run dev                  # open the site and confirm your skill looks right
 
 ## 6. Open a pull request
 
-Submit a PR with your `submissions/<slug>/` folder (or `<slug>.zip`). CI validates
+Submit a PR with your `submissions/<slug>/` folder. CI validates
 the metadata, generates the skill page, and (for same-repo PRs) commits the
 generated files back to your branch. Once merged to `main`, the site redeploys
 automatically.

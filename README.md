@@ -48,17 +48,17 @@ generates the published page (and any download bundle) for you. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide.
 
 Every submission is a `submissions/<slug>/` folder with a `metadata.json` sidecar
-plus one skill payload — an unpacked `SKILL.md` (+ optional dirs) or a `.zip`:
+plus one skill payload — an **unpacked** `SKILL.md` (+ optional dirs):
 
 ```
 submissions/<slug>/
 ├── metadata.json  # OR metadata.yaml — catalog details (sidecar, not bundled)
 ├── README.md      # OPTIONAL human-facing note (not bundled) — shown on the page
-└── EITHER an unpacked skill…       OR a pre-packaged bundle:
-    ├── SKILL.md   # name + agent description + instructions   └── <name>.zip
-    ├── scripts/   # optional executable code
-    ├── references/# optional docs
-    └── assets/    # optional templates / data files
+└── an unpacked skill:
+    ├── SKILL.md    # name + agent description + instructions
+    ├── scripts/    # optional executable code
+    ├── references/ # optional docs
+    └── assets/     # optional templates / data files
 ```
 
 A skill carries **two** descriptions: the **agent** description in `SKILL.md`
@@ -98,11 +98,11 @@ Write the agent instructions here as Markdown — this body becomes the
 > one or more of `Cowork`, `Copilot Studio`, `Scout`). PRs run a build check that
 > validates every skill against the schema.
 
-> Besides single skills, you can submit a **Cowork plugin** (a `.zip` M365 app
-> package, Cowork-only), a **Scout automation** (a `.json` export, Scout-only),
-> or a **Scout automation installer** (a `.zip` with an `INSTALL.md` + JSON
-> config, Scout-only). They all drop into `submissions/<slug>/` the same way and
-> are auto-detected by their payload. See
+> Besides single skills, you can submit a **Scout automation** (a `.json` export,
+> Scout-only). It drops into `submissions/<slug>/` the same way and is
+> auto-detected by its payload. (Cowork plugins and Scout automation installers
+> were `.zip` packages and are **no longer accepted** — `.zip` payloads have
+> been retired; existing ones stay published.) See
 > [`submissions/README.md`](submissions/README.md) for the details.
 
 ## 📁 Project structure
