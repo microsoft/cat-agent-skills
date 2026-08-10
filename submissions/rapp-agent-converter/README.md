@@ -1,13 +1,13 @@
 # RAPP Agent Converter
 
-RAPP to Microsoft Copilot Studio. This skill converts a **RAPP single-file
-agent** (`agent.py` — one file, one class, one typed metadata contract, one
-`perform()` method; the Rapid Agent Prototype Pattern) into an **Agent Skill**
-and back, with **zero fidelity loss**. The emitted projection is a pair: a
+RAPP `agent.py` to Agent Skill — and back. This skill converts a **RAPP
+single-file agent** (`agent.py` — one file, one class, one typed metadata
+contract, one `perform()` method; the Rapid Agent Prototype Pattern) into an
+**Agent Skill** and back, with **zero fidelity loss**. The emitted projection is a pair: a
 `SKILL.md` carrying the complete Python inline plus an invisible
 `rci-capsule:v1:` comment vaulting the byte-exact original, and a **linked
-python file beside it that literally is the agent.py** — so Copilot Studio
-runs the real implementation first-party instead of re-deriving it from prose.
+python file beside it that literally is the agent.py** — so an execution-capable
+host runs the real implementation first-party instead of re-deriving it from prose.
 Converting back is a checksum-verified *restore*, never a re-render. Nothing is
 translated, so nothing can drift.
 

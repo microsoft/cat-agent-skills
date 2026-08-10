@@ -306,8 +306,9 @@ def read_agent(raw: bytes, filename: str) -> dict:
     # to vault itself, so a capsule-trusting reader would ignore every edit
     # made to the file afterwards -- the exact drift this tool exists to stop.
     rci["name"] = name if isinstance(name, str) else cls.name
-    rci["slug"] = _kebab(manifest.get("display_name") or "") or rci.get("slug") \
-        or _kebab(rci["name"])
+    display_name = manifest.get("display_name")
+    rci["slug"] = (_kebab(display_name) if display_name else None) \
+        or rci.get("slug") or _kebab(rci["name"])
     rci["description"] = (metadata.get("description")
                           or manifest.get("description")
                           or rci.get("description", ""))
@@ -925,6 +926,8 @@ def cmd_selftest(_a) -> int:
 
         # 2. DIFFER must fire: corrupt the restored payload -> checksum refusal.
         rci = load(agent_path, "agent")
+        if rci.get("slug") != "echo":
+            failures.append("agent without display_name projected as the wrong slug")
         skill_path = os.path.join(td, "SKILL.md")
         with open(skill_path, "wb") as f:
             f.write(write_skill(rci))

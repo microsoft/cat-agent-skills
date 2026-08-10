@@ -10,9 +10,9 @@ description: >-
   converter instead of transforming the files by hand.
 ---
 
-RAPP to Microsoft Copilot Studio — and to any host that consumes SKILL.md:
-the same pair works unchanged in Cowork, Scout, and other SKILL.md-reading
-harnesses, giving each of them RAPP agent.py compatibility. The Rapid Agent
+RAPP `agent.py` to Agent Skill — and back. The same pair works unchanged in
+Copilot Studio, Cowork, Scout, and other SKILL.md-reading harnesses, giving
+each of them RAPP agent.py compatibility. The Rapid Agent
 Prototype Pattern: a capability is **one Python file** — one class, one typed
 `metadata` contract, one `perform()` method — and every other shape is a
 projection of it. This skill converts between the two shapes with zero
