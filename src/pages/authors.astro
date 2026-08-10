@@ -42,7 +42,7 @@ const MAX_CHIPS = 8;
         <div class="you-headings">
           <h2 class="you-title">Your contributor badge</h2>
           <p class="you-sub">
-            Enter your GitHub handle to reveal the badge you’ve earned —
+            Enter your GitHub handle to reveal the badges you’ve earned —
             computed live from your public contributions, and a little
             tongue-in-cheek.
           </p>
@@ -492,11 +492,70 @@ const MAX_CHIPS = 8;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
     }
+    #you-result .trophy-room {
+      display: grid;
+      gap: 1.5rem;
+    }
+    #you-result .carousel-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 2.5rem;
+    }
+    #you-result .carousel-status {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+      color: var(--fg);
+    }
+    #you-result .carousel-position {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+    #you-result .carousel-controls {
+      display: flex;
+      gap: 0.4rem;
+    }
+    #you-result .carousel-arrow {
+      display: grid;
+      width: 2.25rem;
+      height: 2.25rem;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--fg);
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+    }
+    #you-result .carousel-arrow:not(:disabled):hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    #you-result .carousel-arrow:disabled {
+      cursor: default;
+      opacity: 0.32;
+    }
+    #you-result .carousel-arrow:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    #you-result .carousel-arrow svg {
+      width: 1rem;
+      height: 1rem;
+    }
     #you-result .award {
       display: grid;
       grid-template-columns: auto 1fr;
       gap: 2.75rem;
       align-items: center;
+      min-height: 19rem;
+      padding: 0.25rem 0.5rem 0.5rem;
     }
     @media (max-width: 640px) {
       #you-result .award {
@@ -712,7 +771,7 @@ const MAX_CHIPS = 8;
   <script>
     import {
       computeStats,
-      resolveBadge,
+      resolveBadges,
       captionFor,
       posterTiles,
       BADGES,
@@ -774,21 +833,22 @@ const MAX_CHIPS = 8;
         .join("");
     }
 
-    function cardHtml(login: string, stats: any, badge: any, caption: string) {
+    let activeLogin = "";
+    let activeBadges: any[] = [];
+    let activeBadgeIndex = 0;
+
+    function detailHtml(login: string, resolved: any) {
+      const { badge, caption, stats } = resolved;
       const tiles = tilesFor(badge, stats);
       const real = login && login !== "preview";
       const who = real ? `Issued to @${esc(login)}` : "Badge preview";
-      // Offer the one-click download only for real contributors (each has a
-      // pre-rendered PNG). That image is the whole shareable artifact — caption,
-      // stat tiles and site URL are all baked in — so posting it needs no page.
-      const shareable = real && !!resolveBadge(login, data);
-      const share = shareable
+      const share = real
         ? `<a class="award-download" href="${BASE}/badge/${encodeURIComponent(
             login,
-          )}.png" download="cat-badge-${login}.png"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14"/></svg>Download image</a>`
+          )}/${badge.id}.png" download="cat-badge-${login}-${badge.id}.png"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14"/></svg>Download this badge</a>`
         : "";
       return `
-        <div class="award">
+        <div class="award" id="award-detail" aria-live="polite" tabindex="0">
           <div class="award-stage">
             <div class="award-glow" aria-hidden="true"></div>
             <img class="award-badge" src="${png(badge.image)}" alt="${esc(
@@ -805,6 +865,57 @@ const MAX_CHIPS = 8;
             ${share}
           </div>
         </div>`;
+    }
+
+    function carouselHtml(login: string, resolved: any[], selectedId?: string) {
+      const requested = resolved.findIndex((r) => r.badge.id === selectedId);
+      activeBadgeIndex = requested >= 0 ? requested : 0;
+      const selected = resolved[activeBadgeIndex];
+      const real = login && login !== "preview";
+      const visiblePosition = real
+        ? `${activeBadgeIndex + 1} / ${resolved.length}`
+        : "Preview";
+      const positionLabel = real
+        ? `Badge ${activeBadgeIndex + 1} of ${resolved.length} earned`
+        : "Badge preview";
+      return `<div class="trophy-room">
+        <div class="carousel-toolbar">
+          <p class="carousel-status" aria-label="${positionLabel}"><span class="carousel-position">${visiblePosition}</span></p>
+          <div class="carousel-controls" aria-label="Browse earned badges">
+            <button class="carousel-arrow" type="button" data-direction="-1" aria-label="Previous badge" ${activeBadgeIndex === 0 ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <button class="carousel-arrow" type="button" data-direction="1" aria-label="Next badge" ${activeBadgeIndex === resolved.length - 1 ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+          </div>
+        </div>
+        ${detailHtml(login, selected)}
+      </div>`;
+    }
+
+    function moveCarousel(direction: number) {
+      const next = Math.max(
+        0,
+        Math.min(activeBadges.length - 1, activeBadgeIndex + direction),
+      );
+      const selected = activeBadges[next];
+      if (!selected || !result || next === activeBadgeIndex) return;
+      activeBadgeIndex = next;
+      const detail = result.querySelector("#award-detail");
+      if (detail) detail.outerHTML = detailHtml(activeLogin, selected);
+      const position = result.querySelector(".carousel-position");
+      if (position) position.textContent = `${activeBadgeIndex + 1} / ${activeBadges.length}`;
+      const status = result.querySelector(".carousel-status");
+      if (status)
+        status.setAttribute(
+          "aria-label",
+          `Badge ${activeBadgeIndex + 1} of ${activeBadges.length} earned`,
+        );
+      const previous = result.querySelector<HTMLButtonElement>(
+        '.carousel-arrow[data-direction="-1"]',
+      );
+      const nextButton = result.querySelector<HTMLButtonElement>(
+        '.carousel-arrow[data-direction="1"]',
+      );
+      if (previous) previous.disabled = activeBadgeIndex === 0;
+      if (nextButton) nextButton.disabled = activeBadgeIndex === activeBadges.length - 1;
     }
 
     function emptyHtml(login: string) {
@@ -825,32 +936,49 @@ const MAX_CHIPS = 8;
       if (!norm && !forced) return false;
       await loadData();
       let stats = computeStats(norm, data);
-      let badge: any;
-      let caption: string;
+      let resolved: any[];
       if (forced && (BADGES as any)[forced]) {
-        badge = (BADGES as any)[forced];
-        caption = captionFor(badge, norm || forced);
+        const badge = (BADGES as any)[forced];
         // When a badge is forced via ?badge= but no live votes exist (e.g. a
-        // shared preview link, or empty local ratings), seed a representative
-        // count so the Crowd Favorite tile isn't blank.
+        // shared preview link), seed representative evidence for the preview.
         if (forced === "top-rated" && !stats.totalRating) {
           stats = { ...stats, totalRating: 128 };
         }
+        if (forced === "shelf-clearer" && !stats.totalDownloads) {
+          stats = { ...stats, totalDownloads: 824 };
+        }
+        resolved = [
+          { badge, caption: captionFor(badge, norm || forced), stats },
+        ];
       } else {
-        const r = resolveBadge(norm, data);
-        if (!r) {
+        resolved = resolveBadges(norm, data);
+        if (!resolved.length) {
           show(emptyHtml(norm));
           highlight("");
           return false;
         }
-        badge = r.badge;
-        caption = r.caption;
       }
       if (input) input.value = norm;
-      show(cardHtml(norm || "preview", stats, badge, caption));
+      activeLogin = norm || "preview";
+      activeBadges = resolved;
+      show(carouselHtml(activeLogin, resolved, forced));
       highlight(norm);
       return true;
     }
+
+    result?.addEventListener("click", (event) => {
+      const button = (event.target as Element).closest<HTMLButtonElement>(
+        ".carousel-arrow",
+      );
+      if (button?.dataset.direction) moveCarousel(Number(button.dataset.direction));
+    });
+
+    result?.addEventListener("keydown", (event) => {
+      if (!(event.target as Element).closest("#award-detail")) return;
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      event.preventDefault();
+      moveCarousel(event.key === "ArrowRight" ? 1 : -1);
+    });
 
     // Remember the looked-up handle in this browser so the badge reappears on
     // return. Nothing leaves the device; "Remove handle" clears it. Inline
