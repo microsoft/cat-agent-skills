@@ -174,8 +174,28 @@ def _validate_rci_fields(value):
         value.get("parameters")
         or {"type": "object", "properties": {}, "required": []}
     )
-    if not isinstance(value.get("platform", {}), dict):
+    platform = value.get("platform", {})
+    if not isinstance(platform, dict):
         raise ValueError("RCI platform must be an object")
+    if platform.get("metadata") is not None \
+            and not isinstance(platform.get("metadata"), dict):
+        raise ValueError("RCI platform.metadata must be an object")
+    if platform.get("claude") is not None:
+        if not isinstance(platform.get("claude"), dict):
+            raise ValueError("RCI platform.claude must be an object")
+        allowed = platform["claude"].get("allowed-tools")
+        if allowed is not None and not isinstance(allowed, (str, list)):
+            raise ValueError(
+                "RCI platform.claude.allowed-tools must be a string or list"
+            )
+    if platform.get("compatibility") is not None \
+            and not isinstance(platform.get("compatibility"), str):
+        raise ValueError("RCI platform.compatibility must be a string")
+    if platform.get("disable-model-invocation") is not None \
+            and not isinstance(platform.get("disable-model-invocation"), bool):
+        raise ValueError(
+            "RCI platform.disable-model-invocation must be a boolean"
+        )
     impl = value.get("impl")
     if impl is not None:
         if not isinstance(impl, dict):
@@ -1511,6 +1531,14 @@ def cmd_selftest(_a) -> int:
         try:
             load(bad_impl_path, "skill")
             failures.append("capsule with invalid impl type was accepted")
+        except ValueError:
+            pass
+
+        bad_platform = load(agent_path, "agent")
+        bad_platform["platform"] = {"metadata": [1]}
+        try:
+            write_skill(bad_platform)
+            failures.append("invalid nested platform metadata was accepted")
         except ValueError:
             pass
 
