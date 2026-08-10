@@ -1,4 +1,4 @@
-# RAPPtoMCS
+# RAPP Agent Converter
 
 RAPP to Microsoft Copilot Studio. This skill converts a **RAPP single-file
 agent** (`agent.py` — one file, one class, one typed metadata contract, one
@@ -57,7 +57,7 @@ move between hosts can adopt the same pair unchanged.
 ## Try it
 
 ```bash
-cd rapptomcs
+cd rapp-agent-converter
 python3 scripts/toast.py selftest                                # every verdict fires
 python3 scripts/toast.py convert assets/hello_rapp_agent.py --to skill -o /tmp/SKILL.md
 python3 scripts/toast.py roundtrip assets/hello_rapp_agent.py    # IDENTICAL, or exit 1

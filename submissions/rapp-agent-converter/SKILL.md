@@ -1,5 +1,5 @@
 ---
-name: rapptomcs
+name: rapp-agent-converter
 description: >-
   Use this skill whenever the user works with RAPP single-file agents (the
   Rapid Agent Prototype Pattern): converting an agent.py cartridge into a

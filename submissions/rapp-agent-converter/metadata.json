@@ -1,6 +1,6 @@
 {
-  "name": "RAPPtoMCS",
-  "description": "Bring RAPP single-file agents (agent.py) into Microsoft Copilot Studio and back — byte-identical round trips, the Python embedded in the SKILL.md plus a linked agent.py the host runs first-party.",
+  "name": "RAPP Agent Converter",
+  "description": "Convert RAPP single-file agents (agent.py) into Agent Skills and back — byte-identical round trips for Copilot Studio, Cowork, and Scout, with the Python embedded in the SKILL.md plus a linked agent.py the host runs first-party.",
   "platforms": ["Cowork", "Copilot Studio", "Scout"],
   "tags": ["rapp", "agents", "python", "conversion", "portability", "developer-tools"],
   "author": "Kody Wildfeuer",
