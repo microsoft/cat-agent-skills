@@ -44,6 +44,10 @@ CAPSULE_COMMENT_RE = re.compile(
 )
 GENERATED_BEGIN = "<!-- toaster:generated:begin -->"
 GENERATED_END = "<!-- toaster:generated:end -->"
+GENERATED_MARKER_RE = re.compile(
+    r"^<!-- toaster:generated:(?:begin|end) -->[ \t]*$",
+    re.M,
+)
 GENERATED_BLOCK_RE = re.compile(
     r"^<!-- toaster:generated:begin -->[ \t]*\n"
     r"(.*?)"
@@ -658,7 +662,7 @@ def read_skill(raw: bytes, filename: str) -> dict:
         raise ValueError(f"{filename}: SKILL.md must be UTF-8") from exc
     got = _capsule_or_reparse(raw, filename, "skill")
     cap = got[1] if got and got[0] == "ok" else None
-    has_generated_markers = GENERATED_BEGIN in text or GENERATED_END in text
+    has_generated_markers = bool(GENERATED_MARKER_RE.search(text))
     if has_generated_markers and not _generated_markers_are_top_level(text):
         raise ValueError(
             "generated skill markers must be top-level Markdown blocks"
@@ -824,7 +828,7 @@ def write_skill(rci: dict) -> bytes:
             raise ValueError(
                 "vaulted agent must be UTF-8 for an Agent Skill projection"
             ) from exc
-        if GENERATED_BEGIN in code or GENERATED_END in code:
+        if GENERATED_MARKER_RE.search(code):
             raise ValueError("agent source contains reserved generated-marker text")
         fence = _fence_for(code)
         fn = linked_agent_name(rci)
@@ -1440,7 +1444,8 @@ def cmd_selftest(_a) -> int:
         raw_path = os.path.join(td, "RAW.md")
         with open(raw_path, "w") as f:
             f.write("---\nname: raw-bread\ndescription: no capsule here\n---\n\n"
-                    "Documents `rci-capsule:v1:` as syntax.\n\n"
+                    "Documents `rci-capsule:v1:` and "
+                    "`<!-- toaster:generated:begin -->` as syntax.\n\n"
                     "```python\nprint('documentation only')\n```\n")
         if cmd_roundtrip(argparse.Namespace(path=raw_path, cycles=1,
                                             allow_raw=False)) != 2:
