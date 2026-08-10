@@ -60,8 +60,10 @@ capability-level fidelity only. Treat only exit 1 as drift.
 The full lifecycle: the FIRST conversion of a hand-written SKILL.md creates a
 runnable launchpad agent without inventing behavior. Instructions travel
 verbatim; an explicit `## Parameters` JSON-Schema fence supplies the typed
-contract; an explicit deterministic Python fence supplies implementation when
-present. A prose-only skill remains prose-only in the launchpad. Converting
+contract; a Python fence whose info string is
+`python # rapp:deterministic` supplies implementation when present. Ordinary
+example fences remain documentation. A prose-only skill remains prose-only in
+the launchpad. Converting
 that agent back embeds it literally inside a new SKILL.md — single-file
 shareable — with the agent.py linked beside it, and it still maps back to the
 identical agent.py. Both platforms are served by the same pair, and the Python
@@ -90,8 +92,10 @@ is preserved byte-exact at every hop.
      (sha256-verified; a checksum mismatch aborts — never bypass it).
    - If it is a plain hand-written SKILL.md (no capsule), a launchpad agent is
      **synthesised**: instructions travel verbatim in `INSTRUCTIONS`, typed
-     parameters come from a `## Parameters` fence when present, and an explicit
-     deterministic Python fence is preserved when present. Otherwise
+     parameters come from a `## Parameters` fence when present, and a fence
+     whose info string is `python # rapp:deterministic` is preserved as
+     implementation when present. Ordinary Python examples are never
+     executable. Otherwise
      `perform()` returns the original instructions plus the supplied inputs;
      it does not infer commands from prose. Say so explicitly — a synthesis is
      a capability projection, not a restoration. A prose-only skill (no

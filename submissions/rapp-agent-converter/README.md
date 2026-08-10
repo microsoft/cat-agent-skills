@@ -30,8 +30,10 @@ code and link the runnable file beside it, and make every conversion provable.
 
 It also works starting from an existing skill: the first SKILL.md → agent.py
 conversion creates a runnable launchpad without inventing behavior.
-Instructions travel verbatim, and explicit Parameters or deterministic Python
-fences are preserved when present. A prose-only skill stays prose-only in the
+Instructions travel verbatim, an explicit `## Parameters` fence supplies the
+contract, and only a fence whose info string is
+`python # rapp:deterministic` is treated as implementation. Ordinary Python
+examples remain documentation. A prose-only skill stays prose-only in the
 launchpad. Converting that agent back embeds it literally in a new SKILL.md
 that still maps back to the identical agent.py.
 

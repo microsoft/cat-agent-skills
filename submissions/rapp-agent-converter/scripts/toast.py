@@ -37,7 +37,11 @@ import textwrap
 
 RCI_VERSION = "1.0"
 SPEC = "rapp-capability-interchange/1.0"
-CAPSULE_RE = re.compile(r"rci-capsule:v1:([A-Za-z0-9+/=]+)")
+CAPSULE_COMMENT_RE = re.compile(
+    r"<!--[ \t]*rci-capsule:v1:([^<\r\n]*?)[ \t]*-->"
+    r"|^[ \t]*#[ \t]*rci-capsule:v1:([^\s]+)[ \t]*$",
+    re.M,
+)
 GENERATED_BEGIN = "<!-- toaster:generated:begin -->"
 GENERATED_END = "<!-- toaster:generated:end -->"
 GENERATED_BLOCK_RE = re.compile(
@@ -53,7 +57,9 @@ GENERATED_RE = re.compile(
 )
 GENERATED_PERFORM_MARK = "# toaster:generated-perform"
 DET_FENCE = re.compile(
-    r"(`{3,})python[ \t]*(?:#[ \t]*rapp:deterministic)?[ \t]*\n(.*?)\1", re.S)
+    r"(`{3,})python[ \t]*#[ \t]*rapp:deterministic[ \t]*\n(.*?)\1",
+    re.S,
+)
 PARAM_FENCE = re.compile(r"##+\s*Parameters\s*\n+```json\s*\n(.*?)```", re.S | re.I)
 SYSCTX_SEC = re.compile(r"##+\s*System Context\s*\n+(.*?)(?=\n##+\s|\Z)", re.S | re.I)
 TOOL_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
@@ -66,8 +72,13 @@ def _sha(b: bytes) -> str:
 
 def _gz(b: bytes) -> bytes:
     # mtime=0 keeps the gzip header deterministic — without it two conversions
-    # of the same bytes in different seconds emit different capsules.
-    return gzip.compress(b, 9, mtime=0)
+    # of the same bytes in different seconds emit different capsules. Python
+    # versions have emitted different gzip OS bytes even with mtime=0, so pin
+    # that header byte too.
+    out = bytearray(gzip.compress(b, 9, mtime=0))
+    if len(out) >= 10:
+        out[9] = 255  # RFC 1952: unknown OS; stable on every supported host.
+    return bytes(out)
 
 
 def blank_rci() -> dict:
@@ -118,28 +129,63 @@ def pack_capsule(rci: dict) -> str:
     return "rci-capsule:v1:" + base64.b64encode(_gz(payload)).decode()
 
 
+def _safe_agent_filename(value: str) -> str:
+    if not isinstance(value, str) or not re.fullmatch(
+        r"[A-Za-z0-9_]+_agent\.py", value
+    ):
+        raise ValueError(
+            "vaulted agent filename must be a basename ending _agent.py"
+        )
+    if value != os.path.basename(value) or ".." in value:
+        raise ValueError("vaulted agent filename is not path-safe")
+    return value
+
+
+def _validate_capsule(value):
+    if not isinstance(value, dict) or value.get("rci") != RCI_VERSION:
+        raise ValueError("capsule is not an RCI 1.0 object")
+    preserved = value.get("preserved", {})
+    if not isinstance(preserved, dict):
+        raise ValueError("capsule preserved field must be an object")
+    for fmt, entry in preserved.items():
+        if fmt not in FORMATS or not isinstance(entry, dict):
+            raise ValueError("capsule preserved entry is invalid")
+        if not re.fullmatch(r"[0-9a-f]{64}", str(entry.get("sha256", ""))):
+            raise ValueError("capsule preserved checksum is invalid")
+        if not isinstance(entry.get("b64"), str):
+            raise ValueError("capsule preserved payload is invalid")
+        if not isinstance(entry.get("filename"), str):
+            raise ValueError("capsule preserved filename is invalid")
+    if not isinstance(value.get("provenance", []), list):
+        raise ValueError("capsule provenance must be a list")
+    if value.get("parameters") is not None \
+            and not isinstance(value.get("parameters"), dict):
+        raise ValueError("capsule parameters must be an object")
+    return value
+
+
 def unpack_capsule(text: str):
     # LAST match, deliberately: a converted agent's own source (with its old
     # trailing capsule) can ride inside this artifact, and the capsule this
     # file carries is always appended after it. First-match read the stale
     # passenger instead of the ledger -- found by round-tripping an upstream
     # cartridge that embedded its history.
-    if "rci-capsule:v1:" not in text:
+    matches = CAPSULE_COMMENT_RE.findall(text)
+    if not matches:
         return None
-    ms = CAPSULE_RE.findall(text)
-    if not ms:
+    payload = next(part for part in matches[-1] if part).strip()
+    if not re.fullmatch(r"[A-Za-z0-9+/=]+", payload):
         raise ValueError("malformed rci-capsule:v1 payload")
     try:
-        return json.loads(gzip.decompress(base64.b64decode(ms[-1])))
+        decoded = json.loads(gzip.decompress(base64.b64decode(payload)))
     except Exception as exc:
         raise ValueError("malformed rci-capsule:v1 payload") from exc
+    return _validate_capsule(decoded)
 
 
 def strip_capsules(b: bytes) -> bytes:
     """Every capsule removed -- the content two ledger-bearing artifacts share."""
-    t = re.sub(r"<!--\s*rci-capsule:v1:[A-Za-z0-9+/=]+\s*-->", "",
-               b.decode("utf-8", "replace"))
-    t = re.sub(r"#\s*rci-capsule:v1:[A-Za-z0-9+/=]+", "", t)
+    t = CAPSULE_COMMENT_RE.sub("", b.decode("utf-8"))
     return t.encode()
 
 
@@ -255,7 +301,12 @@ def _class_candidates(tree):
 
 
 def read_agent(raw: bytes, filename: str) -> dict:
-    text = raw.decode("utf-8", "replace").lstrip("\ufeff")
+    try:
+        text = raw.decode("utf-8").lstrip("\ufeff")
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            f"{filename}: agent source must be UTF-8 for an Agent Skill projection"
+        ) from exc
     got = _capsule_or_reparse(raw, filename, "agent")
     cap = got[1] if got and got[0] == "ok" else None
     rci = cap if cap else (got[1] if got else blank_rci())
@@ -357,6 +408,92 @@ def read_agent(raw: bytes, filename: str) -> dict:
 
 # ---------------------------------------------------------------- skill (read)
 
+def _yaml_scalar(value: str):
+    value = value.strip()
+    if not value:
+        return ""
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1].replace("''", "'")
+    if value.startswith('"') and value.endswith('"'):
+        try:
+            return json.loads(value)
+        except Exception:
+            return value[1:-1]
+    if value in ("true", "false", "null") \
+            or re.fullmatch(r"-?(?:0|[1-9]\d*)(?:\.\d+)?", value):
+        return json.loads(value)
+    if value.startswith(("[", "{")):
+        try:
+            return json.loads(value)
+        except Exception:
+            if value.startswith("[") and value.endswith("]"):
+                inner = value[1:-1].strip()
+                return [] if not inner else [
+                    _yaml_scalar(part) for part in inner.split(",")
+                ]
+    return value
+
+
+def _indent_of(line: str) -> int:
+    return len(line) - len(line.lstrip(" "))
+
+
+def _next_indented_line(lines, start: int):
+    for index in range(start, len(lines)):
+        if lines[index].strip():
+            return index, _indent_of(lines[index])
+    return None, None
+
+
+def _parse_yaml_node(lines, start: int, indent: int):
+    first, _ = _next_indented_line(lines, start)
+    is_list = first is not None and lines[first][indent:].startswith("- ")
+    out = [] if is_list else {}
+    i = start
+    while i < len(lines):
+        line = lines[i]
+        if not line.strip():
+            i += 1
+            continue
+        current = _indent_of(line)
+        if current < indent:
+            break
+        if current > indent:
+            raise ValueError("unsupported YAML indentation in frontmatter")
+        token = line[indent:]
+        if is_list:
+            if not token.startswith("- "):
+                break
+            value = token[2:].strip()
+            i += 1
+            if value:
+                out.append(_yaml_scalar(value))
+                continue
+            child_index, child_indent = _next_indented_line(lines, i)
+            if child_index is None or child_indent <= indent:
+                out.append(None)
+                continue
+            child, i = _parse_yaml_node(lines, child_index, child_indent)
+            out.append(child)
+            continue
+
+        match = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", token)
+        if not match:
+            raise ValueError(f"unsupported YAML frontmatter line: {token}")
+        key, value = match.group(1), match.group(2).strip()
+        i += 1
+        if value:
+            out[key] = _yaml_scalar(value)
+            continue
+        child_index, child_indent = _next_indented_line(lines, i)
+        if child_index is None or child_indent <= indent:
+            out[key] = {}
+            continue
+        child, i = _parse_yaml_node(lines, child_index, child_indent)
+        out[key] = child
+    return out, i
+
+
 def split_frontmatter(text: str):
     m = re.match(r"---\s*\n(.*?)\n---\s*\n?(.*)$", text, re.S)
     if not m:
@@ -392,20 +529,23 @@ def split_frontmatter(text: str):
                     paras.append(" ".join(cur))
                 fm[key] = "\n".join(paras)
             continue
-        if val.startswith(("[", "{", '"')) or val in ("true", "false", "null") \
-                or re.fullmatch(r"-?(?:0|[1-9]\d*)(?:\.\d+)?", val):
-            try:
-                fm[key] = json.loads(val)
-            except Exception:
-                fm[key] = val.strip('"').strip("'")
+        if not val:
+            child_index, child_indent = _next_indented_line(lines, i + 1)
+            if child_index is not None and child_indent > 0:
+                fm[key], i = _parse_yaml_node(lines, child_index, child_indent)
+                continue
+            fm[key] = {}
         else:
-            fm[key] = val.strip("'")
+            fm[key] = _yaml_scalar(val)
         i += 1
     return fm, body
 
 
 def read_skill(raw: bytes, filename: str) -> dict:
-    text = raw.decode("utf-8", "replace")
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"{filename}: SKILL.md must be UTF-8") from exc
     got = _capsule_or_reparse(raw, filename, "skill")
     cap = got[1] if got and got[0] == "ok" else None
     has_generated_markers = GENERATED_BEGIN in text or GENERATED_END in text
@@ -413,24 +553,11 @@ def read_skill(raw: bytes, filename: str) -> dict:
         raise ValueError(
             "generated skill content requires a valid current capsule"
         )
-    if cap and (cap.get("preserved") or {}).get("agent"):
-        restored = restore(cap, "agent")
-        fences = _generated_agent_fences(text)
-        if len(fences) != 1:
-            raise ValueError(
-                "generated skill must contain exactly one deterministic "
-                f"Python fence; found {len(fences)}"
-            )
-        shown = fences[0].rstrip("\n").encode("utf-8")
-        if shown != restored.rstrip(b"\n"):
-            raise ValueError(
-                "inline Python does not match the checksum-verified agent"
-            )
     rci = cap if cap else (got[1] if got else blank_rci())
 
     fm, body = split_frontmatter(text)
     body = GENERATED_RE.sub("", body)      # drop what a tool wrote, keep authored text
-    body = re.sub(r"<!--\s*rci-capsule:v1:[A-Za-z0-9+/=]+\s*-->", "", body)
+    body = CAPSULE_COMMENT_RE.sub("", body)
     body = re.sub(r"<!--\s*-->\s*$", "", body).rstrip() + "\n"
 
     # Authored surfaces always come from the CURRENT file; the capsule keeps
@@ -473,10 +600,24 @@ def read_skill(raw: bytes, filename: str) -> dict:
     if isinstance(fm.get("metadata"), dict):
         metadata = dict(fm["metadata"])
         for key in ("version", "author", "tags"):
-            if key in metadata and not rci.get(key):
+            if key in metadata:
                 rci[key] = metadata.pop(key)
         if metadata:
             platform["metadata"] = metadata
+
+    if cap and (cap.get("preserved") or {}).get("agent"):
+        # Generated regions are deterministic output, not editable prose.
+        # Regenerate them from the current authored surfaces + vaulted agent
+        # and compare every byte, including commands, parameters, and code.
+        expected_rci = json.loads(json.dumps(rci))
+        expected = write_skill(expected_rci).decode("utf-8")
+        current_blocks = GENERATED_BLOCK_RE.findall(text)
+        expected_blocks = GENERATED_BLOCK_RE.findall(expected)
+        if current_blocks != expected_blocks:
+            raise ValueError(
+                "generated skill regions do not match the checksum-verified "
+                "projection"
+            )
 
     preserve(rci, "skill", raw, filename)
     rci.setdefault("provenance", []).append(f"read:skill:{os.path.basename(filename)}")
@@ -543,12 +684,17 @@ def write_skill(rci: dict) -> bytes:
         out += [f"\n{GENERATED_BEGIN}\n"
                 "\n## Parameters\n\nThe typed contract this capability answers to "
                 "(JSON Schema — the deterministic layer):\n\n```json\n",
-                json.dumps(params, indent=2),
+                json.dumps(params, indent=2, sort_keys=True),
                 f"\n```\n\n{GENERATED_END}\n"]
 
     source = restore(rci, "agent")
     if source is not None:
-        code = source.decode("utf-8", "replace")
+        try:
+            code = source.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValueError(
+                "vaulted agent must be UTF-8 for an Agent Skill projection"
+            ) from exc
         if GENERATED_BEGIN in code or GENERATED_END in code:
             raise ValueError("agent source contains reserved generated-marker text")
         fence = _fence_for(code)
@@ -576,9 +722,10 @@ def write_skill(rci: dict) -> bytes:
                 "without code execution, "
                 "treat the Parameters schema and the code below as the exact "
                 "specification and never paraphrase a step. Never edit inside the "
-                "generated markers; a toaster-equipped host can instead restore the "
-                "original file checksum-verified with "
-                "`toast.py convert SKILL.md --to agent`.\n\n"
+                "generated markers; a converter-equipped host can instead restore "
+                "the original file checksum-verified with the installed "
+                "`rapp-agent-converter/scripts/toast.py convert SKILL.md --to agent`."
+                "\n\n"
                 f"{fence}python  # rapp:deterministic\n{code}"
                 + ("" if code.endswith("\n") else "\n")
                 + f"{fence}\n\n{GENERATED_END}\n"]
@@ -778,8 +925,8 @@ def agent_filename(rci: dict) -> str:
 def linked_agent_name(rci: dict) -> str:
     """The sidecar name the projection links to — the vaulted original's own
     filename when known, so the link and the restore always agree."""
-    return ((rci.get("preserved", {}).get("agent") or {}).get("filename")
-            or agent_filename(rci))
+    vaulted = (rci.get("preserved", {}).get("agent") or {}).get("filename")
+    return _safe_agent_filename(vaulted or agent_filename(rci))
 
 
 # ------------------------------------------------------------------------ I/O
@@ -824,14 +971,45 @@ def cmd_convert(a) -> int:
     if os.path.abspath(out_path) == os.path.abspath(a.path):
         raise SystemExit("[FAIL] refusing to overwrite the source file with a "
                          "different format -- pass -o with another path")
+
+    side = side_bytes = None
+    if a.to == "skill":
+        side_bytes = restore(rci, "agent")
+        if side_bytes is not None:
+            side = os.path.join(
+                os.path.dirname(os.path.abspath(out_path)),
+                linked_agent_name(rci),
+            )
+
+    # Preflight the complete pair before writing either artifact. A conflicting
+    # linked file must not leave behind a SKILL.md that tells hosts to run it.
+    for target, data in ((out_path, out_bytes), (side, side_bytes)):
+        if not target or data is None \
+                or os.path.abspath(target) == os.path.abspath(a.path):
+            continue
+        if os.path.exists(target) and not a.force \
+                and open(target, "rb").read() != data:
+            raise SystemExit(
+                f"[FAIL] {target} exists with different content "
+                "-- pass -o or --force"
+            )
+
     already_present = False
     if os.path.exists(out_path) and not a.force:
-        if open(out_path, "rb").read() != out_bytes:
-            raise SystemExit(f"[FAIL] {out_path} exists with different content "
-                             "-- pass -o or --force")
         already_present = True
     parent = os.path.dirname(os.path.abspath(out_path))
     os.makedirs(parent, exist_ok=True)
+
+    # Write the linked implementation first. If the later SKILL.md write fails,
+    # the residue is a valid standalone agent rather than a broken instruction
+    # file pointing at hostile or unrelated bytes.
+    if side and side_bytes is not None \
+            and os.path.abspath(side) != os.path.abspath(a.path):
+        os.makedirs(os.path.dirname(os.path.abspath(side)), exist_ok=True)
+        if a.force or not os.path.exists(side):
+            with open(side, "wb") as f:
+                f.write(side_bytes)
+
     if not already_present:
         with open(out_path, "wb") as f:
             f.write(out_bytes)
@@ -845,19 +1023,11 @@ def cmd_convert(a) -> int:
         # linked python file that literally IS the agent.py, so a host with
         # execution (Copilot Studio's sandbox) calls the real implementation
         # first-party instead of re-deriving it from the fence.
-        src_bytes = restore(rci, "agent")
-        if src_bytes is not None:
-            side = os.path.join(os.path.dirname(os.path.abspath(out_path)),
-                                linked_agent_name(rci))
+        src_bytes = side_bytes
+        if src_bytes is not None and side:
             if os.path.abspath(side) == os.path.abspath(a.path):
                 print(f"  linked agent: {side} (the source file itself)")
             else:
-                if os.path.exists(side) and not a.force \
-                        and open(side, "rb").read() != src_bytes:
-                    raise SystemExit(f"[FAIL] {side} exists with different "
-                                     "content -- pass --force to overwrite")
-                with open(side, "wb") as f:
-                    f.write(src_bytes)
                 print(f"  linked agent: {side}  sha256 {_sha(src_bytes)[:16]} "
                       "(byte-exact copy of the source)")
     return 0
@@ -1035,6 +1205,10 @@ def cmd_selftest(_a) -> int:
     """Every verdict must be able to fire, or the oracle proves nothing."""
     import tempfile
     failures = []
+    gzip_probe = _gz(b"rapp-agent-converter-determinism-v1")
+    if _sha(gzip_probe) != \
+            "dd13d986790e5029a2058b7865a01e8a0f1b7f774246aaf02a63e2bca7347aff":
+        failures.append("gzip capsule bytes vary on this Python/runtime")
     with tempfile.TemporaryDirectory() as td:
         agent_path = os.path.join(td, "echo_agent.py")
         with open(agent_path, "wb") as f:
@@ -1074,6 +1248,16 @@ def cmd_selftest(_a) -> int:
         else:
             print("tamper probe: inline drift detection fired as designed")
 
+        command_tampered = open(skill_path, "rb").read().replace(
+            b"python3 echo_agent.py", b"python3 attacker_payload.py", 1
+        )
+        command_path = os.path.join(td, "COMMAND_TAMPERED.md")
+        with open(command_path, "wb") as f:
+            f.write(command_tampered)
+        if cmd_roundtrip(argparse.Namespace(path=command_path, cycles=1,
+                                            allow_raw=False)) != 1:
+            failures.append("generated command tampering was NOT detected")
+
         # Changing prose must not disable the structural inline check.
         reworded = open(skill_path, "rb").read().replace(
             b"deterministic implementation is a RAPP single-file agent",
@@ -1089,13 +1273,17 @@ def cmd_selftest(_a) -> int:
         # 4. Raw bread must be refused by the oracle.
         raw_path = os.path.join(td, "RAW.md")
         with open(raw_path, "w") as f:
-            f.write("---\nname: raw-bread\ndescription: no capsule here\n---\n\nProse.\n")
+            f.write("---\nname: raw-bread\ndescription: no capsule here\n---\n\n"
+                    "Documents `rci-capsule:v1:` as syntax.\n\n"
+                    "```python\nprint('documentation only')\n```\n")
         if cmd_roundtrip(argparse.Namespace(path=raw_path, cycles=1,
                                             allow_raw=False)) != 2:
             failures.append("raw bread was not refused")
         if cmd_roundtrip(argparse.Namespace(path=raw_path, cycles=2,
                                             allow_raw=True)) != 0:
             failures.append("raw capability fixed point was not verified")
+        if (load(raw_path, "skill").get("impl") or {}).get("perform_body"):
+            failures.append("ordinary Python example became executable behavior")
 
         numeric_path = os.path.join(td, "NUMERIC.md")
         with open(numeric_path, "w") as f:
@@ -1105,6 +1293,64 @@ def cmd_selftest(_a) -> int:
             compile(numeric_agent, "123_tool_agent.py", "exec")
         except SyntaxError:
             failures.append("numeric-leading skill name generated invalid Python")
+
+        metadata_path = os.path.join(td, "METADATA.md")
+        with open(metadata_path, "w") as f:
+            f.write(
+                "---\n"
+                "name: metadata-skill\n"
+                "description: block metadata\n"
+                "allowed-tools: Read, Bash\n"
+                "metadata:\n"
+                "  author: Kody\n"
+                "  version: \"2.0.0\"\n"
+                "  tags:\n"
+                "    - conversion\n"
+                "    - rapp\n"
+                "  custom:\n"
+                "    owner: scout\n"
+                "---\n\nProse.\n"
+            )
+        metadata_rci = load(metadata_path, "skill")
+        if metadata_rci.get("author") != "Kody" \
+                or metadata_rci.get("version") != "2.0.0" \
+                or metadata_rci.get("tags") != ["conversion", "rapp"] \
+                or metadata_rci.get("platform", {}).get("metadata", {}) \
+                .get("custom", {}).get("owner") != "scout":
+            failures.append("block-form metadata was not preserved")
+
+        traversing = load(agent_path, "agent")
+        traversing["preserved"]["agent"]["filename"] = "../../escape_agent.py"
+        try:
+            linked_agent_name(traversing)
+            failures.append("vaulted filename path traversal was accepted")
+        except ValueError:
+            pass
+
+        bad_shape = base64.b64encode(_gz(json.dumps([]).encode())).decode()
+        shaped_path = os.path.join(td, "BAD_SHAPE.md")
+        with open(shaped_path, "w") as f:
+            f.write(f"---\nname: bad\ndescription: bad\n---\n\n"
+                    f"<!-- rci-capsule:v1:{bad_shape} -->\n")
+        try:
+            load(shaped_path, "skill")
+            failures.append("non-object capsule shape was accepted")
+        except ValueError:
+            pass
+
+        latin1_path = os.path.join(td, "latin1_agent.py")
+        with open(latin1_path, "wb") as f:
+            f.write(
+                b"# -*- coding: latin-1 -*-\n"
+                b"class LatinAgent:\n"
+                b"    def perform(self, **kwargs):\n"
+                b"        return 'caf" + bytes([0xE9]) + b"'\n"
+            )
+        try:
+            load(latin1_path, "agent")
+            failures.append("non-UTF-8 agent was accepted for projection")
+        except ValueError:
+            pass
 
         # 5. A synthesized launchpad agent must be valid Python (compile gate
         #    inside write_agent), and edits to it must be HONORED on the next
