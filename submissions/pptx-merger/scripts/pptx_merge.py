@@ -5,25 +5,41 @@ pptx_merge.py — Merge PPTX files without PowerPoint repair/open errors.
 Usage:
     python pptx_merge.py output.pptx input1.pptx input2.pptx [input3.pptx ...]
 
-This is the corrected merge stage. It fixes, in addition to the earlier
-media/chart/notes/layout-chain issues, the two defects that made every prior
-output unopenable:
+Relationship handling
+---------------------
+Relationship IDs (`r:id`, `r:embed`, `r:link`, ...) are *part-local*: a slide,
+master or layout resolves them against its own `_rels/<part>.rels` and nothing
+else in the package sees them. Appended parts therefore KEEP their original
+relationship IDs verbatim, which means the copied XML stays valid without any
+rewriting. Only `ppt/_rels/presentation.xml.rels` gets fresh IDs, because that
+part's ID space is genuinely shared between the destination deck and everything
+appended into it.
 
-  * [Content_Types].xml and every .rels part are now serialised in the DEFAULT
+What *does* get rewritten is the `Target` of each relationship, since part
+names are package-global and get renamed on copy (`image1.png` ->
+`s1_image1.png`, `slideLayout2.xml` -> `slideLayout9.xml`, and so on). Targets
+are remapped in every `.rels` we emit — slides, masters, layouts, themes,
+charts and notes — so renamed media, themes and charts stay reachable from
+appended masters and layouts.
+
+Note that `sldMasterId/@id` and `sldLayoutId/@id` are a different thing from
+`r:id`: they are globally unique unsigned integers (>= 2147483648) and ARE
+renumbered from a shared counter.
+
+Also handled here:
+
+  * [Content_Types].xml and every .rels part are serialised in the DEFAULT
     (unprefixed) OPC namespace. A prefixed `<ns0:Types>` makes PowerPoint and
     LibreOffice refuse to open the package ("can't read" / "source could not be
     loaded"). Rebuilding with nsmap={None: NS} guarantees the required form and
     also self-heals inputs that arrive prefixed.
 
-  * Every appended <p:sldMasterId> now receives its required unique unsigned
-    integer `id` attribute (>= 2147483648). Omitting it is a schema violation on
-    any multi-master merge (the normal case).
+  * Zip entry paths are validated before extraction (Zip Slip).
 """
 
 import os
 import re
 import sys
-import json
 import shutil
 import tempfile
 import zipfile
@@ -32,7 +48,6 @@ from pathlib import Path
 try:
     from lxml import etree
 except ImportError:
-    import sys
     sys.exit("ERROR: lxml is required. Install it with: pip install lxml")
 
 # ── Namespaces ──────────────────────────────────────────────────────────────
@@ -48,6 +63,11 @@ RT_THEME        = f"{NS_R}/theme"
 RT_IMAGE        = f"{NS_R}/image"
 RT_CHART        = f"{NS_R}/chart"
 RT_NOTES        = f"{NS_R}/notesSlide"
+RT_AUDIO        = f"{NS_R}/audio"
+RT_VIDEO        = f"{NS_R}/video"
+RT_MEDIA        = "http://schemas.microsoft.com/office/2007/relationships/media"
+
+MEDIA_RELS = {RT_IMAGE, RT_AUDIO, RT_VIDEO, RT_MEDIA}
 
 CT_SLIDE        = "application/vnd.openxmlformats-officedocument.presentationml.slide+xml"
 CT_SLIDE_LAYOUT = "application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"
@@ -74,14 +94,18 @@ def _parser():
         load_dtd=False,
         no_network=True,
     )
+
+
 def parse_xml(path: Path):
     return etree.parse(str(path), _parser()).getroot()
+
 
 def write_xml(root, path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     etree.ElementTree(root).write(
         str(path), xml_declaration=True, encoding="UTF-8", standalone=True
     )
+
 
 def read_rels(rels_path: Path):
     if not rels_path.exists():
@@ -93,8 +117,9 @@ def read_rels(rels_path: Path):
         for r in root
     ]
 
+
 def build_rels_xml(rels):
-    # DEFAULT namespace — no prefix. (Fix C)
+    # DEFAULT namespace — no prefix.
     root = etree.Element(f"{{{NS_REL}}}Relationships", nsmap={None: NS_REL})
     for r in rels:
         el = etree.SubElement(root, f"{{{NS_REL}}}Relationship")
@@ -105,19 +130,13 @@ def build_rels_xml(rels):
             el.set("TargetMode", r["TargetMode"])
     return root
 
+
 def next_rid(used: set) -> str:
     n = 1
     while f"rId{n}" in used:
         n += 1
     return f"rId{n}"
 
-def str_replace_file(path: Path, replacements: dict):
-    if not replacements:
-        return
-    text = path.read_text(encoding="utf-8", errors="replace")
-    for old, new in replacements.items():
-        text = text.replace(old, new)
-    path.write_text(text, encoding="utf-8")
 
 def abs_to_rel(target: str, part_folder: str) -> str:
     if not target.startswith("/"):
@@ -132,15 +151,58 @@ class PptxMerger:
         self.tmp = tmp
         self.out = tmp / "out"
         # Single global ID space shared by sldMasterId and sldLayoutId
-        # (PowerPoint requires these to be globally unique together). (Fix B)
+        # (PowerPoint requires these to be globally unique together).
         self._gid_counter = 2147483648
 
+    # ── target remapping ────────────────────────────────────────────────
+    @staticmethod
+    def remap_rel(r, part_folder, media_map=None, chart_map=None, theme_map=None,
+                  overrides=None):
+        """Return a copy of relationship `r` with its Target rewritten for the
+        merged package.
+
+        The relationship Id is deliberately left untouched: rel IDs are
+        part-local, so preserving them keeps every r:id / r:embed / r:link
+        reference in the copied XML valid with no rewriting of the part itself.
+
+        `overrides` maps a relationship Type to a fixed replacement Target and
+        wins over the name-based maps.
+        """
+        nr = dict(r)                                  # Id preserved verbatim
+        if nr.get("TargetMode", "") == "External":
+            return nr
+
+        target = nr.get("Target", "")
+        if target.startswith("/"):
+            target = abs_to_rel(target, part_folder)
+            nr["Target"] = target
+
+        rtype = r.get("Type", "")
+        if overrides and rtype in overrides:
+            nr["Target"] = overrides[rtype]
+            return nr
+
+        name = Path(target).name
+        if theme_map and rtype == RT_THEME and name in theme_map:
+            nr["Target"] = f"../theme/{theme_map[name]}"
+        elif chart_map and rtype == RT_CHART and name in chart_map:
+            nr["Target"] = f"../charts/{chart_map[name]}"
+        elif media_map and (rtype in MEDIA_RELS or "/media/" in target):
+            if name in media_map:
+                nr["Target"] = f"../media/{media_map[name]}"
+        return nr
+
+    def remap_rels(self, rels, part_folder, **kw):
+        return [self.remap_rel(r, part_folder, **kw) for r in rels]
+
+    # ── main ────────────────────────────────────────────────────────────
     def merge(self, inputs, output: Path):
         srcs = []
         for i, inp in enumerate(inputs):
             d = self.tmp / f"s{i}"
+            d.mkdir(parents=True, exist_ok=True)
+            base = d.resolve()
             with zipfile.ZipFile(inp) as z:
-                base = d.resolve()
                 for info in z.infolist():
                     dest = (d / info.filename).resolve()
                     if not str(dest).startswith(str(base) + os.sep):
@@ -148,7 +210,7 @@ class PptxMerger:
                 z.extractall(d)
             srcs.append(d)
 
-        shutil.copytree(srcs[0], self.out)
+        shutil.copytree(srcs[0], self.out, dirs_exist_ok=True)
         self._fix_base_rels()
         self._sync_id_counters(self.out)
 
@@ -169,11 +231,11 @@ class PptxMerger:
         for src_idx, src in enumerate(srcs[1:], start=1):
             media_map = self._copy_media(src, src_idx)
             chart_map = self._copy_charts_and_deps(src, src_idx)
-            theme_map = self._copy_themes(src, theme_num)
+            theme_map = self._copy_themes(src, theme_num, media_map)
             theme_num += len(theme_map)
 
             master_map, layout_map = self._copy_masters_and_layouts(
-                src, master_num, layout_num, theme_map, media_map
+                src, master_num, layout_num, theme_map, media_map, chart_map
             )
             master_num += len(master_map)
             layout_num += len(layout_map)
@@ -185,6 +247,7 @@ class PptxMerger:
                 prs_root.insert(0, master_id_lst)
 
             for _, new_master_fname in master_map.items():
+                # presentation.xml.rels IS a shared ID space -> new Id here.
                 new_rid = next_rid(prs_rid_set)
                 prs_rid_set.add(new_rid)
                 prs_rels.append({
@@ -193,34 +256,34 @@ class PptxMerger:
                 })
                 el = etree.SubElement(master_id_lst, f"{{{NS_P}}}sldMasterId")
                 self._gid_counter += 1
-                el.set("id", str(self._gid_counter))   # (Fix B) required, globally unique id
+                el.set("id", str(self._gid_counter))   # required, globally unique
                 el.set(f"{{{NS_R}}}id", new_rid)
 
             old_to_new_slides = {}
             for slide_fname in self._ordered_slides(src):
-                slide_num += 1
-                new_slide_fname = f"slide{slide_num}.xml"
-                old_to_new_slides[slide_fname] = new_slide_fname
                 src_slide = src / "ppt" / "slides" / slide_fname
                 if not src_slide.exists():
                     continue
+
+                slide_num += 1
+                new_slide_fname = f"slide{slide_num}.xml"
+                old_to_new_slides[slide_fname] = new_slide_fname
+
                 out_slide = self.out / "ppt" / "slides" / new_slide_fname
+                out_slide.parent.mkdir(parents=True, exist_ok=True)
+                # Copied byte-for-byte: rel IDs are preserved, so every r:id /
+                # r:embed / r:link inside still resolves.
                 shutil.copy2(src_slide, out_slide)
 
-                str_replace_file(out_slide, {
-                    f"../media/{o}": f"../media/{n}" for o, n in media_map.items()
-                })
-
                 src_rels = src / "ppt" / "slides" / "_rels" / f"{slide_fname}.rels"
-                new_slide_rels, rid_remap = self._remap_slide_rels(
-                    read_rels(src_rels), layout_map, media_map, chart_map
+                new_slide_rels = self.remap_rels(
+                    read_rels(src_rels), "ppt/slides",
+                    media_map=media_map, chart_map=chart_map,
+                    overrides=None,
                 )
-                str_replace_file(out_slide, {
-                    f'r:id="{o}"': f'r:id="{n}"' for o, n in rid_remap.items()
-                })
-                str_replace_file(out_slide, {
-                    f'r:embed="{o}"': f'r:embed="{n}"' for o, n in rid_remap.items()
-                })
+                new_slide_rels = [
+                    self._remap_layout_target(r, layout_map) for r in new_slide_rels
+                ]
 
                 out_rels_dir = self.out / "ppt" / "slides" / "_rels"
                 out_rels_dir.mkdir(parents=True, exist_ok=True)
@@ -238,7 +301,7 @@ class PptxMerger:
                     "Target": f"slides/{new_slide_fname}", "TargetMode": "",
                 })
 
-            notes_num = self._copy_notes(src, old_to_new_slides, notes_num)
+            notes_num = self._copy_notes(src, old_to_new_slides, notes_num, media_map)
 
         write_xml(prs_root, prs_path)
         write_xml(build_rels_xml(prs_rels), prs_rels_path)
@@ -255,7 +318,18 @@ class PptxMerger:
 
         print(f"OK  merged {len(inputs)} files -> {output}")
 
-    # ── helpers ──
+    # ── helpers ─────────────────────────────────────────────────────────
+    @staticmethod
+    def _remap_layout_target(r, layout_map):
+        if r.get("Type") != RT_SLIDE_LAYOUT or r.get("TargetMode") == "External":
+            return r
+        name = Path(r.get("Target", "")).name
+        if name in layout_map:
+            nr = dict(r)
+            nr["Target"] = f"../slideLayouts/{layout_map[name]}"
+            return nr
+        return r
+
     def _count_parts(self, base: Path):
         ppt = base / "ppt"
         n = lambda g: sum(1 for _ in ppt.glob(g))
@@ -309,7 +383,8 @@ class PptxMerger:
     def _ordered_slides(self, src: Path):
         prs_root = parse_xml(src / "ppt" / "presentation.xml")
         prs_rels = read_rels(src / "ppt" / "_rels" / "presentation.xml.rels")
-        rid_to_slide = {r["Id"]: Path(r["Target"]).name for r in prs_rels if r["Type"] == RT_SLIDE}
+        rid_to_slide = {r["Id"]: Path(r["Target"]).name
+                        for r in prs_rels if r["Type"] == RT_SLIDE}
         lst = prs_root.find(f".//{{{NS_P}}}sldIdLst")
         if lst is None:
             return []
@@ -323,7 +398,7 @@ class PptxMerger:
         om = self.out / "ppt" / "media"
         om.mkdir(parents=True, exist_ok=True)
         mp = {}
-        for f in sm.iterdir():
+        for f in sorted(sm.iterdir()):
             if f.is_file():
                 new = f"s{src_idx}_{f.name}"
                 shutil.copy2(f, om / new)
@@ -338,7 +413,7 @@ class PptxMerger:
         chart_map, embed_map = {}, {}
         if se.exists():
             oe.mkdir(parents=True, exist_ok=True)
-            for f in se.iterdir():
+            for f in sorted(se.iterdir()):
                 if f.is_file():
                     new = f"s{src_idx}_{f.name}"
                     shutil.copy2(f, oe / new)
@@ -350,19 +425,19 @@ class PptxMerger:
             new = f"s{src_idx}_{f.name}"
             shutil.copy2(f, oc / new)
             chart_map[f.name] = new
-            crels = read_rels(sc / "_rels" / f"{f.name}.rels")
             ncr = []
-            for r in crels:
-                nr = dict(r)
-                oldn = Path(r.get("Target", "")).name
-                if oldn in embed_map:
-                    nr["Target"] = f"../embeddings/{embed_map[oldn]}"
+            for r in read_rels(sc / "_rels" / f"{f.name}.rels"):
+                nr = dict(r)                       # Id preserved
+                if nr.get("TargetMode", "") != "External":
+                    oldn = Path(r.get("Target", "")).name
+                    if oldn in embed_map:
+                        nr["Target"] = f"../embeddings/{embed_map[oldn]}"
                 ncr.append(nr)
             (oc / "_rels").mkdir(exist_ok=True)
             write_xml(build_rels_xml(ncr), oc / "_rels" / f"{new}.rels")
         return chart_map
 
-    def _copy_themes(self, src: Path, theme_start: int):
+    def _copy_themes(self, src: Path, theme_start: int, media_map):
         sd = src / "ppt" / "theme"
         od = self.out / "ppt" / "theme"
         od.mkdir(parents=True, exist_ok=True)
@@ -376,12 +451,20 @@ class PptxMerger:
             tm[f.name] = new
             sr = sd / "_rels" / f"{f.name}.rels"
             if sr.exists():
+                # Themes can reference media (background fills); remap targets
+                # while preserving Ids so the theme XML's r:embed still resolves.
                 (od / "_rels").mkdir(exist_ok=True)
-                shutil.copy2(sr, od / "_rels" / f"{new}.rels")
+                write_xml(
+                    build_rels_xml(self.remap_rels(read_rels(sr), "ppt/theme",
+                                                   media_map=media_map)),
+                    od / "_rels" / f"{new}.rels",
+                )
             n += 1
         return tm
 
-    def _copy_masters_and_layouts(self, src, master_start, layout_start, theme_map, media_map):
+    def _copy_masters_and_layouts(self, src, master_start, layout_start,
+                                  theme_map, media_map, chart_map=None):
+        chart_map = chart_map or {}
         sm = src / "ppt" / "slideMasters"
         sl = src / "ppt" / "slideLayouts"
         om = self.out / "ppt" / "slideMasters"
@@ -391,92 +474,68 @@ class PptxMerger:
         master_map, layout_map = {}, {}
         if not sm.exists():
             return master_map, layout_map
+
         m_num = master_start + 1
         l_num = layout_start + 1
+
         for smf in sorted(sm.glob("slideMaster*.xml")):
             new_master = f"slideMaster{m_num}.xml"
             master_map[smf.name] = new_master
-            smrels = read_rels(sm / "_rels" / f"{smf.name}.rels")
-            this_layouts, new_mrels, rid_set = {}, [], set()
-            for r in smrels:
-                nr_id = next_rid(rid_set); rid_set.add(nr_id)
-                nr = dict(r); nr["Id"] = nr_id
-                if r["Type"] == RT_SLIDE_LAYOUT:
+
+            this_layouts, new_mrels = {}, []
+            for r in read_rels(sm / "_rels" / f"{smf.name}.rels"):
+                if r["Type"] == RT_SLIDE_LAYOUT and r.get("TargetMode") != "External":
                     old_l = Path(r["Target"]).name
-                    new_l = f"slideLayout{l_num}.xml"
+                    new_l = layout_map.get(old_l)
+                    if new_l is None:
+                        new_l = f"slideLayout{l_num}.xml"
+                        l_num += 1
+                        layout_map[old_l] = new_l
                     this_layouts[old_l] = new_l
-                    layout_map[old_l] = new_l
+                    nr = dict(r)                    # Id preserved
                     nr["Target"] = f"../slideLayouts/{new_l}"
-                    l_num += 1
-                elif r["Type"] == RT_THEME:
-                    old_t = Path(r["Target"]).name
-                    if old_t in theme_map:
-                        nr["Target"] = f"../theme/{theme_map[old_t]}"
-                new_mrels.append(nr)
+                    new_mrels.append(nr)
+                else:
+                    new_mrels.append(self.remap_rel(
+                        r, "ppt/slideMasters",
+                        media_map=media_map, chart_map=chart_map, theme_map=theme_map,
+                    ))
+
+            # Copied byte-for-byte. No string surgery on the XML is needed: rel
+            # IDs are preserved so r:id/r:embed still resolve, and media paths
+            # never appear in master XML (only in its .rels).
             shutil.copy2(smf, om / new_master)
-            str_replace_file(om / new_master,
-                             {f"../media/{o}": f"../media/{n}" for o, n in media_map.items()})
-            # unique sldLayoutId ints (Fix #8 from prior round)
+
             mxml = parse_xml(om / new_master)
             lst = mxml.find(f".//{{{NS_P}}}sldLayoutIdLst")
             if lst is not None:
                 for el in lst:
+                    # @id is the globally unique int and IS renumbered.
+                    # @r:id is the part-local rel ref and is left alone.
                     self._gid_counter += 1
                     el.set("id", str(self._gid_counter))
             write_xml(mxml, om / new_master)
+
             (om / "_rels").mkdir(exist_ok=True)
             write_xml(build_rels_xml(new_mrels), om / "_rels" / f"{new_master}.rels")
+
             for old_l, new_l in this_layouts.items():
                 slf = sl / old_l
                 if not slf.exists():
                     continue
                 shutil.copy2(slf, ol / new_l)
-                str_replace_file(ol / new_l,
-                                 {f"../media/{o}": f"../media/{n}" for o, n in media_map.items()})
-                lrels = read_rels(sl / "_rels" / f"{old_l}.rels")
-                nlr, lset = [], set()
-                for lr in lrels:
-                    rid = next_rid(lset); lset.add(rid)
-                    nr = dict(lr); nr["Id"] = rid
-                    if lr["Type"] == RT_SLIDE_MASTER:
-                        nr["Target"] = f"../slideMasters/{new_master}"
-                    elif lr["Type"] == RT_THEME:
-                        ot = Path(lr["Target"]).name
-                        if ot in theme_map:
-                            nr["Target"] = f"../theme/{theme_map[ot]}"
-                    nlr.append(nr)
+                nlr = self.remap_rels(
+                    read_rels(sl / "_rels" / f"{old_l}.rels"), "ppt/slideLayouts",
+                    media_map=media_map, chart_map=chart_map, theme_map=theme_map,
+                    overrides={RT_SLIDE_MASTER: f"../slideMasters/{new_master}"},
+                )
                 (ol / "_rels").mkdir(exist_ok=True)
                 write_xml(build_rels_xml(nlr), ol / "_rels" / f"{new_l}.rels")
+
             m_num += 1
         return master_map, layout_map
 
-    def _remap_slide_rels(self, src_rels, layout_map, media_map, chart_map,
-                          part_folder="ppt/slides"):
-        new_rels, rid_set, rid_remap = [], set(), {}
-        for r in src_rels:
-            rid = next_rid(rid_set); rid_set.add(rid)
-            rid_remap[r["Id"]] = rid
-            nr = dict(r); nr["Id"] = rid
-            target = nr.get("Target", "")
-            if target.startswith("/") and nr.get("TargetMode", "") != "External":
-                target = abs_to_rel(target, part_folder)
-                nr["Target"] = target
-            if r["Type"] == RT_SLIDE_LAYOUT:
-                oln = Path(target).name
-                if oln in layout_map:
-                    nr["Target"] = f"../slideLayouts/{layout_map[oln]}"
-            elif r["Type"] == RT_CHART:
-                ocn = Path(target).name
-                if ocn in chart_map:
-                    nr["Target"] = f"../charts/{chart_map[ocn]}"
-            elif "../media/" in target or r["Type"] == RT_IMAGE:
-                omn = Path(target).name
-                if omn in media_map:
-                    nr["Target"] = f"../media/{media_map[omn]}"
-            new_rels.append(nr)
-        return new_rels, rid_remap
-
-    def _copy_notes(self, src, old_to_new, notes_start):
+    def _copy_notes(self, src, old_to_new, notes_start, media_map=None):
         sn = src / "ppt" / "notesSlides"
         if not sn.exists():
             return notes_start
@@ -502,14 +561,13 @@ class PptxMerger:
             n += 1
             new_nf = f"notesSlide{n}.xml"
             shutil.copy2(snp, on / new_nf)
-            nrels = read_rels(sn / "_rels" / f"{nf}.rels")
-            nnr = []
-            for r in nrels:
-                nr = dict(r)
-                if r["Type"] == RT_SLIDE:
-                    nr["Target"] = f"../slides/{new_slide}"
-                nnr.append(nr)
+            nnr = self.remap_rels(
+                read_rels(sn / "_rels" / f"{nf}.rels"), "ppt/notesSlides",
+                media_map=media_map,
+                overrides={RT_SLIDE: f"../slides/{new_slide}"},
+            )
             write_xml(build_rels_xml(nnr), on / "_rels" / f"{new_nf}.rels")
+
             osr = self.out / "ppt" / "slides" / "_rels" / f"{new_slide}.rels"
             if osr.exists():
                 srels = read_rels(osr)
@@ -529,7 +587,7 @@ class PptxMerger:
         ct_path = self.out / "[Content_Types].xml"
         existing = parse_xml(ct_path) if ct_path.exists() else None
 
-        # DEFAULT namespace, rebuilt fresh so no prefix can leak. (Fix A)
+        # DEFAULT namespace, rebuilt fresh so no prefix can leak.
         root = etree.Element(f"{{{NS_CT}}}Types", nsmap={None: NS_CT})
 
         known_defaults = set()
@@ -573,7 +631,7 @@ class PptxMerger:
 
         mdir = self.out / "ppt" / "media"
         if mdir.exists():
-            for f in mdir.iterdir():
+            for f in sorted(mdir.iterdir()):
                 ext = f.suffix.lower().lstrip(".")
                 if ext and ext not in known_defaults and MEDIA_CT.get(ext):
                     el = etree.SubElement(root, f"{{{NS_CT}}}Default")
