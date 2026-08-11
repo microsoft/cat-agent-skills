@@ -3,9 +3,10 @@
   "description": "Clean up Outlook inbox clutter with a review-first triage plan that groups newsletters, notifications, old meeting mail, resolved threads, and duplicates - approved per bucket, moved (never deleted) to folders you can restore from.",
   "platforms": ["Cowork", "Scout"],
   "tags": ["productivity", "email", "inbox", "outlook", "cleanup", "triage"],
-  "author": "Jagmeet Chabra",
+  "author": "Jagmeet Chabra (Microsoft)",
   "authorUrl": "https://github.com/jchha001",
+  "authorGithub": "jchha001",
   "version": "1.0.0",
   "createdAt": "2026-08-06",
-  "updatedAt": "2026-08-06"
+  "updatedAt": "2026-08-11"
 }
