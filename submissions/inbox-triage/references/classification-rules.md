@@ -8,7 +8,7 @@ If a message matches signals for two buckets, prefer in this order:
 
 1. `notifications`
 2. `newsletters`
-3. `past-events`
+3. `pastEvents`
 4. `duplicates`
 5. `resolved`
 
@@ -76,7 +76,7 @@ Notifications wins over newsletters because a bug tracker digest that happens to
 - From `Jira <noreply@yourcompany.atlassian.net>`, subject "[JIRA] JC-1204 has been assigned to you". Bucket: `notifications`.
 - From `GitHub <notifications@github.com>`, subject "Security advisory: high-severity vulnerability in dependency X". Bucket: none (blocked by security-advisory negative test).
 
-## past-events
+## pastEvents
 
 **Positive tests (all required):**
 
@@ -92,7 +92,7 @@ Notifications wins over newsletters because a bug tracker digest that happens to
 
 **Worked example.**
 
-- Subject `Accepted: Weekly design sync`, received 3 weeks ago, sender `Sarah Chen`. Bucket: `past-events` (older than 7 days, calendar-response pattern).
+- Subject `Accepted: Weekly design sync`, received 3 weeks ago, sender `Sarah Chen`. Bucket: `pastEvents` (older than 7 days, calendar-response pattern).
 - Subject `Updated invitation: Quarterly review`, received today, sender `Marcus Diaz`. Bucket: none (recent, still active).
 
 ## resolved
