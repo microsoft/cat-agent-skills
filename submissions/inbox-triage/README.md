@@ -6,7 +6,7 @@ This skill builds a triage plan you can actually run: it groups mail into bucket
 
 ## Basic usage
 
-Once the skill is imported into Scout, ask for it in plain language:
+Once the skill is imported into Scout or Cowork, ask for it in plain language:
 
 ```
 clean up my inbox
@@ -47,7 +47,7 @@ The point is that you can trust this skill enough to actually run it. A destruct
 
 A message is protected (and never triaged) if any of these are true:
 
-- **From your manager or a direct report.** Resolved once per run via WorkIQ.
+- **From your manager or a direct report.** Resolved once per run via the platform's M365 lookup (WorkIQ on Scout, the equivalent M365 tool on Cowork).
 - **Active thread** - you've emailed the sender in the last 14 days, or a non-bulk sender has emailed you in that window.
 - **Flagged or starred.**
 - **Sensitivity label** of Confidential or above.
@@ -63,9 +63,12 @@ The skill runs with sensible defaults on the first try. To personalise, copy `as
 
 ## Setup
 
-Zero setup on Cowork and on macOS/Linux Scout - the skill creates the destination folders under `Inbox Triage/` automatically on first run.
+In most sessions the skill creates the destination folders under `Inbox Triage/` in your mailbox automatically on first run — Cowork uses the platform's M365 folder tool; macOS/Linux Scout uses the WorkIQ CLI. In two cases you'll need to create the folders once yourself in Outlook (or set alternate names in `config.folders.*`):
 
-On Windows Scout, folder creation is skipped because the WorkIQ CLI's `.cmd` wrapper cannot safely pass JSON payloads through `cmd.exe`. Create these folders once in Outlook (or set alternate names in `config.folders.*`):
+- **Windows Scout**, because the WorkIQ CLI's `.cmd` wrapper cannot safely pass JSON payloads through `cmd.exe`.
+- **Any session where the folder-create capability isn't exposed** (unusual, but the skill defers rather than guessing).
+
+The default folders are:
 
 - `Inbox Triage/Newsletters`
 - `Inbox Triage/Notifications`
@@ -73,7 +76,7 @@ On Windows Scout, folder creation is skipped because the WorkIQ CLI's `.cmd` wra
 - `Inbox Triage/Resolved`
 - `Inbox Triage/Duplicates`
 
-If a folder is missing at execution time and the runtime cannot create it, the skill stops that bucket and tells you the exact name to create - it never falls back to a different destination.
+If a folder is missing at execution time and the runtime cannot create it, the skill stops that bucket and tells you the exact name to create — it never falls back to a different destination.
 
 ## Undo
 

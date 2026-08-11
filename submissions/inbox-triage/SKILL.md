@@ -27,7 +27,7 @@ The skill runs on both Cowork and Scout. Tool names differ by platform - Scout t
 Resolve each parameter in this order, taking the first available:
 
 1. **What the invoking prompt says.**
-2. **The config file** at `~/.copilot/inbox-triage/config.json`, if present. If the file exists but is unreadable or fails to parse as JSON, stop and report - do not fall back to defaults silently, since silent fallback is the exact failure mode that would move mail with settings the user never approved. (Setup guidance for creating this file lives in the submission README, not here.)
+2. **The config file** at `~/.copilot/inbox-triage/config.json`, if present. `assets/config.example.json` is the reference schema. If the file exists but is unreadable or fails to parse as JSON, stop and report - do not fall back to defaults silently, since silent fallback is the exact failure mode that would move mail with settings the user never approved.
 3. **The defaults below.**
 
 | Parameter | Default |
@@ -75,7 +75,7 @@ Protection reasons (any one is sufficient):
 - **Org chart.** Sender or any To/Cc recipient is the user's manager or a direct report.
 - **Active thread.** The user has emailed the sender's address in the last 14 days (read from the Sent-window listing). Or the sender has emailed the user during the same window with a subject that is not a bulk-mail pattern (uses no `List-Unsubscribe` header and does not come from a known bulk-mail or automation sender - see `references/classification-rules.md`). This asymmetry matters: a newsletter arriving weekly is not an "active thread" just because it keeps arriving.
 - **Flag or star.** `flag.flagStatus` is `flagged`.
-- **Sensitivity label.** Message carries a Confidential-or-above sensitivity label. Never move labelled mail, ever.
+- **Sensitivity label.** Message carries a Confidential-or-above sensitivity label. Never move labelled mail, ever. If the sensitivity label field is missing from the message metadata (not present in the tool response, rather than confirmed empty), treat the message as protected under a "label unknown" reason - a missing field is unknown, not confirmed unlabelled, and the whole point of the rule is that the skill never moves anything that might be labelled.
 - **Sensitive sender.** Sender's local part matches `protection.sensitiveLocalParts` (defaults: `hr`, `payroll`, `benefits`, `legal`, `compliance`, `finance`, `treasury`, `security`) OR sender's domain matches `protection.sensitiveDomains`. When either list is unset, err on the side of protection.
 - **User-defined allowlist.** Sender address or domain is in `protection.allowlist`.
 - **Unread and recent.** Message is unread AND received within `protection.unreadRecentProtectionDays` (default 3 days). The one narrow exception: a message may still be classified as `notifications` if its sender local part matches an automated no-reply pattern (`noreply|no-reply|donotreply|do-not-reply|notifications|alerts|automated|system|bot`). Newsletters never bypass this rule - a newsletter you haven't read yet is not stale enough to triage.

@@ -56,7 +56,7 @@ Specific expected non-error responses:
 
 - **Manager lookup returns no result** for a user without one (contractors, C-suite, sole proprietors). This is a normal response, not a failure. Treat as "no protection from this rule for a manager" and proceed. Report in the plan: "Manager: none returned - org-chart protection applied for direct reports only."
 - **Direct reports lookup returns empty**. Same handling.
-- **Sensitivity label field missing** on some messages. Treat as unlabelled and rely on other protection rules. Do not fabricate a label.
+- **Sensitivity label field missing** on some messages. **Treat as protected**, not as unlabelled - a missing label field is unknown, not confirmed absent, and the whole point of the sensitivity-label rule is that the skill never moves anything that might be labelled Confidential-or-above. Record the reason as "label unknown" in the protected count. Do not fabricate a label and do not rely on other protection rules to catch these.
 - **List emails truncates.** If the tool signals truncation, stop and ask the user to run over a narrower window. Do not present a partial plan as though it covers the whole inbox.
 - **List mail folders returns no match** for a configured destination folder. Attempt folder creation via the bound create capability (see above). If creation succeeds, continue. If the capability is unavailable, or the create call fails for a reason other than already-exists, stop the bucket and instruct the user to create the exact folder name in Outlook.
 
