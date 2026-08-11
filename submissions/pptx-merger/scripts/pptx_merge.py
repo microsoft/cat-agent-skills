@@ -332,13 +332,26 @@ class PptxMerger:
 
     def _count_parts(self, base: Path):
         ppt = base / "ppt"
-        n = lambda g: sum(1 for _ in ppt.glob(g))
-        return (n("slides/slide[0-9]*.xml"), n("slideLayouts/slideLayout[0-9]*.xml"),
-                n("slideMasters/slideMaster[0-9]*.xml"), n("theme/theme[0-9]*.xml"))
+
+        def max_num(glob_pat: str, prefix: str) -> int:
+            rx = re.compile(rf"^{re.escape(prefix)}(\d+)\.xml$")
+            nums = (int(m.group(1)) for f in ppt.glob(glob_pat) if (m := rx.match(f.name)))
+            return max(nums, default=0)
+
+        return (
+            max_num("slides/slide[0-9]*.xml", "slide"),
+            max_num("slideLayouts/slideLayout[0-9]*.xml", "slideLayout"),
+            max_num("slideMasters/slideMaster[0-9]*.xml", "slideMaster"),
+            max_num("theme/theme[0-9]*.xml", "theme"),
+        )
 
     def _count_notes(self, base: Path):
         d = base / "ppt" / "notesSlides"
-        return sum(1 for _ in d.glob("notesSlide[0-9]*.xml")) if d.exists() else 0
+        if not d.exists():
+            return 0
+        rx = re.compile(r"^notesSlide(\d+)\.xml$")
+        nums = (int(m.group(1)) for f in d.glob("notesSlide[0-9]*.xml") if (m := rx.match(f.name)))
+        return max(nums, default=0)
 
     def _sync_id_counters(self, base: Path):
         ns = {"p": NS_P}
