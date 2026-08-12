@@ -1,0 +1,6 @@
+"id","question","expected","expectContains"
+"1","Who is eligible for a company car?","Eligibility is confirmed by your HR Business Partner, who checks it against your role and grade.","HR Business Partner"
+"7","How much notice do I need to give for annual leave?","Requests for more than five consecutive days need two weeks' notice; shorter requests need three working days.","two weeks|three working days"
+"12","What do I do if my company fuel card is lost or stolen?","Block the card immediately by calling the fuel provider's helpline, report it to the police, then send a copy of the report to the fleet mailbox to get a replacement.","block|police"
+"23","Can I claim for a train ticket booked outside the travel portal?","Only when the portal was unavailable. Attach the receipt and a short explanation to the expense claim, and your manager approves it as an exception.","exception|receipt"
+"31","Where do I request personal protective equipment?","Raise a ticket with the People Support team and include your size.","ticket|size"
