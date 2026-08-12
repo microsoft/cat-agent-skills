@@ -17,6 +17,161 @@ Runs **fully offline** in the Python sandbox. No extra `pip install` — uses
 
 ![Barcode sheet sample](assets/sample_barcode_sheet.png)
 
+## Real-world examples
+
+These are everyday situations where people ask an agent for codes — no
+special setup required beyond the data you already have.
+
+### Front desk — visitor Wi-Fi QR
+
+> Print a QR for our guest Wi-Fi so visitors don’t have to type the password.
+
+Encode a Wi-Fi string or a short landing page URL as a single large QR. Stick
+it on the reception desk or meeting-room door.
+
+```json
+{
+  "kind": "qr",
+  "size": "large",
+  "label": "Guest Wi-Fi",
+  "data": "WIFI:T:WPA;S:Contoso-Guest;P:Welcome2026;;"
+}
+```
+
+### Field service — work-order barcodes for technicians
+
+> We have 12 open work orders from Dataverse. Make Code128 barcodes so techs
+> can scan them on the van tablet instead of typing WO numbers.
+
+Pull the work-order IDs from Dataverse / CRM, then generate a strip for the
+clipboard or a grid for the van printer.
+
+```json
+{
+  "kind": "barcode",
+  "barcode_type": "code128",
+  "layout": "strip",
+  "title": "Today’s work orders",
+  "items": [
+    { "label": "WO-10421 — HVAC filter", "data": "WO-10421" },
+    { "label": "WO-10422 — Pump seal",   "data": "WO-10422" },
+    { "label": "WO-10423 — Door sensor", "data": "WO-10423" }
+  ]
+}
+```
+
+### Retail shelf — EAN-13 labels for a product launch
+
+> New snack line launches Monday. Generate EAN-13 barcodes for these three
+> SKUs so packing can print shelf labels tonight.
+
+```json
+{
+  "kind": "barcode",
+  "barcode_type": "ean13",
+  "title": "Shelf labels — CrunchBars",
+  "items": [
+    { "label": "CrunchBar Dark 45g",  "data": "9300675031234" },
+    { "label": "CrunchBar Milk 45g",  "data": "9300675031241" },
+    { "label": "CrunchBar Nut 45g",   "data": "9300675031258" }
+  ]
+}
+```
+
+### Event team — registration / feedback QR on badges
+
+> Summit starts Friday. Give me a big registration QR for the badge printer,
+> and a second QR that opens the post-session feedback form.
+
+```json
+{
+  "kind": "qr",
+  "size": "large",
+  "error_correction": "H",
+  "title": "Summit 2026 badges",
+  "items": [
+    { "label": "Register", "data": "https://events.contoso.com/summit2026/register" },
+    { "label": "Feedback", "data": "https://forms.office.com/r/summit2026-feedback" }
+  ]
+}
+```
+
+### IT asset tracking — laptop / monitor tags
+
+> Export our asset list from the CMDB and make barcodes for asset tags we can
+> stick on each laptop before the refresh.
+
+```json
+{
+  "kind": "barcode",
+  "barcode_type": "code128",
+  "layout": "grid",
+  "title": "Q3 laptop refresh — asset tags",
+  "individual": true,
+  "csv": true,
+  "items": [
+    { "label": "Anna Chen — MacBook",     "data": "AST-88421" },
+    { "label": "Sam Okonkwo — Dell 5440", "data": "AST-88422" },
+    { "label": "Priya Shah — ThinkPad",   "data": "AST-88423" }
+  ]
+}
+```
+
+`individual: true` gives one PNG per asset for the label printer;
+`csv: true` maps each tag back to the person / asset ID for audit.
+
+### Restaurant / café — table QR for digital menus
+
+> Put a QR on each table that opens our lunch menu. Tables 1–8.
+
+```json
+{
+  "kind": "qr",
+  "title": "Table menu QR codes",
+  "items": [
+    { "label": "Table 1", "data": "https://menu.contoso.cafe/lunch?table=1" },
+    { "label": "Table 2", "data": "https://menu.contoso.cafe/lunch?table=2" },
+    { "label": "Table 3", "data": "https://menu.contoso.cafe/lunch?table=3" },
+    { "label": "Table 4", "data": "https://menu.contoso.cafe/lunch?table=4" }
+  ]
+}
+```
+
+### Clinic / lab — specimen IDs for the morning run
+
+> Generate barcodes for today’s specimen list so phlebotomy can scan into the LIS.
+
+```json
+{
+  "kind": "barcode",
+  "barcode_type": "code128",
+  "layout": "strip",
+  "title": "Specimen labels — 12 Aug",
+  "items": [
+    { "label": "Patient A — CBC",  "data": "SPC-20260812-001" },
+    { "label": "Patient B — Lipid","data": "SPC-20260812-002" },
+    { "label": "Patient C — HbA1c","data": "SPC-20260812-003" }
+  ]
+}
+```
+
+### Facilities — QR that opens a “report an issue” Form per room
+
+> Each meeting room should have a QR that opens a Microsoft Form pre-filled
+> with the room name.
+
+```json
+{
+  "kind": "qr",
+  "title": "Report a facilities issue",
+  "items": [
+    { "label": "Boardroom A", "data": "https://forms.office.com/r/facilities?room=BoardroomA" },
+    { "label": "Boardroom B", "data": "https://forms.office.com/r/facilities?room=BoardroomB" },
+    { "label": "Training 3",  "data": "https://forms.office.com/r/facilities?room=Training3" }
+  ]
+}
+```
+
 ## What you get
 
 | Output | Flag | Notes |
