@@ -152,19 +152,3 @@ items = [{"label": r["name"], "data": r["url"]} for r in dataverse_records]
 result = generate({"items": items, "individual": True, "csv": True})
 # result["individual_paths"][i] corresponds to items[i]
 ```
-
-```python
-from code_generator import generate as gen_codes
-
-codes = gen_codes({
-    "kind": "qr",
-    "items": [
-        {"label": "Google Maps", "data": result["google_maps_url"]},
-        {"label": "Apple Maps",  "data": result["apple_maps_url"]},
-        {"label": "Bing Maps",   "data": result["bing_maps_url"]},
-    ],
-    "title": "Route QR Codes",
-})
-```
-
-(Or simply use the route-map-visualizer's built-in `"qr_codes": true` flag.)
