@@ -480,6 +480,10 @@ def generate(payload: dict) -> dict:
     title   = str(payload.get("title",   "")).strip()
     caption = bool(payload.get("caption", True))
     prefix  = str(payload.get("output_prefix", "/tmp/codes")).rstrip("/\\")
+    # Ensure parent dirs exist when output_prefix includes a path (e.g. out/codes).
+    _prefix_dir = os.path.dirname(prefix)
+    if _prefix_dir:
+        os.makedirs(_prefix_dir, exist_ok=True)
 
     n_cols_override = int(payload.get("columns", 0))
     want_individual = bool(payload.get("individual", False))

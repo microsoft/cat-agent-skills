@@ -107,3 +107,10 @@ Clarify when helpful:
   not raised as exceptions — the sheet still renders all valid items.
 - Invalid `color` or unknown `barcode_type` values silently fall back to
   defaults — do not crash.
+
+## Bundled files
+
+- `scripts/code_generator.py` — engine (`generate`)
+- `assets/sample_qr.json` / `sample_barcode.json` — sample payloads
+- `assets/sample_qr_sheet.png` / `sample_barcode_sheet.png` — sample output images
+- `references/cheatsheet.md` — full payload reference + CLI flags

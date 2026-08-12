@@ -153,10 +153,6 @@ result = generate({"items": items, "individual": True, "csv": True})
 # result["individual_paths"][i] corresponds to items[i]
 ```
 
-### QR codes as part of a route map
-
-When the route-map-generator produces deep links, feed them here:
-
 ```python
 from code_generator import generate as gen_codes
 
@@ -171,4 +167,4 @@ codes = gen_codes({
 })
 ```
 
-(Or simply use the route-map-generator's built-in `"qr_codes": true` flag.)
+(Or simply use the route-map-visualizer's built-in `"qr_codes": true` flag.)
