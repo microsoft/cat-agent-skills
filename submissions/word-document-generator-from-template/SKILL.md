@@ -1,6 +1,6 @@
 ---
 name: word-document-generator-from-template
-description: Generates a complete Word document by using an uploaded Word template and approved knowledge sources. Use when a user asks to create, draft, or compile a document from a template.
+description: Generates a complete Word document by using an uploaded Word template plus user input, approved knowledge sources, and information retrieved from prior tool or connector calls. Use when a user asks to create, draft, or compile a document from a template.
 ---
 # Word Document Generator from Template
 
@@ -10,8 +10,9 @@ Generate a complete Microsoft Word document using:
 
 - a Word template supplied at runtime;
 - information provided by the user;
-- approved agent knowledge sources; and
-- files supplied with the request.
+- approved agent knowledge sources;
+- files supplied with the request; and
+- information retrieved from prior tool or connector calls in the same conversation (for example Dataverse, SharePoint, CRM, Azure Maps, or any Copilot Studio action).
 
 The uploaded template controls the document structure, formatting, headings, tables, headers, footers, and branding.
 
@@ -23,7 +24,8 @@ Before generating the document, identify:
 - the document title and purpose;
 - the intended audience;
 - any user-provided requirements;
-- the approved knowledge sources to use; and
+- the approved knowledge sources to use;
+- any relevant results from prior tool or connector calls; and
 - the required output filename.
 
 If required information is unavailable, use:
@@ -42,13 +44,13 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
    - repeating content areas;
    - headers and footers; and
    - required document metadata.
-3. Retrieve relevant information from the approved knowledge sources.
+3. Retrieve relevant information from approved knowledge sources, user-supplied files, and prior tool or connector results already available in the conversation. Prefer connector-returned facts (records, dates, owners, IDs) over restating them from memory.
 4. Generate content for each document section separately.
 5. Create a structured JSON object matching the template fields.
 6. Validate that:
    - required sections are present;
    - required fields have values;
-   - generated statements are supported by approved sources;
+   - generated statements are supported by approved knowledge, user files, or prior tool/connector results;
    - repeating items are represented as arrays; and
    - missing information is clearly identified.
 7. Populate the uploaded Word template using the validated JSON.
@@ -72,7 +74,8 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Generation rules
 
-- Use only information from approved knowledge sources or user-supplied files.
+- Use only information from approved knowledge sources, user-supplied files, or prior tool/connector results. Do not invent facts that those sources do not contain.
+- Treat prior tool and connector outputs as approved sources. Record the tool or connector name in `source_ids` (for example `Dataverse:accounts`, `SharePoint:policy-library`).
 - Generate long documents section by section rather than in one response.
 - Keep the structured JSON as the intermediate source of truth.
 - Use clear, professional, organization-appropriate language.
@@ -132,7 +135,13 @@ Example:
   "sources": [
     {
       "source_id": "SRC-001",
-      "title": "Approved source document"
+      "title": "Approved source document",
+      "type": "knowledge"
+    },
+    {
+      "source_id": "SRC-003",
+      "title": "Dataverse — Account records",
+      "type": "connector"
     }
   ]
 }
@@ -141,4 +150,4 @@ Adapt the JSON fields to the actual placeholders and structure found in the runt
 
 ## Quality and safety
 
-The generated document is a draft until reviewed and approved. If a statement cannot be supported by an approved source, do not present it as fact. Mark it for human review.
+The generated document is a draft until reviewed and approved. If a statement cannot be supported by approved knowledge, a user-supplied file, or a prior tool/connector result, do not present it as fact. Mark it for human review.

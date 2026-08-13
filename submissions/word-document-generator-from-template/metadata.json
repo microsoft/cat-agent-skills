@@ -1,8 +1,8 @@
 {
   "name": "Word Document Generator from Template",
-  "description": "Fill an uploaded Word template from approved knowledge sources and user files. Preserves branding, styles, and layout; never invents facts; returns a new DOCX plus a short generation summary.",
+  "description": "Fill an uploaded Word template from approved knowledge, user files, and prior tool or connector results. Preserves branding, styles, and layout; never invents facts; returns a new DOCX plus a short generation summary.",
   "platforms": ["Copilot Studio"],
-  "tags": ["word", "documents", "templates", "docx", "knowledge", "drafting", "compliance"],
+  "tags": ["word", "documents", "templates", "docx", "knowledge", "connectors", "drafting", "compliance"],
   "author": "Nazish Qasim",
   "authorUrl": "https://github.com/nazishqassim",
   "version": "1.0.0",
