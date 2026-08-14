@@ -48,10 +48,10 @@ agent writes `Not specified in approved sources` instead of inventing it.
 
 ## Example requests
 
-> Use the Information Security Policy template in SharePoint
-> (`Policies/Templates/InfoSec-Policy.docx`). Draft version 0.1 for internal
-> staff. Pull content from our approved security knowledge. Save as
-> `Information-Security-Policy-v0.1.docx`.
+> Use the Leave Policy template in SharePoint
+> (`Policies/Templates/Leave-Policy.docx`). Draft version 0.1 for internal
+> staff. Pull content from our approved HR knowledge. Save as
+> `Leave-Policy-v0.1.docx`.
 
 > Get the open accounts from Dataverse, then fill the status-report template
 > in my OneDrive (`Templates/Q3-Status-Report.docx`). Use those records for

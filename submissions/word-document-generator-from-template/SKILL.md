@@ -125,8 +125,8 @@ Example:
 
 {
   "document": {
-    "title": "Information Security Policy",
-    "owner": "Information Security",
+    "title": "Leave Policy",
+    "owner": "Human Resources",
     "version": "0.1",
     "status": "Draft"
   },
@@ -140,24 +140,25 @@ Example:
       "source_ids": ["SRC-001", "SRC-002"]
     }
   },
-  "requirements": [
+  "leave_types": [
     {
-      "id": "REQ-001",
-      "requirement": "Generated requirement",
-      "owner": "System owner",
-      "evidence": "Approval record",
+      "id": "LV-001",
+      "leave_type": "Annual leave",
+      "entitlement": "Generated entitlement",
+      "owner": "Human Resources",
+      "evidence": "HR policy handbook",
       "source_ids": ["SRC-002"]
     }
   ],
   "sources": [
     {
       "source_id": "SRC-001",
-      "title": "Approved source document",
+      "title": "Approved HR source document",
       "type": "knowledge"
     },
     {
       "source_id": "SRC-003",
-      "title": "Dataverse — Account records",
+      "title": "Dataverse — Employee leave records",
       "type": "connector"
     }
   ]
