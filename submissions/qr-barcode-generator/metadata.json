@@ -1,5 +1,5 @@
 {
-  "name": "QR & Barcode Generator",
+  "name": "Barcode and QR Code Generator",
   "description": "Generate QR codes and 1D barcodes (Code128, Code39, EAN-13, EAN-8, UPC-A, I2of5) from any data — URLs, product IDs, record links, free text. Accepts single items or lists; outputs a labelled PNG grid sheet, optional individual PNGs, and optional CSV. Fully offline — no extra dependencies beyond reportlab + Pillow.",
   "platforms": ["Copilot Studio"],
   "tags": ["qr-code", "barcode", "python", "offline", "logistics", "retail", "printing", "automation"],
@@ -7,5 +7,5 @@
   "authorUrl": "https://github.com/nazishqassim",
   "version": "1.0.0",
   "createdAt": "2026-08-08",
-  "updatedAt": "2026-08-12"
+  "updatedAt": "2026-08-14"
 }
