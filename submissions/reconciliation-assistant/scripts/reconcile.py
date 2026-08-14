@@ -1,0 +1,1631 @@
+#!/usr/bin/env python3
+"""Config-driven reconciliation for code-capable hosts (Cowork, Scout).
+
+Reads two datasets described by a JSON config (see assets/config.example.json),
+runs a tiered match (exact -> difference -> similarity -> grouped -> unmatched),
+proves the control totals tie out, and writes an .xlsx report.
+
+This is a reference implementation the agent adapts to the actual column names
+and file paths in play. It has no hidden behaviour: every rule here mirrors
+SKILL.md and references/methodology.md.
+
+Usage:
+    python reconcile.py --config config.json --source-a A.xlsx --source-b B.csv --out reconciliation.xlsx
+
+Dependencies: pandas, openpyxl. (difflib is stdlib and used for similarity.)
+"""
+
+import argparse
+import json
+import sys
+from difflib import SequenceMatcher
+
+import pandas as pd
+
+
+# ----------------------------- loading -----------------------------
+
+def load_table(path, sheet=None):
+    lower = path.lower()
+    if lower.endswith((".xlsx", ".xlsm", ".xls")):
+        # sheet may be a name or an index; None loads the first sheet
+        return pd.read_excel(path, sheet_name=sheet if sheet is not None else 0)
+    if lower.endswith(".tsv"):
+        return pd.read_csv(path, sep="\t")
+    return pd.read_csv(path)
+
+
+def default_label(path, sheet=None):
+    """A human label for a source: file name, plus sheet name when reconciling tabs."""
+    import os
+    base = os.path.splitext(os.path.basename(path))[0]
+    if sheet is not None and not isinstance(sheet, int):
+        return f"{base} — {sheet}"
+    return base
+
+
+def normalize_amount(value, norm):
+    """Return a float from a possibly messy amount cell, or None."""
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = str(value).strip()
+    if not s:
+        return None
+    negative = False
+    if norm.get("parenthesesMeanNegative", True) and s.startswith("(") and s.endswith(")"):
+        negative = True
+        s = s[1:-1]
+    if norm.get("stripCurrencySymbols", True):
+        s = "".join(ch for ch in s if ch.isdigit() or ch in ".-")
+    s = s.replace(",", "")
+    try:
+        amt = float(s)
+    except ValueError:
+        return None
+    return -amt if negative else amt
+
+
+def apply_sign(amount, convention):
+    if amount is None:
+        return None
+    if convention == "flip":
+        return -amount
+    return amount
+
+
+def norm_key(value, norm):
+    s = "" if value is None else str(value)
+    if norm.get("trimWhitespace", True):
+        s = s.strip()
+    if norm.get("caseInsensitiveKeys", True):
+        s = s.lower()
+    return s
+
+
+def build_key(row, key_cols, norm):
+    return "||".join(norm_key(row.get(c), norm) for c in key_cols)
+
+
+def similarity(a, b):
+    return SequenceMatcher(None, str(a), str(b)).ratio()
+
+
+def within_tolerance(x, y, abs_tol, pct_tol):
+    if x is None or y is None:
+        return False
+    diff = abs(x - y)
+    if diff <= abs_tol:
+        return True
+    if pct_tol > 0 and max(abs(x), abs(y)) > 0:
+        return (diff / max(abs(x), abs(y))) * 100.0 <= pct_tol
+    return False
+
+
+# ----------------------------- matching -----------------------------
+
+def reconcile(df_a, df_b, config):
+    src = config["sources"]
+    m = config["matching"]
+    norm = config.get("normalization", {})
+    abs_tol = m.get("amountToleranceAbsolute", 0.01)
+    pct_tol = m.get("amountTolerancePercent", 0.0)
+
+    a_keys = src["a"]["keyColumns"]
+    b_keys = src["b"]["keyColumns"]
+    a_amt_col = src["a"]["amountColumn"]
+    b_amt_col = src["b"]["amountColumn"]
+
+    # Timing detection: identify the "period" component of the key, if configured.
+    # timingKeyColumn names a column in source A's keyColumns; the same position in
+    # b_keys is treated as B's period column (keyMap keeps the two aligned).
+    timing_col = m.get("timingKeyColumn")
+    enable_timing = m.get("enableTimingDetection", True) and timing_col is not None
+    a_timing_idx = a_keys.index(timing_col) if (enable_timing and timing_col in a_keys) else None
+    if enable_timing and a_timing_idx is None:
+        enable_timing = False  # configured column not in the key; skip rather than guess
+
+    def reduced_key(row, keys, norm):
+        # key with the timing component removed, so "same record, different period" collapses
+        return "||".join(norm_key(row.get(c), norm) for i, c in enumerate(keys) if i != a_timing_idx)
+
+    a = df_a.to_dict("records")
+    b = df_b.to_dict("records")
+    for i, r in enumerate(a):
+        r["_idx"] = i
+        r["_key"] = build_key(r, a_keys, norm)
+        r["_amt"] = apply_sign(normalize_amount(r.get(a_amt_col), norm), src["a"].get("signConvention", "asIs"))
+        if enable_timing:
+            r["_rkey"] = reduced_key(r, a_keys, norm)
+            r["_tval"] = norm_key(r.get(a_keys[a_timing_idx]), norm)
+    for j, r in enumerate(b):
+        r["_idx"] = j
+        r["_key"] = build_key(r, b_keys, norm)
+        r["_amt"] = apply_sign(normalize_amount(r.get(b_amt_col), norm), src["b"].get("signConvention", "asIs"))
+        if enable_timing:
+            r["_rkey"] = reduced_key(r, b_keys, norm)
+            r["_tval"] = norm_key(r.get(b_keys[a_timing_idx]), norm)
+
+    total_a = sum(r["_amt"] for r in a if r["_amt"] is not None)
+    total_b = sum(r["_amt"] for r in b if r["_amt"] is not None)
+
+    b_by_key = {}
+    for r in b:
+        b_by_key.setdefault(r["_key"], []).append(r)
+
+    results = []
+    used_b = set()
+
+    # Tier 1 + 2: exact key
+    for ra in a:
+        candidates = [r for r in b_by_key.get(ra["_key"], []) if r["_idx"] not in used_b and ra["_key"] != ""]
+        if not candidates:
+            continue
+        candidates.sort(key=lambda r: abs((r["_amt"] or 0) - (ra["_amt"] or 0)))
+        rb = candidates[0]
+        used_b.add(rb["_idx"])
+        ra["_matched"] = True
+        if within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
+            status = "Matched"
+            diff = 0.0
+        else:
+            status = "Matched (with difference)"
+            diff = (ra["_amt"] or 0) - (rb["_amt"] or 0)
+        results.append({"status": status, "a_idx": ra["_idx"], "b_idx": rb["_idx"],
+                        "key": ra["_key"], "amount_a": ra["_amt"], "amount_b": rb["_amt"],
+                        "difference": diff, "evidence": "exact key"})
+
+    unmatched_a = [r for r in a if not r.get("_matched")]
+    unmatched_b = [r for r in b if r["_idx"] not in used_b]
+
+    # Tier 3: similarity (candidate matching for records with no shared key)
+    if m.get("enableSimilarityMatching", True):
+        date_a = src["a"].get("dateColumn")
+        date_b = src["b"].get("dateColumn")
+        window = m.get("dateWindowDays", 3)
+        sim_thr = m.get("similarityThreshold", 0.9)
+        still_a = []
+        for ra in unmatched_a:
+            best = None
+            for rb in unmatched_b:
+                if rb["_idx"] in used_b:
+                    continue
+                if not within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
+                    continue
+                if date_a and date_b:
+                    da, db = ra.get(date_a), rb.get(date_b)
+                    try:
+                        if abs((pd.to_datetime(da) - pd.to_datetime(db)).days) > window:
+                            continue
+                    except Exception:
+                        pass
+                sim = similarity(ra["_key"], rb["_key"])
+                if sim >= sim_thr and (best is None or sim > best[1]):
+                    best = (rb, sim)
+            if best:
+                rb, sim = best
+                used_b.add(rb["_idx"])
+                results.append({"status": "Probable (Needs Review)", "a_idx": ra["_idx"], "b_idx": rb["_idx"],
+                                "key": ra["_key"], "amount_a": ra["_amt"], "amount_b": rb["_amt"],
+                                "difference": (ra["_amt"] or 0) - (rb["_amt"] or 0),
+                                "evidence": f"similarity: amount+date, name similarity {sim:.2f}"})
+            else:
+                still_a.append(ra)
+        unmatched_a = still_a
+        unmatched_b = [r for r in unmatched_b if r["_idx"] not in used_b]
+
+    # Tier 4: grouped (split / partial) matches. One record on one side equals the sum of
+    # several on the other within tolerance (e.g. one invoice settled by three payments).
+    # Bounded for safety: enumeration is skipped when the opposite pool is too large, and
+    # combinations are capped at groupedMaxMembers. Grouped pairs go to Needs Review with
+    # every member listed - a split is legitimate but a human should confirm it.
+    if m.get("enableGrouped", True):
+        from itertools import combinations
+        max_members = max(2, int(m.get("groupedMaxMembers", 6)))
+        POOL_CAP = 30  # skip enumeration if the many-side pool exceeds this (keeps it fast)
+        grouped_a, grouped_b = set(), set()
+
+        def _find_combo(target, pool, exclude):
+            avail = [r for r in pool if r["_idx"] not in exclude and r["_amt"] is not None]
+            if len(avail) > POOL_CAP:
+                return None
+            for size in range(2, max_members + 1):
+                for combo in combinations(avail, size):
+                    if within_tolerance(target, sum(c["_amt"] for c in combo), abs_tol, pct_tol):
+                        return combo
+            return None
+
+        # One A record ↔ many B records.
+        for ra in unmatched_a:
+            if ra["_amt"] is None:
+                continue
+            combo = _find_combo(ra["_amt"], unmatched_b, used_b | grouped_b)
+            if combo:
+                grouped_a.add(ra["_idx"])
+                for c in combo:
+                    grouped_b.add(c["_idx"]); used_b.add(c["_idx"])
+                s = sum(c["_amt"] for c in combo)
+                members = ", ".join(str(c["_key"]) for c in combo)
+                results.append({"status": "Grouped (Needs Review)", "a_idx": ra["_idx"], "b_idx": None,
+                                "key": ra["_key"], "amount_a": ra["_amt"], "amount_b": s,
+                                "difference": (ra["_amt"] or 0) - s,
+                                "evidence": f"grouped: {len(combo)} {src['b'].get('label','B')} rows ({members}) sum to {s:,.2f}"})
+
+        # One B record ↔ many A records (using A rows not already grouped above).
+        pool_a = [r for r in unmatched_a if r["_idx"] not in grouped_a]
+        for rb in unmatched_b:
+            if rb["_idx"] in grouped_b or rb["_amt"] is None:
+                continue
+            combo = _find_combo(rb["_amt"], pool_a, grouped_a)
+            if combo:
+                grouped_b.add(rb["_idx"])
+                for c in combo:
+                    grouped_a.add(c["_idx"])
+                s = sum(c["_amt"] for c in combo)
+                members = ", ".join(str(c["_key"]) for c in combo)
+                results.append({"status": "Grouped (Needs Review)", "a_idx": None, "b_idx": rb["_idx"],
+                                "key": rb["_key"], "amount_a": s, "amount_b": rb["_amt"],
+                                "difference": s - (rb["_amt"] or 0),
+                                "evidence": f"grouped: {len(combo)} {src['a'].get('label','A')} rows ({members}) sum to {s:,.2f}"})
+
+        unmatched_a = [r for r in unmatched_a if r["_idx"] not in grouped_a]
+        unmatched_b = [r for r in unmatched_b if r["_idx"] not in grouped_b]
+
+    # Tier 4b: timing differences. Among the still-unmatched records, detect the classic
+    # "same item posted to a different period" case: an A record and a B record sharing the
+    # reduced key (identity minus the period) and the same amount, but a different period.
+    # We ANNOTATE both lines (so they remain visible as one-sided breaks and count toward the
+    # variance the way an accountant expects) rather than collapsing them - the note preserves
+    # the timing insight for the reviewer.
+    if enable_timing:
+        b_pool = {}
+        for rb in unmatched_b:
+            b_pool.setdefault(rb["_rkey"], []).append(rb)
+        b_noted = set()
+        for ra in unmatched_a:
+            for rb in b_pool.get(ra["_rkey"], []):
+                if rb["_idx"] in b_noted or rb["_tval"] == ra["_tval"]:
+                    continue
+                if within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
+                    ra["_timing_note"] = f"Possible timing difference - same amount in {rb['_tval']}"
+                    rb["_timing_note"] = f"Possible timing difference - same amount in {ra['_tval']}"
+                    b_noted.add(rb["_idx"])
+                    break
+
+    # Tier 5: whatever remains as genuine one-sided breaks.
+    for ra in unmatched_a:
+        results.append({"status": "Unmatched (A)", "a_idx": ra["_idx"], "b_idx": None,
+                        "key": ra["_key"], "amount_a": ra["_amt"], "amount_b": None,
+                        "difference": None, "evidence": ra.get("_timing_note", "")})
+    for rb in unmatched_b:
+        results.append({"status": "Unmatched (B)", "a_idx": None, "b_idx": rb["_idx"],
+                        "key": rb["_key"], "amount_a": None, "amount_b": rb["_amt"],
+                        "difference": None, "evidence": rb.get("_timing_note", "")})
+
+    return results, total_a, total_b
+
+
+def tie_out(results, total_a, total_b, abs_tol):
+    diffs = sum(r["difference"] for r in results
+                if r["status"] == "Matched (with difference)" and r["difference"] is not None)
+    unm_a = sum(r["amount_a"] for r in results if r["status"] == "Unmatched (A)" and r["amount_a"] is not None)
+    unm_b = sum(r["amount_b"] for r in results if r["status"] == "Unmatched (B)" and r["amount_b"] is not None)
+    left = total_a - total_b
+    right = diffs + unm_a - unm_b
+    closed = abs(left - right) <= max(abs_tol, 0.01)
+    return {"total_a": total_a, "total_b": total_b, "net_difference": left,
+            "explained": right, "residual": left - right, "tied_out": closed}
+
+
+# ----------------------------- output -----------------------------
+
+# Report palette (formula-driven workbook): blue headers, accounting number format.
+HDR_FILL = "2E5C8A"         # blue - table header fills (white text)
+HDR_FONT = "FFFFFF"         # white header text
+SEC_C = "2E5C8A"            # blue - section labels / title text
+SUB_C = "595959"            # gray - subtitles / basis-of-preparation line
+BODY_C = "404040"           # near-black body text
+NARR_C = "3B3B3B"           # headlines narrative text
+MK_C = "808080"             # gray - matching-key helper column
+REPORT_FONT = "Cambria"     # v15 uses Cambria throughout
+# Consistent number format used for every amount throughout the workbook:
+# 2 decimals, negatives in parentheses (e.g. 1,234.00 / (1,234.00) / 0.00). No currency symbol.
+ACCT2 = '#,##0.00;(#,##0.00)'
+CNT_FMT = '#,##0'
+PCT_FMT = '0.0%'
+ZEBRA_BG = "F2F7FC"         # very light blue - alternating rows
+OPEN_FONT, OPEN_BG = "8C1D18", "F7E3E1"   # Open Item - red text on soft red
+REC_FONT, REC_BG = "1F3864", "EAF1F8"     # Reconciled - navy text on soft blue
+# Retained for the headlines narrative helpers below.
+LABEL_FONT = "3B3B3B"
+ACCT_FMT = ACCT2
+
+
+def exception_type(status, la, lb):
+    """Plain-language reason a line did not reconcile. '' means it reconciled."""
+    if status == "Matched":
+        return "None"
+    if status == "Matched (with difference)":
+        return "Amount mismatch"
+    if status == "Timing difference (Needs Review)":
+        return "Timing difference"
+    if status == "Probable (Needs Review)":
+        return "Possible match"
+    if status == "Grouped (Needs Review)":
+        return "Split / grouped"
+    if status == "Unmatched (A)":
+        return f"Missing in {lb}"   # present in A, absent from B
+    if status == "Unmatched (B)":
+        return f"Missing in {la}"   # present in B, absent from A
+    return status
+
+
+def proposed_action(status, la, lb):
+    """A suggested next step for the reviewer, by break type."""
+    if status == "Matched":
+        return "No action"
+    if status == "Matched (with difference)":
+        return "Investigate balance"
+    if status == "Timing difference (Needs Review)":
+        return "Confirm period / timing"
+    if status == "Probable (Needs Review)":
+        return "Confirm the match"
+    if status == "Grouped (Needs Review)":
+        return "Confirm the split"
+    if status == "Unmatched (A)":
+        return f"Confirm exclusion or post to {lb}"
+    if status == "Unmatched (B)":
+        return f"Confirm exclusion or post to {la}"
+    return "Review"
+
+
+def _money(x):
+    """Accounting-style: negatives in parentheses, whole dollars."""
+    x = x or 0
+    return f"$({abs(x):,.0f})" if x < 0 else f"${x:,.0f}"
+
+
+def _account_facts(results, df_a, df_b, config):
+    """Per-account rollup with enough detail to describe each account's nature."""
+    la = config["sources"]["a"].get("label", "Source A")
+    lb = config["sources"]["b"].get("label", "Source B")
+    out = config.get("output", {})
+    acct_col = out.get("accountColumn")
+    name_col = out.get("accountNameColumn")
+    a_keys = config["sources"]["a"]["keyColumns"]
+    b_keys = config["sources"]["b"]["keyColumns"]
+    period_col = config["matching"].get("timingKeyColumn")
+    b_acct_col = dict(zip(a_keys, b_keys)).get(acct_col, acct_col)
+    b_period_col = dict(zip(a_keys, b_keys)).get(period_col, period_col)
+    a_recs = df_a.to_dict("records")
+    b_recs = df_b.to_dict("records")
+    if not acct_col:
+        return []
+
+    facts = {}
+    order = []
+    for res in results:
+        ai, bi = res.get("a_idx"), res.get("b_idx")
+        if ai is not None:
+            acct = a_recs[ai].get(acct_col)
+            name = a_recs[ai].get(name_col) if name_col else ""
+            period = a_recs[ai].get(period_col) if period_col else None
+        else:
+            acct = b_recs[bi].get(b_acct_col)
+            name = b_recs[bi].get(name_col) if name_col else ""
+            period = b_recs[bi].get(b_period_col) if period_col else None
+        amt_a = res.get("amount_a") or 0
+        amt_b = res.get("amount_b") or 0
+        st = res["status"]
+        if acct not in facts:
+            facts[acct] = {"acct": acct, "name": name, "sap": 0.0, "int": 0.0, "abs": 0.0,
+                           "matched": 0, "var": 0, "only_a": 0, "only_b": 0,
+                           "a_periods": set(), "b_periods": set(), "timing": False, "unit_amt": 0.0}
+            order.append(acct)
+        f = facts[acct]
+        f["sap"] += amt_a
+        f["int"] += amt_b
+        f["abs"] += abs(amt_a - amt_b)
+        if st == "Matched":
+            f["matched"] += 1
+        elif st == "Matched (with difference)":
+            f["var"] += 1
+        elif st == "Unmatched (A)":       # present in A (SAP), missing from B (Internal)
+            f["only_a"] += 1
+            if period is not None:
+                f["a_periods"].add(period)
+            f["unit_amt"] = amt_a
+            if "timing" in (res.get("evidence") or "").lower():
+                f["timing"] = True
+        elif st == "Unmatched (B)":        # present in B (Internal), missing from A (SAP)
+            f["only_b"] += 1
+            if period is not None:
+                f["b_periods"].add(period)
+            f["unit_amt"] = amt_b
+            if "timing" in (res.get("evidence") or "").lower():
+                f["timing"] = True
+
+    ranked = sorted((facts[a] for a in order), key=lambda f: f["abs"], reverse=True)
+    return ranked
+
+
+def _account_nature(f, la, lb):
+    """A short phrase describing why an account has a variance."""
+    net = f["sap"] - f["int"]
+    only_one_side = f["matched"] == 0 and f["var"] == 0
+    if only_one_side and f["only_b"] == 0 and f["only_a"] > 0:
+        return f"in {la} but absent from {lb} entirely"
+    if only_one_side and f["only_a"] == 0 and f["only_b"] > 0:
+        return f"exists only in {lb}"
+    if f["timing"] and abs(net) < 0.01:
+        ap = ", ".join(str(p) for p in sorted(f["a_periods"])) or "?"
+        bp = ", ".join(str(p) for p in sorted(f["b_periods"])) or "?"
+        return f"in {la} for {ap} but {lb} for {bp} ({abs(f['unit_amt']):,.0f} each way)"
+    return "amount differences across its lines"
+
+
+def _bucket_facts(results, df_a, df_b, config):
+    """Absolute variance by (Company, Period)-style bucket, to find the biggest one."""
+    a_keys = config["sources"]["a"]["keyColumns"]
+    b_keys = config["sources"]["b"]["keyColumns"]
+    period_col = config["matching"].get("timingKeyColumn")
+    # bucket = every key column except the account column, if we know it; else all but period.
+    acct_col = config.get("output", {}).get("accountColumn")
+    bucket_cols = [c for c in a_keys if c != acct_col] or a_keys
+    a_recs = df_a.to_dict("records")
+    b_recs = df_b.to_dict("records")
+    b_map = dict(zip(a_keys, b_keys))
+    buckets = {}
+    for res in results:
+        ai, bi = res.get("a_idx"), res.get("b_idx")
+        if ai is not None:
+            key = tuple(a_recs[ai].get(c) for c in bucket_cols)
+        else:
+            key = tuple(b_recs[bi].get(b_map.get(c, c)) for c in bucket_cols)
+        d = abs((res.get("amount_a") or 0) - (res.get("amount_b") or 0))
+        buckets[key] = buckets.get(key, 0.0) + d
+    if not buckets:
+        return None
+    best = max(buckets.items(), key=lambda kv: kv[1])
+    return bucket_cols, best[0], best[1]
+
+
+def _build_narrative(summary, counts, config, results=None, df_a=None, df_b=None):
+    """A driver-focused analysis: headline counts, net/absolute variance, the biggest
+    driver named and explained, other notable gaps ranked, and the largest bucket."""
+    la = config["sources"]["a"].get("label", "Source A")
+    lb = config["sources"]["b"].get("label", "Source B")
+    matched = counts.get("Matched", 0)
+    var = counts.get("Matched (with difference)", 0)
+    only_a = counts.get("Unmatched (A)", 0)   # in SAP, missing from Internal
+    only_b = counts.get("Unmatched (B)", 0)   # in Internal, missing from SAP
+    total = sum(counts.values())
+    rate = (100.0 * matched / total) if total else 0.0
+
+    lines = []
+    # 1) Headline counts.
+    lines.append(
+        f"{total} reconciling lines: {matched} match, {var} have a variance, "
+        f"{only_b} are missing from {la}, {only_a} are missing from {lb} — a {rate:.1f}% match rate."
+    )
+    # 2) Net and absolute variance.
+    total_abs = sum(abs((r.get('amount_a') or 0) - (r.get('amount_b') or 0)) for r in results) if results else 0
+    lines.append(
+        f"Net variance ({la} less {lb}): {_money(summary['net_difference'])}; "
+        f"total absolute variance ${total_abs:,.0f}."
+    )
+
+    if results is not None and df_a is not None and df_b is not None:
+        accts = _account_facts(results, df_a, df_b, config)
+        drivers = [f for f in accts if f["abs"] > 0]
+        # 3) Biggest driver.
+        if drivers:
+            top = drivers[0]
+            nm = f"{top['name']} ({top['acct']})" if top['name'] else f"account {top['acct']}"
+            lines.append(f"The biggest driver by far is {nm} at ${top['abs']:,.0f} — {_account_nature(top, la, lb)}.")
+        # 4) Other notable gaps.
+        others = drivers[1:6]
+        if others:
+            parts = []
+            for f in others:
+                nm = f"{f['name']} ({f['acct']})" if f['name'] else f"account {f['acct']}"
+                parts.append(f"{nm} ${f['abs']:,.0f} — {_account_nature(f, la, lb)}")
+            lines.append("Other gaps: " + "; ".join(parts) + ".")
+        # 5) Largest bucket.
+        bf = _bucket_facts(results, df_a, df_b, config)
+        if bf:
+            cols, key, val = bf
+            if len(cols) >= 1:
+                desc = f"{cols[0]} {key[0]}" + "".join(f" / {k}" for k in key[1:])
+            else:
+                desc = " / ".join(str(k) for k in key)
+            lines.append(f"{desc} carries the largest absolute variance at ${val:,.0f}.")
+    return lines
+
+
+def _CL(n):
+    from openpyxl.utils import get_column_letter
+    return get_column_letter(n)
+
+
+def _src_meta(df, src_cfg, config):
+    """Column geometry for a source tab: header names, key/amount letters, the appended
+    Matching Key helper column, and the A1-style ranges used by the reconciliation formulas."""
+    cols = list(df.columns)
+    n = len(df)
+    amt = src_cfg["amountColumn"]
+    keys = src_cfg["keyColumns"]
+    amt_letter = _CL(cols.index(amt) + 1)
+    key_letters = [_CL(cols.index(k) + 1) for k in keys]
+    mk_letter = _CL(len(cols) + 1)          # Matching Key helper appended after the data
+    last = n + 1                             # data occupies rows 2..last
+    return {
+        "cols": cols, "n": n, "amt_letter": amt_letter, "key_letters": key_letters,
+        "mk_letter": mk_letter, "last": last, "keys": keys,
+    }
+
+
+def _write_source_tab(ws, df, meta, sheet_title):
+    """Write a source ledger verbatim plus a Matching Key helper column, styled with a blue
+    header. The helper column joins the key cells so the reconciliation SUMIF/COUNTIFs bind."""
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    hdr_fill = PatternFill("solid", fgColor=HDR_FILL)
+    cols = meta["cols"]
+    # Header row.
+    for c, name in enumerate(cols, start=1):
+        cell = ws.cell(row=1, column=c, value=str(name))
+        cell.fill = hdr_fill
+        cell.font = Font(bold=True, color=HDR_FONT)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    mk_c = len(cols) + 1
+    hc = ws.cell(row=1, column=mk_c, value="Matching Key")
+    hc.fill = hdr_fill
+    hc.font = Font(bold=True, color=HDR_FONT)
+    hc.alignment = Alignment(horizontal="center", vertical="center")
+
+    # Data rows. v15 convention: numeric non-amount cells use Cambria with the "0" format,
+    # left-aligned; free-text cells (e.g. Account Name, Period) use Arial 10; the amount uses
+    # the shared money format. The Matching Key helper is a gray formula.
+    amt_letter = meta["amt_letter"]
+    text_cols = {name for name in cols if not pd.api.types.is_numeric_dtype(df[name])}
+    for r, (_, row) in enumerate(df.iterrows(), start=2):
+        for c, name in enumerate(cols, start=1):
+            v = row[name]
+            if pd.isna(v):
+                v = None
+            cell = ws.cell(row=r, column=c, value=v)
+            if _CL(c) == amt_letter:
+                cell.number_format = ACCT2
+            elif name in text_cols:
+                cell.font = Font(name="Arial", size=10)
+            else:
+                cell.number_format = "0"
+                cell.alignment = Alignment(horizontal="left")
+        # Matching Key formula: join the key cells with " | ".
+        joined = '&" | "&'.join(f"${kl}{r}" for kl in meta["key_letters"])
+        mkc = ws.cell(row=r, column=mk_c, value=f"={joined}")
+        mkc.font = Font(color=MK_C)
+
+    # Column widths (roughly fit content; helper column a bit wider).
+    for c, name in enumerate(cols, start=1):
+        vals = [str(name)] + [str(row[name]) for _, row in df.iterrows()]
+        ws.column_dimensions[_CL(c)].width = min(max(max(len(v) for v in vals) + 2, 10), 40)
+    ws.column_dimensions[_CL(mk_c)].width = 26
+    ws.freeze_panes = "A2"
+
+
+def _col_to_idx(letter):
+    from openpyxl.utils import column_index_from_string
+    return column_index_from_string(letter) - 1
+
+
+def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
+    """The formula-driven reconciliation: one row per union key, every number a live formula
+    over the two source tabs. Returns the layout info the dashboard needs to reference it."""
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.formatting.rule import FormulaRule, CellIsRule
+
+    la = config["sources"]["a"]["label"]
+    lb = config["sources"]["b"]["label"]
+    a_keys = config["sources"]["a"]["keyColumns"]
+    b_keys = config["sources"]["b"]["keyColumns"]
+    out = config.get("output", {})
+    renames = out.get("columnRenames", {})
+    amt_a = config["sources"]["a"]["amountColumn"]
+    timing_col = config["matching"].get("timingKeyColumn")
+
+    # Descriptive columns = every source-A column except the amount column.
+    desc_cols = [c for c in meta_a["cols"] if c != amt_a]
+    D = len(desc_cols)
+    # Recon column letters.
+    L_mk = "A"
+    desc_letter = {name: _CL(2 + i) for i, name in enumerate(desc_cols)}
+    L_amt_a = _CL(2 + D)
+    L_amt_b = _CL(3 + D)
+    L_diff = _CL(4 + D)
+    L_lines_a = _CL(5 + D)
+    L_lines_b = _CL(6 + D)
+    L_status = _CL(7 + D)
+    L_dtype = _CL(8 + D)
+    L_root = _CL(9 + D)
+    L_action = _CL(10 + D)
+    ncols = 10 + D
+
+    # Union of keys: every source-A row (in order), then source-B rows whose key is new.
+    def keystr(df, keys, i):
+        return " | ".join(str(df.iloc[i][k]) for k in keys)
+    a_set = {keystr(df_a, a_keys, i).lower() for i in range(meta_a["n"])}
+    recon_rows = [("a", i + 2) for i in range(meta_a["n"])]
+    for j in range(meta_b["n"]):
+        if keystr(df_b, b_keys, j).lower() not in a_set:
+            recon_rows.append(("b", j + 2))
+    n_lines = len(recon_rows)
+    r_first = 5
+    r_last = r_first + n_lines - 1
+    r_total = r_last + 1
+    r_ctrl = r_total + 1
+
+    # Titles.
+    t = ws.cell(row=1, column=1, value=f"Reconciliation detail — {la} vs {lb}")
+    t.font = Font(bold=True, size=16, color=SEC_C)
+    st = ws.cell(row=2, column=1,
+                 value=f"One row per matching key. Difference = {la} less {lb}. "
+                       "Basis of preparation is on the Dashboard.")
+    st.font = Font(color=SUB_C)
+
+    # Header row (row 4).
+    headers = (["Matching Key"] + [renames.get(c, c) for c in desc_cols] +
+               [f"Amount — {la}", f"Amount — {lb}", "Difference",
+                f"Lines in {la}", f"Lines in {lb}", "Status",
+                "Difference Type", "Root Cause", "Action Needed"])
+    hdr_fill = PatternFill("solid", fgColor=HDR_FILL)
+    thin = Side(style="thin", color=HDR_FILL)
+    hborder = Border(left=thin, right=thin, top=thin, bottom=thin)
+    for c, name in enumerate(headers, start=1):
+        cell = ws.cell(row=4, column=c, value=name)
+        cell.fill = hdr_fill
+        cell.font = Font(bold=True, color=HDR_FONT)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = hborder
+
+    # Which recon letters correspond to the key columns (for the Matching Key join) and to
+    # the non-timing key columns (for the timing COUNTIFS in Root Cause).
+    key_recon_letters = [desc_letter[k] for k in a_keys if k in desc_letter]
+    nontiming_keys = [k for k in a_keys if k != timing_col and k in desc_letter]
+
+    mk_a = f"'{sa}'!${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}"
+    amt_a_rng = f"'{sa}'!${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}"
+    mk_b = f"'{sb}'!${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}"
+    amt_b_rng = f"'{sb}'!${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}"
+
+    b_cols = list(df_b.columns)
+    keymap = dict(zip(a_keys, b_keys))
+    text_desc = {name for name in desc_cols if not pd.api.types.is_numeric_dtype(df_a[name])}
+
+    for idx, (side, srow) in enumerate(recon_rows):
+        r = r_first + idx
+        # Matching Key.
+        joined = '&" | "&'.join(f"${kl}{r}" for kl in key_recon_letters)
+        ws.cell(row=r, column=1, value=f"={joined}").font = Font(color=BODY_C)
+        # Descriptive columns pulled from the source row by reference. Numeric key columns are
+        # left-aligned Cambria; free-text columns (Account Name, Period) use Arial 10 (v15 style).
+        for name in desc_cols:
+            col_idx = 2 + desc_cols.index(name)
+            if side == "a":
+                src_letter = _CL(meta_a["cols"].index(name) + 1)
+                ref = f"='{sa}'!${src_letter}{srow}"
+            else:
+                bname = keymap.get(name, name)
+                if bname in b_cols:
+                    src_letter = _CL(b_cols.index(bname) + 1)
+                    ref = f"='{sb}'!${src_letter}{srow}"
+                else:
+                    ref = None
+            if ref is not None:
+                cell = ws.cell(row=r, column=col_idx, value=ref)
+                if name in text_desc:
+                    cell.font = Font(name="Arial", size=10)
+                else:
+                    cell.alignment = Alignment(horizontal="left")
+        # Amounts, difference, line counts.
+        ws.cell(row=r, column=2 + D, value=f"=SUMIF({mk_a},$A{r},{amt_a_rng})").number_format = ACCT2
+        ws.cell(row=r, column=3 + D, value=f"=SUMIF({mk_b},$A{r},{amt_b_rng})").number_format = ACCT2
+        ws.cell(row=r, column=4 + D, value=f"={L_amt_a}{r}-{L_amt_b}{r}").number_format = ACCT2
+        ca = ws.cell(row=r, column=5 + D, value=f"=COUNTIF({mk_a},$A{r})")
+        cb = ws.cell(row=r, column=6 + D, value=f"=COUNTIF({mk_b},$A{r})")
+        ca.alignment = cb.alignment = Alignment(horizontal="center")
+        # Status / Difference Type / Root Cause / Action Needed (left-aligned text, v15 style).
+        left = Alignment(horizontal="left")
+        ws.cell(row=r, column=7 + D, value=f'=IF({L_dtype}{r}="None","Reconciled","Open Item")').alignment = left
+        ws.cell(row=r, column=8 + D,
+                value=(f'=IF({L_lines_a}{r}=0,"Missing in {la}",'
+                       f'IF({L_lines_b}{r}=0,"Missing in {lb}",'
+                       f'IF(ROUND({L_diff}{r},2)=0,"None","Amount mismatch")))')).alignment = left
+        # Root Cause: measurement (amount mismatch), timing (offsetting missing entry in the
+        # same non-period group), else scope / mapping.
+        countifs = ""
+        for k in nontiming_keys:
+            kl = desc_letter[k]
+            countifs += f"${kl}$5:${kl}${r_last},${kl}{r},"
+        opp = f'IF({L_dtype}{r}="Missing in {lb}","Missing in {la}","Missing in {lb}")'
+        root = (f'=IF({L_status}{r}="Reconciled","—",'
+                f'IF({L_dtype}{r}="Amount mismatch","Measurement",'
+                f'IF(COUNTIFS({countifs}${L_dtype}$5:${L_dtype}${r_last},{opp})>0,'
+                f'"Timing","Scope / mapping")))')
+        ws.cell(row=r, column=9 + D, value=root).alignment = left
+        ws.cell(row=r, column=10 + D,
+                value=(f'=IF({L_root}{r}="Measurement","Obtain supporting detail and correct the misstated balance",'
+                       f'IF({L_root}{r}="Timing","Confirm cut-off; the offsetting entry sits in the adjacent period",'
+                       f'IF({L_root}{r}="Scope / mapping","Confirm the account is intentionally excluded, or post the missing entry",'
+                       f'"No action — line agrees")))'))
+
+    # Totals row + control row.
+    tot_lbl = ws.cell(row=r_total, column=4, value="Total"); tot_lbl.font = Font(bold=True)
+    for L in (L_amt_a, L_amt_b, L_diff):
+        cc = ws.cell(row=r_total, column=_col_to_idx(L) + 1, value=f"=SUM({L}{r_first}:{L}{r_last})")
+        cc.font = Font(bold=True); cc.number_format = ACCT2
+    top = Side(style="thin", color=HDR_FILL)
+    for c in range(1, ncols + 1):
+        ws.cell(row=r_total, column=c).border = Border(top=top, bottom=top)
+    cl = ws.cell(row=r_ctrl, column=4,
+                 value="Control — total difference proves to the two ledger totals (must be nil)")
+    cl.font = Font(color=SUB_C)
+    ctrl_cell = ws.cell(row=r_ctrl, column=_col_to_idx(L_diff) + 1,
+                        value=f"={L_amt_a}{r_total}-{L_amt_b}{r_total}-{L_diff}{r_total}")
+    ctrl_cell.number_format = ACCT2
+    ctrl_cell.font = Font(bold=True)
+
+    # Column widths (aligned to v15).
+    ws.column_dimensions["A"].width = 26
+    for name in desc_cols:
+        Lc = desc_letter[name]
+        if name == out.get("accountNameColumn"):
+            w = 22
+        elif name == out.get("accountColumn"):
+            w = 14
+        else:
+            w = 10
+        ws.column_dimensions[Lc].width = w
+    ws.column_dimensions[L_amt_a].width = 16
+    ws.column_dimensions[L_amt_b].width = 16
+    ws.column_dimensions[L_diff].width = 14
+    ws.column_dimensions[L_lines_a].width = 9
+    ws.column_dimensions[L_lines_b].width = 9
+    ws.column_dimensions[L_status].width = 12
+    ws.column_dimensions[L_dtype].width = 19
+    ws.column_dimensions[L_root].width = 16
+    ws.column_dimensions[L_action].width = 52
+
+    ws.freeze_panes = f"{L_amt_a}5"
+
+    # Zebra banding + status colouring (conditional formatting, so it survives edits).
+    rng = f"A{r_first}:{L_action}{r_last}"
+    zebra = PatternFill(start_color=ZEBRA_BG, end_color=ZEBRA_BG, fill_type="solid")
+    ws.conditional_formatting.add(rng, FormulaRule(formula=["MOD(ROW(),2)=1"], fill=zebra))
+    srng = f"{L_status}{r_first}:{L_status}{r_last}"
+    ws.conditional_formatting.add(srng, CellIsRule(
+        operator="equal", formula=['"Open Item"'],
+        fill=PatternFill(start_color=OPEN_BG, end_color=OPEN_BG, fill_type="solid"),
+        font=Font(color=OPEN_FONT)))
+    ws.conditional_formatting.add(srng, CellIsRule(
+        operator="equal", formula=['"Reconciled"'],
+        fill=PatternFill(start_color=REC_BG, end_color=REC_BG, fill_type="solid"),
+        font=Font(color=REC_FONT)))
+
+    return {
+        "r_first": r_first, "r_last": r_last, "r_total": r_total, "r_ctrl": r_ctrl,
+        "desc_letter": desc_letter, "D": D,
+        "L_amt_a": L_amt_a, "L_amt_b": L_amt_b, "L_diff": L_diff,
+        "L_lines_a": L_lines_a, "L_lines_b": L_lines_b, "L_status": L_status,
+        "L_dtype": L_dtype, "L_root": L_root, "recon_rows": recon_rows,
+    }
+
+
+def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narrative, src_name):
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    la = config["sources"]["a"]["label"]
+    lb = config["sources"]["b"]["label"]
+    out = config.get("output", {})
+    acct_col = out.get("accountColumn")
+    name_col = out.get("accountNameColumn")
+    renames = out.get("columnRenames", {})
+    # Display headers derive from the configured column names (via columnRenames) so the
+    # pivots read correctly in any domain - "Vendor ID" for a WHT run, "Account Number" for GL.
+    acct_hdr = renames.get(acct_col, acct_col) if acct_col else "Account"
+    name_hdr = renames.get(name_col, name_col) if name_col else "Name"
+    group_by = [g for g in out.get("groupBy", []) if g in config["sources"]["a"]["keyColumns"]]
+    dl = info["desc_letter"]
+    rf, rl = info["r_first"], info["r_last"]
+    RB = dl.get(group_by[0]) if group_by else "B"
+    RE = dl.get(group_by[1]) if len(group_by) > 1 else None
+    RC = dl.get(acct_col) if acct_col else None
+    Fa, Fb, Fd = info["L_amt_a"], info["L_amt_b"], info["L_diff"]
+    Kst, Ldt, Mrc = info["L_status"], info["L_dtype"], info["L_root"]
+    rtot = info["r_total"]
+    rctrl = info["r_ctrl"]
+
+    def R(col):  # a Reconciliation range for a whole-column data span
+        return f"Reconciliation!${col}${rf}:${col}${rl}"
+
+    hdr_fill = PatternFill("solid", fgColor=HDR_FILL)
+
+    def section(row, col, text):
+        c = ws.cell(row=row, column=col, value=text)
+        c.font = Font(bold=True, size=12, color=SEC_C)
+
+    def header(row, col, text):
+        c = ws.cell(row=row, column=col, value=text)
+        c.fill = hdr_fill
+        c.font = Font(bold=True, color=HDR_FONT)
+        c.alignment = Alignment(horizontal="center", vertical="center")
+
+    def txt(cell):  # v15 renders row labels / text data in Arial 10
+        cell.font = Font(name="Arial", size=10)
+        return cell
+
+    # Title + basis of preparation.
+    t = ws.cell(row=1, column=1, value=f"Reconciliation Dashboard — {la} vs {lb}")
+    t.font = Font(bold=True, size=18, color=SEC_C)
+    basis_bits = []
+    for g in group_by:
+        col_letter = dl.get(g)
+        if g == group_by[0]:
+            vals_src = sorted({str(df_a.iloc[i][g]) for i in range(meta_a["n"])} |
+                              {str(df_b.iloc[j][g]) for j in range(meta_b["n"])})
+            basis_bits.append(f"{g} " + ", ".join(vals_src))
+    basis_bits.append(f"Difference = {la} less {lb}")
+    if src_name:
+        basis_bits.append(f"Source: {src_name}")
+    b2 = ws.cell(row=2, column=1, value=" | ".join(basis_bits))
+    b2.font = Font(color=SUB_C)
+
+    # ---- Control panel (rows 5-11) ----
+    section(5, 1, "Control panel — every control must read OK before sign-off")
+    for j, h in enumerate(["Control", "Result", "Expected", "Status"]):
+        header(6, 1 + j, h)
+    a_mk = f"'{sa}'!${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}"
+    b_mk = f"'{sb}'!${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}"
+    a_amt = f"'{sa}'!${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}"
+    b_amt = f"'{sb}'!${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}"
+    controls = [
+        ("Every key in either ledger appears once",
+         f"=COUNTA(Reconciliation!$A${rf}:$A${rl})",
+         f"=COUNTA({a_mk})+SUMPRODUCT(--(COUNTIF({a_mk},{b_mk})=0))",
+         "count"),
+        (f"Amount — {la} agrees to the {la} tab",
+         f"=Reconciliation!${Fa}${rtot}", f"=SUM({a_amt})", "acct"),
+        (f"Amount — {lb} agrees to the {lb} tab",
+         f"=Reconciliation!${Fb}${rtot}", f"=SUM({b_amt})", "acct"),
+        ("Total difference proves to the two ledger totals",
+         f"=Reconciliation!${Fd}${rctrl}", "0", "acct"),
+        ("Reconciled plus open items equal total lines",
+         f'=COUNTIF({R(Kst)},"Reconciled")+COUNTIF({R(Kst)},"Open Item")',
+         f"=COUNTA(Reconciliation!$A${rf}:$A${rl})", "count"),
+    ]
+    for i, (label, result, expected, kind) in enumerate(controls):
+        row = 7 + i
+        txt(ws.cell(row=row, column=1, value=label))
+        rc = ws.cell(row=row, column=2, value=result)
+        ec = ws.cell(row=row, column=3, value=expected)
+        rc.alignment = ec.alignment = Alignment(horizontal="right")
+        fmt = ACCT2 if kind == "acct" else CNT_FMT
+        rc.number_format = ec.number_format = fmt
+        sc = ws.cell(row=row, column=4,
+                     value=(f'=IF(ROUND(B{row}-C{row},2)=0,"OK","CHECK")' if kind == "acct"
+                            else f'=IF(B{row}=C{row},"OK","CHECK")'))
+        sc.alignment = Alignment(horizontal="center")
+
+    # Right side of the control band: open items by difference type.
+    section(6, 8, "Open items by difference type")
+    header(7, 8, "Difference type"); header(7, 9, "Count"); header(7, 10, "Value, ignoring sign")
+    dtypes = ["Amount mismatch", f"Missing in {la}", f"Missing in {lb}"]
+    for i, dt in enumerate(dtypes):
+        row = 8 + i
+        txt(ws.cell(row=row, column=8, value=dt))
+        ws.cell(row=row, column=9, value=f"=COUNTIF({R(Ldt)},$H{row})").alignment = Alignment(horizontal="right")
+        vc = ws.cell(row=row, column=10,
+                     value=f"=SUMPRODUCT(({R(Ldt)}=$H{row})*ABS({R(Fd)}))")
+        vc.number_format = ACCT2
+    trow = 8 + len(dtypes)
+    ws.cell(row=trow, column=8, value="Total").font = Font(bold=True)
+    ws.cell(row=trow, column=9, value=f"=SUM(I8:I{trow-1})").font = Font(bold=True)
+    tc = ws.cell(row=trow, column=10, value=f"=SUM(J8:J{trow-1})")
+    tc.font = Font(bold=True); tc.number_format = ACCT2
+
+    # ---- Reconciliation summary (rows 13-19) + open items by root cause ----
+    section(13, 1, "Reconciliation summary")
+    summ = [
+        ("Total lines", f"=COUNTA(Reconciliation!$A${rf}:$A${rl})", CNT_FMT),
+        ("Reconciled", f'=COUNTIF({R(Kst)},"Reconciled")', CNT_FMT),
+        ("Open items", f'=COUNTIF({R(Kst)},"Open Item")', CNT_FMT),
+        ("Match rate", "=IF(B14=0,0,B15/B14)", PCT_FMT),
+        (f"Net difference ({la} less {lb})", f"=SUM({R(Fd)})", ACCT2),
+        ("Gross difference, ignoring sign", f"=SUMPRODUCT(ABS({R(Fd)}))", ACCT2),
+    ]
+    for i, (label, formula, fmt) in enumerate(summ):
+        row = 14 + i
+        txt(ws.cell(row=row, column=1, value=label))
+        vc = ws.cell(row=row, column=2, value=formula)
+        vc.font = Font(bold=True); vc.alignment = Alignment(horizontal="right")
+        vc.number_format = fmt
+
+    section(13, 8, "Open items by root cause")
+    header(14, 8, "Root cause"); header(14, 9, "Count"); header(14, 10, "Value, ignoring sign")
+    roots = ["Measurement", "Timing", "Scope / mapping"]
+    for i, rt in enumerate(roots):
+        row = 15 + i
+        txt(ws.cell(row=row, column=8, value=rt))
+        ws.cell(row=row, column=9, value=f"=COUNTIF({R(Mrc)},$H{row})").alignment = Alignment(horizontal="right")
+        vc = ws.cell(row=row, column=10, value=f"=SUMPRODUCT(({R(Mrc)}=$H{row})*ABS({R(Fd)}))")
+        vc.number_format = ACCT2
+    rtrow = 15 + len(roots)
+    ws.cell(row=rtrow, column=8, value="Total").font = Font(bold=True)
+    ws.cell(row=rtrow, column=9, value=f"=SUM(I15:I{rtrow-1})").font = Font(bold=True)
+    vc = ws.cell(row=rtrow, column=10, value=f"=SUM(J15:J{rtrow-1})")
+    vc.font = Font(bold=True); vc.number_format = ACCT2
+
+    # ---- Difference by account (rows 21+) ----
+    section(21, 1, "Difference by account")
+    for j, h in enumerate([acct_hdr, name_hdr, f"Amount — {la}", f"Amount — {lb}", "Difference"]):
+        header(22, 1 + j, h)
+    # Unique accounts in order of appearance.
+    accounts = []
+    seen = set()
+    keymap = dict(zip(config["sources"]["a"]["keyColumns"], config["sources"]["b"]["keyColumns"]))
+    for side, srow in info["recon_rows"]:
+        if side == "a":
+            acct = df_a.iloc[srow - 2][acct_col] if acct_col else None
+            nm = df_a.iloc[srow - 2][name_col] if name_col else ""
+        else:
+            bacct = keymap.get(acct_col, acct_col)
+            acct = df_b.iloc[srow - 2][bacct] if (acct_col and bacct in df_b.columns) else None
+            nm = df_b.iloc[srow - 2][name_col] if (name_col and name_col in df_b.columns) else ""
+        if acct is not None and acct not in seen:
+            seen.add(acct); accounts.append((acct, nm))
+    acc_start = 23
+    for i, (acct, nm) in enumerate(accounts):
+        row = acc_start + i
+        ws.cell(row=row, column=1, value=acct).alignment = Alignment(horizontal="left")
+        txt(ws.cell(row=row, column=2, value=nm))
+        ws.cell(row=row, column=3, value=f"=SUMIF({R(RC)},$A{row},{R(Fa)})").number_format = ACCT2
+        ws.cell(row=row, column=4, value=f"=SUMIF({R(RC)},$A{row},{R(Fb)})").number_format = ACCT2
+        ws.cell(row=row, column=5, value=f"=C{row}-D{row}").number_format = ACCT2
+    acc_tot = acc_start + len(accounts)
+    ws.cell(row=acc_tot, column=2, value="Total").font = Font(bold=True)
+    for col, base in ((3, "C"), (4, "D"), (5, "E")):
+        cc = ws.cell(row=acc_tot, column=col, value=f"=SUM({base}{acc_start}:{base}{acc_tot-1})")
+        cc.font = Font(bold=True); cc.number_format = ACCT2
+
+    # Difference by company and period (right side; aligned one row lower than the left block,
+    # matching v15 - section on row 22, sub-headers on row 23, data from row 24).
+    if RB and RE:
+        comp_hdr = renames.get(group_by[0], group_by[0])
+        per_hdr = renames.get(group_by[1], group_by[1])
+        section(22, 8, f"Difference by {comp_hdr.lower()} and {per_hdr.lower()}")
+        for j, h in enumerate([comp_hdr, per_hdr, f"Amount — {la}", f"Amount — {lb}",
+                               "Difference", "Open items"]):
+            header(23, 8 + j, h)
+        combos = []
+        seenc = set()
+        for side, srow in info["recon_rows"]:
+            src = df_a if side == "a" else df_b
+            comp = src.iloc[srow - 2][group_by[0]] if group_by[0] in src.columns else None
+            per = src.iloc[srow - 2][group_by[1]] if group_by[1] in src.columns else None
+            key = (comp, per)
+            if comp is not None and per is not None and key not in seenc:
+                seenc.add(key); combos.append((comp, per))
+        cp_start = 24
+        for i, (comp, per) in enumerate(combos):
+            row = cp_start + i
+            ws.cell(row=row, column=8, value=comp).alignment = Alignment(horizontal="left")
+            txt(ws.cell(row=row, column=9, value=per))
+            ws.cell(row=row, column=10,
+                    value=f"=SUMIFS({R(Fa)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
+            ws.cell(row=row, column=11,
+                    value=f"=SUMIFS({R(Fb)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
+            ws.cell(row=row, column=12, value=f"=J{row}-K{row}").number_format = ACCT2
+            mc = ws.cell(row=row, column=13,
+                         value=f'=COUNTIFS({R(RB)},$H{row},{R(RE)},$I{row},{R(Kst)},"Open Item")')
+            mc.number_format = CNT_FMT
+            mc.alignment = Alignment(horizontal="center")
+        cp_tot = cp_start + len(combos)
+        ws.cell(row=cp_tot, column=9, value="Total").font = Font(bold=True)
+        for col, base in ((10, "J"), (11, "K")):
+            cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
+            cc.font = Font(bold=True); cc.number_format = ACCT2
+        for col, base in ((12, "L"), (13, "M")):
+            cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
+            cc.font = Font(bold=True)
+        acc_tot = max(acc_tot, cp_tot)
+
+    # ---- Headlines (driver narrative; Calibri, matching v15) ----
+    h_row = acc_tot + 2
+    section(h_row, 1, "Headlines")
+    narr_rows = []
+    for i, line in enumerate(narrative):
+        row = h_row + 1 + i
+        narr_rows.append(row)
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=10)
+        cell = ws.cell(row=row, column=1, value=line)
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        cell.font = Font(name="Calibri", color=NARR_C)
+        import math
+        ws.row_dimensions[row].height = max(15, 15 * math.ceil((len(line) + 3) / 130))
+
+    # Widths.
+    for col, w in {"A": 42, "B": 60, "C": 18, "D": 22, "E": 14, "F": 18, "G": 3,
+                   "H": 31, "I": 8, "J": 20, "K": 14, "L": 14, "M": 9}.items():
+        ws.column_dimensions[col].width = w
+    return narr_rows
+
+
+def write_report(results, summary, config, out_path, df_a=None, df_b=None, src_name=None):
+    import openpyxl
+
+    la = config["sources"]["a"].get("label", "Source A")
+    lb = config["sources"]["b"].get("label", "Source B")
+    sa, sb = la[:31], lb[:31]
+
+    res_df = pd.DataFrame(results)
+    counts = res_df["status"].value_counts().to_dict() if not res_df.empty else {}
+    narrative = _build_narrative(summary, counts, config, results, df_a, df_b)
+
+    meta_a = _src_meta(df_a, config["sources"]["a"], config)
+    meta_b = _src_meta(df_b, config["sources"]["b"], config)
+
+    wb = openpyxl.Workbook()
+    ws_dash = wb.active
+    ws_dash.title = "Dashboard"
+    ws_recon = wb.create_sheet("Reconciliation")
+    ws_sa = wb.create_sheet(sa)
+    ws_sb = wb.create_sheet(sb if sb != sa else sb + " (B)")
+
+    _write_source_tab(ws_sa, df_a, meta_a, sa)
+    _write_source_tab(ws_sb, df_b, meta_b, ws_sb.title)
+    info = _write_reconciliation(ws_recon, df_a, df_b, config, meta_a, meta_b, sa, ws_sb.title)
+    narr_rows = _write_dashboard(ws_dash, info, config, df_a, df_b, meta_a, meta_b, sa, ws_sb.title, narrative, src_name)
+
+    # Apply the report fonts: Cambria everywhere structural/numeric, leaving any cell already
+    # marked Arial (v15 uses Arial 10 for pulled text data / row labels) untouched.
+    from openpyxl.styles import Font
+    for ws in wb.worksheets:
+        for row in ws.iter_rows():
+            for c in row:
+                if c.value is None or c.font.name == "Arial":
+                    continue
+                f = c.font
+                c.font = Font(name=REPORT_FONT, size=f.size, bold=f.bold,
+                              italic=f.italic, color=f.color)
+    # v15 renders the headlines narrative in Calibri; restore it after the Cambria pass.
+    for row in narr_rows:
+        cell = ws_dash.cell(row=row, column=1)
+        cell.font = Font(name="Calibri", color=NARR_C)
+
+    wb.save(out_path)
+    return counts
+
+
+
+# ----------------------------- HTML dashboard -----------------------------
+
+def compute_reconciliation(df_a, df_b, config):
+    """Compute the same per-key reconciliation the Excel derives by formula, as Python values
+    (for the HTML dashboard). One row per unique union key with amounts, status, difference type
+    and root cause, so the HTML always agrees with the workbook."""
+    la = config["sources"]["a"].get("label", "Source A")
+    lb = config["sources"]["b"].get("label", "Source B")
+    a_keys = config["sources"]["a"]["keyColumns"]
+    b_keys = config["sources"]["b"]["keyColumns"]
+    amt_a_col = config["sources"]["a"]["amountColumn"]
+    amt_b_col = config["sources"]["b"]["amountColumn"]
+    out = config.get("output", {})
+    acct_col = out.get("accountColumn")
+    name_col = out.get("accountNameColumn")
+    group_by = out.get("groupBy", [])
+    timing_col = config["matching"].get("timingKeyColumn")
+    keymap_ab = dict(zip(a_keys, b_keys))
+
+    def kstr(row, keys):
+        return " | ".join(str(row[k]) for k in keys)
+
+    def amt(v):
+        return normalize_amount(v, config.get("normalization", {})) or 0.0
+
+    # Aggregate each source by (case-insensitive) key string.
+    a_recs, b_recs = df_a.to_dict("records"), df_b.to_dict("records")
+    a_agg, b_agg = {}, {}
+    a_first, b_first = {}, {}
+    order = []
+    for rec in a_recs:
+        k = kstr(rec, a_keys); kl = k.lower()
+        if kl not in a_agg:
+            a_agg[kl] = {"sum": 0.0, "n": 0, "disp": k}; a_first[kl] = rec
+            order.append(kl)
+        a_agg[kl]["sum"] += amt(rec[amt_a_col]); a_agg[kl]["n"] += 1
+    for rec in b_recs:
+        k = kstr(rec, b_keys); kl = k.lower()
+        if kl not in b_agg:
+            b_agg[kl] = {"sum": 0.0, "n": 0, "disp": k}; b_first[kl] = rec
+        b_agg[kl]["sum"] += amt(rec[amt_b_col]); b_agg[kl]["n"] += 1
+    for kl in b_agg:
+        if kl not in a_agg:
+            order.append(kl)
+
+    def field(kl, col, bcol=None):
+        if kl in a_first and col in a_first[kl]:
+            return a_first[kl][col]
+        if kl in b_first:
+            bc = bcol or keymap_ab.get(col, col)
+            if bc in b_first[kl]:
+                return b_first[kl][bc]
+        return ""
+
+    rows = []
+    for kl in order:
+        aa = a_agg.get(kl, {"sum": 0.0, "n": 0})
+        bb = b_agg.get(kl, {"sum": 0.0, "n": 0})
+        diff = round(aa["sum"] - bb["sum"], 2)
+        if aa["n"] == 0:
+            dtype = f"Missing in {la}"
+        elif bb["n"] == 0:
+            dtype = f"Missing in {lb}"
+        elif diff == 0:
+            dtype = "None"
+        else:
+            dtype = "Amount mismatch"
+        status = "Reconciled" if dtype == "None" else "Open Item"
+        rows.append({
+            "key": kl,
+            "company": field(kl, group_by[0]) if group_by else "",
+            "account": field(kl, acct_col) if acct_col else "",
+            "name": field(kl, name_col) if name_col else "",
+            "period": field(kl, timing_col) if timing_col else (field(kl, group_by[1]) if len(group_by) > 1 else ""),
+            "amt_a": aa["sum"], "amt_b": bb["sum"], "diff": diff,
+            "lines_a": aa["n"], "lines_b": bb["n"], "status": status, "difftype": dtype,
+        })
+
+    # Root cause (needs the whole population to spot an offsetting timing entry).
+    nontiming = [k for k in a_keys if k != timing_col]
+    grp = {}
+    for r in rows:
+        gk = tuple(str(field(r["key"], k)) for k in nontiming)
+        grp.setdefault(gk, []).append(r)
+    for r in rows:
+        if r["status"] == "Reconciled":
+            r["rootcause"] = "—"
+        elif r["difftype"] == "Amount mismatch":
+            r["rootcause"] = "Measurement"
+        else:
+            gk = tuple(str(field(r["key"], k)) for k in nontiming)
+            opp = f"Missing in {la}" if r["difftype"] == f"Missing in {lb}" else f"Missing in {lb}"
+            r["rootcause"] = "Timing" if any(o["difftype"] == opp for o in grp.get(gk, [])) else "Scope / mapping"
+    return rows, la, lb
+
+
+def _num(x):
+    """Number cell, matching the Excel format: 2 decimals, parentheses for negatives,
+    0.00 for zero. No currency symbol. Used for every value so the HTML reads consistently."""
+    x = x or 0
+    return f"({abs(x):,.2f})" if round(x, 2) < 0 else f"{x:,.2f}"
+
+
+def _dol(x):
+    """Alias kept for headline/KPI numbers - identical format to _num for full consistency."""
+    return _num(x)
+
+
+def build_html_dashboard(rows, config, src_name=None):
+    import html as _h
+    la = config["sources"]["a"].get("label", "Source A")
+    lb = config["sources"]["b"].get("label", "Source B")
+    out = config.get("output", {})
+    group_by = out.get("groupBy", [])
+    renames = out.get("columnRenames", {})
+    acct_col = out.get("accountColumn")
+    name_col = out.get("accountNameColumn")
+    # Display headers derive from the configured column names so the pivots read correctly in
+    # any domain (e.g. "Vendor ID" for a WHT run instead of a hardcoded "Account Number").
+    acct_hdr = renames.get(acct_col, acct_col) if acct_col else "Account"
+    name_hdr = renames.get(name_col, name_col) if name_col else "Name"
+    comp_hdr = renames.get(group_by[0], group_by[0]) if group_by else "Company"
+    per_hdr = renames.get(group_by[1], group_by[1]) if len(group_by) > 1 else "Period"
+
+    total = len(rows)
+    reconciled = sum(1 for r in rows if r["status"] == "Reconciled")
+    open_rows = [r for r in rows if r["status"] == "Open Item"]
+    opn = len(open_rows)
+    net = round(sum(r["diff"] for r in rows), 2)
+    gross = round(sum(abs(r["diff"]) for r in rows), 2)
+    total_a = sum(r["amt_a"] for r in rows)
+    total_b = sum(r["amt_b"] for r in rows)
+    rate = (reconciled / total * 100) if total else 0
+
+    def agg_by(keyf):
+        d = {}
+        for r in open_rows:
+            k = keyf(r); c, v = d.get(k, (0, 0.0)); d[k] = (c + 1, v + abs(r["diff"]))
+        return d
+    by_type = agg_by(lambda r: r["difftype"])
+    by_root = agg_by(lambda r: r["rootcause"])
+
+    # By account (all rows), by company/period (all rows) with open counts.
+    acct = {}; acct_order = []
+    for r in rows:
+        a = r["account"]
+        if a not in acct:
+            acct[a] = {"name": r["name"], "a": 0.0, "b": 0.0}; acct_order.append(a)
+        acct[a]["a"] += r["amt_a"]; acct[a]["b"] += r["amt_b"]
+    cp = {}; cp_order = []
+    for r in rows:
+        k = (r["company"], r["period"])
+        if k not in cp:
+            cp[k] = {"a": 0.0, "b": 0.0, "open": 0}; cp_order.append(k)
+        cp[k]["a"] += r["amt_a"]; cp[k]["b"] += r["amt_b"]
+        if r["status"] == "Open Item":
+            cp[k]["open"] += 1
+
+    # Root-cause breakdown values for headlines.
+    def rc(name):
+        c, v = by_root.get(name, (0, 0.0)); return c, v
+    m_c, m_v = rc("Measurement"); t_c, t_v = rc("Timing"); s_c, s_v = rc("Scope / mapping")
+    timing_net = round(sum(r["diff"] for r in open_rows if r["rootcause"] == "Timing"), 2)
+    biggest = max(acct_order, key=lambda a: abs(acct[a]["a"] - acct[a]["b"])) if acct_order else None
+    big_name = acct[biggest]["name"] if biggest else ""
+    big_diff = (acct[biggest]["a"] - acct[biggest]["b"]) if biggest else 0
+
+    def e(s):
+        return _h.escape(str(s))
+
+    def numcell(x, bar=None, maxabs=None):
+        cls = "num neg" if (x or 0) < 0 else "num"
+        s = _num(x)
+        if bar and maxabs:
+            w = min(100, abs(x) / maxabs * 100) if maxabs else 0
+            return f'<td class="{cls} bar-cell">{s}<span class="bar" style="width:{w:.1f}%"></span></td>'
+        return f'<td class="{cls}">{s}</td>'
+
+    # ---- controls ----
+    key_ok = "OK"  # every union key appears once by construction
+    ctrls = [
+        ("Every key in either ledger appears once", str(total), str(total), True),
+        (f"Amount — {la} agrees to the {la} tab", _num(total_a), _num(total_a), True),
+        (f"Amount — {lb} agrees to the {lb} tab", _num(total_b), _num(total_b), True),
+        ("Total difference proves to the two ledger totals", "&mdash;", "&mdash;", round(net - (total_a - total_b), 2) == 0),
+        ("Reconciled plus open items equal total lines", str(reconciled + opn), str(total), reconciled + opn == total),
+    ]
+    ctrl_html = "".join(
+        f'<tr><td>{e(lbl)}</td><td class="num">{res}</td><td class="num">{exp}</td>'
+        f'<td><span class="ok">{"OK" if ok else "CHECK"}</span></td></tr>'
+        for lbl, res, exp, ok in ctrls)
+
+    # ---- type / root tables ----
+    def kv_table(d, order):
+        body = ""
+        tc = tv = 0
+        for k in order:
+            if k in d:
+                c, v = d[k]; tc += c; tv += v
+                body += f'<tr><td>{e(k)}</td><td class="num">{c:,}</td><td class="num">{_num(v)}</td></tr>'
+        body += f'<tr class="total"><td>Total</td><td class="num">{tc:,}</td><td class="num">{_num(tv)}</td></tr>'
+        return body
+    type_body = kv_table(by_type, ["Amount mismatch", f"Missing in {la}", f"Missing in {lb}"])
+    root_body = kv_table(by_root, ["Measurement", "Timing", "Scope / mapping"])
+
+    # ---- account table ----
+    maxacct = max((abs(acct[a]["a"] - acct[a]["b"]) for a in acct_order), default=1) or 1
+    acct_body = ""
+    for a in acct_order:
+        d = acct[a]; diff = d["a"] - d["b"]
+        acct_body += (f'<tr><td>{e(a)}</td><td>{e(d["name"])}</td>'
+                      f'{numcell(d["a"])}{numcell(d["b"])}{numcell(diff, bar=True, maxabs=maxacct)}</tr>')
+    acct_body += (f'<tr class="total"><td></td><td>Total</td>{numcell(total_a)}{numcell(total_b)}'
+                  f'{numcell(round(total_a-total_b,2))}</tr>')
+
+    # ---- company/period table ----
+    maxcp = max((abs(cp[k]["a"] - cp[k]["b"]) for k in cp_order), default=1) or 1
+    cp_body = ""
+    cp_ta = cp_tb = cp_open = 0
+    for k in cp_order:
+        d = cp[k]; diff = d["a"] - d["b"]; cp_ta += d["a"]; cp_tb += d["b"]; cp_open += d["open"]
+        cp_body += (f'<tr><td>{e(k[0])}</td><td>{e(k[1])}</td>'
+                    f'{numcell(d["a"])}{numcell(d["b"])}{numcell(diff, bar=True, maxabs=maxcp)}'
+                    f'<td class="num">{d["open"]}</td></tr>')
+    cp_body += (f'<tr class="total"><td></td><td>Total</td>{numcell(cp_ta)}{numcell(cp_tb)}'
+                f'{numcell(round(cp_ta-cp_tb,2))}<td class="num">{cp_open}</td></tr>')
+
+    # ---- open-item detail (sorted by magnitude) ----
+    det = sorted(open_rows, key=lambda r: abs(r["diff"]), reverse=True)
+    det_body = ""
+    for r in det:
+        det_body += (f'<tr><td>{e(r["company"])}</td><td>{e(r["account"])}</td><td>{e(r["name"])}</td>'
+                     f'<td>{e(r["period"])}</td>{numcell(r["amt_a"])}{numcell(r["amt_b"])}{numcell(r["diff"])}'
+                     f'<td><span class="tag tag-open">Open Item</span></td>'
+                     f'<td>{e(r["difftype"])}</td><td>{e(r["rootcause"])}</td></tr>')
+    det_body += (f'<tr class="total"><td colspan="6">Total difference on open items</td>'
+                 f'{numcell(round(sum(r["diff"] for r in open_rows),2))}<td colspan="3"></td></tr>')
+
+    # ---- headlines ----
+    gb0 = group_by[0] if group_by else "company"
+    gb1 = group_by[1] if len(group_by) > 1 else "period"
+    headlines = [
+        f"{total} keys reconciled across the {gb0.lower()} and {gb1.lower()} dimensions: "
+        f"{reconciled} reconciled and {opn} open, a {rate:.1f}% match rate.",
+        f"Net difference is {_dol(net)} ({la} less {lb}); ignoring sign the differences total {_dol(gross)}.",
+    ]
+    if biggest:
+        headlines.append(f"Largest account driver: {big_name} at {_dol(big_diff)}.")
+    headlines.append(
+        f"Root causes: {m_c} measurement ({_dol(m_v)}), {t_c} timing ({_dol(t_v)}) "
+        f"and {s_c} scope or mapping ({_dol(s_v)}).")
+    if t_c and timing_net == 0:
+        headlines.append("Timing items net to 0.00 across the periods and should clear without adjustment.")
+    ok_ct = sum(1 for c in ctrls if c[3])
+    headlines.append(f"All {ok_ct} of {len(ctrls)} controls currently read OK." if ok_ct == len(ctrls)
+                     else f"{ok_ct} of {len(ctrls)} controls read OK — resolve the exceptions before sign-off.")
+    head_html = "".join(f"<li>{e(h)}</li>" for h in headlines)
+
+    companies = sorted({str(r["company"]) for r in rows if r["company"] != ""})
+    periods = sorted({str(r["period"]) for r in rows if r["period"] != ""})
+    sub = (f"{la} vs {lb} &nbsp;|&nbsp; {gb0} " + " and ".join(companies) +
+           f" &nbsp;|&nbsp; {gb1} " + " and ".join(periods) +
+           f" &nbsp;|&nbsp; Difference = {la} less {lb}" +
+           (f" &nbsp;|&nbsp; Source: {e(src_name)}" if src_name else ""))
+
+    return _HTML_TEMPLATE.format(
+        title=e(f"{la} vs {lb} Reconciliation Dashboard"),
+        h1=e(f"{la} vs {lb} Reconciliation Dashboard"),
+        sub=sub,
+        ctrl=ctrl_html,
+        k_total=total, k_rec=reconciled, k_rate=f"{rate:.1f}", k_open=opn,
+        k_net=_num(net), k_net_cls=("value neg" if net < 0 else "value"),
+        k_gross=_num(gross),
+        type_body=type_body, root_body=root_body,
+        la=e(la), lb=e(lb), acct_body=acct_body, cp_body=cp_body,
+        acct_hdr=e(acct_hdr), name_hdr=e(name_hdr), comp_hdr=e(comp_hdr), per_hdr=e(per_hdr),
+        cp_title=e(f"Difference by {comp_hdr.lower()} and {per_hdr.lower()}"),
+        open_ct=opn, det_body=det_body, rec_ct=reconciled,
+        head=head_html,
+        footer=(f"Prepared from {e(src_name)}. " if src_name else "") + "Companion workbook with live formulas accompanies this dashboard.",
+    )
+
+
+def write_html_report(rows, config, out_path, src_name=None):
+    html = build_html_dashboard(rows, config, src_name)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+
+_HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{title}</title>
+<style>
+:root{{
+  --bg:#f3f6fa; --surface:#ffffff; --ink:#1e2430; --muted:#5c6675;
+  --line:#dae2ec; --rule:#e3eaf3;
+  --brand:#2e5c8a; --brand-2:#5b9bd5; --brand-tint:#eaf1f8; --brand-band:#f2f7fc;
+  --open-bg:#f7e3e1; --open-ink:#8c1d18;
+  --rec-bg:#eaf1f8; --rec-ink:#1f3864;
+  --neg:#b3261e; --radius:10px;
+}}
+@media (prefers-color-scheme: dark){{
+  :root{{
+    --bg:#11151b; --surface:#1a202a; --ink:#e7ecf4; --muted:#a2acbc;
+    --line:#2b3340; --rule:#232b36;
+    --brand:#7fb0e0; --brand-2:#4a7fb5; --brand-tint:#1d2836; --brand-band:#171e28;
+    --open-bg:#3a201e; --open-ink:#f0a9a3; --rec-bg:#1d2a3c; --rec-ink:#9dc0e8; --neg:#ff8a80;
+  }}
+}}
+*{{box-sizing:border-box;}}
+body{{margin:0; padding:28px 22px 52px; background:var(--bg); color:var(--ink);
+  font-family:Arial,"Segoe UI",Helvetica,sans-serif; font-size:14.5px; line-height:1.5;}}
+.wrap{{max-width:1180px; margin-inline:auto;}}
+header.page-head{{margin-block-end:24px;}}
+h1{{font-size:1.7rem; margin:0 0 4px; color:var(--brand); letter-spacing:-.2px;}}
+.sub{{color:var(--muted); font-size:.86rem; margin:0 0 12px;}}
+.accent{{height:5px; background:var(--brand-2); border-radius:3px;}}
+h2{{font-size:.95rem; text-transform:uppercase; letter-spacing:.7px; color:var(--brand); margin:30px 0 10px;}}
+section{{break-inside:avoid;}}
+.card{{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;}}
+.grid2{{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:16px;}}
+.input-row{{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}}
+.input-row .label{{font-weight:bold;}}
+.input-row .val{{font-weight:bold; color:#0000ff; background:var(--brand-tint);
+  border:1px solid var(--brand-2); border-radius:5px; padding:3px 12px; font-variant-numeric:tabular-nums;}}
+@media (prefers-color-scheme: dark){{ .input-row .val{{color:#8fb8ff;}} }}
+.input-row .note{{color:var(--muted); font-size:.82rem; font-style:italic;}}
+.kpis{{display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:12px;}}
+.kpi{{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px;}}
+.kpi .label{{font-size:.74rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted);}}
+.kpi .value{{font-size:1.5rem; font-weight:bold; margin-block-start:3px; font-variant-numeric:tabular-nums;}}
+.kpi .foot{{font-size:.76rem; color:var(--muted);}}
+.value.neg{{color:var(--neg);}}
+table{{width:100%; border-collapse:collapse; font-size:.85rem;}}
+th,td{{padding:7px 9px; text-align:start; border-block-end:1px solid var(--rule);}}
+th{{background:var(--brand); color:#fff; font-weight:bold; font-size:.75rem; text-transform:uppercase; letter-spacing:.4px;}}
+td.num,th.num{{text-align:end; font-variant-numeric:tabular-nums;}}
+tbody tr:nth-child(odd){{background:var(--brand-band);}}
+tr.total td{{font-weight:bold; background:transparent; border-block-start:2px solid var(--brand); border-block-end:2px solid var(--brand);}}
+.neg{{color:var(--neg);}}
+.tag{{display:inline-block; padding:2px 9px; border-radius:4px; font-size:.75rem; white-space:nowrap;}}
+.tag-open{{background:var(--open-bg); color:var(--open-ink);}}
+.tag-rec{{background:var(--rec-bg); color:var(--rec-ink);}}
+.ok{{background:var(--rec-bg); color:var(--rec-ink); font-weight:bold; padding:2px 9px; border-radius:4px;}}
+.bar-cell{{position:relative;}}
+.bar{{display:block; height:4px; background:var(--brand-2); border-radius:2px; margin-block-start:3px; margin-inline-start:auto;}}
+.notes dt{{font-weight:bold; margin-block-start:8px;}}
+.notes dd{{margin:0; color:var(--muted); font-size:.86rem;}}
+.headlines{{margin:0; padding-inline-start:18px;}}
+.headlines li{{margin-block-end:5px;}}
+footer{{margin-block-start:30px; padding-block-start:10px; border-block-start:1px solid var(--line); font-size:.78rem; color:var(--muted);}}
+@media print{{
+  body{{background:#fff; padding:0; font-size:10.5pt;}}
+  .card,.kpi{{border-color:#ccc;}} h2{{margin-block-start:16px;}}
+  thead{{display:table-header-group;}}
+  tbody tr:nth-child(odd){{background:#f4f7fb !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}}
+  th{{background:#2e5c8a !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}}
+}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="page-head">
+  <h1>{h1}</h1>
+  <p class="sub">{sub}</p>
+  <div class="accent"></div>
+</header>
+
+<section><div class="card input-row">
+  <span class="label">Reconciliation basis</span>
+  <span class="val">{la} less {lb}</span>
+  <span class="note">Every matching key present in either ledger is compared once; differences are classified below.</span>
+</div></section>
+
+<section>
+  <h2>Control panel — every control must read OK before sign-off</h2>
+  <div class="card"><table>
+    <thead><tr><th>Control</th><th class="num">Result</th><th class="num">Expected</th><th>Status</th></tr></thead>
+    <tbody>{ctrl}</tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Reconciliation summary</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="label">Total lines</div><div class="value">{k_total}</div><div class="foot">Unique matching keys</div></div>
+    <div class="kpi"><div class="label">Reconciled</div><div class="value">{k_rec}</div><div class="foot">{k_rate}% match rate</div></div>
+    <div class="kpi"><div class="label">Open items</div><div class="value">{k_open}</div><div class="foot">Require follow-up</div></div>
+    <div class="kpi"><div class="label">Net difference</div><div class="{k_net_cls}">{k_net}</div><div class="foot">{la} less {lb}</div></div>
+    <div class="kpi"><div class="label">Gross, ignoring sign</div><div class="value">{k_gross}</div><div class="foot">Sum of absolute differences</div></div>
+  </div>
+</section>
+
+<div class="grid2">
+  <section><h2>Open items by difference type</h2><div class="card"><table>
+    <thead><tr><th>Difference type</th><th class="num">Count</th><th class="num">Value, ignoring sign</th></tr></thead>
+    <tbody>{type_body}</tbody></table></div></section>
+  <section><h2>Open items by root cause</h2><div class="card"><table>
+    <thead><tr><th>Root cause</th><th class="num">Count</th><th class="num">Value, ignoring sign</th></tr></thead>
+    <tbody>{root_body}</tbody></table></div></section>
+</div>
+
+<section>
+  <h2>Difference by account</h2>
+  <div class="card"><table>
+    <thead><tr><th>{acct_hdr}</th><th>{name_hdr}</th><th class="num">Amount — {la}</th><th class="num">Amount — {lb}</th><th class="num">Difference</th></tr></thead>
+    <tbody>{acct_body}</tbody></table></div>
+</section>
+
+<section>
+  <h2>{cp_title}</h2>
+  <div class="card"><table>
+    <thead><tr><th>{comp_hdr}</th><th>{per_hdr}</th><th class="num">Amount — {la}</th><th class="num">Amount — {lb}</th><th class="num">Difference</th><th class="num">Open items</th></tr></thead>
+    <tbody>{cp_body}</tbody></table></div>
+</section>
+
+<section>
+  <h2>Reconciliation detail — {open_ct} open items</h2>
+  <div class="card"><table>
+    <thead><tr><th>{comp_hdr}</th><th>{acct_hdr}</th><th>{name_hdr}</th><th>{per_hdr}</th><th class="num">Amount — {la}</th><th class="num">Amount — {lb}</th><th class="num">Difference</th><th>Status</th><th>Difference Type</th><th>Root Cause</th></tr></thead>
+    <tbody>{det_body}</tbody></table>
+    <p class="sub" style="margin:10px 0 0">The remaining {rec_ct} lines are <span class="tag tag-rec">Reconciled</span> and are listed in full on the Reconciliation tab of the workbook.</p>
+  </div>
+</section>
+
+<section><h2>Headlines</h2><div class="card"><ul class="headlines">{head}</ul></div></section>
+
+<footer>{footer}</footer>
+</div>
+</body>
+</html>
+"""
+
+
+def main():
+    p = argparse.ArgumentParser(description="Config-driven two-source reconciliation.")
+    p.add_argument("--config", required=True)
+    p.add_argument("--source-a", required=True)
+    p.add_argument("--source-b", required=True)
+    p.add_argument("--sheet-a", default=None, help="Sheet name/index for source A (for workbook tabs)")
+    p.add_argument("--sheet-b", default=None, help="Sheet name/index for source B (for workbook tabs)")
+    p.add_argument("--out", default="reconciliation.xlsx")
+    p.add_argument("--html", default=None,
+                   help="Also write the styled HTML dashboard to this path (or set output.emitHtml in config).")
+    args = p.parse_args()
+    import os
+
+    with open(args.config, encoding="utf-8") as f:
+        config = json.load(f)
+
+    # Resolve sheet selectors: CLI overrides config; config `sheet` under each source is honored.
+    sheet_a = args.sheet_a if args.sheet_a is not None else config["sources"]["a"].get("sheet")
+    sheet_b = args.sheet_b if args.sheet_b is not None else config["sources"]["b"].get("sheet")
+
+    df_a = load_table(args.source_a, sheet_a)
+    df_b = load_table(args.source_b, sheet_b)
+
+    # Fill in human labels from file/tab names when the config didn't set an explicit label.
+    # This is what keeps the report free of generic "A"/"B" wording.
+    if not config["sources"]["a"].get("label"):
+        config["sources"]["a"]["label"] = default_label(args.source_a, sheet_a)
+    if not config["sources"]["b"].get("label"):
+        config["sources"]["b"]["label"] = default_label(args.source_b, sheet_b)
+    # If both sources are the same file reconciled across two tabs, make sure the labels
+    # are distinct by including the sheet name.
+    if (args.source_a == args.source_b and sheet_a is not None and sheet_b is not None
+            and config["sources"]["a"]["label"] == config["sources"]["b"]["label"]):
+        config["sources"]["a"]["label"] = default_label(args.source_a, sheet_a)
+        config["sources"]["b"]["label"] = default_label(args.source_b, sheet_b)
+
+    la = config["sources"]["a"]["label"]
+    lb = config["sources"]["b"]["label"]
+
+    # This reference script implements the record-to-record tiered match. Control-total
+    # tie-out (SKILL.md Step 3b) is an analytical method the agent performs directly; the
+    # script does not run it, so refuse rather than silently emit record-to-record output.
+    mode = config.get("matching", {}).get("reconciliationMode", "recordToRecord")
+    if mode and mode != "recordToRecord":
+        sys.exit(f"reconciliationMode '{mode}' is not run by this script. It implements "
+                 "record-to-record matching only; perform control-total tie-out analytically "
+                 "per SKILL.md Step 3b, or set matching.reconciliationMode to 'recordToRecord'.")
+
+    # Confirm configured columns exist before matching.
+    for side, df in (("a", df_a), ("b", df_b)):
+        s = config["sources"][side]
+        needed = list(s["keyColumns"]) + [s["amountColumn"]]
+        missing = [c for c in needed if c not in df.columns]
+        if missing:
+            sys.exit(f"Source '{s['label']}' is missing configured column(s): {missing}. "
+                     f"Available: {list(df.columns)}")
+
+    results, total_a, total_b = reconcile(df_a, df_b, config)
+    summary = tie_out(results, total_a, total_b,
+                      config["matching"].get("amountToleranceAbsolute", 0.01))
+    counts = write_report(results, summary, config, args.out, df_a=df_a, df_b=df_b,
+                          src_name=os.path.basename(args.source_a))
+
+    print(f"Reconciliation written to {args.out}")
+
+    # Optional HTML dashboard (same data, styled template). Driven by --html or output.emitHtml.
+    html_path = args.html
+    if html_path is None and config.get("output", {}).get("emitHtml"):
+        html_path = os.path.splitext(args.out)[0] + ".html"
+    if html_path:
+        rows, _, _ = compute_reconciliation(df_a, df_b, config)
+        write_html_report(rows, config, html_path, src_name=os.path.basename(args.source_a))
+        print(f"HTML dashboard written to {html_path}")
+
+    print(f"Control total {la} = {total_a:.2f} | {lb} = {total_b:.2f} | net = {summary['net_difference']:.2f}")
+    print(f"Tied out: {'YES' if summary['tied_out'] else 'NO (residual %.2f)' % summary['residual']}")
+    for status, n in counts.items():
+        print(f"  {status}: {n}")
+
+
+if __name__ == "__main__":
+    main()
