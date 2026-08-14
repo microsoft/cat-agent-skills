@@ -3,32 +3,33 @@
 Fill a Microsoft Word template supplied at runtime — **uploaded**, or retrieved
 from **SharePoint**, **OneDrive**, or another connector — using **user input**,
 approved agent **knowledge sources**, and **results from prior tool or connector
-calls**. The template keeps control of structure, branding, styles, tables,
-headers, and footers. The skill writes a **new** DOCX — it never overwrites the
-original template.
+calls**. Works for any document the template defines: **policy, procedure,
+report, paper, briefing, SOP, statement of work**, or similar.
+
+The template keeps control of structure, branding, styles, tables, headers, and
+footers. The skill writes a **new** DOCX — it never overwrites the original.
 
 ## When to use it
 
-Ask the agent to create, draft, or compile a document from a template, for
-example:
+| Document kind | Typical template |
+| --- | --- |
+| Policy | Corporate policy shell (purpose, scope, rules, related docs) |
+| Procedure / SOP | Numbered steps, roles, inputs/outputs |
+| Report / briefing | Summary, findings table, recommendations |
+| Paper | Title, abstract, body headings, references |
+| Status pack | Narrative plus rows from Dataverse, SharePoint, or another connector |
 
-- a leave policy from the corporate policy template;
-- a statement of work from a standard SOW template;
-- a report, briefing, or paper from a branded Word file;
-- a procedure or SOP that must keep the official heading structure;
-- a status report whose tables come from Dataverse, SharePoint, or another connector called earlier in the conversation.
+Ask the agent to create, draft, or compile the document from that template.
 
 ## Before you start
-
-Provide:
 
 | Input | Why it matters |
 | --- | --- |
 | Word template (`.docx`) — **required** | Controls layout, placeholders, and branding. May be **uploaded**, or retrieved from **SharePoint**, **OneDrive**, or another connector |
-| Document title and purpose | Sets the draft intent |
+| Document type, title, and purpose | Sets what is being drafted |
 | Intended audience | Tones the language |
 | Requirements | Anything the template must cover |
-| Approved knowledge sources | Policies, manuals, and other grounded content |
+| Approved knowledge sources | Grounded content |
 | Prior tool / connector results | Records, lists, and fields already retrieved this conversation |
 | Output filename | Name of the new DOCX |
 
@@ -38,86 +39,94 @@ agent writes `Not specified in approved sources` instead of inventing it.
 
 ## Ideal Word template structure
 
-Design the `.docx` so the agent can map sections and placeholders to JSON
-without guessing. Use **Word styles** (Heading 1, Heading 2, Normal) and
-clear `{{placeholders}}` — not dummy paragraphs of finished policy text.
+The same pattern works for every document type. Use **Word styles** (Heading 1,
+Heading 2, Normal) and `{{placeholders}}` — not finished body text.
 
 **Do**
 
 - Put branding, page numbers, and classification in the **header / footer**.
 - Use **Heading 1** for every major section the finished document must keep.
-- Use a **one-row sample table** for repeating items (leave types, owners, dates).
-- Name placeholders to match fields: `{{document.title}}`, `{{sections.purpose}}`.
-- Leave body cells short: `{{sections.purpose}}` or `[Insert purpose — from approved sources]`.
+- Use a **one-row sample table** for anything that repeats (steps, findings, leave types, owners).
+- Name placeholders after the field: `{{document.title}}`, `{{sections.<heading>}}`.
+- Keep body cells short: `{{sections.purpose}}` or `[Insert from approved sources]`.
 
 **Don’t**
 
-- Bury real policy wording in the template (it is not a knowledge source).
+- Bury finished wording in the template (it is not a knowledge source).
 - Use floating text boxes or images that hide placeholders.
 - Skip headings and rely on bold paragraphs — the agent may miss sections.
 
-### Example — Leave Policy template
+### Generic skeleton
 
-What the Word file should look like before generation:
-
-**Header:** `Contoso | Internal | {{document.title}}`
+**Header:** `Organisation | Classification | {{document.title}}`
 
 **Title (Heading 1):** `{{document.title}}`
 
-**Document control (Heading 2)** — one metadata table:
+**Document control (Heading 2)**
 
 | Field | Placeholder |
 | --- | --- |
+| Type | `{{document.type}}` |
 | Owner | `{{document.owner}}` |
 | Version | `{{document.version}}` |
 | Status | `{{document.status}}` |
 | Audience | `{{document.audience}}` |
 
-**Body sections** — each is Heading 1 with a single placeholder underneath:
+**Body** — one Heading 1 per section, placeholder underneath. Name sections
+after the template, for example:
 
-| Heading 1 | Body |
+| Kind | Typical Heading 1s |
 | --- | --- |
-| 1. Executive summary | `{{sections.executive_summary}}` |
-| 2. Purpose | `{{sections.purpose}}` |
-| 3. Scope | `{{sections.scope}}` |
-| 4. Leave types | Repeating table (below) |
-| 5. Responsibilities | `{{sections.responsibilities}}` |
-| 6. Related documents | `{{sections.related_documents}}` |
+| Policy | Purpose, Scope, Policy statements, Responsibilities, Related documents |
+| Procedure | Purpose, Scope, Roles, Procedure steps, Exceptions |
+| Report | Executive summary, Findings, Analysis, Recommendations |
+| Paper | Abstract, Introduction, Discussion, Conclusion, References |
 
-**Leave types table** — keep the header row; leave **one sample data row** for the agent to clone:
+`{{sections.purpose}}`, `{{sections.scope}}`, `{{sections.findings}}`, and so on.
 
-| Leave type | Entitlement | Owner | Evidence |
-| --- | --- | --- | --- |
-| `{{leave_type}}` | `{{leave_entitlement}}` | `{{leave_owner}}` | `{{leave_evidence}}` |
+**Repeating table** — keep the header row; leave **one sample data row** to clone:
 
-**Footer:** `{{document.version}} | Page X of Y | Draft`
+| Column A | Column B | Column C |
+| --- | --- | --- |
+| `{{item.col_a}}` | `{{item.col_b}}` | `{{item.col_c}}` |
 
-The agent fills those placeholders from approved sources, **repeats the
-leave-types row** for each item in the JSON array, and leaves unused
-fields as `Not specified in approved sources`. Styles, header, footer,
-and table formatting stay as they are in the template.
+Rename columns to match the document (`Step` / `Owner` / `System`, or
+`Finding` / `Impact` / `Action`, or `Leave type` / `Entitlement` / `Owner`).
+
+**Footer:** `{{document.version}} | Page X of Y | {{document.status}}`
+
+The agent fills placeholders from approved sources, **repeats the sample row**
+for each JSON array item, and leaves gaps as `Not specified in approved
+sources`. Styles, header, footer, and table formatting stay as in the template.
+
+### Example mapping — Leave Policy
+
+A leave policy is only one use of the same skeleton: Heading 1s become Purpose,
+Scope, Leave types, Responsibilities; the repeating table columns become
+`{{leave_type}}`, `{{leave_entitlement}}`, `{{leave_owner}}`, `{{leave_evidence}}`.
 
 ## How it works
 
 1. Finds the Word template at runtime — from the upload, SharePoint, OneDrive, or the named connector.
-2. Inspects placeholders, sections, tables, headers, and footers.
+2. Inspects document type, placeholders, sections, tables, headers, and footers.
 3. Pulls facts from approved knowledge, user-supplied files, and prior tool or connector results.
-4. Builds a structured JSON object that matches the template fields.
+4. Builds JSON that matches **this** template's fields.
 5. Validates required sections, source-backed statements, and repeating rows.
 6. Populates the template while preserving styles and layout.
 7. Saves a new DOCX and returns a short generation summary.
 
 ## Example requests
 
-> Use the Leave Policy template in SharePoint
-> (`Policies/Templates/Leave-Policy.docx`). Draft version 0.1 for internal
-> staff. Pull content from our approved HR knowledge. Save as
-> `Leave-Policy-v0.1.docx`.
+> Use the Leave Policy template in SharePoint (`Policies/Templates/Leave-Policy.docx`).
+> Draft version 0.1 for internal staff from approved HR knowledge.
+> Save as `Leave-Policy-v0.1.docx`.
 
-> Get the open accounts from Dataverse, then fill the status-report template
-> in my OneDrive (`Templates/Q3-Status-Report.docx`). Use those records for
-> the table and our knowledge base for the narrative. Save as
-> `Q3-Account-Status.docx`.
+> Fill the incident-response **procedure** template in OneDrive.
+> Use the approved ops playbook for the steps. Save as `IR-Procedure-v2.docx`.
+
+> Get this quarter's accounts from Dataverse, then fill the **status report**
+> template. Connector rows go in the findings table; knowledge base for the narrative.
+> Save as `Q3-Account-Status.docx`.
 
 The agent returns the completed Word file plus a summary of what was filled,
 what was missing, and which sources were used — including connector names.

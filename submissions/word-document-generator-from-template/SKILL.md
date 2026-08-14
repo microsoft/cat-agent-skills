@@ -1,27 +1,28 @@
 ---
 name: word-document-generator-from-template
-description: Generates a complete Word document from a Word template supplied at runtime (uploaded, or retrieved from SharePoint, OneDrive, or another connector) plus user input, approved knowledge sources, and prior tool or connector results. Use when a user asks to create, draft, or compile a document from a template.
+description: Generates a complete Word document from a Word template supplied at runtime (uploaded, or retrieved from SharePoint, OneDrive, or another connector) plus user input, approved knowledge sources, and prior tool or connector results. Use when a user asks to create, draft, or compile any document from a template — policy, procedure, report, paper, briefing, SOP, or similar.
 ---
 # Word Document Generator from Template
 
 ## Purpose
 
-Generate a complete Microsoft Word document using:
+Generate a complete Microsoft Word document of **any type the template defines**
+(policy, procedure, report, paper, briefing, SOP, statement of work, or similar) using:
 
 - a Word template supplied at runtime (uploaded by the user, or retrieved from SharePoint, OneDrive, or another connector);
 - information provided by the user;
 - approved agent knowledge sources;
 - files supplied with the request; and
-- information retrieved from prior tool or connector calls in the same conversation (for example Dataverse, SharePoint, CRM, Azure Maps, or any Copilot Studio action).
+- information retrieved from prior tool or connector calls in the same conversation (for example Dataverse, SharePoint, CRM, or any Copilot Studio action).
 
-The runtime template controls the document structure, formatting, headings, tables, headers, footers, and branding.
+The runtime template controls document type, structure, formatting, headings, tables, headers, footers, and branding. Adapt sections, tables, and JSON keys to **that** template — do not assume a fixed outline.
 
 ## Required inputs
 
 Before generating the document, identify:
 
 - the Word template to use, and where it comes from (upload, SharePoint, OneDrive, or another location);
-- the document title and purpose;
+- the document type, title, and purpose;
 - the intended audience;
 - any user-provided requirements;
 - the approved knowledge sources to use;
@@ -43,6 +44,7 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
    - another connector or prior tool result that returns a `.docx` file.
    If the template is not already in the working directory, retrieve it with the matching connector or tool before continuing.
 2. Inspect the template to identify:
+   - document type (policy, procedure, report, paper, or other);
    - placeholders;
    - headings and sections;
    - tables;
@@ -50,10 +52,10 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
    - headers and footers; and
    - required document metadata.
 3. Retrieve relevant information from approved knowledge sources, user-supplied files, and prior tool or connector results already available in the conversation. Prefer connector-returned facts (records, dates, owners, IDs) over restating them from memory.
-4. Generate content for each document section separately.
-5. Create a structured JSON object matching the template fields.
+4. Generate content for each document section separately, matching the template's headings.
+5. Create a structured JSON object matching the template fields (not a fixed schema).
 6. Validate that:
-   - required sections are present;
+   - required sections from the template are present;
    - required fields have values;
    - generated statements are supported by approved knowledge, user files, or prior tool/connector results;
    - repeating items are represented as arrays; and
@@ -79,11 +81,12 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Generation rules
 
+- Follow the uploaded template's outline. Rename JSON keys to match its headings and placeholders.
 - Use only information from approved knowledge sources, user-supplied files, or prior tool/connector results. Do not invent facts that those sources do not contain.
 - Treat prior tool and connector outputs as approved sources. Record the tool or connector name in `source_ids` (for example `Dataverse:accounts`, `SharePoint:policy-library`).
 - Generate long documents section by section rather than in one response.
 - Keep the structured JSON as the intermediate source of truth.
-- Use clear, professional, organization-appropriate language.
+- Use clear, professional, organization-appropriate language for the stated audience.
 - Preserve mandatory wording found in approved sources.
 - Do not treat the template file as a knowledge source unless instructed.
 - Do not add new sections unless required to complete the template.
@@ -114,57 +117,49 @@ If the required template cannot be found or retrieved, stop document generation 
 
 ## Structured JSON
 
-Create JSON that reflects the runtime template. Use:
+Create JSON that reflects the **runtime template**. Use:
 
-- strings for individual fields;
-- objects for document sections;
-- arrays for repeating tables or content blocks; and
-- source identifiers for traceability.
+- `document` — title, type, owner, version, status, audience, and any other metadata fields on the cover or control table;
+- `sections` — one object per Heading 1 / Heading 2, keyed by a slug of that heading;
+- `items` (or a name taken from the table, e.g. `leave_types`, `findings`, `steps`) — arrays for repeating tables or content blocks;
+- `sources` — identifiers for knowledge, files, and connectors.
 
-Example:
+Example shape (field names change to match the template):
 
+```json
 {
   "document": {
-    "title": "Leave Policy",
-    "owner": "Human Resources",
-    "version": "0.1",
-    "status": "Draft"
+    "title": "{{document.title}}",
+    "type": "policy | procedure | report | paper | other",
+    "owner": "{{document.owner}}",
+    "version": "{{document.version}}",
+    "status": "{{document.status}}",
+    "audience": "{{document.audience}}"
   },
   "sections": {
-    "executive_summary": {
+    "<heading_slug>": {
       "content": "Generated section content",
       "source_ids": ["SRC-001"]
-    },
-    "purpose": {
-      "content": "Generated section content",
-      "source_ids": ["SRC-001", "SRC-002"]
     }
   },
-  "leave_types": [
+  "items": [
     {
-      "id": "LV-001",
-      "leave_type": "Annual leave",
-      "entitlement": "Generated entitlement",
-      "owner": "Human Resources",
-      "evidence": "HR policy handbook",
+      "col_1": "Value for first repeating-table column",
+      "col_2": "Value for second column",
       "source_ids": ["SRC-002"]
     }
   ],
   "sources": [
     {
       "source_id": "SRC-001",
-      "title": "Approved HR source document",
-      "type": "knowledge"
-    },
-    {
-      "source_id": "SRC-003",
-      "title": "Dataverse — Employee leave records",
-      "type": "connector"
+      "title": "Approved source",
+      "type": "knowledge | file | connector"
     }
   ]
 }
+```
 
-Adapt the JSON fields to the actual placeholders and structure found in the runtime template.
+A Leave Policy template would map `items` to `leave_types`; a procedure would map it to `steps`; a report would map it to `findings` or connector rows. Always adapt to the actual placeholders.
 
 ## Quality and safety
 
