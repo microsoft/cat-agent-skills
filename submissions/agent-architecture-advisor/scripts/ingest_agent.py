@@ -637,11 +637,21 @@ def ingest(path: Path, verbose: bool) -> Dict[str, Any]:
         ingest_solution_zip(path, model, verbose)
     elif fmt == "agent_yaml":
         text = path.read_text(encoding="utf-8", errors="replace")
-        model["source"]["format"] = "copilot_studio_agent_yaml"
-        model["agent"]["platform"] = "copilot_studio"
-        model["source"]["parsed_files"].append(path.name)
-        parse_topic_yaml(text, path.name, model, verbose)
-    elif fmt == "json_definition":
+
+        # Heuristic: Foundry agent definitions often have top-level 'model'/'model_deployment' and 'tools'.
+        # Prefer failing with an explicit warning over mis-parsing as a Copilot Studio topic.
+        looks_like_foundry = (
+            re.search(r"^\s*(model|model_deployment)\s*:", text, re.M)
+            and re.search(r"^\s*tools\s*:", text, re.M)
+        )
+
+        if looks_like_foundry:
+            ingest_foundry(text, model, path.name)
+        else:
+            model["source"]["format"] = "copilot_studio_agent_yaml"
+            model["agent"]["platform"] = "copilot_studio"
+            model["source"]["parsed_files"].append(path.name)
+            parse_topic_yaml(text, path.name, model, verbose)
         text = path.read_text(encoding="utf-8", errors="replace")
         ingest_foundry(text, model, path.name)
     elif fmt == "customizations_xml":
