@@ -226,15 +226,18 @@ const authorProfileUrl =
           )
         }
 
-        <div class="mt-4 flex items-center gap-2">
+        <div class="mt-4 flex flex-wrap items-center gap-2">
           <a
             href="#rate"
-            class="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-fg hover:border-accent/50 hover:text-fg transition-colors"
-            title={`Rate & discuss this ${noun}`}
+            class="inline-flex items-center rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-fg transition-colors hover:border-accent/50"
           >
-            <span aria-hidden="true">👍</span>
-            <span>{rating}</span>
-            <span class="text-muted">{rating === 1 ? "rating" : "ratings"}</span>
+            <span class="inline-flex items-center gap-1.5">
+              <span aria-hidden="true">👍</span>
+              <span>{rating}</span>
+              <span class="text-muted">{rating === 1 ? "rating" : "ratings"}</span>
+            </span>
+            <span class="mx-2 h-4 w-px bg-border" aria-hidden="true"></span>
+            <span class="text-accent-text">Rate &amp; discuss</span>
           </a>
           {
             downloads > 0 && (
@@ -436,8 +439,9 @@ const authorProfileUrl =
                     class="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-border accent-accent"
                   />
                   <span>
-                    I understand I should only add {noun}s from sources I trust.
-                    This {noun} runs with my agent's permissions.
+                    I understand that this is a community-provided {noun}. It runs with my agent's
+                    permissions, so I should review it carefully and install it only if I trust the
+                    source.
                   </span>
                 </label>
               </div>
