@@ -103,6 +103,24 @@ def within_tolerance(x, y, abs_tol, pct_tol):
     return False
 
 
+def align_key_columns(config):
+    """If matching.keyMap pairs A's key columns to differently-named B columns, reorder
+    sources.b.keyColumns to match sources.a.keyColumns element-wise, so every positional
+    (a_keys[i] <-> b_keys[i]) assumption downstream (key building, timing, report field
+    mapping) holds. No-op when keyMap is absent or does not cover every A key column."""
+    m = config.get("matching", {})
+    key_map = m.get("keyMap")
+    if not key_map:
+        return
+    a_keys = config["sources"]["a"]["keyColumns"]
+    mapping = {}
+    for pair in key_map:
+        if isinstance(pair, (list, tuple)) and len(pair) == 2:
+            mapping[pair[0]] = pair[1]
+    if a_keys and all(k in mapping for k in a_keys):
+        config["sources"]["b"]["keyColumns"] = [mapping[k] for k in a_keys]
+
+
 # ----------------------------- matching -----------------------------
 
 def reconcile(df_a, df_b, config):
@@ -166,15 +184,25 @@ def reconcile(df_a, df_b, config):
         rb = candidates[0]
         used_b.add(rb["_idx"])
         ra["_matched"] = True
-        if within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
+        if ra["_amt"] is None or rb["_amt"] is None:
+            # Key matches on both sides but an amount is blank/unparseable. Do not silently
+            # invent a clean variance; flag for review. The difference kept here is the
+            # balancing contribution to the tie-out identity (a blank amount contributed 0
+            # to its control total), not a fabricated "matched" number.
+            status = "Probable (Needs Review)"
+            diff = (ra["_amt"] or 0) - (rb["_amt"] or 0)
+            evidence = "exact key; amount missing on one side - verify before treating as matched"
+        elif within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
             status = "Matched"
             diff = 0.0
+            evidence = "exact key"
         else:
             status = "Matched (with difference)"
             diff = (ra["_amt"] or 0) - (rb["_amt"] or 0)
+            evidence = "exact key"
         results.append({"status": status, "a_idx": ra["_idx"], "b_idx": rb["_idx"],
                         "key": ra["_key"], "amount_a": ra["_amt"], "amount_b": rb["_amt"],
-                        "difference": diff, "evidence": "exact key"})
+                        "difference": diff, "evidence": evidence})
 
     unmatched_a = [r for r in a if not r.get("_matched")]
     unmatched_b = [r for r in b if r["_idx"] not in used_b]
@@ -187,9 +215,14 @@ def reconcile(df_a, df_b, config):
         sim_thr = m.get("similarityThreshold", 0.9)
         still_a = []
         for ra in unmatched_a:
+            # Never pair on an empty key/description - SequenceMatcher on two empty strings
+            # returns 1.0 and would fabricate a "Probable" match from amount/date alone.
+            if not str(ra["_key"]).strip():
+                still_a.append(ra)
+                continue
             best = None
             for rb in unmatched_b:
-                if rb["_idx"] in used_b:
+                if rb["_idx"] in used_b or not str(rb["_key"]).strip():
                     continue
                 if not within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
                     continue
@@ -230,9 +263,25 @@ def reconcile(df_a, df_b, config):
             avail = [r for r in pool if r["_idx"] not in exclude and r["_amt"] is not None]
             if len(avail) > POOL_CAP:
                 return None
+            # A split is same-sign as its target, so drop opposite-sign candidates and any
+            # single item already larger (by magnitude) than the target - this prunes the
+            # search space sharply before enumerating combinations.
+            if target >= 0:
+                avail = [r for r in avail if 0 <= r["_amt"] <= target + abs_tol]
+            else:
+                avail = [r for r in avail if target - abs_tol <= r["_amt"] <= 0]
+            # Search smaller (nearest-magnitude-first) combinations first, with an attempt cap
+            # so a pathological pool can't blow up the run.
+            avail.sort(key=lambda r: abs(r["_amt"]), reverse=True)
+            attempts = 0
+            ATTEMPT_CAP = 50000
             for size in range(2, max_members + 1):
                 for combo in combinations(avail, size):
-                    if within_tolerance(target, sum(c["_amt"] for c in combo), abs_tol, pct_tol):
+                    attempts += 1
+                    if attempts > ATTEMPT_CAP:
+                        return None
+                    s = sum(c["_amt"] for c in combo)
+                    if within_tolerance(target, s, abs_tol, pct_tol):
                         return combo
             return None
 
@@ -307,15 +356,26 @@ def reconcile(df_a, df_b, config):
 
 
 def tie_out(results, total_a, total_b, abs_tol):
-    diffs = sum(r["difference"] for r in results
-                if r["status"] == "Matched (with difference)" and r["difference"] is not None)
-    unm_a = sum(r["amount_a"] for r in results if r["status"] == "Unmatched (A)" and r["amount_a"] is not None)
-    unm_b = sum(r["amount_b"] for r in results if r["status"] == "Unmatched (B)" and r["amount_b"] is not None)
+    # The identity: (total A - total B) must equal the sum of every line's net contribution.
+    # For a matched-with-difference, probable, or grouped pairing that is the recorded
+    # difference (A less B, with a blank amount counting as 0); for a one-sided item it is
+    # the present amount. Including probable/grouped keeps the identity correct whenever those
+    # tiers pair amounts within tolerance (a small non-zero delta still has to be explained).
+    explained = 0.0
+    for r in results:
+        st = r["status"]
+        d = r.get("difference")
+        if st in ("Matched (with difference)", "Probable (Needs Review)",
+                  "Grouped (Needs Review)") and d is not None:
+            explained += d
+        elif st == "Unmatched (A)" and r.get("amount_a") is not None:
+            explained += r["amount_a"]
+        elif st == "Unmatched (B)" and r.get("amount_b") is not None:
+            explained -= r["amount_b"]
     left = total_a - total_b
-    right = diffs + unm_a - unm_b
-    closed = abs(left - right) <= max(abs_tol, 0.01)
+    closed = abs(left - explained) <= max(abs_tol, 0.01)
     return {"total_a": total_a, "total_b": total_b, "net_difference": left,
-            "explained": right, "residual": left - right, "tied_out": closed}
+            "explained": explained, "residual": left - explained, "tied_out": closed}
 
 
 # ----------------------------- output -----------------------------
@@ -340,44 +400,6 @@ REC_FONT, REC_BG = "1F3864", "EAF1F8"     # Reconciled - navy text on soft blue
 # Retained for the headlines narrative helpers below.
 LABEL_FONT = "3B3B3B"
 ACCT_FMT = ACCT2
-
-
-def exception_type(status, la, lb):
-    """Plain-language reason a line did not reconcile. '' means it reconciled."""
-    if status == "Matched":
-        return "None"
-    if status == "Matched (with difference)":
-        return "Amount mismatch"
-    if status == "Timing difference (Needs Review)":
-        return "Timing difference"
-    if status == "Probable (Needs Review)":
-        return "Possible match"
-    if status == "Grouped (Needs Review)":
-        return "Split / grouped"
-    if status == "Unmatched (A)":
-        return f"Missing in {lb}"   # present in A, absent from B
-    if status == "Unmatched (B)":
-        return f"Missing in {la}"   # present in B, absent from A
-    return status
-
-
-def proposed_action(status, la, lb):
-    """A suggested next step for the reviewer, by break type."""
-    if status == "Matched":
-        return "No action"
-    if status == "Matched (with difference)":
-        return "Investigate balance"
-    if status == "Timing difference (Needs Review)":
-        return "Confirm period / timing"
-    if status == "Probable (Needs Review)":
-        return "Confirm the match"
-    if status == "Grouped (Needs Review)":
-        return "Confirm the split"
-    if status == "Unmatched (A)":
-        return f"Confirm exclusion or post to {lb}"
-    if status == "Unmatched (B)":
-        return f"Confirm exclusion or post to {la}"
-    return "Review"
 
 
 def _money(x):
@@ -566,11 +588,38 @@ def _src_meta(df, src_cfg, config):
     }
 
 
-def _write_source_tab(ws, df, meta, sheet_title):
-    """Write a source ledger verbatim plus a Matching Key helper column, styled with a blue
-    header. The helper column joins the key cells so the reconciliation SUMIF/COUNTIFs bind."""
+def _neutralize(v):
+    """Defuse spreadsheet formula/injection: a text value that begins with = + - @ could be
+    executed as a formula when the workbook is opened. Since all source data is untrusted, force
+    such strings to literal text with a leading apostrophe. Numbers are unaffected."""
+    if isinstance(v, str) and v[:1] in ("=", "+", "-", "@"):
+        return "'" + v
+    return v
+
+
+def _safe_sheet_name(name, taken):
+    """A valid, unique Excel sheet name: strip the reserved characters : \\ / ? * [ ], cap at
+    31 chars, and de-duplicate with a numeric suffix (truncating to keep room for it)."""
+    import re
+    n = re.sub(r"[:\\/?*\[\]]", " ", str(name)).strip() or "Sheet"
+    n = n[:31]
+    base, i = n, 2
+    while n.lower() in taken:
+        suffix = f" ({i})"
+        n = base[:31 - len(suffix)].rstrip() + suffix
+        i += 1
+    taken.add(n.lower())
+    return n
+
+
+def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
+    """Write a source ledger plus a Matching Key helper column, styled with a blue header. The
+    amount column is written sign-normalized (so signConvention flows through the workbook's
+    SUMIF totals); text cells are neutralized against formula injection; the helper column joins
+    the key cells so the reconciliation SUMIF/COUNTIFs bind."""
     from openpyxl.styles import Font, PatternFill, Alignment
 
+    norm = norm or {}
     hdr_fill = PatternFill("solid", fgColor=HDR_FILL)
     cols = meta["cols"]
     # Header row.
@@ -595,12 +644,15 @@ def _write_source_tab(ws, df, meta, sheet_title):
             v = row[name]
             if pd.isna(v):
                 v = None
-            cell = ws.cell(row=r, column=c, value=v)
             if _CL(c) == amt_letter:
+                # Sign-normalized numeric value drives the workbook's SUMIF totals.
+                cell = ws.cell(row=r, column=c, value=apply_sign(normalize_amount(v, norm), sign))
                 cell.number_format = ACCT2
             elif name in text_cols:
+                cell = ws.cell(row=r, column=c, value=_neutralize(v))
                 cell.font = Font(name="Arial", size=10)
             else:
+                cell = ws.cell(row=r, column=c, value=v)
                 cell.number_format = "0"
                 cell.alignment = Alignment(horizontal="left")
         # Matching Key formula: join the key cells with " | ".
@@ -608,10 +660,16 @@ def _write_source_tab(ws, df, meta, sheet_title):
         mkc = ws.cell(row=r, column=mk_c, value=f"={joined}")
         mkc.font = Font(color=MK_C)
 
-    # Column widths (roughly fit content; helper column a bit wider).
+    # Column widths: vectorized string-length over a bounded sample (avoids an O(rows*cols)
+    # Python loop; the widest of the first 200 rows is a fine proxy for display width).
+    sample = df.head(200)
     for c, name in enumerate(cols, start=1):
-        vals = [str(name)] + [str(row[name]) for _, row in df.iterrows()]
-        ws.column_dimensions[_CL(c)].width = min(max(max(len(v) for v in vals) + 2, 10), 40)
+        try:
+            body_max = int(sample[name].astype(str).str.len().max() or 0)
+        except Exception:
+            body_max = 0
+        width = min(max(max(len(str(name)), body_max) + 2, 10), 40)
+        ws.column_dimensions[_CL(c)].width = width
     ws.column_dimensions[_CL(mk_c)].width = 26
     ws.freeze_panes = "A2"
 
@@ -1067,7 +1125,6 @@ def write_report(results, summary, config, out_path, df_a=None, df_b=None, src_n
 
     la = config["sources"]["a"].get("label", "Source A")
     lb = config["sources"]["b"].get("label", "Source B")
-    sa, sb = la[:31], lb[:31]
 
     res_df = pd.DataFrame(results)
     counts = res_df["status"].value_counts().to_dict() if not res_df.empty else {}
@@ -1075,18 +1132,25 @@ def write_report(results, summary, config, out_path, df_a=None, df_b=None, src_n
 
     meta_a = _src_meta(df_a, config["sources"]["a"], config)
     meta_b = _src_meta(df_b, config["sources"]["b"], config)
+    norm = config.get("normalization", {})
+    sign_a = config["sources"]["a"].get("signConvention", "asIs")
+    sign_b = config["sources"]["b"].get("signConvention", "asIs")
 
     wb = openpyxl.Workbook()
     ws_dash = wb.active
     ws_dash.title = "Dashboard"
     ws_recon = wb.create_sheet("Reconciliation")
+    # Excel sheet names: <=31 chars, no : \ / ? * [ ], and unique. Sanitize both labels.
+    taken = {"dashboard", "reconciliation"}
+    sa = _safe_sheet_name(la, taken)
+    sb = _safe_sheet_name(lb, taken)
     ws_sa = wb.create_sheet(sa)
-    ws_sb = wb.create_sheet(sb if sb != sa else sb + " (B)")
+    ws_sb = wb.create_sheet(sb)
 
-    _write_source_tab(ws_sa, df_a, meta_a, sa)
-    _write_source_tab(ws_sb, df_b, meta_b, ws_sb.title)
-    info = _write_reconciliation(ws_recon, df_a, df_b, config, meta_a, meta_b, sa, ws_sb.title)
-    narr_rows = _write_dashboard(ws_dash, info, config, df_a, df_b, meta_a, meta_b, sa, ws_sb.title, narrative, src_name)
+    _write_source_tab(ws_sa, df_a, meta_a, sa, sign=sign_a, norm=norm)
+    _write_source_tab(ws_sb, df_b, meta_b, sb, sign=sign_b, norm=norm)
+    info = _write_reconciliation(ws_recon, df_a, df_b, config, meta_a, meta_b, sa, sb)
+    narr_rows = _write_dashboard(ws_dash, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narrative, src_name)
 
     # Apply the report fonts: Cambria everywhere structural/numeric, leaving any cell already
     # marked Arial (v15 uses Arial 10 for pulled text data / row labels) untouched.
@@ -1131,8 +1195,15 @@ def compute_reconciliation(df_a, df_b, config):
     def kstr(row, keys):
         return " | ".join(str(row[k]) for k in keys)
 
-    def amt(v):
-        return normalize_amount(v, config.get("normalization", {})) or 0.0
+    norm = config.get("normalization", {})
+    sign_a = config["sources"]["a"].get("signConvention", "asIs")
+    sign_b = config["sources"]["b"].get("signConvention", "asIs")
+
+    def amt_a(v):
+        return apply_sign(normalize_amount(v, norm), sign_a) or 0.0
+
+    def amt_b(v):
+        return apply_sign(normalize_amount(v, norm), sign_b) or 0.0
 
     # Aggregate each source by (case-insensitive) key string.
     a_recs, b_recs = df_a.to_dict("records"), df_b.to_dict("records")
@@ -1144,12 +1215,12 @@ def compute_reconciliation(df_a, df_b, config):
         if kl not in a_agg:
             a_agg[kl] = {"sum": 0.0, "n": 0, "disp": k}; a_first[kl] = rec
             order.append(kl)
-        a_agg[kl]["sum"] += amt(rec[amt_a_col]); a_agg[kl]["n"] += 1
+        a_agg[kl]["sum"] += amt_a(rec[amt_a_col]); a_agg[kl]["n"] += 1
     for rec in b_recs:
         k = kstr(rec, b_keys); kl = k.lower()
         if kl not in b_agg:
             b_agg[kl] = {"sum": 0.0, "n": 0, "disp": k}; b_first[kl] = rec
-        b_agg[kl]["sum"] += amt(rec[amt_b_col]); b_agg[kl]["n"] += 1
+        b_agg[kl]["sum"] += amt_b(rec[amt_b_col]); b_agg[kl]["n"] += 1
     for kl in b_agg:
         if kl not in a_agg:
             order.append(kl)
@@ -1369,9 +1440,12 @@ def build_html_dashboard(rows, config, src_name=None):
 
     companies = sorted({str(r["company"]) for r in rows if r["company"] != ""})
     periods = sorted({str(r["period"]) for r in rows if r["period"] != ""})
-    sub = (f"{la} vs {lb} &nbsp;|&nbsp; {gb0} " + " and ".join(companies) +
-           f" &nbsp;|&nbsp; {gb1} " + " and ".join(periods) +
-           f" &nbsp;|&nbsp; Difference = {la} less {lb}" +
+    # Build the sub-header from escaped pieces so user-derived labels/values can't inject markup.
+    esc_comp = " and ".join(e(c) for c in companies)
+    esc_per = " and ".join(e(p) for p in periods)
+    sub = (f"{e(la)} vs {e(lb)} &nbsp;|&nbsp; {e(gb0)} " + esc_comp +
+           f" &nbsp;|&nbsp; {e(gb1)} " + esc_per +
+           f" &nbsp;|&nbsp; Difference = {e(la)} less {e(lb)}" +
            (f" &nbsp;|&nbsp; Source: {e(src_name)}" if src_name else ""))
 
     return _HTML_TEMPLATE.format(
@@ -1566,6 +1640,12 @@ def main():
     # Resolve sheet selectors: CLI overrides config; config `sheet` under each source is honored.
     sheet_a = args.sheet_a if args.sheet_a is not None else config["sources"]["a"].get("sheet")
     sheet_b = args.sheet_b if args.sheet_b is not None else config["sources"]["b"].get("sheet")
+    # A digit-only selector (e.g. --sheet-a 0) is a sheet index, not a sheet literally named "0".
+    def _parse_sheet(s):
+        if isinstance(s, str) and s.strip().lstrip("-").isdigit():
+            return int(s.strip())
+        return s
+    sheet_a, sheet_b = _parse_sheet(sheet_a), _parse_sheet(sheet_b)
 
     df_a = load_table(args.source_a, sheet_a)
     df_b = load_table(args.source_b, sheet_b)
@@ -1582,6 +1662,9 @@ def main():
             and config["sources"]["a"]["label"] == config["sources"]["b"]["label"]):
         config["sources"]["a"]["label"] = default_label(args.source_a, sheet_a)
         config["sources"]["b"]["label"] = default_label(args.source_b, sheet_b)
+
+    # Align B's key columns to A's per matching.keyMap so differently-named keys reconcile.
+    align_key_columns(config)
 
     la = config["sources"]["a"]["label"]
     lb = config["sources"]["b"]["label"]

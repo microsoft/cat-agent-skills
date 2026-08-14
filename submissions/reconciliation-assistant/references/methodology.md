@@ -12,7 +12,7 @@ A reconciliation compares two sources that *should* describe the same set of rec
 | Matched (with difference) | Same record in both sources, amounts disagree. A real break. |
 | Probable (Needs Review) | No exact key, but a similarity pair cleared every threshold. A suggestion. |
 | Grouped (Needs Review) | One record on one side corresponds to several on the other (split/partial). |
-| Unmatched (A) / Unmatched (B) | Present in one source only. Shown in the report as "Only in &lt;source name&gt;". |
+| Unmatched (A) / Unmatched (B) | Present in one source only. Reported with Difference Type "Missing in &lt;source name&gt;". |
 
 The pool shrinks as tiers run: once a record is matched (or placed in a group), it leaves the pool and cannot match again. This guarantees one-to-one integrity and makes the result deterministic.
 
@@ -48,13 +48,13 @@ Detect one-to-many and many-to-one relationships when `enableGrouped` is on. A s
 
 Worked example. Ledger `INV-1005 | 3,000.00`; bank shows `PMT-A | 1,000.00`, `PMT-B | 1,000.00`, `PMT-C | 1,000.00`. The three payments sum to 3,000.00 within tolerance. State: **Grouped (Needs Review)**, with the invoice and all three payments listed together. Splits are legitimate but a human should see them, because a coincidental sum is possible.
 
-Guard against combinatorial blow-up: only attempt grouping among records that share a plausible key, counterparty, or date neighbourhood, and cap group size at `groupedMaxMembers`. Do not brute-force every subset of a large pool.
+Guard against combinatorial blow-up: the reference implementation restricts the candidate pool to the **same sign** as the target and to members no larger in magnitude than the target, searches larger-magnitude members first, and caps both the pool size and the number of subset attempts. A split therefore matches when several **same-sign** items sum to the target (the overwhelmingly common case - an invoice settled by several payments); a group that only nets to the target through offsetting positive and negative members (e.g. an amount reached via a credit memo) is intentionally left as separate one-sided breaks rather than paid for with an unbounded search. Cap group size at `groupedMaxMembers`.
 
 ## Tier 5 - Unmatched
 
-Whatever remains after Tiers 1-4. Records only in A are **Unmatched (A)**; records only in B are **Unmatched (B)**. In the delivered report these are labelled **"Only in &lt;source name&gt;"** (e.g. "Only in Bank statement") rather than "A"/"B", so the one-sided breaks read naturally. These are the genuine one-sided breaks: a payment with no matching invoice, an invoice never paid, a statement line the ledger never recorded.
+Whatever remains after Tiers 1-4. Records only in A are **Unmatched (A)**; records only in B are **Unmatched (B)**. In the delivered report these carry the Difference Type **"Missing in &lt;source name&gt;"** (e.g. "Missing in Bank statement"), so the one-sided breaks name the source that lacks the record rather than "A"/"B". These are the genuine one-sided breaks: a payment with no matching invoice, an invoice never paid, a statement line the ledger never recorded.
 
-## Tier 4b - Timing differences (Needs Review)
+## Tier 4b - Timing differences (annotation)
 
 Runs when `enableTimingDetection` is on and `timingKeyColumn` names the period/date component of the key (e.g., `Period` in a GL reconciliation, or the posting-date column elsewhere). It is checked against the records still unmatched after Tiers 1-4, before they are finalized as one-sided breaks.
 
@@ -66,11 +66,11 @@ Pair an unmatched A record with an unmatched B record when **all** hold:
 - their amounts are equal within tolerance,
 - their period values **differ** (same period is not a timing difference - that would have matched at Tier 1).
 
-A timing pair is **Timing difference (Needs Review)**, listed with both periods and the shared amount. Like similarity and grouped matches, it is a strong suggestion for a human to confirm, never an auto-confirmed match. Detecting it turns two confusing one-sided breaks (one on each side) into a single, self-explaining line.
+Timing detection **does not create a new match state**. The two lines **remain `Unmatched (A)` and `Unmatched (B)`** - so the counts and the tie-out still reflect one break on each side - but each is **annotated** with an evidence note ("Possible timing difference - same amount in <other period>"). In the delivered formula workbook these two lines are additionally classified with **Root Cause = Timing** (the "Missing in <source>" line has an offsetting "Missing in <other source>" line for the same reduced key). This keeps two confusing one-sided breaks readable as a single timing story without inventing a state the tie-out would have to special-case.
 
-Worked example. SAP GL has `Co 900001 | Accrued Liabilities | 2025-09 | -5,000`; the internal ledger has `Co 900001 | Accrued Liabilities | 2025-08 | -5,000`. No exact key match (periods differ), so both would fall to Unmatched. But the reduced key (`Co 900001 | Accrued Liabilities`) and the amount (`-5,000`) are identical, and the periods differ. State: **Timing difference (Needs Review)** - the accrual was booked a month apart in the two systems. Without this tier it reads as one missing item on each side; with it, it reads as one timing item to confirm.
+Worked example. SAP GL has `Co 900001 | Accrued Liabilities | 2025-09 | -5,000`; the internal ledger has `Co 900001 | Accrued Liabilities | 2025-08 | -5,000`. No exact key match (periods differ), so both fall to Unmatched. The reduced key (`Co 900001 | Accrued Liabilities`) and the amount (`-5,000`) are identical and the periods differ, so both lines are annotated as a possible timing difference and classified Root Cause = Timing in the workbook - the accrual was booked a month apart in the two systems.
 
-Because a timing pair has equal amounts on both sides, its contribution to the tie-out identity (`amount_a - amount_b`) is zero - reclassifying two unmatched items as one timing pair does not change whether the reconciliation ties.
+Because the two lines carry equal and opposite amounts, their net contribution to the tie-out identity is zero - annotating them as timing does not change whether the reconciliation ties.
 
 ## The tie-out identity
 
