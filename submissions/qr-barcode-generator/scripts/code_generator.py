@@ -364,10 +364,7 @@ def _compose_sheet(
 
 # ── CSV export ────────────────────────────────────────────────────────────────
 
-_FORMULA_CHARS = frozenset("=+@|%`")
-
-def _csv_cell(v: str) -> str:
-    return ("\t" + v) if v and v[0] in _FORMULA_CHARS else v
+_FORMULA_CHARS = frozenset("=+-@|%`")
 
 
 def _save_csv(
