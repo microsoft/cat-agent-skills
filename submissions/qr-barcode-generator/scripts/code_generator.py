@@ -367,6 +367,14 @@ def _compose_sheet(
 _FORMULA_CHARS = frozenset("=+-@|%`")
 
 
+def _csv_cell(value: Any) -> str:
+    """Return a CSV-safe string value (mitigates spreadsheet formula injection)."""
+    s = "" if value is None else str(value)
+    if s and s[0] in _FORMULA_CHARS:
+        return "'" + s
+    return s
+
+
 def _save_csv(
     items: list[dict],
     individual_paths: list[str],
