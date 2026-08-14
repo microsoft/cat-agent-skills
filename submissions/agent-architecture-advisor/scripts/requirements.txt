@@ -1,0 +1,3 @@
+# Optional. The skill runs without any dependencies (stdlib only).
+# Install this for high-fidelity YAML parsing of real Copilot Studio solution exports.
+pyyaml>=6.0

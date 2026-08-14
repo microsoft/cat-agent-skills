@@ -1,0 +1,22 @@
+{
+  "name": "Agent Architecture Advisor",
+  "description": "Reviews an existing Copilot Studio or Azure AI Foundry agent for architectural problems, modernizes a classic (topic-based) Copilot Studio agent into the new agentic multi-agent structure, or designs the architecture for a new one. Classifies every finding as a configuration issue, a design issue, or a genuine platform ceiling — then recommends staying put, extending with a hybrid, or migrating, with cost break-even and simulated production failures as evidence. Pulls guidance and pricing live from official Microsoft links.",
+  "platforms": ["Copilot Studio", "Cowork", "Scout"],
+  "tags": [
+    "architecture",
+    "copilot-studio",
+    "foundry",
+    "assessment",
+    "agent",
+    "review",
+    "cost",
+    "governance",
+    "decision-making",
+    "orchestration"
+  ],
+  "author": "Anamika Kumari & Shilpa Gangaramani",
+  "version": "1.1.0",
+  "createdAt": "2026-07-24",
+  "updatedAt": "2026-08-14",
+  "coverColor": "#1f4e79"
+}
