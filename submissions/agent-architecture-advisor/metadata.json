@@ -1,6 +1,6 @@
 {
   "name": "Agent Architecture Advisor",
-  "description": "Reviews an existing Copilot Studio or Azure AI Foundry agent for architectural problems, modernizes a classic (topic-based) Copilot Studio agent into the new agentic multi-agent structure, or designs the architecture for a new one. Classifies every finding as a configuration issue, a design issue, or a genuine platform ceiling — then recommends staying put, extending with a hybrid, or migrating, with cost break-even and simulated production failures as evidence. Pulls guidance and pricing live from official Microsoft links.",
+  "description": "Cross-platform architecture analysis for Copilot Studio and Azure AI Foundry agents — the only advisor that reasons about when to stay, extend, or move between the two. Runs deterministic checks (trigger-collision matrix, orchestration graph, token-and-credit cost model with break-even) on an agent export, then classifies every finding as configuration, design, cost, governance, or a genuine platform ceiling. Recommends OPTIMIZE, EXTEND (hybrid), MIGRATE, or REDESIGN — with a strict anti-bias rule that never recommends migration without a real capability ceiling. Also modernizes classic topic-based agents to the agentic multi-agent structure, designs new agents greenfield, and renders findings as simulated production conversations. Pulls guidance and pricing live from official Microsoft links.",
   "platforms": ["Copilot Studio", "Cowork", "Scout"],
   "tags": [
     "architecture",
