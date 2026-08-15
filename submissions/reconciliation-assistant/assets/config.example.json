@@ -21,7 +21,7 @@
     "reconciliationMode": "recordToRecord",
     "keyMap": [["Company", "Company"], ["Account No.", "Account No."], ["Period", "Period"]],
     "amountMatch": "exact",
-    "amountToleranceAbsolute": 0.01,
+    "amountToleranceAbsolute": 0.0,
     "amountTolerancePercent": 0.0,
     "dateWindowDays": 3,
     "enableSimilarityMatching": false,
@@ -45,8 +45,6 @@
     "expectedCurrency": "USD"
   },
   "output": {
-    "format": "xlsx",
-    "fileName": "reconciliation-<date>.xlsx",
     "emitHtml": false,
     "columnRenames": {"Account No.": "Account Number"},
     "accountColumn": "Account No.",

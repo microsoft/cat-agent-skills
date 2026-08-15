@@ -18,9 +18,9 @@ The pool shrinks as tiers run: once a record is matched (or placed in a group), 
 
 ## Tier 1 - Exact match
 
-Two records match exactly when their keys are equal under the `keyMap` (case-insensitive and trimmed if configured) **and** their normalized amounts are equal within `amountToleranceAbsolute` or `amountTolerancePercent`.
+Two records match exactly when their keys are equal under the `keyMap` (case-insensitive and trimmed if configured) **and** their normalized amounts agree under the configured `amountMatch` mode: in `exact` mode the amounts must be equal to the cent (both tolerances are treated as 0, regardless of any `amountToleranceAbsolute`/`amountTolerancePercent` left in the config); in `tolerance` mode they must agree within `amountToleranceAbsolute` or `amountTolerancePercent`.
 
-Worked example. Ledger row `INV-1001 | 1,250.00 | 2026-03-04`; bank row `inv-1001 | 1250.00 | 2026-03-05`. Keys equal after trim + case-fold; amounts equal within 0.01. State: **Matched**. The one-day date gap is irrelevant once the key matches.
+Worked example. Ledger row `INV-1001 | 1,250.00 | 2026-03-04`; bank row `inv-1001 | 1250.00 | 2026-03-05`. Keys equal after trim + case-fold; amounts equal to the cent. State: **Matched**. The one-day date gap is irrelevant once the key matches.
 
 ## Tier 2 - Matched with difference
 

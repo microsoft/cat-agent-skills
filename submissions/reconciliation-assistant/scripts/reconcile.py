@@ -136,6 +136,16 @@ def within_tolerance(x, y, abs_tol, pct_tol):
     return False
 
 
+def effective_tolerances(matching):
+    """Resolve the amount-match tolerances honoring matching.amountMatch. In 'exact' mode the
+    amounts must agree exactly (to the cent for 2-dp currency data), so BOTH tolerances are 0
+    regardless of any amountToleranceAbsolute/Percent left in the config; 'tolerance' mode (or an
+    unset amountMatch) uses the configured absolute/percent values (default 0.01 / 0)."""
+    if matching.get("amountMatch") == "exact":
+        return 0.0, 0.0
+    return matching.get("amountToleranceAbsolute", 0.01), matching.get("amountTolerancePercent", 0.0)
+
+
 def align_key_columns(config):
     """If matching.keyMap pairs A's key columns to differently-named B columns, reorder
     sources.b.keyColumns to match sources.a.keyColumns element-wise, so every positional
@@ -160,8 +170,7 @@ def reconcile(df_a, df_b, config):
     src = config["sources"]
     m = config["matching"]
     norm = config.get("normalization", {})
-    abs_tol = m.get("amountToleranceAbsolute", 0.01)
-    pct_tol = m.get("amountTolerancePercent", 0.0)
+    abs_tol, pct_tol = effective_tolerances(m)
 
     a_keys = src["a"]["keyColumns"]
     b_keys = src["b"]["keyColumns"]
@@ -665,15 +674,26 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     L_action = _CL(10 + D)
     ncols = 10 + D
 
-    # Union of keys: every source-A row (in order), then source-B rows whose key is new.
-    # Uses norm_key per component so the union matches the Python matcher and the Excel
-    # TRIM/LOWER helper (integer-valued cells canonicalize identically).
+    # Union of keys: one row per UNIQUE key - the first-seen source-A row for each A key (in
+    # order), then the first-seen source-B row for each B key not already present in A. This
+    # mirrors compute_reconciliation()'s union exactly, so the SUMIF/COUNTIF-per-key sheet agrees
+    # with the HTML dashboard and a key duplicated within a source is never double-counted. Uses
+    # norm_key per component so the union matches the Python matcher and the Excel TRIM/LOWER
+    # helper (integer-valued cells canonicalize identically).
     def keystr(df, keys, i):
         return join_key_parts([norm_key(df.iloc[i][k], norm) for k in keys])
-    a_set = {keystr(df_a, a_keys, i) for i in range(meta_a["n"])}
-    recon_rows = [("a", i + 2) for i in range(meta_a["n"])]
+    a_keyset = set()
+    recon_rows = []
+    for i in range(meta_a["n"]):
+        k = keystr(df_a, a_keys, i)
+        if k not in a_keyset:
+            a_keyset.add(k)
+            recon_rows.append(("a", i + 2))
+    b_keyset = set()
     for j in range(meta_b["n"]):
-        if keystr(df_b, b_keys, j) not in a_set:
+        k = keystr(df_b, b_keys, j)
+        if k not in a_keyset and k not in b_keyset:
+            b_keyset.add(k)
             recon_rows.append(("b", j + 2))
     n_lines = len(recon_rows)
     r_first = 5
@@ -981,46 +1001,48 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     vc.font = Font(bold=True); vc.number_format = ACCT2
 
     # ---- Difference by account (rows 21+) ----
-    section(21, 1, "Difference by account")
-    for j, h in enumerate([acct_hdr, name_hdr, f"Amount — {la}", f"Amount — {lb}", "Difference"]):
-        header(22, 1 + j, h)
-    # Unique accounts in order of appearance.
+    # Build the unique account list first; only draw the section when the account column is
+    # configured, resolvable to a Reconciliation column (RC), and actually present in the data.
+    # Otherwise the SUMIF ranges would reference a "$None$" column and an empty list would build a
+    # reversed SUM() range (e.g. SUM(C23:C22)).
     accounts = []
-    seen = set()
-    keymap = dict(zip(config["sources"]["a"]["keyColumns"], config["sources"]["b"]["keyColumns"]))
-    for side, srow in info["recon_rows"]:
-        if side == "a":
-            acct = df_a.iloc[srow - 2][acct_col] if acct_col else None
-            nm = df_a.iloc[srow - 2][name_col] if name_col else ""
-        else:
-            bacct = keymap.get(acct_col, acct_col)
-            acct = df_b.iloc[srow - 2][bacct] if (acct_col and bacct in df_b.columns) else None
-            nm = df_b.iloc[srow - 2][name_col] if (name_col and name_col in df_b.columns) else ""
-        if acct is not None and acct not in seen:
-            seen.add(acct); accounts.append((acct, nm))
+    if acct_col and RC:
+        seen = set()
+        keymap = dict(zip(config["sources"]["a"]["keyColumns"], config["sources"]["b"]["keyColumns"]))
+        for side, srow in info["recon_rows"]:
+            if side == "a":
+                acct = df_a.iloc[srow - 2][acct_col] if acct_col in df_a.columns else None
+                nm = df_a.iloc[srow - 2][name_col] if (name_col and name_col in df_a.columns) else ""
+            else:
+                bacct = keymap.get(acct_col, acct_col)
+                acct = df_b.iloc[srow - 2][bacct] if bacct in df_b.columns else None
+                nm = df_b.iloc[srow - 2][name_col] if (name_col and name_col in df_b.columns) else ""
+            if acct is not None and acct not in seen:
+                seen.add(acct); accounts.append((acct, nm))
     acc_start = 23
-    for i, (acct, nm) in enumerate(accounts):
-        row = acc_start + i
-        ws.cell(row=row, column=1, value=acct).alignment = Alignment(horizontal="left")
-        txt(ws.cell(row=row, column=2, value=nm))
-        ws.cell(row=row, column=3, value=f"=SUMIF({R(RC)},$A{row},{R(Fa)})").number_format = ACCT2
-        ws.cell(row=row, column=4, value=f"=SUMIF({R(RC)},$A{row},{R(Fb)})").number_format = ACCT2
-        ws.cell(row=row, column=5, value=f"=C{row}-D{row}").number_format = ACCT2
-    acc_tot = acc_start + len(accounts)
-    ws.cell(row=acc_tot, column=2, value="Total").font = Font(bold=True)
-    for col, base in ((3, "C"), (4, "D"), (5, "E")):
-        cc = ws.cell(row=acc_tot, column=col, value=f"=SUM({base}{acc_start}:{base}{acc_tot-1})")
-        cc.font = Font(bold=True); cc.number_format = ACCT2
+    acc_tot = 22  # baseline row if the account section is not drawn (keeps the later blocks below)
+    if accounts:
+        section(21, 1, "Difference by account")
+        for j, h in enumerate([acct_hdr, name_hdr, f"Amount \u2014 {la}", f"Amount \u2014 {lb}", "Difference"]):
+            header(22, 1 + j, h)
+        for i, (acct, nm) in enumerate(accounts):
+            row = acc_start + i
+            ws.cell(row=row, column=1, value=acct).alignment = Alignment(horizontal="left")
+            txt(ws.cell(row=row, column=2, value=nm))
+            ws.cell(row=row, column=3, value=f"=SUMIF({R(RC)},$A{row},{R(Fa)})").number_format = ACCT2
+            ws.cell(row=row, column=4, value=f"=SUMIF({R(RC)},$A{row},{R(Fb)})").number_format = ACCT2
+            ws.cell(row=row, column=5, value=f"=C{row}-D{row}").number_format = ACCT2
+        acc_tot = acc_start + len(accounts)
+        ws.cell(row=acc_tot, column=2, value="Total").font = Font(bold=True)
+        for col, base in ((3, "C"), (4, "D"), (5, "E")):
+            cc = ws.cell(row=acc_tot, column=col, value=f"=SUM({base}{acc_start}:{base}{acc_tot-1})")
+            cc.font = Font(bold=True); cc.number_format = ACCT2
 
     # Difference by company and period (right side; aligned one row lower than the left block,
-    # matching v15 - section on row 22, sub-headers on row 23, data from row 24).
+    # matching v15 - section on row 22, sub-headers on row 23, data from row 24). Only drawn when
+    # both group dimensions resolve AND at least one (company, period) combo exists, so the totals
+    # never build a reversed SUM() range.
     if RB and RE:
-        comp_hdr = renames.get(group_by[0], group_by[0])
-        per_hdr = renames.get(group_by[1], group_by[1])
-        section(22, 8, f"Difference by {comp_hdr.lower()} and {per_hdr.lower()}")
-        for j, h in enumerate([comp_hdr, per_hdr, f"Amount — {la}", f"Amount — {lb}",
-                               "Difference", "Open items"]):
-            header(23, 8 + j, h)
         combos = []
         seenc = set()
         for side, srow in info["recon_rows"]:
@@ -1030,29 +1052,36 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
             key = (comp, per)
             if comp is not None and per is not None and key not in seenc:
                 seenc.add(key); combos.append((comp, per))
-        cp_start = 24
-        for i, (comp, per) in enumerate(combos):
-            row = cp_start + i
-            ws.cell(row=row, column=8, value=comp).alignment = Alignment(horizontal="left")
-            txt(ws.cell(row=row, column=9, value=per))
-            ws.cell(row=row, column=10,
-                    value=f"=SUMIFS({R(Fa)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
-            ws.cell(row=row, column=11,
-                    value=f"=SUMIFS({R(Fb)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
-            ws.cell(row=row, column=12, value=f"=J{row}-K{row}").number_format = ACCT2
-            mc = ws.cell(row=row, column=13,
-                         value=f'=COUNTIFS({R(RB)},$H{row},{R(RE)},$I{row},{R(Kst)},"Open Item")')
-            mc.number_format = CNT_FMT
-            mc.alignment = Alignment(horizontal="center")
-        cp_tot = cp_start + len(combos)
-        ws.cell(row=cp_tot, column=9, value="Total").font = Font(bold=True)
-        for col, base in ((10, "J"), (11, "K")):
-            cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
-            cc.font = Font(bold=True); cc.number_format = ACCT2
-        for col, base in ((12, "L"), (13, "M")):
-            cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
-            cc.font = Font(bold=True)
-        acc_tot = max(acc_tot, cp_tot)
+        if combos:
+            comp_hdr = renames.get(group_by[0], group_by[0])
+            per_hdr = renames.get(group_by[1], group_by[1])
+            section(22, 8, f"Difference by {comp_hdr.lower()} and {per_hdr.lower()}")
+            for j, h in enumerate([comp_hdr, per_hdr, f"Amount \u2014 {la}", f"Amount \u2014 {lb}",
+                                   "Difference", "Open items"]):
+                header(23, 8 + j, h)
+            cp_start = 24
+            for i, (comp, per) in enumerate(combos):
+                row = cp_start + i
+                ws.cell(row=row, column=8, value=comp).alignment = Alignment(horizontal="left")
+                txt(ws.cell(row=row, column=9, value=per))
+                ws.cell(row=row, column=10,
+                        value=f"=SUMIFS({R(Fa)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
+                ws.cell(row=row, column=11,
+                        value=f"=SUMIFS({R(Fb)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
+                ws.cell(row=row, column=12, value=f"=J{row}-K{row}").number_format = ACCT2
+                mc = ws.cell(row=row, column=13,
+                             value=f'=COUNTIFS({R(RB)},$H{row},{R(RE)},$I{row},{R(Kst)},"Open Item")')
+                mc.number_format = CNT_FMT
+                mc.alignment = Alignment(horizontal="center")
+            cp_tot = cp_start + len(combos)
+            ws.cell(row=cp_tot, column=9, value="Total").font = Font(bold=True)
+            for col, base in ((10, "J"), (11, "K")):
+                cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
+                cc.font = Font(bold=True); cc.number_format = ACCT2
+            for col, base in ((12, "L"), (13, "M")):
+                cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
+                cc.font = Font(bold=True)
+            acc_tot = max(acc_tot, cp_tot)
 
     # ---- Headlines (driver narrative; Calibri, matching v15) ----
     h_row = acc_tot + 2
@@ -1630,8 +1659,7 @@ def main():
                      f"Available: {list(df.columns)}")
 
     results, total_a, total_b = reconcile(df_a, df_b, config)
-    summary = tie_out(results, total_a, total_b,
-                      config["matching"].get("amountToleranceAbsolute", 0.01))
+    summary = tie_out(results, total_a, total_b, effective_tolerances(config["matching"])[0])
     counts = write_report(results, config, args.out, df_a=df_a, df_b=df_b,
                           src_name=os.path.basename(args.source_a))
 
