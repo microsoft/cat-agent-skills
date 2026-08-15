@@ -76,7 +76,15 @@ def apply_sign(amount, convention):
 
 
 def norm_key(value, norm):
-    s = "" if value is None else str(value)
+    # Canonicalize a key component. Integer-valued floats (e.g. 7100.0 that pandas produced
+    # because another row was blank) are rendered as "7100" so a Python key matches what Excel
+    # writes when it concatenates the same numeric cell - keeping all three outputs in step.
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        s = ""
+    elif isinstance(value, float) and value.is_integer():
+        s = str(int(value))
+    else:
+        s = str(value)
     if norm.get("trimWhitespace", True):
         s = s.strip()
     if norm.get("caseInsensitiveKeys", True):
@@ -85,7 +93,12 @@ def norm_key(value, norm):
 
 
 def build_key(row, key_cols, norm):
-    return "||".join(norm_key(row.get(c), norm) for c in key_cols)
+    parts = [norm_key(row.get(c), norm) for c in key_cols]
+    # If every component is empty there is no usable key: return "" so Tier 1 (exact) and Tier 3
+    # (similarity) treat it as keyless rather than matching on a "||"-only string.
+    if not any(parts):
+        return ""
+    return "||".join(parts)
 
 
 def similarity(a, b):
@@ -141,8 +154,11 @@ def reconcile(df_a, df_b, config):
     timing_col = m.get("timingKeyColumn")
     enable_timing = m.get("enableTimingDetection", True) and timing_col is not None
     a_timing_idx = a_keys.index(timing_col) if (enable_timing and timing_col in a_keys) else None
-    if enable_timing and a_timing_idx is None:
-        enable_timing = False  # configured column not in the key; skip rather than guess
+    # Disable timing unless the period column is present in A's key AND the aligned B key has a
+    # column at the same position (guards against an IndexError / wrong reduced key when B's
+    # keyColumns are shorter or were not aligned to A via keyMap).
+    if enable_timing and (a_timing_idx is None or a_timing_idx >= len(b_keys)):
+        enable_timing = False
 
     def reduced_key(row, keys, norm):
         # key with the timing component removed, so "same record, different period" collapses
@@ -229,10 +245,13 @@ def reconcile(df_a, df_b, config):
                 if date_a and date_b:
                     da, db = ra.get(date_a), rb.get(date_b)
                     try:
-                        if abs((pd.to_datetime(da) - pd.to_datetime(db)).days) > window:
-                            continue
+                        delta_days = abs((pd.to_datetime(da) - pd.to_datetime(db)).total_seconds()) / 86400.0
                     except Exception:
-                        pass
+                        # A date was configured but could not be parsed: the proximity rule
+                        # cannot be satisfied, so this pair is not eligible for similarity.
+                        continue
+                    if delta_days > window:
+                        continue
                 sim = similarity(ra["_key"], rb["_key"])
                 if sim >= sim_thr and (best is None or sim > best[1]):
                     best = (rb, sim)
@@ -597,6 +616,26 @@ def _neutralize(v):
     return v
 
 
+def _xl_key_formula(cell_refs, norm):
+    """Excel formula that concatenates key cell references into a Matching Key, mirroring the
+    Python norm_key() normalization so the workbook groups keys the same way the matcher does.
+    Wraps each component in TRIM() when trimWhitespace is on and LOWER() when caseInsensitiveKeys
+    is on. Both the source-tab helper and the Reconciliation sheet call this with identical
+    settings so their SUMIF/COUNTIF keys line up. LOWER/TRIM also coerce numbers to text the same
+    way (integer-valued cells render without a trailing .0)."""
+    trim = norm.get("trimWhitespace", True)
+    lower = norm.get("caseInsensitiveKeys", True)
+    parts = []
+    for ref in cell_refs:
+        expr = ref
+        if trim:
+            expr = f"TRIM({expr})"
+        if lower:
+            expr = f"LOWER({expr})"
+        parts.append(expr)
+    return "=" + '&" | "&'.join(parts)
+
+
 def _safe_sheet_name(name, taken):
     """A valid, unique Excel sheet name: strip the reserved characters : \\ / ? * [ ], cap at
     31 chars, and de-duplicate with a numeric suffix (truncating to keep room for it)."""
@@ -634,9 +673,9 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
     hc.font = Font(bold=True, color=HDR_FONT)
     hc.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Data rows. v15 convention: numeric non-amount cells use Cambria with the "0" format,
-    # left-aligned; free-text cells (e.g. Account Name, Period) use Arial 10; the amount uses
-    # the shared money format. The Matching Key helper is a gray formula.
+    # Data rows. v15 convention: numeric non-amount cells use Cambria left-aligned (General
+    # format renders integer keys cleanly); free-text cells (e.g. Account Name, Period) use
+    # Arial 10; the amount uses the shared money format. The Matching Key helper is a gray formula.
     amt_letter = meta["amt_letter"]
     text_cols = {name for name in cols if not pd.api.types.is_numeric_dtype(df[name])}
     for r, (_, row) in enumerate(df.iterrows(), start=2):
@@ -653,11 +692,10 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
                 cell.font = Font(name="Arial", size=10)
             else:
                 cell = ws.cell(row=r, column=c, value=v)
-                cell.number_format = "0"
                 cell.alignment = Alignment(horizontal="left")
-        # Matching Key formula: join the key cells with " | ".
-        joined = '&" | "&'.join(f"${kl}{r}" for kl in meta["key_letters"])
-        mkc = ws.cell(row=r, column=mk_c, value=f"={joined}")
+        # Matching Key formula: normalized concatenation of the key cells.
+        refs = [f"${kl}{r}" for kl in meta["key_letters"]]
+        mkc = ws.cell(row=r, column=mk_c, value=_xl_key_formula(refs, norm))
         mkc.font = Font(color=MK_C)
 
     # Column widths: vectorized string-length over a bounded sample (avoids an O(rows*cols)
@@ -691,6 +729,7 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     b_keys = config["sources"]["b"]["keyColumns"]
     out = config.get("output", {})
     renames = out.get("columnRenames", {})
+    norm = config.get("normalization", {})
     amt_a = config["sources"]["a"]["amountColumn"]
     timing_col = config["matching"].get("timingKeyColumn")
 
@@ -712,12 +751,14 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     ncols = 10 + D
 
     # Union of keys: every source-A row (in order), then source-B rows whose key is new.
+    # Uses norm_key per component so the union matches the Python matcher and the Excel
+    # TRIM/LOWER helper (integer-valued cells canonicalize identically).
     def keystr(df, keys, i):
-        return " | ".join(str(df.iloc[i][k]) for k in keys)
-    a_set = {keystr(df_a, a_keys, i).lower() for i in range(meta_a["n"])}
+        return " | ".join(norm_key(df.iloc[i][k], norm) for k in keys)
+    a_set = {keystr(df_a, a_keys, i) for i in range(meta_a["n"])}
     recon_rows = [("a", i + 2) for i in range(meta_a["n"])]
     for j in range(meta_b["n"]):
-        if keystr(df_b, b_keys, j).lower() not in a_set:
+        if keystr(df_b, b_keys, j) not in a_set:
             recon_rows.append(("b", j + 2))
     n_lines = len(recon_rows)
     r_first = 5
@@ -764,9 +805,9 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
 
     for idx, (side, srow) in enumerate(recon_rows):
         r = r_first + idx
-        # Matching Key.
-        joined = '&" | "&'.join(f"${kl}{r}" for kl in key_recon_letters)
-        ws.cell(row=r, column=1, value=f"={joined}").font = Font(color=BODY_C)
+        # Matching Key (normalized identically to the source-tab helper so SUMIF/COUNTIF align).
+        refs = [f"${kl}{r}" for kl in key_recon_letters]
+        ws.cell(row=r, column=1, value=_xl_key_formula(refs, norm)).font = Font(color=BODY_C)
         # Descriptive columns pulled from the source row by reference. Numeric key columns are
         # left-aligned Cambria; free-text columns (Account Name, Period) use Arial 10 (v15 style).
         for name in desc_cols:
@@ -1193,7 +1234,10 @@ def compute_reconciliation(df_a, df_b, config):
     keymap_ab = dict(zip(a_keys, b_keys))
 
     def kstr(row, keys):
-        return " | ".join(str(row[k]) for k in keys)
+        # Canonical key: norm_key per component (trim/case/int-canonicalization) joined the same
+        # way the Python matcher's build_key does, so the HTML groups keys identically to the
+        # workbook and to reconcile().
+        return "||".join(norm_key(row.get(k), norm) for k in keys)
 
     norm = config.get("normalization", {})
     sign_a = config["sources"]["a"].get("signConvention", "asIs")
@@ -1205,21 +1249,21 @@ def compute_reconciliation(df_a, df_b, config):
     def amt_b(v):
         return apply_sign(normalize_amount(v, norm), sign_b) or 0.0
 
-    # Aggregate each source by (case-insensitive) key string.
+    # Aggregate each source by canonical (normalized) key string.
     a_recs, b_recs = df_a.to_dict("records"), df_b.to_dict("records")
     a_agg, b_agg = {}, {}
     a_first, b_first = {}, {}
     order = []
     for rec in a_recs:
-        k = kstr(rec, a_keys); kl = k.lower()
+        kl = kstr(rec, a_keys)
         if kl not in a_agg:
-            a_agg[kl] = {"sum": 0.0, "n": 0, "disp": k}; a_first[kl] = rec
+            a_agg[kl] = {"sum": 0.0, "n": 0}; a_first[kl] = rec
             order.append(kl)
         a_agg[kl]["sum"] += amt_a(rec[amt_a_col]); a_agg[kl]["n"] += 1
     for rec in b_recs:
-        k = kstr(rec, b_keys); kl = k.lower()
+        kl = kstr(rec, b_keys)
         if kl not in b_agg:
-            b_agg[kl] = {"sum": 0.0, "n": 0, "disp": k}; b_first[kl] = rec
+            b_agg[kl] = {"sum": 0.0, "n": 0}; b_first[kl] = rec
         b_agg[kl]["sum"] += amt_b(rec[amt_b_col]); b_agg[kl]["n"] += 1
     for kl in b_agg:
         if kl not in a_agg:
