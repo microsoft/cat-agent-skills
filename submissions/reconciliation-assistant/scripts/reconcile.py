@@ -17,6 +17,7 @@ Dependencies: pandas, openpyxl. (difflib is stdlib and used for similarity.)
 
 import argparse
 import json
+import re
 import sys
 from difflib import SequenceMatcher
 
@@ -75,6 +76,9 @@ def apply_sign(amount, convention):
     return amount
 
 
+_MULTISPACE = re.compile(r" {2,}")
+
+
 def norm_key(value, norm):
     # Canonicalize a key component. Integer-valued floats (e.g. 7100.0 that pandas produced
     # because another row was blank) are rendered as "7100" so a Python key matches what Excel
@@ -86,19 +90,35 @@ def norm_key(value, norm):
     else:
         s = str(value)
     if norm.get("trimWhitespace", True):
-        s = s.strip()
+        # Mirror Excel TRIM(): strip leading/trailing spaces AND collapse internal runs of spaces
+        # to a single space. If we only did .strip(), a component like "ACME  CORP" would stay
+        # distinct in the Python union while Excel's TRIM in the Matching Key formula collapses it
+        # to "ACME CORP" - the two would then disagree and SUMIF/COUNTIF could double-count.
+        s = _MULTISPACE.sub(" ", s).strip(" ")
     if norm.get("caseInsensitiveKeys", True):
         s = s.lower()
     return s
 
 
+# One delimiter for every key builder - the Python matcher (build_key), the Excel helper
+# (_xl_key_formula), the workbook union (keystr) and the HTML path (kstr) - so the three outputs
+# group keys identically. A delimiter-only string can never stand in for a real key because
+# join_key_parts collapses an all-empty key to "".
+KEY_DELIM = " | "
+
+
+def join_key_parts(parts):
+    """Join normalized key components with the shared delimiter, collapsing an all-empty key to
+    "" so keyless rows are treated as keyless everywhere (matcher, workbook, HTML) instead of
+    grouping under a delimiter-only string."""
+    return KEY_DELIM.join(parts) if any(parts) else ""
+
+
 def build_key(row, key_cols, norm):
-    parts = [norm_key(row.get(c), norm) for c in key_cols]
-    # If every component is empty there is no usable key: return "" so Tier 1 (exact) and Tier 3
-    # (similarity) treat it as keyless rather than matching on a "||"-only string.
-    if not any(parts):
-        return ""
-    return "||".join(parts)
+    # Exact/similarity tiers treat a "" key as keyless (see the `_key != ""` guard and the
+    # similarity empty-key check), so join_key_parts collapsing all-empty parts to "" is what
+    # keeps that protection intact.
+    return join_key_parts([norm_key(row.get(c), norm) for c in key_cols])
 
 
 def similarity(a, b):
@@ -162,7 +182,7 @@ def reconcile(df_a, df_b, config):
 
     def reduced_key(row, keys, norm):
         # key with the timing component removed, so "same record, different period" collapses
-        return "||".join(norm_key(row.get(c), norm) for i, c in enumerate(keys) if i != a_timing_idx)
+        return join_key_parts([norm_key(row.get(c), norm) for i, c in enumerate(keys) if i != a_timing_idx])
 
     a = df_a.to_dict("records")
     b = df_b.to_dict("records")
@@ -416,172 +436,61 @@ PCT_FMT = '0.0%'
 ZEBRA_BG = "F2F7FC"         # very light blue - alternating rows
 OPEN_FONT, OPEN_BG = "8C1D18", "F7E3E1"   # Open Item - red text on soft red
 REC_FONT, REC_BG = "1F3864", "EAF1F8"     # Reconciled - navy text on soft blue
-# Retained for the headlines narrative helpers below.
-LABEL_FONT = "3B3B3B"
-ACCT_FMT = ACCT2
-
-
-def _money(x):
-    """Accounting-style: negatives in parentheses, whole dollars."""
-    x = x or 0
-    return f"$({abs(x):,.0f})" if x < 0 else f"${x:,.0f}"
-
-
-def _account_facts(results, df_a, df_b, config):
-    """Per-account rollup with enough detail to describe each account's nature."""
+def _build_narrative_perkey(rows, config):
+    """Headline narrative computed from the per-key reconciliation rows - the same model the
+    Reconciliation sheet and the HTML dashboard use - so the headline counts can never disagree
+    with the sheet totals. Returns plain-text lines (no currency symbols); shared verbatim by the
+    Excel Dashboard and the HTML dashboard."""
     la = config["sources"]["a"].get("label", "Source A")
     lb = config["sources"]["b"].get("label", "Source B")
     out = config.get("output", {})
-    acct_col = out.get("accountColumn")
-    name_col = out.get("accountNameColumn")
-    a_keys = config["sources"]["a"]["keyColumns"]
-    b_keys = config["sources"]["b"]["keyColumns"]
-    period_col = config["matching"].get("timingKeyColumn")
-    b_acct_col = dict(zip(a_keys, b_keys)).get(acct_col, acct_col)
-    b_period_col = dict(zip(a_keys, b_keys)).get(period_col, period_col)
-    a_recs = df_a.to_dict("records")
-    b_recs = df_b.to_dict("records")
-    if not acct_col:
-        return []
+    group_by = out.get("groupBy", [])
+    gb0 = group_by[0] if group_by else "company"
+    gb1 = group_by[1] if len(group_by) > 1 else "period"
 
-    facts = {}
-    order = []
-    for res in results:
-        ai, bi = res.get("a_idx"), res.get("b_idx")
-        if ai is not None:
-            acct = a_recs[ai].get(acct_col)
-            name = a_recs[ai].get(name_col) if name_col else ""
-            period = a_recs[ai].get(period_col) if period_col else None
-        else:
-            acct = b_recs[bi].get(b_acct_col)
-            name = b_recs[bi].get(name_col) if name_col else ""
-            period = b_recs[bi].get(b_period_col) if period_col else None
-        amt_a = res.get("amount_a") or 0
-        amt_b = res.get("amount_b") or 0
-        st = res["status"]
-        if acct not in facts:
-            facts[acct] = {"acct": acct, "name": name, "sap": 0.0, "int": 0.0, "abs": 0.0,
-                           "matched": 0, "var": 0, "only_a": 0, "only_b": 0,
-                           "a_periods": set(), "b_periods": set(), "timing": False, "unit_amt": 0.0}
-            order.append(acct)
-        f = facts[acct]
-        f["sap"] += amt_a
-        f["int"] += amt_b
-        f["abs"] += abs(amt_a - amt_b)
-        if st == "Matched":
-            f["matched"] += 1
-        elif st == "Matched (with difference)":
-            f["var"] += 1
-        elif st == "Unmatched (A)":       # present in A (SAP), missing from B (Internal)
-            f["only_a"] += 1
-            if period is not None:
-                f["a_periods"].add(period)
-            f["unit_amt"] = amt_a
-            if "timing" in (res.get("evidence") or "").lower():
-                f["timing"] = True
-        elif st == "Unmatched (B)":        # present in B (Internal), missing from A (SAP)
-            f["only_b"] += 1
-            if period is not None:
-                f["b_periods"].add(period)
-            f["unit_amt"] = amt_b
-            if "timing" in (res.get("evidence") or "").lower():
-                f["timing"] = True
+    total = len(rows)
+    reconciled = sum(1 for r in rows if r["status"] == "Reconciled")
+    open_rows = [r for r in rows if r["status"] == "Open Item"]
+    opn = len(open_rows)
+    net = round(sum(r["diff"] for r in rows), 2)
+    gross = round(sum(abs(r["diff"]) for r in rows), 2)
+    rate = (reconciled / total * 100) if total else 0
 
-    ranked = sorted((facts[a] for a in order), key=lambda f: f["abs"], reverse=True)
-    return ranked
+    # Per-account rollup (for the biggest driver) and root-cause tallies over open items.
+    acct = {}
+    acct_order = []
+    for r in rows:
+        a = r["account"]
+        if a not in acct:
+            acct[a] = {"name": r["name"], "a": 0.0, "b": 0.0}
+            acct_order.append(a)
+        acct[a]["a"] += r["amt_a"]
+        acct[a]["b"] += r["amt_b"]
 
+    def rc(name):
+        c = sum(1 for r in open_rows if r["rootcause"] == name)
+        v = round(sum(abs(r["diff"]) for r in open_rows if r["rootcause"] == name), 2)
+        return c, v
 
-def _account_nature(f, la, lb):
-    """A short phrase describing why an account has a variance."""
-    net = f["sap"] - f["int"]
-    only_one_side = f["matched"] == 0 and f["var"] == 0
-    if only_one_side and f["only_b"] == 0 and f["only_a"] > 0:
-        return f"in {la} but absent from {lb} entirely"
-    if only_one_side and f["only_a"] == 0 and f["only_b"] > 0:
-        return f"exists only in {lb}"
-    if f["timing"] and abs(net) < 0.01:
-        ap = ", ".join(str(p) for p in sorted(f["a_periods"])) or "?"
-        bp = ", ".join(str(p) for p in sorted(f["b_periods"])) or "?"
-        return f"in {la} for {ap} but {lb} for {bp} ({abs(f['unit_amt']):,.0f} each way)"
-    return "amount differences across its lines"
+    m_c, m_v = rc("Measurement")
+    t_c, t_v = rc("Timing")
+    s_c, s_v = rc("Scope / mapping")
+    timing_net = round(sum(r["diff"] for r in open_rows if r["rootcause"] == "Timing"), 2)
 
-
-def _bucket_facts(results, df_a, df_b, config):
-    """Absolute variance by (Company, Period)-style bucket, to find the biggest one."""
-    a_keys = config["sources"]["a"]["keyColumns"]
-    b_keys = config["sources"]["b"]["keyColumns"]
-    period_col = config["matching"].get("timingKeyColumn")
-    # bucket = every key column except the account column, if we know it; else all but period.
-    acct_col = config.get("output", {}).get("accountColumn")
-    bucket_cols = [c for c in a_keys if c != acct_col] or a_keys
-    a_recs = df_a.to_dict("records")
-    b_recs = df_b.to_dict("records")
-    b_map = dict(zip(a_keys, b_keys))
-    buckets = {}
-    for res in results:
-        ai, bi = res.get("a_idx"), res.get("b_idx")
-        if ai is not None:
-            key = tuple(a_recs[ai].get(c) for c in bucket_cols)
-        else:
-            key = tuple(b_recs[bi].get(b_map.get(c, c)) for c in bucket_cols)
-        d = abs((res.get("amount_a") or 0) - (res.get("amount_b") or 0))
-        buckets[key] = buckets.get(key, 0.0) + d
-    if not buckets:
-        return None
-    best = max(buckets.items(), key=lambda kv: kv[1])
-    return bucket_cols, best[0], best[1]
-
-
-def _build_narrative(summary, counts, config, results=None, df_a=None, df_b=None):
-    """A driver-focused analysis: headline counts, net/absolute variance, the biggest
-    driver named and explained, other notable gaps ranked, and the largest bucket."""
-    la = config["sources"]["a"].get("label", "Source A")
-    lb = config["sources"]["b"].get("label", "Source B")
-    matched = counts.get("Matched", 0)
-    var = counts.get("Matched (with difference)", 0)
-    only_a = counts.get("Unmatched (A)", 0)   # in SAP, missing from Internal
-    only_b = counts.get("Unmatched (B)", 0)   # in Internal, missing from SAP
-    total = sum(counts.values())
-    rate = (100.0 * matched / total) if total else 0.0
-
-    lines = []
-    # 1) Headline counts.
+    lines = [
+        f"{total} keys reconciled across the {gb0.lower()} and {gb1.lower()} dimensions: "
+        f"{reconciled} reconciled and {opn} open, a {rate:.1f}% match rate.",
+        f"Net difference is {_num(net)} ({la} less {lb}); ignoring sign the differences total {_num(gross)}.",
+    ]
+    if acct_order:
+        biggest = max(acct_order, key=lambda a: abs(acct[a]["a"] - acct[a]["b"]))
+        big_diff = acct[biggest]["a"] - acct[biggest]["b"]
+        lines.append(f"Largest account driver: {acct[biggest]['name']} at {_num(big_diff)}.")
     lines.append(
-        f"{total} reconciling lines: {matched} match, {var} have a variance, "
-        f"{only_b} are missing from {la}, {only_a} are missing from {lb} — a {rate:.1f}% match rate."
-    )
-    # 2) Net and absolute variance.
-    total_abs = sum(abs((r.get('amount_a') or 0) - (r.get('amount_b') or 0)) for r in results) if results else 0
-    lines.append(
-        f"Net variance ({la} less {lb}): {_money(summary['net_difference'])}; "
-        f"total absolute variance ${total_abs:,.0f}."
-    )
-
-    if results is not None and df_a is not None and df_b is not None:
-        accts = _account_facts(results, df_a, df_b, config)
-        drivers = [f for f in accts if f["abs"] > 0]
-        # 3) Biggest driver.
-        if drivers:
-            top = drivers[0]
-            nm = f"{top['name']} ({top['acct']})" if top['name'] else f"account {top['acct']}"
-            lines.append(f"The biggest driver by far is {nm} at ${top['abs']:,.0f} — {_account_nature(top, la, lb)}.")
-        # 4) Other notable gaps.
-        others = drivers[1:6]
-        if others:
-            parts = []
-            for f in others:
-                nm = f"{f['name']} ({f['acct']})" if f['name'] else f"account {f['acct']}"
-                parts.append(f"{nm} ${f['abs']:,.0f} — {_account_nature(f, la, lb)}")
-            lines.append("Other gaps: " + "; ".join(parts) + ".")
-        # 5) Largest bucket.
-        bf = _bucket_facts(results, df_a, df_b, config)
-        if bf:
-            cols, key, val = bf
-            if len(cols) >= 1:
-                desc = f"{cols[0]} {key[0]}" + "".join(f" / {k}" for k in key[1:])
-            else:
-                desc = " / ".join(str(k) for k in key)
-            lines.append(f"{desc} carries the largest absolute variance at ${val:,.0f}.")
+        f"Root causes: {m_c} measurement ({_num(m_v)}), {t_c} timing ({_num(t_v)}) "
+        f"and {s_c} scope or mapping ({_num(s_v)}).")
+    if t_c and timing_net == 0:
+        lines.append("Timing items net to 0.00 across the periods and should clear without adjustment.")
     return lines
 
 
@@ -617,23 +526,30 @@ def _neutralize(v):
 
 
 def _xl_key_formula(cell_refs, norm):
-    """Excel formula that concatenates key cell references into a Matching Key, mirroring the
-    Python norm_key() normalization so the workbook groups keys the same way the matcher does.
-    Wraps each component in TRIM() when trimWhitespace is on and LOWER() when caseInsensitiveKeys
-    is on. Both the source-tab helper and the Reconciliation sheet call this with identical
-    settings so their SUMIF/COUNTIF keys line up. LOWER/TRIM also coerce numbers to text the same
-    way (integer-valued cells render without a trailing .0)."""
+    """Excel formula that concatenates key cell references into a Matching Key, mirroring
+    join_key_parts()/norm_key(): each component is wrapped in TRIM() when trimWhitespace is on and
+    LOWER() when caseInsensitiveKeys is on, the components are joined by the shared KEY_DELIM, and
+    an all-empty key collapses to "" (via an IF over the delimiter-free concatenation) exactly as
+    the Python builder does. The source-tab helper and the Reconciliation sheet both call this with
+    identical settings so their SUMIF/COUNTIF keys line up. LOWER/TRIM also coerce numbers to text
+    the same way (integer-valued cells render without a trailing .0)."""
     trim = norm.get("trimWhitespace", True)
     lower = norm.get("caseInsensitiveKeys", True)
-    parts = []
-    for ref in cell_refs:
+
+    def wrap(ref):
         expr = ref
         if trim:
             expr = f"TRIM({expr})"
         if lower:
             expr = f"LOWER({expr})"
-        parts.append(expr)
-    return "=" + '&" | "&'.join(parts)
+        return expr
+
+    parts = [wrap(r) for r in cell_refs]
+    if not parts:
+        return '=""'
+    bare = "&".join(parts)                       # components with no delimiter, for the empty test
+    joined = ('&"' + KEY_DELIM + '"&').join(parts)
+    return f'=IF({bare}="","",{joined})'
 
 
 def _safe_sheet_name(name, taken):
@@ -737,7 +653,6 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     desc_cols = [c for c in meta_a["cols"] if c != amt_a]
     D = len(desc_cols)
     # Recon column letters.
-    L_mk = "A"
     desc_letter = {name: _CL(2 + i) for i, name in enumerate(desc_cols)}
     L_amt_a = _CL(2 + D)
     L_amt_b = _CL(3 + D)
@@ -754,7 +669,7 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     # Uses norm_key per component so the union matches the Python matcher and the Excel
     # TRIM/LOWER helper (integer-valued cells canonicalize identically).
     def keystr(df, keys, i):
-        return " | ".join(norm_key(df.iloc[i][k], norm) for k in keys)
+        return join_key_parts([norm_key(df.iloc[i][k], norm) for k in keys])
     a_set = {keystr(df_a, a_keys, i) for i in range(meta_a["n"])}
     recon_rows = [("a", i + 2) for i in range(meta_a["n"])]
     for j in range(meta_b["n"]):
@@ -970,7 +885,6 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     t.font = Font(bold=True, size=18, color=SEC_C)
     basis_bits = []
     for g in group_by:
-        col_letter = dl.get(g)
         if g == group_by[0]:
             vals_src = sorted({str(df_a.iloc[i][g]) for i in range(meta_a["n"])} |
                               {str(df_b.iloc[j][g]) for j in range(meta_b["n"])})
@@ -1161,7 +1075,7 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     return narr_rows
 
 
-def write_report(results, summary, config, out_path, df_a=None, df_b=None, src_name=None):
+def write_report(results, config, out_path, df_a=None, df_b=None, src_name=None):
     import openpyxl
 
     la = config["sources"]["a"].get("label", "Source A")
@@ -1169,7 +1083,12 @@ def write_report(results, summary, config, out_path, df_a=None, df_b=None, src_n
 
     res_df = pd.DataFrame(results)
     counts = res_df["status"].value_counts().to_dict() if not res_df.empty else {}
-    narrative = _build_narrative(summary, counts, config, results, df_a, df_b)
+    # The Dashboard headlines are built from the per-key reconciliation model (compute_reconciliation) -
+    # the same model that drives the Reconciliation sheet's formulas and the HTML dashboard - so the
+    # narrative counts can never disagree with the sheet totals. (The tiered `results`/`counts` are a
+    # record-level view returned for the caller's console summary, not the per-key artifact.)
+    perkey_rows, _, _ = compute_reconciliation(df_a, df_b, config)
+    narrative = _build_narrative_perkey(perkey_rows, config)
 
     meta_a = _src_meta(df_a, config["sources"]["a"], config)
     meta_b = _src_meta(df_b, config["sources"]["b"], config)
@@ -1234,10 +1153,10 @@ def compute_reconciliation(df_a, df_b, config):
     keymap_ab = dict(zip(a_keys, b_keys))
 
     def kstr(row, keys):
-        # Canonical key: norm_key per component (trim/case/int-canonicalization) joined the same
-        # way the Python matcher's build_key does, so the HTML groups keys identically to the
-        # workbook and to reconcile().
-        return "||".join(norm_key(row.get(k), norm) for k in keys)
+        # Canonical key: identical to build_key() (norm_key per component, shared KEY_DELIM,
+        # all-empty collapses to "") so the HTML groups keys the same way as the matcher and the
+        # workbook.
+        return join_key_parts([norm_key(row.get(k), norm) for k in keys])
 
     norm = config.get("normalization", {})
     sign_a = config["sources"]["a"].get("signConvention", "asIs")
@@ -1327,11 +1246,6 @@ def _num(x):
     return f"({abs(x):,.2f})" if round(x, 2) < 0 else f"{x:,.2f}"
 
 
-def _dol(x):
-    """Alias kept for headline/KPI numbers - identical format to _num for full consistency."""
-    return _num(x)
-
-
 def build_html_dashboard(rows, config, src_name=None):
     import html as _h
     la = config["sources"]["a"].get("label", "Source A")
@@ -1382,14 +1296,7 @@ def build_html_dashboard(rows, config, src_name=None):
         if r["status"] == "Open Item":
             cp[k]["open"] += 1
 
-    # Root-cause breakdown values for headlines.
-    def rc(name):
-        c, v = by_root.get(name, (0, 0.0)); return c, v
-    m_c, m_v = rc("Measurement"); t_c, t_v = rc("Timing"); s_c, s_v = rc("Scope / mapping")
-    timing_net = round(sum(r["diff"] for r in open_rows if r["rootcause"] == "Timing"), 2)
-    biggest = max(acct_order, key=lambda a: abs(acct[a]["a"] - acct[a]["b"])) if acct_order else None
-    big_name = acct[biggest]["name"] if biggest else ""
-    big_diff = (acct[biggest]["a"] - acct[biggest]["b"]) if biggest else 0
+    # (Headline aggregates now come from _build_narrative_perkey, shared with the Excel Dashboard.)
 
     def e(s):
         return _h.escape(str(s))
@@ -1403,7 +1310,6 @@ def build_html_dashboard(rows, config, src_name=None):
         return f'<td class="{cls}">{s}</td>'
 
     # ---- controls ----
-    key_ok = "OK"  # every union key appears once by construction
     ctrls = [
         ("Every key in either ledger appears once", str(total), str(total), True),
         (f"Amount — {la} agrees to the {la} tab", _num(total_a), _num(total_a), True),
@@ -1465,18 +1371,10 @@ def build_html_dashboard(rows, config, src_name=None):
     # ---- headlines ----
     gb0 = group_by[0] if group_by else "company"
     gb1 = group_by[1] if len(group_by) > 1 else "period"
-    headlines = [
-        f"{total} keys reconciled across the {gb0.lower()} and {gb1.lower()} dimensions: "
-        f"{reconciled} reconciled and {opn} open, a {rate:.1f}% match rate.",
-        f"Net difference is {_dol(net)} ({la} less {lb}); ignoring sign the differences total {_dol(gross)}.",
-    ]
-    if biggest:
-        headlines.append(f"Largest account driver: {big_name} at {_dol(big_diff)}.")
-    headlines.append(
-        f"Root causes: {m_c} measurement ({_dol(m_v)}), {t_c} timing ({_dol(t_v)}) "
-        f"and {s_c} scope or mapping ({_dol(s_v)}).")
-    if t_c and timing_net == 0:
-        headlines.append("Timing items net to 0.00 across the periods and should clear without adjustment.")
+    # Analytical headlines come from the shared per-key narrative builder, so the HTML and the
+    # Excel Dashboard show identical wording over the same numbers. The controls line is
+    # HTML-specific (the workbook evaluates its controls as live formulas instead).
+    headlines = list(_build_narrative_perkey(rows, config))
     ok_ct = sum(1 for c in ctrls if c[3])
     headlines.append(f"All {ok_ct} of {len(ctrls)} controls currently read OK." if ok_ct == len(ctrls)
                      else f"{ok_ct} of {len(ctrls)} controls read OK — resolve the exceptions before sign-off.")
@@ -1734,7 +1632,7 @@ def main():
     results, total_a, total_b = reconcile(df_a, df_b, config)
     summary = tie_out(results, total_a, total_b,
                       config["matching"].get("amountToleranceAbsolute", 0.01))
-    counts = write_report(results, summary, config, args.out, df_a=df_a, df_b=df_b,
+    counts = write_report(results, config, args.out, df_a=df_a, df_b=df_b,
                           src_name=os.path.basename(args.source_a))
 
     print(f"Reconciliation written to {args.out}")
