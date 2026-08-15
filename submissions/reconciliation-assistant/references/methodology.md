@@ -66,6 +66,8 @@ Pair an unmatched A record with an unmatched B record when **all** hold:
 - their amounts are equal within tolerance,
 - their period values **differ** (same period is not a timing difference - that would have matched at Tier 1).
 
+Timing detection requires at least one **non-timing** key column, so the reduced key is a real identity. If the timing column is the only key column (or a row's reduced key is entirely blank), timing is not applied - otherwise unrelated rows would be paired on amount alone. This same guard is applied consistently in the Python matcher, the per-key model, and the workbook's Root Cause logic.
+
 Timing detection **does not create a new match state**. The two lines **remain `Unmatched (A)` and `Unmatched (B)`** - so the counts and the tie-out still reflect one break on each side - but each is **annotated** with an evidence note ("Possible timing difference - same amount in <other period>"). In the delivered formula workbook these two lines are additionally classified with **Root Cause = Timing** (the "Missing in <source>" line has an offsetting "Missing in <other source>" line for the same reduced key). This keeps two confusing one-sided breaks readable as a single timing story without inventing a state the tie-out would have to special-case.
 
 Worked example. SAP GL has `Co 900001 | Accrued Liabilities | 2025-09 | -5,000`; the internal ledger has `Co 900001 | Accrued Liabilities | 2025-08 | -5,000`. No exact key match (periods differ), so both fall to Unmatched. The reduced key (`Co 900001 | Accrued Liabilities`) and the amount (`-5,000`) are identical and the periods differ, so both lines are annotated as a possible timing difference and classified Root Cause = Timing in the workbook - the accrual was booked a month apart in the two systems.
@@ -120,6 +122,7 @@ Plus orphans: any detail row whose account code is not one of the three control 
 - **Intra-source duplicates** (same key twice in one source) make a one-to-one match ambiguous. Report them in Diagnostics and, when matching, pair by nearest amount/date, leaving the surplus duplicate as unmatched for review rather than arbitrarily consuming a partner.
 - **Multiple exact-key candidates** across sources (same key appears twice on both sides) are matched by nearest amount then nearest date; any leftover goes to Needs Review.
 - **Ambiguous dates** (a column that parses as both `MM/DD` and `DD/MM`) are flagged, not silently resolved.
+- **Keyless rows** (every key component blank) have no identity to match on. The matcher treats each as its own one-sided break, and the formula workbook and HTML give each keyless row a unique placeholder key, so keyless rows are never aggregated together or netted into a false "reconciled" line.
 
 ## What this skill is not
 

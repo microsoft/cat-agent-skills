@@ -121,6 +121,24 @@ def build_key(row, key_cols, norm):
     return join_key_parts([norm_key(row.get(c), norm) for c in key_cols])
 
 
+# A row whose key components are ALL blank has no usable key. The record matcher treats such a row
+# as non-matchable (its own one-sided break). The per-key views (workbook SUMIF/COUNTIF and the
+# HTML aggregation) would otherwise group every keyless row under the single empty key "" and could
+# "reconcile" them purely on netted totals. To keep those views faithful to the matcher, each
+# keyless row is given a stable, unique placeholder key derived from a per-side scope plus its row
+# position, so keyless rows are never aggregated together. The prefix cannot collide with a real
+# key (real keys are TRIM/LOWER'd values joined by KEY_DELIM) and contains no Excel wildcard chars.
+_KEYLESS_PREFIX = "(no key \u00b7 "
+
+
+def keyless_token(scope, position):
+    return f"{_KEYLESS_PREFIX}{scope} #{position})"
+
+
+def is_keyless_token(s):
+    return isinstance(s, str) and s.startswith(_KEYLESS_PREFIX)
+
+
 def similarity(a, b):
     return SequenceMatcher(None, str(a), str(b)).ratio()
 
@@ -185,8 +203,10 @@ def reconcile(df_a, df_b, config):
     a_timing_idx = a_keys.index(timing_col) if (enable_timing and timing_col in a_keys) else None
     # Disable timing unless the period column is present in A's key AND the aligned B key has a
     # column at the same position (guards against an IndexError / wrong reduced key when B's
-    # keyColumns are shorter or were not aligned to A via keyMap).
-    if enable_timing and (a_timing_idx is None or a_timing_idx >= len(b_keys)):
+    # keyColumns are shorter or were not aligned to A via keyMap), AND there is at least one
+    # non-timing key column - otherwise the reduced key collapses to "" and unrelated rows would
+    # be paired as "timing" purely on amount.
+    if enable_timing and (a_timing_idx is None or a_timing_idx >= len(b_keys) or len(a_keys) <= 1):
         enable_timing = False
 
     def reduced_key(row, keys, norm):
@@ -378,9 +398,13 @@ def reconcile(df_a, df_b, config):
     if enable_timing:
         b_pool = {}
         for rb in unmatched_b:
+            if not rb.get("_rkey"):
+                continue  # all non-period components blank: no identity to match a timing pair on
             b_pool.setdefault(rb["_rkey"], []).append(rb)
         b_noted = set()
         for ra in unmatched_a:
+            if not ra.get("_rkey"):
+                continue
             for rb in b_pool.get(ra["_rkey"], []):
                 if rb["_idx"] in b_noted or rb["_tval"] == ra["_tval"]:
                     continue
@@ -562,10 +586,12 @@ def _xl_key_formula(cell_refs, norm):
 
 
 def _safe_sheet_name(name, taken):
-    """A valid, unique Excel sheet name: strip the reserved characters : \\ / ? * [ ], cap at
-    31 chars, and de-duplicate with a numeric suffix (truncating to keep room for it)."""
+    """A valid, unique Excel sheet name: strip the reserved characters : \\ / ? * [ ] (plus ~,
+    which is a wildcard-escape in SUMIF/COUNTIF criteria and would break a keyless row's literal
+    Matching Key that embeds the sheet name), cap at 31 chars, and de-duplicate with a numeric
+    suffix (truncating to keep room for it)."""
     import re
-    n = re.sub(r"[:\\/?*\[\]]", " ", str(name)).strip() or "Sheet"
+    n = re.sub(r"[:\\/?*\[\]~]", " ", str(name)).strip() or "Sheet"
     n = n[:31]
     base, i = n, 2
     while n.lower() in taken:
@@ -618,9 +644,14 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
             else:
                 cell = ws.cell(row=r, column=c, value=v)
                 cell.alignment = Alignment(horizontal="left")
-        # Matching Key formula: normalized concatenation of the key cells.
-        refs = [f"${kl}{r}" for kl in meta["key_letters"]]
-        mkc = ws.cell(row=r, column=mk_c, value=_xl_key_formula(refs, norm))
+        # Matching Key. A row with all key components blank gets a unique placeholder so keyless
+        # rows are never aggregated together by the reconciliation SUMIF/COUNTIF; otherwise the
+        # normalized concatenation of the key cells (TRIM/LOWER, all-empty collapses to "").
+        if not any(norm_key(row[k], norm) for k in meta["keys"]):
+            mkc = ws.cell(row=r, column=mk_c, value=keyless_token(sheet_title, r))
+        else:
+            refs = [f"${kl}{r}" for kl in meta["key_letters"]]
+            mkc = ws.cell(row=r, column=mk_c, value=_xl_key_formula(refs, norm))
         mkc.font = Font(color=MK_C)
 
     # Column widths: vectorized string-length over a bounded sample (avoids an O(rows*cols)
@@ -680,21 +711,23 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     # with the HTML dashboard and a key duplicated within a source is never double-counted. Uses
     # norm_key per component so the union matches the Python matcher and the Excel TRIM/LOWER
     # helper (integer-valued cells canonicalize identically).
-    def keystr(df, keys, i):
-        return join_key_parts([norm_key(df.iloc[i][k], norm) for k in keys])
+    def keystr(df, keys, i, scope):
+        k = join_key_parts([norm_key(df.iloc[i][c], norm) for c in keys])
+        return k if k else keyless_token(scope, i + 2)
     a_keyset = set()
     recon_rows = []
+    row_keys = []
     for i in range(meta_a["n"]):
-        k = keystr(df_a, a_keys, i)
+        k = keystr(df_a, a_keys, i, sa)
         if k not in a_keyset:
             a_keyset.add(k)
-            recon_rows.append(("a", i + 2))
+            recon_rows.append(("a", i + 2)); row_keys.append(k)
     b_keyset = set()
     for j in range(meta_b["n"]):
-        k = keystr(df_b, b_keys, j)
+        k = keystr(df_b, b_keys, j, sb)
         if k not in a_keyset and k not in b_keyset:
             b_keyset.add(k)
-            recon_rows.append(("b", j + 2))
+            recon_rows.append(("b", j + 2)); row_keys.append(k)
     n_lines = len(recon_rows)
     r_first = 5
     r_last = r_first + n_lines - 1
@@ -728,6 +761,11 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     # the non-timing key columns (for the timing COUNTIFS in Root Cause).
     key_recon_letters = [desc_letter[k] for k in a_keys if k in desc_letter]
     nontiming_keys = [k for k in a_keys if k != timing_col and k in desc_letter]
+    # Timing root cause only makes sense when timing detection is enabled AND at least one
+    # non-timing key column exists to group offsetting entries by; otherwise every one-sided break
+    # would be grouped together and mislabelled "Timing" (mirrors the reconcile()/HTML guard).
+    timing_on = (config["matching"].get("enableTimingDetection", True)
+                 and timing_col is not None and len(nontiming_keys) >= 1)
 
     mk_a = f"'{sa}'!${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}"
     amt_a_rng = f"'{sa}'!${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}"
@@ -740,9 +778,25 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
 
     for idx, (side, srow) in enumerate(recon_rows):
         r = r_first + idx
-        # Matching Key (normalized identically to the source-tab helper so SUMIF/COUNTIF align).
-        refs = [f"${kl}{r}" for kl in key_recon_letters]
-        ws.cell(row=r, column=1, value=_xl_key_formula(refs, norm)).font = Font(color=BODY_C)
+        # Matching Key. Keyless rows carry a unique placeholder (written literally, matching the
+        # source-tab helper) so they are never aggregated together; keyed rows rebuild the key by
+        # formula, normalized identically to the source-tab helper so SUMIF/COUNTIF align.
+        if is_keyless_token(row_keys[idx]):
+            ws.cell(row=r, column=1, value=row_keys[idx]).font = Font(color=BODY_C)
+        else:
+            refs = [f"${kl}{r}" for kl in key_recon_letters]
+            ws.cell(row=r, column=1, value=_xl_key_formula(refs, norm)).font = Font(color=BODY_C)
+        # Timing root cause applies to this row only when timing is on AND its non-timing (reduced)
+        # key is genuinely non-blank; keyless / blank-reduced rows are excluded so they are never
+        # grouped and mislabelled "Timing" (mirrors reconcile() and the HTML per-key model).
+        if timing_on:
+            if side == "a":
+                reduced = [norm_key(df_a.iloc[srow - 2].get(k), norm) for k in nontiming_keys]
+            else:
+                reduced = [norm_key(df_b.iloc[srow - 2].get(keymap.get(k, k)), norm) for k in nontiming_keys]
+            row_timing = any(reduced)
+        else:
+            row_timing = False
         # Descriptive columns pulled from the source row by reference. Numeric key columns are
         # left-aligned Cambria; free-text columns (Account Name, Period) use Arial 10 (v15 style).
         for name in desc_cols:
@@ -778,16 +832,20 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
                        f'IF({L_lines_b}{r}=0,"Missing in {lb}",'
                        f'IF(ROUND({L_diff}{r},2)=0,"None","Amount mismatch")))')).alignment = left
         # Root Cause: measurement (amount mismatch), timing (offsetting missing entry in the
-        # same non-period group), else scope / mapping.
-        countifs = ""
-        for k in nontiming_keys:
-            kl = desc_letter[k]
-            countifs += f"${kl}$5:${kl}${r_last},${kl}{r},"
-        opp = f'IF({L_dtype}{r}="Missing in {lb}","Missing in {la}","Missing in {lb}")'
-        root = (f'=IF({L_status}{r}="Reconciled","—",'
-                f'IF({L_dtype}{r}="Amount mismatch","Measurement",'
-                f'IF(COUNTIFS({countifs}${L_dtype}$5:${L_dtype}${r_last},{opp})>0,'
-                f'"Timing","Scope / mapping")))')
+        # same non-period group when timing applies to this row), else scope / mapping.
+        if row_timing:
+            countifs = ""
+            for k in nontiming_keys:
+                kl = desc_letter[k]
+                countifs += f"${kl}$5:${kl}${r_last},${kl}{r},"
+            opp = f'IF({L_dtype}{r}="Missing in {lb}","Missing in {la}","Missing in {lb}")'
+            root = (f'=IF({L_status}{r}="Reconciled","—",'
+                    f'IF({L_dtype}{r}="Amount mismatch","Measurement",'
+                    f'IF(COUNTIFS({countifs}${L_dtype}$5:${L_dtype}${r_last},{opp})>0,'
+                    f'"Timing","Scope / mapping")))')
+        else:
+            root = (f'=IF({L_status}{r}="Reconciled","—",'
+                    f'IF({L_dtype}{r}="Amount mismatch","Measurement","Scope / mapping"))')
         ws.cell(row=r, column=9 + D, value=root).alignment = left
         ws.cell(row=r, column=10 + D,
                 value=(f'=IF({L_root}{r}="Measurement","Obtain supporting detail and correct the misstated balance",'
@@ -1197,19 +1255,21 @@ def compute_reconciliation(df_a, df_b, config):
     def amt_b(v):
         return apply_sign(normalize_amount(v, norm), sign_b) or 0.0
 
-    # Aggregate each source by canonical (normalized) key string.
+    # Aggregate each source by canonical (normalized) key string. Keyless rows (all key parts
+    # blank) get a unique per-row placeholder so they are never merged together - matching the
+    # workbook helper and the record matcher, which treat an empty key as non-matchable.
     a_recs, b_recs = df_a.to_dict("records"), df_b.to_dict("records")
     a_agg, b_agg = {}, {}
     a_first, b_first = {}, {}
     order = []
-    for rec in a_recs:
-        kl = kstr(rec, a_keys)
+    for i, rec in enumerate(a_recs):
+        kl = kstr(rec, a_keys) or keyless_token("A " + la, i + 2)
         if kl not in a_agg:
             a_agg[kl] = {"sum": 0.0, "n": 0}; a_first[kl] = rec
             order.append(kl)
         a_agg[kl]["sum"] += amt_a(rec[amt_a_col]); a_agg[kl]["n"] += 1
-    for rec in b_recs:
-        kl = kstr(rec, b_keys)
+    for j, rec in enumerate(b_recs):
+        kl = kstr(rec, b_keys) or keyless_token("B " + lb, j + 2)
         if kl not in b_agg:
             b_agg[kl] = {"sum": 0.0, "n": 0}; b_first[kl] = rec
         b_agg[kl]["sum"] += amt_b(rec[amt_b_col]); b_agg[kl]["n"] += 1
@@ -1250,8 +1310,14 @@ def compute_reconciliation(df_a, df_b, config):
             "lines_a": aa["n"], "lines_b": bb["n"], "status": status, "difftype": dtype,
         })
 
-    # Root cause (needs the whole population to spot an offsetting timing entry).
+    # Root cause (needs the whole population to spot an offsetting timing entry). Timing only
+    # applies when timing detection is enabled AND there is at least one non-timing key column to
+    # group offsetting entries by, and only for a row whose non-timing (reduced) key is not all
+    # blank - otherwise unrelated one-sided breaks would be mislabelled "Timing" (mirrors the
+    # reconcile() and Excel-root-cause guards so the platforms don't diverge).
     nontiming = [k for k in a_keys if k != timing_col]
+    timing_on = (config["matching"].get("enableTimingDetection", True)
+                 and timing_col is not None and len(nontiming) >= 1)
     grp = {}
     for r in rows:
         gk = tuple(str(field(r["key"], k)) for k in nontiming)
@@ -1264,7 +1330,14 @@ def compute_reconciliation(df_a, df_b, config):
         else:
             gk = tuple(str(field(r["key"], k)) for k in nontiming)
             opp = f"Missing in {la}" if r["difftype"] == f"Missing in {lb}" else f"Missing in {lb}"
-            r["rootcause"] = "Timing" if any(o["difftype"] == opp for o in grp.get(gk, [])) else "Scope / mapping"
+            # Only a row whose reduced (non-timing) key is genuinely non-blank can be a timing
+            # difference. norm_key collapses NaN/blank components to "" (str(NaN) would be the
+            # truthy "nan"), so keyless / blank-reduced rows are correctly excluded - matching the
+            # reconcile() and Excel guards.
+            reduced_nonempty = any(norm_key(field(r["key"], k), norm) for k in nontiming)
+            has_offset = (timing_on and reduced_nonempty
+                          and any(o["difftype"] == opp for o in grp.get(gk, [])))
+            r["rootcause"] = "Timing" if has_offset else "Scope / mapping"
     return rows, la, lb
 
 
