@@ -984,7 +984,14 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     controls = [
         ("Every key in either ledger appears once",
          f"=COUNTA(Reconciliation!$A${rf}:$A${rl})",
-         f"=COUNTA({a_mk})+SUMPRODUCT(--(COUNTIF({a_mk},{b_mk})=0))",
+         # Unique keys in A, plus unique keys in B that are absent from A - matching the union
+         # (which de-duplicates each source), rather than counting raw rows. The 1/COUNTIF pattern
+         # collapses repeats of the same key to a single count; keyless rows each carry a distinct
+         # placeholder so they count once apiece. Each term drops to 0 when its source has no data
+         # rows, so the helper range never inverts to include a blank cell (which would #DIV/0!).
+         ("=" + (f"SUMPRODUCT(1/COUNTIF({a_mk},{a_mk}))" if meta_a["n"] else "0")
+          + "+" + (f"SUMPRODUCT((COUNTIF({a_mk},{b_mk})=0)/COUNTIF({b_mk},{b_mk}))"
+                   if meta_b["n"] else "0")),
          "count"),
         (f"Amount — {la} agrees to the {la} tab",
          f"=Reconciliation!${Fa}${rtot}", f"=SUM({a_amt})", "acct"),
