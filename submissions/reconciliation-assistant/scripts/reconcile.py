@@ -547,7 +547,10 @@ def _src_meta(df, src_cfg, config):
     amt_letter = _CL(cols.index(amt) + 1)
     key_letters = [_CL(cols.index(k) + 1) for k in keys]
     mk_letter = _CL(len(cols) + 1)          # Matching Key helper appended after the data
-    last = n + 1                             # data occupies rows 2..last
+    # Data occupies rows 2..(n+1). Clamp to a minimum of 2 so that, when a source has no data
+    # rows, the helper/amount ranges are the single (blank) cell $2:$2 rather than the inverted
+    # $2:$1 - which Excel would mis-handle in SUM/COUNTIF and in the reconciliation formulas.
+    last = max(n + 1, 2)
     return {
         "cols": cols, "n": n, "amt_letter": amt_letter, "key_letters": key_letters,
         "mk_letter": mk_letter, "last": last, "keys": keys,
@@ -735,7 +738,10 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
             recon_rows.append(("b", j + 2)); row_keys.append(k)
     n_lines = len(recon_rows)
     r_first = 5
-    r_last = r_first + n_lines - 1
+    # Clamp so an empty union (both sources have no data rows) yields the single row $5:$5 instead
+    # of the inverted $5:$4, which would break every range-based formula and the conditional
+    # formatting. Row 5 is then left blank and every SUM/COUNT over it evaluates to 0.
+    r_last = max(r_first + n_lines - 1, r_first)
     r_total = r_last + 1
     r_ctrl = r_total + 1
 
