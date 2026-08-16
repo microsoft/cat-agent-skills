@@ -46,11 +46,16 @@ def default_label(path, sheet=None):
 
 
 def normalize_amount(value, norm):
-    """Return a float from a possibly messy amount cell, or None."""
+    """Return a float from a possibly messy amount cell, or None. The result is quantized to the
+    cent (2 decimals) so that "exact to the cent" matching is deterministic and immune to binary
+    floating-point noise - two cells that should be equal (e.g. both "1250.00") can otherwise parse
+    to minutely different floats and, with a zero tolerance, be pushed to "Matched (with
+    difference)". Quantizing here means the matcher, the per-key model and the workbook all compare
+    the same cent-rounded values (the workbook already rounds to 2 dp when classifying)."""
     if value is None or (isinstance(value, float) and pd.isna(value)):
         return None
     if isinstance(value, (int, float)):
-        return float(value)
+        return round(float(value), 2)
     s = str(value).strip()
     if not s:
         return None
@@ -65,7 +70,7 @@ def normalize_amount(value, norm):
         amt = float(s)
     except ValueError:
         return None
-    return -amt if negative else amt
+    return round(-amt if negative else amt, 2)
 
 
 def apply_sign(amount, convention):
@@ -862,10 +867,14 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     for c in range(1, ncols + 1):
         ws.cell(row=r_total, column=c).border = Border(top=top, bottom=top)
     cl = ws.cell(row=r_ctrl, column=4,
-                 value="Control — total difference proves to the two ledger totals (must be nil)")
+                 value="Control — net difference ties to the independent ledger totals (must be nil)")
     cl.font = Font(color=SUB_C)
+    # A real check, not a tautology: the reconciliation's net difference (sum of the per-key
+    # Difference column) must equal the difference of the two *independent* source-tab totals
+    # (SUM over each source's amount column). If a key were dropped from the union or a range were
+    # misaligned, the per-key total would stop matching the raw source total and this reads non-nil.
     ctrl_cell = ws.cell(row=r_ctrl, column=_col_to_idx(L_diff) + 1,
-                        value=f"={L_amt_a}{r_total}-{L_amt_b}{r_total}-{L_diff}{r_total}")
+                        value=f"={L_diff}{r_total}-(SUM({amt_a_rng})-SUM({amt_b_rng}))")
     ctrl_cell.number_format = ACCT2
     ctrl_cell.font = Font(bold=True)
 
@@ -1355,7 +1364,7 @@ def _num(x):
     return f"({abs(x):,.2f})" if round(x, 2) < 0 else f"{x:,.2f}"
 
 
-def build_html_dashboard(rows, config, src_name=None):
+def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
     import html as _h
     la = config["sources"]["a"].get("label", "Source A")
     lb = config["sources"]["b"].get("label", "Source B")
@@ -1377,9 +1386,26 @@ def build_html_dashboard(rows, config, src_name=None):
     opn = len(open_rows)
     net = round(sum(r["diff"] for r in rows), 2)
     gross = round(sum(abs(r["diff"]) for r in rows), 2)
-    total_a = sum(r["amt_a"] for r in rows)
-    total_b = sum(r["amt_b"] for r in rows)
+    total_a = round(sum(r["amt_a"] for r in rows), 2)
+    total_b = round(sum(r["amt_b"] for r in rows), 2)
     rate = (reconciled / total * 100) if total else 0
+
+    # Independent source totals: summed directly from the raw records (a different code path from
+    # the per-key aggregation), so the amount controls below are a real check - they would read
+    # CHECK if the per-key aggregation dropped or double-counted a record - rather than comparing a
+    # value to itself. Falls back to the per-key totals only if the raw frames weren't provided.
+    nrm = config.get("normalization", {})
+    amt_a_col = config["sources"]["a"]["amountColumn"]
+    amt_b_col = config["sources"]["b"]["amountColumn"]
+    sgn_a = config["sources"]["a"].get("signConvention", "asIs")
+    sgn_b = config["sources"]["b"].get("signConvention", "asIs")
+    if df_a is not None and df_b is not None:
+        ind_a = round(sum(apply_sign(normalize_amount(rec.get(amt_a_col), nrm), sgn_a) or 0.0
+                          for rec in df_a.to_dict("records")), 2)
+        ind_b = round(sum(apply_sign(normalize_amount(rec.get(amt_b_col), nrm), sgn_b) or 0.0
+                          for rec in df_b.to_dict("records")), 2)
+    else:
+        ind_a, ind_b = total_a, total_b
 
     def agg_by(keyf):
         d = {}
@@ -1421,9 +1447,10 @@ def build_html_dashboard(rows, config, src_name=None):
     # ---- controls ----
     ctrls = [
         ("Every key in either ledger appears once", str(total), str(total), True),
-        (f"Amount — {la} agrees to the {la} tab", _num(total_a), _num(total_a), True),
-        (f"Amount — {lb} agrees to the {lb} tab", _num(total_b), _num(total_b), True),
-        ("Total difference proves to the two ledger totals", "&mdash;", "&mdash;", round(net - (total_a - total_b), 2) == 0),
+        (f"Amount — {la} agrees to the {la} tab", _num(total_a), _num(ind_a), round(total_a - ind_a, 2) == 0),
+        (f"Amount — {lb} agrees to the {lb} tab", _num(total_b), _num(ind_b), round(total_b - ind_b, 2) == 0),
+        ("Total difference proves to the two ledger totals",
+         _num(net), _num(round(ind_a - ind_b, 2)), round(net - (ind_a - ind_b), 2) == 0),
         ("Reconciled plus open items equal total lines", str(reconciled + opn), str(total), reconciled + opn == total),
     ]
     ctrl_html = "".join(
@@ -1517,8 +1544,8 @@ def build_html_dashboard(rows, config, src_name=None):
     )
 
 
-def write_html_report(rows, config, out_path, src_name=None):
-    html = build_html_dashboard(rows, config, src_name)
+def write_html_report(rows, config, out_path, src_name=None, df_a=None, df_b=None):
+    html = build_html_dashboard(rows, config, src_name, df_a=df_a, df_b=df_b)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -1751,7 +1778,8 @@ def main():
         html_path = os.path.splitext(args.out)[0] + ".html"
     if html_path:
         rows, _, _ = compute_reconciliation(df_a, df_b, config)
-        write_html_report(rows, config, html_path, src_name=os.path.basename(args.source_a))
+        write_html_report(rows, config, html_path, src_name=os.path.basename(args.source_a),
+                          df_a=df_a, df_b=df_b)
         print(f"HTML dashboard written to {html_path}")
 
     print(f"Control total {la} = {total_a:.2f} | {lb} = {total_b:.2f} | net = {summary['net_difference']:.2f}")
