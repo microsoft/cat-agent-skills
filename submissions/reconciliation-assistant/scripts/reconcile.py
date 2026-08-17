@@ -1008,6 +1008,11 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     b_recs = df_b.to_dict("records")
     a_cols = set(df_a.columns)
     b_cols_set = set(df_b.columns)
+    # A->B column map (positionally aligned by align_key_columns / keyMap), so any A-side key name
+    # read from the B frame is translated to B's own column name - otherwise a keyMap that renames
+    # columns (e.g. A "Account No." -> B "GLAccount") makes df_b[A-name] a KeyError and silently
+    # drops B-origin rows from the pivots.
+    keymap_ab = dict(zip(config["sources"]["a"]["keyColumns"], config["sources"]["b"]["keyColumns"]))
     dl = info["desc_letter"]
     rf, rl = info["r_first"], info["r_last"]
     RB = dl.get(group_by[0]) if group_by else "B"
@@ -1044,10 +1049,13 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     for g in group_by:
         if g == group_by[0]:
             # Distinct group values from the two columns directly (vectorized), instead of an
-            # O(rows) df.iloc[i][g] Series allocation per row.
-            vals_src = sorted({str(v) for v in df_a[g].tolist()} |
-                              {str(v) for v in df_b[g].tolist()})
-            basis_bits.append(f"{g} " + ", ".join(vals_src))
+            # O(rows) df.iloc[i][g] Series allocation per row. The B column may be named differently
+            # under keyMap, so translate g through the A->B map and guard when it's absent.
+            gb = keymap_ab.get(g, g)
+            vals = {str(v) for v in df_a[g].tolist()} if g in a_cols else set()
+            if gb in b_cols_set:
+                vals |= {str(v) for v in df_b[gb].tolist()}
+            basis_bits.append(f"{g} " + ", ".join(sorted(vals)))
     basis_bits.append(f"Difference = {la} less {lb}")
     if src_name:
         basis_bits.append(f"Source: {src_name}")
@@ -1158,14 +1166,13 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     accounts = []
     if acct_col and RC:
         seen = set()
-        keymap = dict(zip(config["sources"]["a"]["keyColumns"], config["sources"]["b"]["keyColumns"]))
         for side, srow in info["recon_rows"]:
             if side == "a":
                 rec = a_recs[srow - 2]
                 acct = rec.get(acct_col) if acct_col in a_cols else None
                 nm = rec.get(name_col) if (name_col and name_col in a_cols) else ""
             else:
-                bacct = keymap.get(acct_col, acct_col)
+                bacct = keymap_ab.get(acct_col, acct_col)
                 rec = b_recs[srow - 2]
                 acct = rec.get(bacct) if bacct in b_cols_set else None
                 nm = rec.get(name_col) if (name_col and name_col in b_cols_set) else ""
@@ -1202,10 +1209,17 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         combos = []
         seenc = set()
         for side, srow in info["recon_rows"]:
-            rec = a_recs[srow - 2] if side == "a" else b_recs[srow - 2]
-            cols_set = a_cols if side == "a" else b_cols_set
-            comp = rec.get(group_by[0]) if group_by[0] in cols_set else None
-            per = rec.get(group_by[1]) if group_by[1] in cols_set else None
+            if side == "a":
+                rec = a_recs[srow - 2]
+                gcomp, gper = group_by[0], group_by[1]
+                cols_set = a_cols
+            else:
+                rec = b_recs[srow - 2]
+                # Translate the A-side group names to B's column names (keyMap may rename them).
+                gcomp, gper = keymap_ab.get(group_by[0], group_by[0]), keymap_ab.get(group_by[1], group_by[1])
+                cols_set = b_cols_set
+            comp = rec.get(gcomp) if gcomp in cols_set else None
+            per = rec.get(gper) if gper in cols_set else None
             key = (comp, per)
             if comp is not None and per is not None and key not in seenc:
                 seenc.add(key); combos.append((comp, per))
