@@ -1,7 +1,7 @@
 ---
 name: semantic-pdf-image-extractor
 description: "Extract meaningful images, photos, diagrams, charts, maps, screenshots, illustrations, and visual evidence from uploaded PDFs with arbitrary layouts. Use when a user asks to extract, crop, classify, caption, deduplicate, inventory, or package images from PDF documents while preserving page context and source traceability."
-compatibility: "Works with Microsoft Copilot Studio GitHub Copilot harness, Copilot Cowork, Microsoft Scout, and other Agent Skills-compatible runtimes. Optional Python helper requires Python 3.10+; rendering/cropping additionally uses pypdfium2 and Pillow."
+compatibility: "Designed for Microsoft Copilot Studio agents powered by the GitHub Copilot harness. Optional Python helper requires Python 3.10+; rendering/cropping additionally uses pypdfium2 and Pillow."
 metadata:
   version: "1.0.0"
   output-schema: "semantic-pdf-image-manifest/1.0"
