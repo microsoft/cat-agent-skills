@@ -1,0 +1,17 @@
+{
+  "name": "Semantic PDF Image Extractor",
+  "description": "Extract meaningful photos, diagrams, charts, maps, screenshots, and other visual evidence from PDFs with context, provenance, quality checks, and duplicate detection.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "pdf",
+    "images",
+    "document-processing",
+    "computer-vision",
+    "knowledge-retrieval"
+  ],
+  "author": "Bas",
+  "authorUrl": "https://github.com/basvb1992",
+  "version": "1.0.0"
+}
