@@ -231,13 +231,15 @@ def command_crop(args: argparse.Namespace) -> None:
                 require(isinstance(region_id, str) and ID_PATTERN.fullmatch(region_id) is not None,
                         "Region id is invalid")
                 require(region.get("kind") in VALID_KINDS, f"Region {region_id} has an invalid kind")
-                validate_box(region.get("box"), f"region {region_id}.box")
+                box = region.get("box")
+                require(box is not None, f"region {region_id}.box is required")
+                validate_box(box, f"region {region_id}.box")
                 output = str(safe_relative_path(region.get("output"), f"region {region_id}.output"))
                 require(output.startswith("crops/") and output.lower().endswith(".png"),
                         f"Region {region_id} output must be a PNG under crops/")
                 require(output not in seen_outputs, f"Duplicate crop output: {output}")
                 seen_outputs.add(output)
-                left, top, right, bottom = region["box"]
+                left, top, right, bottom = box
                 pixel_box = (
                     max(0, min(width - 1, round(left * width))),
                     max(0, min(height - 1, round(top * height))),
