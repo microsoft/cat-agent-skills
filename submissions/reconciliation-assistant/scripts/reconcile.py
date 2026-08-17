@@ -777,6 +777,17 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     # would be grouped together and mislabelled "Timing" (mirrors the reconcile()/HTML guard).
     timing_on = (config["matching"].get("enableTimingDetection", True)
                  and timing_col is not None and len(nontiming_keys) >= 1)
+    # Hidden helper column holding the NORMALIZED reduced key (the non-timing key components,
+    # TRIM/LOWER'd exactly like the Matching Key). The Root Cause timing COUNTIFS groups offsetting
+    # entries by this normalized identity - matching the Python matcher and the HTML - instead of
+    # the raw display columns, which ignore trimWhitespace / caseInsensitiveKeys.
+    L_rk = _CL(ncols + 1)
+    nontiming_recon_letters = [desc_letter[k] for k in nontiming_keys]
+    if timing_on:
+        hc = ws.cell(row=4, column=ncols + 1, value="Reduced Key (helper)")
+        hc.fill = hdr_fill
+        hc.font = Font(bold=True, color=HDR_FONT)
+        ws.column_dimensions[L_rk].hidden = True
 
     mk_a = f"'{sa}'!${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}"
     amt_a_rng = f"'{sa}'!${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}"
@@ -843,16 +854,16 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
                        f'IF({L_lines_b}{r}=0,"Missing in {lb}",'
                        f'IF(ROUND({L_diff}{r},2)=0,"None","Amount mismatch")))')).alignment = left
         # Root Cause: measurement (amount mismatch), timing (offsetting missing entry in the
-        # same non-period group when timing applies to this row), else scope / mapping.
+        # same normalized non-period group when timing applies to this row), else scope / mapping.
+        if timing_on:
+            rk_refs = [f"${kl}{r}" for kl in nontiming_recon_letters]
+            ws.cell(row=r, column=ncols + 1, value=_xl_key_formula(rk_refs, norm)).font = Font(color=MK_C)
         if row_timing:
-            countifs = ""
-            for k in nontiming_keys:
-                kl = desc_letter[k]
-                countifs += f"${kl}$5:${kl}${r_last},${kl}{r},"
             opp = f'IF({L_dtype}{r}="Missing in {lb}","Missing in {la}","Missing in {lb}")'
             root = (f'=IF({L_status}{r}="Reconciled","—",'
                     f'IF({L_dtype}{r}="Amount mismatch","Measurement",'
-                    f'IF(COUNTIFS({countifs}${L_dtype}$5:${L_dtype}${r_last},{opp})>0,'
+                    f'IF(COUNTIFS(${L_rk}$5:${L_rk}${r_last},${L_rk}{r},'
+                    f'${L_dtype}$5:${L_dtype}${r_last},{opp})>0,'
                     f'"Timing","Scope / mapping")))')
         else:
             root = (f'=IF({L_status}{r}="Reconciled","—",'
@@ -1342,7 +1353,7 @@ def compute_reconciliation(df_a, df_b, config):
                  and timing_col is not None and len(nontiming) >= 1)
     grp = {}
     for r in rows:
-        gk = tuple(str(field(r["key"], k)) for k in nontiming)
+        gk = tuple(norm_key(field(r["key"], k), norm) for k in nontiming)
         grp.setdefault(gk, []).append(r)
     for r in rows:
         if r["status"] == "Reconciled":
@@ -1350,13 +1361,14 @@ def compute_reconciliation(df_a, df_b, config):
         elif r["difftype"] == "Amount mismatch":
             r["rootcause"] = "Measurement"
         else:
-            gk = tuple(str(field(r["key"], k)) for k in nontiming)
+            # Group offsetting entries by the NORMALIZED reduced key (norm_key per non-timing
+            # component), so the timing classification matches the matcher and the workbook helper
+            # even when non-timing key parts differ only by whitespace/case. norm_key also collapses
+            # NaN/blank components to "" (str(NaN) would be the truthy "nan"), so keyless /
+            # blank-reduced rows are correctly excluded from timing.
+            gk = tuple(norm_key(field(r["key"], k), norm) for k in nontiming)
             opp = f"Missing in {la}" if r["difftype"] == f"Missing in {lb}" else f"Missing in {lb}"
-            # Only a row whose reduced (non-timing) key is genuinely non-blank can be a timing
-            # difference. norm_key collapses NaN/blank components to "" (str(NaN) would be the
-            # truthy "nan"), so keyless / blank-reduced rows are correctly excluded - matching the
-            # reconcile() and Excel guards.
-            reduced_nonempty = any(norm_key(field(r["key"], k), norm) for k in nontiming)
+            reduced_nonempty = any(gk)
             has_offset = (timing_on and reduced_nonempty
                           and any(o["difftype"] == opp for o in grp.get(gk, [])))
             r["rootcause"] = "Timing" if has_offset else "Scope / mapping"
