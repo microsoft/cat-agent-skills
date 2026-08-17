@@ -569,10 +569,12 @@ def _src_meta(df, src_cfg, config):
 
 
 def _neutralize(v):
-    """Defuse spreadsheet formula/injection: a text value that begins with = + - @ could be
-    executed as a formula when the workbook is opened. Since all source data is untrusted, force
-    such strings to literal text with a leading apostrophe. Numbers are unaffected."""
-    if isinstance(v, str) and v[:1] in ("=", "+", "-", "@"):
+    """Defuse spreadsheet formula/injection: a text value whose first non-whitespace character is
+    = + - @ could be executed as a formula when the workbook is opened. Since all source data is
+    untrusted, force such strings to literal text with a leading apostrophe. The check ignores
+    leading whitespace (Excel does too: `  =1+1` still evaluates), while the original value is
+    preserved after the apostrophe. Numbers are unaffected."""
+    if isinstance(v, str) and v.lstrip()[:1] in ("=", "+", "-", "@"):
         return "'" + v
     return v
 
@@ -1314,8 +1316,12 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     return narr_rows
 
 
-def write_report(results, config, out_path, df_a=None, df_b=None, src_name=None):
+def write_report(results, config, out_path, df_a, df_b, src_name=None):
     import openpyxl
+
+    if df_a is None or df_b is None:
+        raise ValueError("write_report requires both source frames df_a and df_b "
+                         "(they drive the per-key model, source metadata, and tabs).")
 
     la = config["sources"]["a"].get("label", "Source A")
     lb = config["sources"]["b"].get("label", "Source B")
@@ -1522,11 +1528,16 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
     amt_b_col = config["sources"]["b"]["amountColumn"]
     sgn_a = config["sources"]["a"].get("signConvention", "asIs")
     sgn_b = config["sources"]["b"].get("signConvention", "asIs")
+    # Materialize the raw records once (they feed both the independent totals control and the
+    # independent unique-key control below); df.to_dict("records") is O(rows*cols) and would
+    # otherwise be built twice per frame on large reconciliations.
+    a_recs = df_a.to_dict("records") if df_a is not None else None
+    b_recs = df_b.to_dict("records") if df_b is not None else None
     if df_a is not None and df_b is not None:
         ind_a = round(sum(apply_sign(normalize_amount(rec.get(amt_a_col), nrm), sgn_a) or 0.0
-                          for rec in df_a.to_dict("records")), 2)
+                          for rec in a_recs), 2)
         ind_b = round(sum(apply_sign(normalize_amount(rec.get(amt_b_col), nrm), sgn_b) or 0.0
-                          for rec in df_b.to_dict("records")), 2)
+                          for rec in b_recs), 2)
     else:
         ind_a, ind_b = total_a, total_b
 
@@ -1541,8 +1552,8 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
         def _canon(rec, keys, scope, i):
             k = join_key_parts([norm_key(rec.get(c), nrm) for c in keys])
             return k if k else keyless_token(scope, i + 2)
-        a_ky = {_canon(rec, a_keycols, "A " + la, i) for i, rec in enumerate(df_a.to_dict("records"))}
-        b_extra = {k for j, rec in enumerate(df_b.to_dict("records"))
+        a_ky = {_canon(rec, a_keycols, "A " + la, i) for i, rec in enumerate(a_recs)}
+        b_extra = {k for j, rec in enumerate(b_recs)
                    if (k := _canon(rec, b_keycols, "B " + lb, j)) not in a_ky}
         ind_total = len(a_ky) + len(b_extra)
     else:
@@ -1596,7 +1607,7 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
     ]
     ctrl_html = "".join(
         f'<tr><td>{e(lbl)}</td><td class="num">{res}</td><td class="num">{exp}</td>'
-        f'<td><span class="ok">{"OK" if ok else "CHECK"}</span></td></tr>'
+        f'<td><span class="{"ok" if ok else "check"}">{"OK" if ok else "CHECK"}</span></td></tr>'
         for lbl, res, exp, ok in ctrls)
 
     # ---- type / root tables ----
@@ -1750,6 +1761,7 @@ tr.total td{{font-weight:bold; background:transparent; border-block-start:2px so
 .tag-open{{background:var(--open-bg); color:var(--open-ink);}}
 .tag-rec{{background:var(--rec-bg); color:var(--rec-ink);}}
 .ok{{background:var(--rec-bg); color:var(--rec-ink); font-weight:bold; padding:2px 9px; border-radius:4px;}}
+.check{{background:var(--open-bg); color:var(--open-ink); font-weight:bold; padding:2px 9px; border-radius:4px;}}
 .bar-cell{{position:relative;}}
 .bar{{display:block; height:4px; background:var(--brand-2); border-radius:2px; margin-block-start:3px; margin-inline-start:auto;}}
 .notes dt{{font-weight:bold; margin-block-start:8px;}}
