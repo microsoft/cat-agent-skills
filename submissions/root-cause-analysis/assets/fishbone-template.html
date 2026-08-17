@@ -5,51 +5,130 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fishbone Diagram Template</title>
 <style>
-  body { font-family: sans-serif; margin: 2rem; background: #f8f9fa; color: #212529; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 2rem; background: #f8f9fa; color: #212529; max-width: 960px; }
   h1 { font-size: 1.25rem; margin-bottom: 1rem; }
-  .problem { font-weight: bold; text-align: center; margin-bottom: 2rem; padding: 0.5rem; border: 2px solid #333; display: inline-block; }
-  .diagram { position: relative; height: 420px; margin-bottom: 2rem; }
-  .spine { position: absolute; top: 210px; left: 4%; right: 4%; height: 4px; background: #333; }
-  .head { position: absolute; right: 2%; top: 210px; transform: translateY(-50%); width: 0; height: 0; border-top: 20px solid transparent; border-bottom: 20px solid transparent; border-left: 30px solid #333; }
-  .category { position: absolute; width: 110px; text-align: center; }
-  .category .label { font-weight: bold; font-size: 0.85rem; margin-bottom: 0.25rem; }
-  .category .causes { font-size: 0.75rem; color: #495057; }
-  .cat-top { top: 40px; }
-  .cat-bottom { top: 310px; }
-  .c1 { left: 10%; } .c2 { left: 30%; } .c3 { left: 50%; } .c4 { left: 10%; } .c5 { left: 30%; } .c6 { left: 50%; }
-  .bone { position: absolute; height: 2px; background: #666; transform-origin: left center; }
-  .bone-top { top: 115px; width: 140px; transform: rotate(35deg); }
-  .bone-bottom { top: 275px; width: 140px; transform: rotate(-35deg); }
-  .notes { margin-top: 1rem; }
-  .notes textarea { width: 100%; min-height: 120px; border: 1px solid #ced4da; border-radius: 0.25rem; padding: 0.5rem; }
+  .problem { font-weight: bold; text-align: center; margin-bottom: 1.5rem; padding: 0.5rem 1.5rem; border: 2px solid #333; display: inline-block; cursor: text; }
+  .diagram { position: relative; margin-bottom: 2rem; }
+  .diagram svg.overlay { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 0; }
+  .row { display: flex; justify-content: space-around; gap: 1rem; padding: 0.5rem 0; position: relative; z-index: 1; }
+  .category { min-width: 0; flex: 1 1 0; max-width: 220px; border: 1px solid #ced4da; border-radius: 6px; padding: 0.75rem; background: white; word-wrap: break-word; overflow-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .category .label { font-weight: 600; font-size: 0.8rem; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.03em; color: #495057; }
+  .category .causes { font-size: 0.85rem; color: #212529; min-height: 1.2em; line-height: 1.4; }
+  .spine-area { position: relative; height: 50px; display: flex; align-items: center; margin: 0.5rem 0; }
+  .spine-line { flex: 1; height: 3px; background: #333; }
+  .head { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid #333; }
+  .notes { margin-top: 1.5rem; }
+  .notes label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+  .notes textarea { width: 100%; min-height: 120px; border: 1px solid #ced4da; border-radius: 4px; padding: 0.75rem; font-family: inherit; }
 </style>
 </head>
 <body>
   <h1>Fishbone Diagram Template</h1>
   <div class="problem" contenteditable="true">PROBLEM STATEMENT</div>
 
-  <div class="diagram">
-    <div class="spine"></div>
-    <div class="head"></div>
+  <div class="diagram" id="diagram">
+    <svg class="overlay" id="overlay"></svg>
 
-    <div class="bone bone-top" style="left: 10%;"></div>
-    <div class="bone bone-top" style="left: 30%;"></div>
-    <div class="bone bone-top" style="left: 50%;"></div>
-    <div class="bone bone-bottom" style="left: 10%;"></div>
-    <div class="bone bone-bottom" style="left: 30%;"></div>
-    <div class="bone bone-bottom" style="left: 50%;"></div>
+    <div class="row top" id="topRow">
+      <div class="category"><div class="label">People</div><div class="causes" contenteditable="true">skills, training, staffing</div></div>
+      <div class="category"><div class="label">Process</div><div class="causes" contenteditable="true">steps, policies, approvals</div></div>
+      <div class="category"><div class="label">Technology</div><div class="causes" contenteditable="true">tools, infra, config</div></div>
+    </div>
 
-    <div class="category c1 cat-top"><div class="label">People</div><div class="causes" contenteditable="true">skills, training, staffing</div></div>
-    <div class="category c2 cat-top"><div class="label">Process</div><div class="causes" contenteditable="true">steps, policies, approvals</div></div>
-    <div class="category c3 cat-top"><div class="label">Technology</div><div class="causes" contenteditable="true">tools, infra, config</div></div>
-    <div class="category c4 cat-bottom"><div class="label">Data</div><div class="causes" contenteditable="true">quality, completeness</div></div>
-    <div class="category c5 cat-bottom"><div class="label">Environment</div><div class="causes" contenteditable="true">external conditions</div></div>
-    <div class="category c6 cat-bottom"><div class="label">Management</div><div class="causes" contenteditable="true">priorities, resources</div></div>
+    <div class="spine-area" id="spineArea">
+      <div class="spine-line"></div>
+      <div class="head"></div>
+    </div>
+
+    <div class="row bottom" id="bottomRow">
+      <div class="category"><div class="label">Data</div><div class="causes" contenteditable="true">quality, completeness</div></div>
+      <div class="category"><div class="label">Environment</div><div class="causes" contenteditable="true">external conditions</div></div>
+      <div class="category"><div class="label">Management</div><div class="causes" contenteditable="true">priorities, resources</div></div>
+    </div>
   </div>
 
   <div class="notes">
     <label><strong>Notes / Evidence:</strong></label><br>
     <textarea placeholder="Add supporting facts, timestamps, logs, or observations for each category..."></textarea>
   </div>
+
+  <script>
+    function drawBones() {
+      const diagram = document.getElementById('diagram');
+      const overlay = document.getElementById('overlay');
+      const spineArea = document.getElementById('spineArea');
+      const diagramRect = diagram.getBoundingClientRect();
+      const spineRect = spineArea.getBoundingClientRect();
+
+      if (diagramRect.width === 0 || diagramRect.height === 0) return;
+
+      const svgNS = 'http://www.w3.org/2000/svg';
+      overlay.setAttribute('viewBox', `0 0 ${diagramRect.width} ${diagramRect.height}`);
+      overlay.setAttribute('width', diagramRect.width);
+      overlay.setAttribute('height', diagramRect.height);
+      overlay.innerHTML = '';
+
+      const spineY = spineRect.top + spineRect.height / 2 - diagramRect.top;
+      const spineStartX = 20;
+      const spineEndX = spineRect.right - diagramRect.left - 30;
+      const spineCenterX = (spineStartX + spineEndX) / 2;
+
+      const spine = document.createElementNS(svgNS, 'line');
+      spine.setAttribute('x1', spineStartX);
+      spine.setAttribute('y1', spineY);
+      spine.setAttribute('x2', spineEndX);
+      spine.setAttribute('y2', spineY);
+      spine.setAttribute('stroke', '#333');
+      spine.setAttribute('stroke-width', '3');
+      overlay.appendChild(spine);
+
+      const head = document.createElementNS(svgNS, 'polygon');
+      const headX = spineEndX;
+      const headSize = 12;
+      head.setAttribute('points', `${headX},${spineY} ${headX - 20},${spineY - headSize} ${headX - 20},${spineY + headSize}`);
+      head.setAttribute('fill', '#333');
+      overlay.appendChild(head);
+
+      document.querySelectorAll('.category').forEach(cat => {
+        const catRect = cat.getBoundingClientRect();
+        const isTop = cat.closest('.top') !== null;
+
+        // Connect from the category edge closest to the spine center
+        const catCenterX = catRect.left + catRect.width / 2 - diagramRect.left;
+        const useLeftEdge = catCenterX > spineCenterX;
+
+        const startY = isTop ? catRect.bottom - diagramRect.top : catRect.top - diagramRect.top;
+        const startX = useLeftEdge ? catRect.left - diagramRect.left : catRect.right - diagramRect.left;
+
+        // End at the point on the spine closest to the start X
+        const endY = spineY;
+        const endX = Math.max(spineStartX, Math.min(spineEndX, startX));
+
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', startX);
+        line.setAttribute('y1', startY);
+        line.setAttribute('x2', endX);
+        line.setAttribute('y2', endY);
+        line.setAttribute('stroke', '#666');
+        line.setAttribute('stroke-width', '2');
+        overlay.appendChild(line);
+      });
+    }
+
+    function init() {
+      drawBones();
+      window.addEventListener('resize', drawBones);
+      document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+        el.addEventListener('input', drawBones);
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
 </body>
 </html>
