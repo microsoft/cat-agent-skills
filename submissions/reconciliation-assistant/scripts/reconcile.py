@@ -277,10 +277,14 @@ def reconcile(df_a, df_b, config):
     unmatched_a = [r for r in a if not r.get("_matched")]
     unmatched_b = [r for r in b if r["_idx"] not in used_b]
 
-    # Tier 3: similarity (candidate matching for records with no shared key)
-    if m.get("enableSimilarityMatching", True):
-        date_a = src["a"].get("dateColumn")
-        date_b = src["b"].get("dateColumn")
+    # Tier 3: similarity (candidate matching for records with no shared key). Requires BOTH date
+    # columns to be configured: the method pairs on amount + date proximity + name similarity, so
+    # without dates the two remaining signals (amount within tolerance + name) would fabricate
+    # "Probable" pairs on common round amounts. When dates aren't configured the tier is skipped
+    # (documented in references/methodology.md and SKILL.md).
+    date_a = src["a"].get("dateColumn")
+    date_b = src["b"].get("dateColumn")
+    if m.get("enableSimilarityMatching", True) and date_a and date_b:
         window = m.get("dateWindowDays", 3)
         sim_thr = m.get("similarityThreshold", 0.9)
         still_a = []
@@ -296,16 +300,15 @@ def reconcile(df_a, df_b, config):
                     continue
                 if not within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
                     continue
-                if date_a and date_b:
-                    da, db = ra.get(date_a), rb.get(date_b)
-                    try:
-                        delta_days = abs((pd.to_datetime(da) - pd.to_datetime(db)).total_seconds()) / 86400.0
-                    except Exception:
-                        # A date was configured but could not be parsed: the proximity rule
-                        # cannot be satisfied, so this pair is not eligible for similarity.
-                        continue
-                    if delta_days > window:
-                        continue
+                da, db = ra.get(date_a), rb.get(date_b)
+                try:
+                    delta_days = abs((pd.to_datetime(da) - pd.to_datetime(db)).total_seconds()) / 86400.0
+                except Exception:
+                    # A date could not be parsed: the proximity rule cannot be satisfied, so this
+                    # pair is not eligible for similarity.
+                    continue
+                if delta_days > window:
+                    continue
                 sim = similarity(ra["_key"], rb["_key"])
                 if sim >= sim_thr and (best is None or sim > best[1]):
                     best = (rb, sim)
@@ -574,6 +577,19 @@ def _neutralize(v):
     return v
 
 
+def _xl_sheet_ref(sheet, a1):
+    """A sheet-qualified reference (e.g. 'Sheet Name'!$A$1) with the sheet name safely quoted -
+    embedded apostrophes are doubled, so a label/path-derived sheet name like "O'Brien" produces a
+    valid formula instead of a broken one. Used everywhere a source-tab range/cell is referenced."""
+    return "'" + str(sheet).replace("'", "''") + "'!" + a1
+
+
+def _xl_str_literal(s):
+    """An Excel string literal ("...") with any embedded double-quote doubled, so a user-derived
+    label can neither break the formula nor be used to inject by escaping the string."""
+    return '"' + str(s).replace('"', '""') + '"'
+
+
 def _xl_key_formula(cell_refs, norm):
     """Excel formula that concatenates key cell references into a Matching Key, mirroring
     join_key_parts()/norm_key(): each component is wrapped in TRIM() when trimWhitespace is on and
@@ -829,14 +845,21 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
         hc.font = f_hdr
         ws.column_dimensions[L_rk].hidden = True
 
-    mk_a = f"'{sa}'!${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}"
-    amt_a_rng = f"'{sa}'!${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}"
-    mk_b = f"'{sb}'!${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}"
-    amt_b_rng = f"'{sb}'!${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}"
+    mk_a = _xl_sheet_ref(sa, f"${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}")
+    amt_a_rng = _xl_sheet_ref(sa, f"${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}")
+    mk_b = _xl_sheet_ref(sb, f"${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}")
+    amt_b_rng = _xl_sheet_ref(sb, f"${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}")
 
     b_cols = list(df_b.columns)
     keymap = dict(zip(a_keys, b_keys))
     text_desc = {name for name in desc_cols if not pd.api.types.is_numeric_dtype(df_a[name])}
+    # Excel string literals for the source labels, embedded in the Difference Type / Root Cause
+    # formulas. Built once with any double-quote in the label doubled so a label like `AB"C` can't
+    # break the formula string (or inject). The runtime value Excel produces is the plain
+    # "Missing in <label>", which matches the same plain string written as the Dashboard pivot
+    # labels, so the COUNTIF/COUNTIFS still bind.
+    miss_a = _xl_str_literal(f"Missing in {la}")
+    miss_b = _xl_str_literal(f"Missing in {lb}")
     # Precompute constant column geometry ONCE (letters/indices don't change per row), so the hot
     # loop below is O(1) dict lookups instead of repeated list.index() scans (which made it
     # O(rows * cols^2) on wide/large reconciliations).
@@ -870,11 +893,11 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
         for name in desc_cols:
             col_idx = desc_col_idx[name]
             if side == "a":
-                ref = f"='{sa}'!${a_src_letter[name]}{srow}"
+                ref = "=" + _xl_sheet_ref(sa, f"${a_src_letter[name]}{srow}")
             else:
                 bname = keymap.get(name, name)
                 bl = b_src_letter.get(bname)
-                ref = f"='{sb}'!${bl}{srow}" if bl is not None else None
+                ref = "=" + _xl_sheet_ref(sb, f"${bl}{srow}") if bl is not None else None
             if ref is not None:
                 cell = ws.cell(row=r, column=col_idx, value=ref)
                 if name in text_desc:
@@ -897,8 +920,8 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
         c_st = ws.cell(row=r, column=7 + D, value=f'=IF({L_dtype}{r}="None","Reconciled","Open Item")')
         c_st.alignment = a_left; c_st.font = f_body
         c_dt = ws.cell(row=r, column=8 + D,
-                       value=(f'=IF({L_lines_a}{r}=0,"Missing in {la}",'
-                              f'IF({L_lines_b}{r}=0,"Missing in {lb}",'
+                       value=(f'=IF({L_lines_a}{r}=0,{miss_a},'
+                              f'IF({L_lines_b}{r}=0,{miss_b},'
                               f'IF(ROUND({L_diff}{r},2)=0,"None","Amount mismatch")))'))
         c_dt.alignment = a_left; c_dt.font = f_body
         # Root Cause: measurement (amount mismatch), timing (offsetting missing entry in the
@@ -907,7 +930,7 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
             rk_refs = [f"${kl}{r}" for kl in nontiming_recon_letters]
             ws.cell(row=r, column=ncols + 1, value=_xl_key_formula(rk_refs, norm)).font = f_mk
         if row_timing:
-            opp = f'IF({L_dtype}{r}="Missing in {lb}","Missing in {la}","Missing in {lb}")'
+            opp = f'IF({L_dtype}{r}={miss_b},{miss_a},{miss_b})'
             root = (f'=IF({L_status}{r}="Reconciled","—",'
                     f'IF({L_dtype}{r}="Amount mismatch","Measurement",'
                     f'IF(COUNTIFS(${L_rk}$5:${L_rk}${r_last},${L_rk}{r},'
@@ -1078,10 +1101,10 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     section(5, 1, "Control panel — every control must read OK before sign-off")
     for j, h in enumerate(["Control", "Result", "Expected", "Status"]):
         header(6, 1 + j, h)
-    a_mk = f"'{sa}'!${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}"
-    b_mk = f"'{sb}'!${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}"
-    a_amt = f"'{sa}'!${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}"
-    b_amt = f"'{sb}'!${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}"
+    a_mk = _xl_sheet_ref(sa, f"${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}")
+    b_mk = _xl_sheet_ref(sb, f"${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}")
+    a_amt = _xl_sheet_ref(sa, f"${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}")
+    b_amt = _xl_sheet_ref(sb, f"${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}")
     controls = [
         ("Every key in either ledger appears once",
          f"=COUNTA(Reconciliation!$A${rf}:$A${rl})",

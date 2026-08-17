@@ -30,11 +30,13 @@ Worked example. Ledger `INV-1002 | 900.00`; bank `INV-1002 | 890.00`. Keys equal
 
 ## Tier 3 - Similarity match (Needs Review)
 
-Only for records with no exact key match, and only when `enableSimilarityMatching` is on (the user opts into this during setup; it is not forced). Pair an A record with a B record when **all three** hold:
+Only for records with no exact key match, and only when `enableSimilarityMatching` is on (the user opts into this during setup; it is not forced) **and both sources have a `dateColumn` configured**. Pair an A record with a B record when **all three** hold:
 
 - amounts within tolerance,
 - dates within `dateWindowDays`,
 - similarity of the key/description strings ≥ `similarityThreshold` (use a normalized edit-distance or token ratio in [0,1]).
+
+All three signals are required. Because date proximity is one of them, the tier is **skipped entirely when either source has no date column** - matching on amount + name alone would fabricate Probable pairs on common round amounts, so the reference implementation does not run similarity without dates.
 
 A similarity pair is **Probable** and always goes to Needs Review. It is never promoted to Matched automatically, no matter how high the similarity.
 
