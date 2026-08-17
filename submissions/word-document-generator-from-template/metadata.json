@@ -1,8 +1,8 @@
 {
   "name": "Word Document Generator from Template",
-  "description": "Fill a Word template supplied at runtime (upload, SharePoint, OneDrive, or another connector) for any document type — policy, procedure, report, or paper. Uses approved knowledge, user files, and prior tool results. Preserves branding; never invents facts; returns a new DOCX.",
+  "description": "Deterministically fill a runtime Word template for any document type using approved knowledge, user files, and prior tool results. Handles split placeholders and repeating tables, preserves branding and live fields, validates output, and returns a new DOCX.",
   "platforms": ["Copilot Studio"],
-  "tags": ["word", "documents", "templates", "docx", "policy", "procedure", "reports", "sharepoint", "onedrive", "knowledge", "connectors", "drafting"],
+  "tags": ["word", "documents", "templates", "docx", "ooxml", "policy", "procedure", "reports", "sharepoint", "onedrive", "knowledge", "connectors"],
   "author": "Nazish Qasim",
   "authorUrl": "https://github.com/nazishqassim",
   "version": "1.0.0",

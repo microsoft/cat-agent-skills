@@ -15,7 +15,10 @@ Generate a complete Microsoft Word document of **any type the template defines**
 - files supplied with the request; and
 - information retrieved from prior tool or connector calls in the same conversation (for example Dataverse, SharePoint, CRM, or any Copilot Studio action).
 
-The runtime template controls document type, structure, formatting, headings, tables, headers, footers, and branding. Adapt sections, tables, and JSON keys to **that** template — do not assume a fixed outline.
+The runtime template controls document type, structure, formatting, headings,
+tables, headers, footers, and branding. Adapt JSON keys to **that** template —
+do not assume a fixed outline. Use the bundled deterministic engine for DOCX
+inspection, filling, and validation; do not implement ad-hoc run replacement.
 
 ## Required inputs
 
@@ -37,51 +40,50 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Instructions
 
-1. Locate the Word template supplied at runtime. Obtain it from whichever source the user identified:
-   - a file uploaded with the request;
-   - SharePoint (library, folder, or site);
-   - OneDrive; or
-   - another connector or prior tool result that returns a `.docx` file.
-   If the template is not already in the working directory, retrieve it with the matching connector or tool before continuing.
-2. Inspect the template to identify:
-   - document type (policy, procedure, report, paper, or other);
-   - placeholders;
-   - headings and sections;
-   - tables;
-   - repeating content areas;
-   - headers and footers; and
-   - required document metadata.
-3. Retrieve relevant information from approved knowledge sources, user-supplied files, and prior tool or connector results already available in the conversation. Prefer connector-returned facts (records, dates, owners, IDs) over restating them from memory.
-4. Generate content for each document section separately, matching the template's headings.
-5. Create a structured JSON object matching the template fields (not a fixed schema).
-6. Validate that:
-   - required sections from the template are present;
-   - required fields have values;
-   - generated statements are supported by approved knowledge, user files, or prior tool/connector results;
-   - repeating items are represented as arrays; and
-   - missing information is clearly identified.
-7. Populate the runtime Word template using the validated JSON.
-8. Preserve the template's:
-   - styles;
-   - layout;
-   - branding;
-   - section breaks;
-   - headers and footers; and
-   - table formatting.
-9. Save the completed document as a new DOCX file.
-10. Never overwrite the original template.
-11. Check the completed document for:
-    - unresolved placeholders;
-    - missing sections;
-    - broken tables;
-    - duplicated content;
-    - unsupported statements; and
-    - formatting or pagination problems.
-12. Return the completed Word document and a short generation summary.
+1. Locate the runtime `.docx` template. Use the uploaded file, or retrieve the
+   user-identified SharePoint / OneDrive / connector item into the working
+   directory. Stop with the message under **Template handling** if unavailable.
+2. Inspect it before writing content:
+
+   ```bash
+   python scripts/docx_template.py inspect template.docx --output manifest.json
+   ```
+
+   Read the manifest's exact scalar placeholders, repeating arrays, parts, and
+   live Word fields. If inspection rejects the template, report the error; do
+   not guess at its schema.
+3. Retrieve relevant information from approved knowledge, user files, and prior
+   tool/connector results already in the conversation. Prefer connector-returned
+   records, dates, owners, and IDs over restating them from memory.
+4. Generate long documents section by section. Build a JSON object whose paths
+   exactly match the manifest. Use arrays for repeating table rows. Use
+   `Not specified in approved sources` for unsupported facts.
+5. Validate the JSON conceptually: all required template fields are represented,
+   claims are grounded, and each array item supplies the expected row fields.
+6. Fill a **new** file with the deterministic engine:
+
+   ```bash
+   python scripts/docx_template.py fill template.docx data.json output.docx \
+     --summary fill-summary.json
+   ```
+
+   Never set `output.docx` to the template path.
+7. Validate package integrity, unresolved tokens, and live Word fields:
+
+   ```bash
+   python scripts/docx_template.py validate output.docx \
+     --template template.docx --output validation.json
+   ```
+
+   Do not return a DOCX unless both commands succeed.
+8. Return the completed DOCX plus a short generation summary: output filename,
+   document type, sources used, filled/defaulted fields, repeated-row counts,
+   and validation status.
 
 ## Generation rules
 
-- Follow the uploaded template's outline. Rename JSON keys to match its headings and placeholders.
+- Follow the runtime template's outline. JSON keys must match the inspection
+  manifest, not a hard-coded schema.
 - Use only information from approved knowledge sources, user-supplied files, or prior tool/connector results. Do not invent facts that those sources do not contain.
 - Treat prior tool and connector outputs as approved sources. Record the tool or connector name in `source_ids` (for example `Dataverse:accounts`, `SharePoint:policy-library`).
 - Generate long documents section by section rather than in one response.
@@ -92,6 +94,9 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 - Do not add new sections unless required to complete the template.
 - Do not remove sections from the template without an explicit instruction.
 - Record the sources used for each major section when source information is available.
+- Do not replace runs manually or clear footer/header paragraphs. The script
+  handles split-run tokens and preserves PAGE, NUMPAGES, TOC, REF, and other
+  live Word fields.
 
 ## Template handling
 
@@ -115,6 +120,16 @@ If the required template cannot be found or retrieved, stop document generation 
 
 'The required Word template was not supplied or could not be accessed.'
 
+## Template contract
+
+Use `{{path.to.value}}` for scalar text and `{{items[].field}}` in one sample
+table row for repetition. Tokens may be split across Word runs; the engine
+matches their visible paragraph text. It fills the main document, tables,
+headers, and footers while preserving live Word fields.
+
+Read [`references/placeholder-contract.md`](references/placeholder-contract.md)
+for the exact grammar, supported scope, limits, and troubleshooting.
+
 ## Structured JSON
 
 Create JSON that reflects the **runtime template**. Use:
@@ -129,24 +144,22 @@ Example shape (field names change to match the template):
 ```json
 {
   "document": {
-    "title": "{{document.title}}",
-    "type": "policy | procedure | report | paper | other",
-    "owner": "{{document.owner}}",
-    "version": "{{document.version}}",
-    "status": "{{document.status}}",
-    "audience": "{{document.audience}}"
+    "title": "Quarterly Operations Report",
+    "type": "Report",
+    "owner": "Operations",
+    "version": "1.0",
+    "status": "Draft",
+    "audience": "Leadership team"
   },
   "sections": {
-    "<heading_slug>": {
-      "content": "Generated section content",
-      "source_ids": ["SRC-001"]
-    }
+    "executive_summary": "Generated section content",
+    "purpose": "Generated section content"
   },
-  "items": [
+  "findings": [
     {
-      "col_1": "Value for first repeating-table column",
-      "col_2": "Value for second column",
-      "source_ids": ["SRC-002"]
+      "finding": "Generated finding",
+      "impact": "Generated impact",
+      "owner": "Action owner"
     }
   ],
   "sources": [
@@ -159,7 +172,16 @@ Example shape (field names change to match the template):
 }
 ```
 
-A Leave Policy template would map `items` to `leave_types`; a procedure would map it to `steps`; a report would map it to `findings` or connector rows. Always adapt to the actual placeholders.
+A Leave Policy template might use `leave_types`; a procedure might use `steps`;
+a report might use `findings` or connector rows. Always use the array names
+reported by template inspection.
+
+## Requirements
+
+The engine uses Python's standard library plus `lxml`, preinstalled in the
+Copilot Studio sandbox. The sample-template builder and tests additionally use
+preinstalled `python-docx` and Pillow. No network service or `pip install` is
+needed in Copilot Studio.
 
 ## Quality and safety
 
