@@ -70,7 +70,10 @@ def normalize_amount(value, norm):
         amt = float(s)
     except ValueError:
         return None
-    return round(-amt if negative else amt, 2)
+    # Parentheses denote a negative in accounting notation. Use -abs() rather than -amt so a value
+    # that ALSO carries an inner minus sign (e.g. "(-50.00)") isn't double-negated back to positive:
+    # the parentheses are authoritative for the sign, magnitude comes from the parsed number.
+    return round(-abs(amt) if negative else amt, 2)
 
 
 def apply_sign(amount, convention):
