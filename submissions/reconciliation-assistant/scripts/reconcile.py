@@ -333,7 +333,9 @@ def reconcile(df_a, df_b, config):
         grouped_a, grouped_b = set(), set()
 
         def _find_combo(target, pool, exclude):
-            avail = [r for r in pool if r["_idx"] not in exclude and r["_amt"] is not None]
+            # Keyless rows (empty key) are non-matchable by design, so they never participate as
+            # combo members either (mirrors the exact/similarity tiers).
+            avail = [r for r in pool if r["_idx"] not in exclude and r["_amt"] is not None and r["_key"] != ""]
             if len(avail) > POOL_CAP:
                 return None
             # A split is same-sign as its target, so drop opposite-sign candidates and any
@@ -360,7 +362,7 @@ def reconcile(df_a, df_b, config):
 
         # One A record ↔ many B records.
         for ra in unmatched_a:
-            if ra["_amt"] is None:
+            if ra["_amt"] is None or ra["_key"] == "":
                 continue
             combo = _find_combo(ra["_amt"], unmatched_b, used_b | grouped_b)
             if combo:
@@ -377,7 +379,7 @@ def reconcile(df_a, df_b, config):
         # One B record ↔ many A records (using A rows not already grouped above).
         pool_a = [r for r in unmatched_a if r["_idx"] not in grouped_a]
         for rb in unmatched_b:
-            if rb["_idx"] in grouped_b or rb["_amt"] is None:
+            if rb["_idx"] in grouped_b or rb["_amt"] is None or rb["_key"] == "":
                 continue
             combo = _find_combo(rb["_amt"], pool_a, grouped_a)
             if combo:
@@ -630,9 +632,9 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
     a_ctr_v = Alignment(horizontal="center", vertical="center")
     hdr_fill = PatternFill("solid", fgColor=HDR_FILL)
     cols = meta["cols"]
-    # Header row.
+    # Header row. Column names are user-derived, so neutralize against formula injection.
     for c, name in enumerate(cols, start=1):
-        cell = ws.cell(row=1, column=c, value=str(name))
+        cell = ws.cell(row=1, column=c, value=_neutralize(str(name)))
         cell.fill = hdr_fill
         cell.font = f_hdr
         cell.alignment = a_ctr_v
@@ -794,7 +796,7 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     thin = Side(style="thin", color=HDR_FILL)
     hborder = Border(left=thin, right=thin, top=thin, bottom=thin)
     for c, name in enumerate(headers, start=1):
-        cell = ws.cell(row=4, column=c, value=name)
+        cell = ws.cell(row=4, column=c, value=_neutralize(name))
         cell.fill = hdr_fill
         cell.font = f_hdr
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -829,6 +831,12 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     b_cols = list(df_b.columns)
     keymap = dict(zip(a_keys, b_keys))
     text_desc = {name for name in desc_cols if not pd.api.types.is_numeric_dtype(df_a[name])}
+    # Precompute constant column geometry ONCE (letters/indices don't change per row), so the hot
+    # loop below is O(1) dict lookups instead of repeated list.index() scans (which made it
+    # O(rows * cols^2) on wide/large reconciliations).
+    desc_col_idx = {name: 2 + i for i, name in enumerate(desc_cols)}
+    a_src_letter = {name: _CL(meta_a["cols"].index(name) + 1) for name in desc_cols}
+    b_src_letter = {bname: _CL(i + 1) for i, bname in enumerate(b_cols)}
 
     for idx, (side, srow) in enumerate(recon_rows):
         r = r_first + idx
@@ -854,17 +862,13 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
         # Descriptive columns pulled from the source row by reference. Numeric key columns are
         # left-aligned Cambria; free-text columns (Account Name, Period) use Arial 10 (v15 style).
         for name in desc_cols:
-            col_idx = 2 + desc_cols.index(name)
+            col_idx = desc_col_idx[name]
             if side == "a":
-                src_letter = _CL(meta_a["cols"].index(name) + 1)
-                ref = f"='{sa}'!${src_letter}{srow}"
+                ref = f"='{sa}'!${a_src_letter[name]}{srow}"
             else:
                 bname = keymap.get(name, name)
-                if bname in b_cols:
-                    src_letter = _CL(b_cols.index(bname) + 1)
-                    ref = f"='{sb}'!${src_letter}{srow}"
-                else:
-                    ref = None
+                bl = b_src_letter.get(bname)
+                ref = f"='{sb}'!${bl}{srow}" if bl is not None else None
             if ref is not None:
                 cell = ws.cell(row=r, column=col_idx, value=ref)
                 if name in text_desc:
@@ -1033,7 +1037,9 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         c.font = f_sec
 
     def header(row, col, text):
-        c = ws.cell(row=row, column=col, value=text)
+        # Header text can include user-derived column names (via columnRenames); neutralize so a
+        # column literally named e.g. "=cmd" can't execute when the workbook opens.
+        c = ws.cell(row=row, column=col, value=_neutralize(text))
         c.fill = hdr_fill
         c.font = f_hdr
         c.alignment = Alignment(horizontal="center", vertical="center")
@@ -1059,7 +1065,7 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     basis_bits.append(f"Difference = {la} less {lb}")
     if src_name:
         basis_bits.append(f"Source: {src_name}")
-    b2 = ws.cell(row=2, column=1, value=" | ".join(basis_bits))
+    b2 = ws.cell(row=2, column=1, value=_neutralize(" | ".join(basis_bits)))
     b2.font = Font(name=REPORT_FONT, color=SUB_C)
 
     # ---- Control panel (rows 5-11) ----
@@ -1186,9 +1192,9 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
             header(22, 1 + j, h)
         for i, (acct, nm) in enumerate(accounts):
             row = acc_start + i
-            ac = ws.cell(row=row, column=1, value=acct)
+            ac = ws.cell(row=row, column=1, value=_neutralize(acct))
             ac.alignment = Alignment(horizontal="left"); ac.font = f_body
-            txt(ws.cell(row=row, column=2, value=nm))
+            txt(ws.cell(row=row, column=2, value=_neutralize(nm)))
             c3 = ws.cell(row=row, column=3, value=f"=SUMIF({R(RC)},$A{row},{R(Fa)})")
             c3.number_format = ACCT2; c3.font = f_body
             c4 = ws.cell(row=row, column=4, value=f"=SUMIF({R(RC)},$A{row},{R(Fb)})")
@@ -1233,9 +1239,9 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
             cp_start = 24
             for i, (comp, per) in enumerate(combos):
                 row = cp_start + i
-                cc8 = ws.cell(row=row, column=8, value=comp)
+                cc8 = ws.cell(row=row, column=8, value=_neutralize(comp))
                 cc8.alignment = Alignment(horizontal="left"); cc8.font = f_body
-                txt(ws.cell(row=row, column=9, value=per))
+                txt(ws.cell(row=row, column=9, value=_neutralize(per)))
                 c10 = ws.cell(row=row, column=10,
                               value=f"=SUMIFS({R(Fa)},{R(RB)},$H{row},{R(RE)},$I{row})")
                 c10.number_format = ACCT2; c10.font = f_body
@@ -1495,6 +1501,24 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
     else:
         ind_a, ind_b = total_a, total_b
 
+    # Independent unique-key count, recomputed straight from the raw frames (a separate code path
+    # from the `rows` aggregation), so the "every key appears once" control is a real check - it
+    # reads CHECK if the aggregation dropped or duplicated a key - rather than comparing total to
+    # itself. Mirrors the workbook's SUMPRODUCT(1/COUNTIF) control. Keyless rows get the same unique
+    # placeholder scheme as compute_reconciliation so each counts once.
+    a_keycols = config["sources"]["a"]["keyColumns"]
+    b_keycols = config["sources"]["b"]["keyColumns"]
+    if df_a is not None and df_b is not None:
+        def _canon(rec, keys, scope, i):
+            k = join_key_parts([norm_key(rec.get(c), nrm) for c in keys])
+            return k if k else keyless_token(scope, i + 2)
+        a_ky = {_canon(rec, a_keycols, "A " + la, i) for i, rec in enumerate(df_a.to_dict("records"))}
+        b_extra = {k for j, rec in enumerate(df_b.to_dict("records"))
+                   if (k := _canon(rec, b_keycols, "B " + lb, j)) not in a_ky}
+        ind_total = len(a_ky) + len(b_extra)
+    else:
+        ind_total = total
+
     def agg_by(keyf):
         d = {}
         for r in open_rows:
@@ -1534,7 +1558,7 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
 
     # ---- controls ----
     ctrls = [
-        ("Every key in either ledger appears once", str(total), str(total), True),
+        ("Every key in either ledger appears once", str(total), str(ind_total), total == ind_total),
         (f"Amount — {la} agrees to the {la} tab", _num(total_a), _num(ind_a), round(total_a - ind_a, 2) == 0),
         (f"Amount — {lb} agrees to the {lb} tab", _num(total_b), _num(ind_b), round(total_b - ind_b, 2) == 0),
         ("Total difference proves to the two ledger totals",
