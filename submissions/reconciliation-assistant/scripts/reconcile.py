@@ -618,26 +618,38 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
     from openpyxl.styles import Font, PatternFill, Alignment
 
     norm = norm or {}
+    # Shared font objects assigned by reference (openpyxl de-duplicates styles), so every cell is
+    # styled as it is created - no second whole-sheet pass over this potentially huge tab.
+    f_body = Font(name=REPORT_FONT)
+    f_text = Font(name="Arial", size=10)
+    f_hdr = Font(name=REPORT_FONT, bold=True, color=HDR_FONT)
+    f_mk = Font(name=REPORT_FONT, color=MK_C)
+    # Shared alignments too (re-creating an Alignment per cell is a measurable cost at scale and
+    # bloats openpyxl's style table).
+    a_left = Alignment(horizontal="left")
+    a_ctr_v = Alignment(horizontal="center", vertical="center")
     hdr_fill = PatternFill("solid", fgColor=HDR_FILL)
     cols = meta["cols"]
     # Header row.
     for c, name in enumerate(cols, start=1):
         cell = ws.cell(row=1, column=c, value=str(name))
         cell.fill = hdr_fill
-        cell.font = Font(bold=True, color=HDR_FONT)
-        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.font = f_hdr
+        cell.alignment = a_ctr_v
     mk_c = len(cols) + 1
     hc = ws.cell(row=1, column=mk_c, value="Matching Key")
     hc.fill = hdr_fill
-    hc.font = Font(bold=True, color=HDR_FONT)
-    hc.alignment = Alignment(horizontal="center", vertical="center")
+    hc.font = f_hdr
+    hc.alignment = a_ctr_v
 
     # Data rows. v15 convention: numeric non-amount cells use Cambria left-aligned (General
     # format renders integer keys cleanly); free-text cells (e.g. Account Name, Period) use
     # Arial 10; the amount uses the shared money format. The Matching Key helper is a gray formula.
     amt_letter = meta["amt_letter"]
     text_cols = {name for name in cols if not pd.api.types.is_numeric_dtype(df[name])}
-    for r, (_, row) in enumerate(df.iterrows(), start=2):
+    # Iterate plain dicts (one to_dict up front) rather than df.iterrows(), which allocates a fresh
+    # pandas Series per row - a meaningful cost when writing tens of thousands of rows.
+    for r, row in enumerate(df.to_dict("records"), start=2):
         for c, name in enumerate(cols, start=1):
             v = row[name]
             if pd.isna(v):
@@ -646,12 +658,14 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
                 # Sign-normalized numeric value drives the workbook's SUMIF totals.
                 cell = ws.cell(row=r, column=c, value=apply_sign(normalize_amount(v, norm), sign))
                 cell.number_format = ACCT2
+                cell.font = f_body
             elif name in text_cols:
                 cell = ws.cell(row=r, column=c, value=_neutralize(v))
-                cell.font = Font(name="Arial", size=10)
+                cell.font = f_text
             else:
                 cell = ws.cell(row=r, column=c, value=v)
-                cell.alignment = Alignment(horizontal="left")
+                cell.alignment = a_left
+                cell.font = f_body
         # Matching Key. A row with all key components blank gets a unique placeholder so keyless
         # rows are never aggregated together by the reconciliation SUMIF/COUNTIF; otherwise the
         # normalized concatenation of the key cells (TRIM/LOWER, all-empty collapses to "").
@@ -660,7 +674,7 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
         else:
             refs = [f"${kl}{r}" for kl in meta["key_letters"]]
             mkc = ws.cell(row=r, column=mk_c, value=_xl_key_formula(refs, norm))
-        mkc.font = Font(color=MK_C)
+        mkc.font = f_mk
 
     # Column widths: vectorized string-length over a bounded sample (avoids an O(rows*cols)
     # Python loop; the widest of the first 200 rows is a fine proxy for display width).
@@ -686,6 +700,18 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     over the two source tabs. Returns the layout info the dashboard needs to reference it."""
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.formatting.rule import FormulaRule, CellIsRule
+
+    # Shared fonts assigned by reference, so every cell on this (potentially large) sheet is styled
+    # as it is created - no second whole-sheet styling pass.
+    f_body = Font(name=REPORT_FONT)
+    f_text = Font(name="Arial", size=10)
+    f_hdr = Font(name=REPORT_FONT, bold=True, color=HDR_FONT)
+    f_mk = Font(name=REPORT_FONT, color=MK_C)
+    f_key = Font(name=REPORT_FONT, color=BODY_C)
+    f_bold = Font(name=REPORT_FONT, bold=True)
+    # Shared alignments (avoid re-creating one per cell across a large sheet).
+    a_left = Alignment(horizontal="left")
+    a_center = Alignment(horizontal="center")
 
     la = config["sources"]["a"]["label"]
     lb = config["sources"]["b"]["label"]
@@ -719,20 +745,26 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     # with the HTML dashboard and a key duplicated within a source is never double-counted. Uses
     # norm_key per component so the union matches the Python matcher and the Excel TRIM/LOWER
     # helper (integer-valued cells canonicalize identically).
-    def keystr(df, keys, i, scope):
-        k = join_key_parts([norm_key(df.iloc[i][c], norm) for c in keys])
+    # Precompute each source as a list of plain dicts ONCE, so per-row lookups below are O(1) dict
+    # access instead of df.iloc[i] (which allocates a fresh pandas Series on every access - an
+    # O(rows x keys) cost on large reconciliations).
+    a_recs = df_a.to_dict("records")
+    b_recs = df_b.to_dict("records")
+
+    def keystr(recs, keys, i, scope):
+        k = join_key_parts([norm_key(recs[i].get(c), norm) for c in keys])
         return k if k else keyless_token(scope, i + 2)
     a_keyset = set()
     recon_rows = []
     row_keys = []
     for i in range(meta_a["n"]):
-        k = keystr(df_a, a_keys, i, sa)
+        k = keystr(a_recs, a_keys, i, sa)
         if k not in a_keyset:
             a_keyset.add(k)
             recon_rows.append(("a", i + 2)); row_keys.append(k)
     b_keyset = set()
     for j in range(meta_b["n"]):
-        k = keystr(df_b, b_keys, j, sb)
+        k = keystr(b_recs, b_keys, j, sb)
         if k not in a_keyset and k not in b_keyset:
             b_keyset.add(k)
             recon_rows.append(("b", j + 2)); row_keys.append(k)
@@ -747,11 +779,11 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
 
     # Titles.
     t = ws.cell(row=1, column=1, value=f"Reconciliation detail — {la} vs {lb}")
-    t.font = Font(bold=True, size=16, color=SEC_C)
+    t.font = Font(name=REPORT_FONT, bold=True, size=16, color=SEC_C)
     st = ws.cell(row=2, column=1,
                  value=f"One row per matching key. Difference = {la} less {lb}. "
                        "Basis of preparation is on the Dashboard.")
-    st.font = Font(color=SUB_C)
+    st.font = Font(name=REPORT_FONT, color=SUB_C)
 
     # Header row (row 4).
     headers = (["Matching Key"] + [renames.get(c, c) for c in desc_cols] +
@@ -764,7 +796,7 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     for c, name in enumerate(headers, start=1):
         cell = ws.cell(row=4, column=c, value=name)
         cell.fill = hdr_fill
-        cell.font = Font(bold=True, color=HDR_FONT)
+        cell.font = f_hdr
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = hborder
 
@@ -786,7 +818,7 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     if timing_on:
         hc = ws.cell(row=4, column=ncols + 1, value="Reduced Key (helper)")
         hc.fill = hdr_fill
-        hc.font = Font(bold=True, color=HDR_FONT)
+        hc.font = f_hdr
         ws.column_dimensions[L_rk].hidden = True
 
     mk_a = f"'{sa}'!${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}"
@@ -804,18 +836,18 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
         # source-tab helper) so they are never aggregated together; keyed rows rebuild the key by
         # formula, normalized identically to the source-tab helper so SUMIF/COUNTIF align.
         if is_keyless_token(row_keys[idx]):
-            ws.cell(row=r, column=1, value=row_keys[idx]).font = Font(color=BODY_C)
+            ws.cell(row=r, column=1, value=row_keys[idx]).font = f_key
         else:
             refs = [f"${kl}{r}" for kl in key_recon_letters]
-            ws.cell(row=r, column=1, value=_xl_key_formula(refs, norm)).font = Font(color=BODY_C)
+            ws.cell(row=r, column=1, value=_xl_key_formula(refs, norm)).font = f_key
         # Timing root cause applies to this row only when timing is on AND its non-timing (reduced)
         # key is genuinely non-blank; keyless / blank-reduced rows are excluded so they are never
         # grouped and mislabelled "Timing" (mirrors reconcile() and the HTML per-key model).
         if timing_on:
             if side == "a":
-                reduced = [norm_key(df_a.iloc[srow - 2].get(k), norm) for k in nontiming_keys]
+                reduced = [norm_key(a_recs[srow - 2].get(k), norm) for k in nontiming_keys]
             else:
-                reduced = [norm_key(df_b.iloc[srow - 2].get(keymap.get(k, k)), norm) for k in nontiming_keys]
+                reduced = [norm_key(b_recs[srow - 2].get(keymap.get(k, k)), norm) for k in nontiming_keys]
             row_timing = any(reduced)
         else:
             row_timing = False
@@ -836,28 +868,34 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
             if ref is not None:
                 cell = ws.cell(row=r, column=col_idx, value=ref)
                 if name in text_desc:
-                    cell.font = Font(name="Arial", size=10)
+                    cell.font = f_text
                 else:
-                    cell.alignment = Alignment(horizontal="left")
+                    cell.font = f_body
+                    cell.alignment = a_left
         # Amounts, difference, line counts.
-        ws.cell(row=r, column=2 + D, value=f"=SUMIF({mk_a},$A{r},{amt_a_rng})").number_format = ACCT2
-        ws.cell(row=r, column=3 + D, value=f"=SUMIF({mk_b},$A{r},{amt_b_rng})").number_format = ACCT2
-        ws.cell(row=r, column=4 + D, value=f"={L_amt_a}{r}-{L_amt_b}{r}").number_format = ACCT2
+        c_aa = ws.cell(row=r, column=2 + D, value=f"=SUMIF({mk_a},$A{r},{amt_a_rng})")
+        c_aa.number_format = ACCT2; c_aa.font = f_body
+        c_bb = ws.cell(row=r, column=3 + D, value=f"=SUMIF({mk_b},$A{r},{amt_b_rng})")
+        c_bb.number_format = ACCT2; c_bb.font = f_body
+        c_df = ws.cell(row=r, column=4 + D, value=f"={L_amt_a}{r}-{L_amt_b}{r}")
+        c_df.number_format = ACCT2; c_df.font = f_body
         ca = ws.cell(row=r, column=5 + D, value=f"=COUNTIF({mk_a},$A{r})")
         cb = ws.cell(row=r, column=6 + D, value=f"=COUNTIF({mk_b},$A{r})")
-        ca.alignment = cb.alignment = Alignment(horizontal="center")
+        ca.alignment = cb.alignment = a_center
+        ca.font = cb.font = f_body
         # Status / Difference Type / Root Cause / Action Needed (left-aligned text, v15 style).
-        left = Alignment(horizontal="left")
-        ws.cell(row=r, column=7 + D, value=f'=IF({L_dtype}{r}="None","Reconciled","Open Item")').alignment = left
-        ws.cell(row=r, column=8 + D,
-                value=(f'=IF({L_lines_a}{r}=0,"Missing in {la}",'
-                       f'IF({L_lines_b}{r}=0,"Missing in {lb}",'
-                       f'IF(ROUND({L_diff}{r},2)=0,"None","Amount mismatch")))')).alignment = left
+        c_st = ws.cell(row=r, column=7 + D, value=f'=IF({L_dtype}{r}="None","Reconciled","Open Item")')
+        c_st.alignment = a_left; c_st.font = f_body
+        c_dt = ws.cell(row=r, column=8 + D,
+                       value=(f'=IF({L_lines_a}{r}=0,"Missing in {la}",'
+                              f'IF({L_lines_b}{r}=0,"Missing in {lb}",'
+                              f'IF(ROUND({L_diff}{r},2)=0,"None","Amount mismatch")))'))
+        c_dt.alignment = a_left; c_dt.font = f_body
         # Root Cause: measurement (amount mismatch), timing (offsetting missing entry in the
         # same normalized non-period group when timing applies to this row), else scope / mapping.
         if timing_on:
             rk_refs = [f"${kl}{r}" for kl in nontiming_recon_letters]
-            ws.cell(row=r, column=ncols + 1, value=_xl_key_formula(rk_refs, norm)).font = Font(color=MK_C)
+            ws.cell(row=r, column=ncols + 1, value=_xl_key_formula(rk_refs, norm)).font = f_mk
         if row_timing:
             opp = f'IF({L_dtype}{r}="Missing in {lb}","Missing in {la}","Missing in {lb}")'
             root = (f'=IF({L_status}{r}="Reconciled","—",'
@@ -868,24 +906,26 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
         else:
             root = (f'=IF({L_status}{r}="Reconciled","—",'
                     f'IF({L_dtype}{r}="Amount mismatch","Measurement","Scope / mapping"))')
-        ws.cell(row=r, column=9 + D, value=root).alignment = left
-        ws.cell(row=r, column=10 + D,
-                value=(f'=IF({L_root}{r}="Measurement","Obtain supporting detail and correct the misstated balance",'
-                       f'IF({L_root}{r}="Timing","Confirm cut-off; the offsetting entry sits in the adjacent period",'
-                       f'IF({L_root}{r}="Scope / mapping","Confirm the account is intentionally excluded, or post the missing entry",'
-                       f'"No action — line agrees")))'))
+        c_rt = ws.cell(row=r, column=9 + D, value=root)
+        c_rt.alignment = a_left; c_rt.font = f_body
+        c_ac = ws.cell(row=r, column=10 + D,
+                       value=(f'=IF({L_root}{r}="Measurement","Obtain supporting detail and correct the misstated balance",'
+                              f'IF({L_root}{r}="Timing","Confirm cut-off; the offsetting entry sits in the adjacent period",'
+                              f'IF({L_root}{r}="Scope / mapping","Confirm the account is intentionally excluded, or post the missing entry",'
+                              f'"No action — line agrees")))'))
+        c_ac.font = f_body
 
     # Totals row + control row.
-    tot_lbl = ws.cell(row=r_total, column=4, value="Total"); tot_lbl.font = Font(bold=True)
+    tot_lbl = ws.cell(row=r_total, column=4, value="Total"); tot_lbl.font = f_bold
     for L in (L_amt_a, L_amt_b, L_diff):
         cc = ws.cell(row=r_total, column=_col_to_idx(L) + 1, value=f"=SUM({L}{r_first}:{L}{r_last})")
-        cc.font = Font(bold=True); cc.number_format = ACCT2
+        cc.font = f_bold; cc.number_format = ACCT2
     top = Side(style="thin", color=HDR_FILL)
     for c in range(1, ncols + 1):
         ws.cell(row=r_total, column=c).border = Border(top=top, bottom=top)
     cl = ws.cell(row=r_ctrl, column=4,
                  value="Control — net difference ties to the independent ledger totals (must be nil)")
-    cl.font = Font(color=SUB_C)
+    cl.font = Font(name=REPORT_FONT, color=SUB_C)
     # A real check, not a tautology: the reconciliation's net difference (sum of the per-key
     # Difference column) must equal the difference of the two *independent* source-tab totals
     # (SUM over each source's amount column). If a key were dropped from the union or a range were
@@ -893,7 +933,7 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     ctrl_cell = ws.cell(row=r_ctrl, column=_col_to_idx(L_diff) + 1,
                         value=f"={L_diff}{r_total}-(SUM({amt_a_rng})-SUM({amt_b_rng}))")
     ctrl_cell.number_format = ACCT2
-    ctrl_cell.font = Font(bold=True)
+    ctrl_cell.font = f_bold
 
     # Column widths (aligned to v15).
     ws.column_dimensions["A"].width = 26
@@ -944,6 +984,13 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
 def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narrative, src_name):
     from openpyxl.styles import Font, PatternFill, Alignment
 
+    # Shared fonts (assigned by reference) so the Dashboard is styled as it is built - there is no
+    # separate whole-workbook font pass over any sheet.
+    f_bold = Font(name=REPORT_FONT, bold=True)
+    f_body = Font(name=REPORT_FONT)
+    f_sec = Font(name=REPORT_FONT, bold=True, size=12, color=SEC_C)
+    f_hdr = Font(name=REPORT_FONT, bold=True, color=HDR_FONT)
+    f_arial = Font(name="Arial", size=10)
     la = config["sources"]["a"]["label"]
     lb = config["sources"]["b"]["label"]
     out = config.get("output", {})
@@ -955,6 +1002,12 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     acct_hdr = renames.get(acct_col, acct_col) if acct_col else "Account"
     name_hdr = renames.get(name_col, name_col) if name_col else "Name"
     group_by = [g for g in out.get("groupBy", []) if g in config["sources"]["a"]["keyColumns"]]
+    # Precompute each source as plain dicts once, so the account / company-period pivots below do
+    # O(1) dict access per union row instead of df.iloc[srow-2] (a fresh pandas Series each time).
+    a_recs = df_a.to_dict("records")
+    b_recs = df_b.to_dict("records")
+    a_cols = set(df_a.columns)
+    b_cols_set = set(df_b.columns)
     dl = info["desc_letter"]
     rf, rl = info["r_first"], info["r_last"]
     RB = dl.get(group_by[0]) if group_by else "B"
@@ -972,32 +1025,34 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
 
     def section(row, col, text):
         c = ws.cell(row=row, column=col, value=text)
-        c.font = Font(bold=True, size=12, color=SEC_C)
+        c.font = f_sec
 
     def header(row, col, text):
         c = ws.cell(row=row, column=col, value=text)
         c.fill = hdr_fill
-        c.font = Font(bold=True, color=HDR_FONT)
+        c.font = f_hdr
         c.alignment = Alignment(horizontal="center", vertical="center")
 
     def txt(cell):  # v15 renders row labels / text data in Arial 10
-        cell.font = Font(name="Arial", size=10)
+        cell.font = f_arial
         return cell
 
     # Title + basis of preparation.
     t = ws.cell(row=1, column=1, value=f"Reconciliation Dashboard — {la} vs {lb}")
-    t.font = Font(bold=True, size=18, color=SEC_C)
+    t.font = Font(name=REPORT_FONT, bold=True, size=18, color=SEC_C)
     basis_bits = []
     for g in group_by:
         if g == group_by[0]:
-            vals_src = sorted({str(df_a.iloc[i][g]) for i in range(meta_a["n"])} |
-                              {str(df_b.iloc[j][g]) for j in range(meta_b["n"])})
+            # Distinct group values from the two columns directly (vectorized), instead of an
+            # O(rows) df.iloc[i][g] Series allocation per row.
+            vals_src = sorted({str(v) for v in df_a[g].tolist()} |
+                              {str(v) for v in df_b[g].tolist()})
             basis_bits.append(f"{g} " + ", ".join(vals_src))
     basis_bits.append(f"Difference = {la} less {lb}")
     if src_name:
         basis_bits.append(f"Source: {src_name}")
     b2 = ws.cell(row=2, column=1, value=" | ".join(basis_bits))
-    b2.font = Font(color=SUB_C)
+    b2.font = Font(name=REPORT_FONT, color=SUB_C)
 
     # ---- Control panel (rows 5-11) ----
     section(5, 1, "Control panel — every control must read OK before sign-off")
@@ -1035,12 +1090,14 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         rc = ws.cell(row=row, column=2, value=result)
         ec = ws.cell(row=row, column=3, value=expected)
         rc.alignment = ec.alignment = Alignment(horizontal="right")
+        rc.font = ec.font = f_body
         fmt = ACCT2 if kind == "acct" else CNT_FMT
         rc.number_format = ec.number_format = fmt
         sc = ws.cell(row=row, column=4,
                      value=(f'=IF(ROUND(B{row}-C{row},2)=0,"OK","CHECK")' if kind == "acct"
                             else f'=IF(B{row}=C{row},"OK","CHECK")'))
         sc.alignment = Alignment(horizontal="center")
+        sc.font = f_body
 
     # Right side of the control band: open items by difference type.
     section(6, 8, "Open items by difference type")
@@ -1049,15 +1106,16 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     for i, dt in enumerate(dtypes):
         row = 8 + i
         txt(ws.cell(row=row, column=8, value=dt))
-        ws.cell(row=row, column=9, value=f"=COUNTIF({R(Ldt)},$H{row})").alignment = Alignment(horizontal="right")
+        cc9 = ws.cell(row=row, column=9, value=f"=COUNTIF({R(Ldt)},$H{row})")
+        cc9.alignment = Alignment(horizontal="right"); cc9.font = f_body
         vc = ws.cell(row=row, column=10,
                      value=f"=SUMPRODUCT(({R(Ldt)}=$H{row})*ABS({R(Fd)}))")
-        vc.number_format = ACCT2
+        vc.number_format = ACCT2; vc.font = f_body
     trow = 8 + len(dtypes)
-    ws.cell(row=trow, column=8, value="Total").font = Font(bold=True)
-    ws.cell(row=trow, column=9, value=f"=SUM(I8:I{trow-1})").font = Font(bold=True)
+    ws.cell(row=trow, column=8, value="Total").font = f_bold
+    ws.cell(row=trow, column=9, value=f"=SUM(I8:I{trow-1})").font = f_bold
     tc = ws.cell(row=trow, column=10, value=f"=SUM(J8:J{trow-1})")
-    tc.font = Font(bold=True); tc.number_format = ACCT2
+    tc.font = f_bold; tc.number_format = ACCT2
 
     # ---- Reconciliation summary (rows 13-19) + open items by root cause ----
     section(13, 1, "Reconciliation summary")
@@ -1073,7 +1131,7 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         row = 14 + i
         txt(ws.cell(row=row, column=1, value=label))
         vc = ws.cell(row=row, column=2, value=formula)
-        vc.font = Font(bold=True); vc.alignment = Alignment(horizontal="right")
+        vc.font = f_bold; vc.alignment = Alignment(horizontal="right")
         vc.number_format = fmt
 
     section(13, 8, "Open items by root cause")
@@ -1082,14 +1140,15 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     for i, rt in enumerate(roots):
         row = 15 + i
         txt(ws.cell(row=row, column=8, value=rt))
-        ws.cell(row=row, column=9, value=f"=COUNTIF({R(Mrc)},$H{row})").alignment = Alignment(horizontal="right")
+        cc9 = ws.cell(row=row, column=9, value=f"=COUNTIF({R(Mrc)},$H{row})")
+        cc9.alignment = Alignment(horizontal="right"); cc9.font = f_body
         vc = ws.cell(row=row, column=10, value=f"=SUMPRODUCT(({R(Mrc)}=$H{row})*ABS({R(Fd)}))")
-        vc.number_format = ACCT2
+        vc.number_format = ACCT2; vc.font = f_body
     rtrow = 15 + len(roots)
-    ws.cell(row=rtrow, column=8, value="Total").font = Font(bold=True)
-    ws.cell(row=rtrow, column=9, value=f"=SUM(I15:I{rtrow-1})").font = Font(bold=True)
+    ws.cell(row=rtrow, column=8, value="Total").font = f_bold
+    ws.cell(row=rtrow, column=9, value=f"=SUM(I15:I{rtrow-1})").font = f_bold
     vc = ws.cell(row=rtrow, column=10, value=f"=SUM(J15:J{rtrow-1})")
-    vc.font = Font(bold=True); vc.number_format = ACCT2
+    vc.font = f_bold; vc.number_format = ACCT2
 
     # ---- Difference by account (rows 21+) ----
     # Build the unique account list first; only draw the section when the account column is
@@ -1102,12 +1161,14 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         keymap = dict(zip(config["sources"]["a"]["keyColumns"], config["sources"]["b"]["keyColumns"]))
         for side, srow in info["recon_rows"]:
             if side == "a":
-                acct = df_a.iloc[srow - 2][acct_col] if acct_col in df_a.columns else None
-                nm = df_a.iloc[srow - 2][name_col] if (name_col and name_col in df_a.columns) else ""
+                rec = a_recs[srow - 2]
+                acct = rec.get(acct_col) if acct_col in a_cols else None
+                nm = rec.get(name_col) if (name_col and name_col in a_cols) else ""
             else:
                 bacct = keymap.get(acct_col, acct_col)
-                acct = df_b.iloc[srow - 2][bacct] if bacct in df_b.columns else None
-                nm = df_b.iloc[srow - 2][name_col] if (name_col and name_col in df_b.columns) else ""
+                rec = b_recs[srow - 2]
+                acct = rec.get(bacct) if bacct in b_cols_set else None
+                nm = rec.get(name_col) if (name_col and name_col in b_cols_set) else ""
             if acct is not None and acct not in seen:
                 seen.add(acct); accounts.append((acct, nm))
     acc_start = 23
@@ -1118,16 +1179,20 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
             header(22, 1 + j, h)
         for i, (acct, nm) in enumerate(accounts):
             row = acc_start + i
-            ws.cell(row=row, column=1, value=acct).alignment = Alignment(horizontal="left")
+            ac = ws.cell(row=row, column=1, value=acct)
+            ac.alignment = Alignment(horizontal="left"); ac.font = f_body
             txt(ws.cell(row=row, column=2, value=nm))
-            ws.cell(row=row, column=3, value=f"=SUMIF({R(RC)},$A{row},{R(Fa)})").number_format = ACCT2
-            ws.cell(row=row, column=4, value=f"=SUMIF({R(RC)},$A{row},{R(Fb)})").number_format = ACCT2
-            ws.cell(row=row, column=5, value=f"=C{row}-D{row}").number_format = ACCT2
+            c3 = ws.cell(row=row, column=3, value=f"=SUMIF({R(RC)},$A{row},{R(Fa)})")
+            c3.number_format = ACCT2; c3.font = f_body
+            c4 = ws.cell(row=row, column=4, value=f"=SUMIF({R(RC)},$A{row},{R(Fb)})")
+            c4.number_format = ACCT2; c4.font = f_body
+            c5 = ws.cell(row=row, column=5, value=f"=C{row}-D{row}")
+            c5.number_format = ACCT2; c5.font = f_body
         acc_tot = acc_start + len(accounts)
-        ws.cell(row=acc_tot, column=2, value="Total").font = Font(bold=True)
+        ws.cell(row=acc_tot, column=2, value="Total").font = f_bold
         for col, base in ((3, "C"), (4, "D"), (5, "E")):
             cc = ws.cell(row=acc_tot, column=col, value=f"=SUM({base}{acc_start}:{base}{acc_tot-1})")
-            cc.font = Font(bold=True); cc.number_format = ACCT2
+            cc.font = f_bold; cc.number_format = ACCT2
 
     # Difference by company and period (right side; aligned one row lower than the left block,
     # matching v15 - section on row 22, sub-headers on row 23, data from row 24). Only drawn when
@@ -1137,9 +1202,10 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         combos = []
         seenc = set()
         for side, srow in info["recon_rows"]:
-            src = df_a if side == "a" else df_b
-            comp = src.iloc[srow - 2][group_by[0]] if group_by[0] in src.columns else None
-            per = src.iloc[srow - 2][group_by[1]] if group_by[1] in src.columns else None
+            rec = a_recs[srow - 2] if side == "a" else b_recs[srow - 2]
+            cols_set = a_cols if side == "a" else b_cols_set
+            comp = rec.get(group_by[0]) if group_by[0] in cols_set else None
+            per = rec.get(group_by[1]) if group_by[1] in cols_set else None
             key = (comp, per)
             if comp is not None and per is not None and key not in seenc:
                 seenc.add(key); combos.append((comp, per))
@@ -1153,25 +1219,29 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
             cp_start = 24
             for i, (comp, per) in enumerate(combos):
                 row = cp_start + i
-                ws.cell(row=row, column=8, value=comp).alignment = Alignment(horizontal="left")
+                cc8 = ws.cell(row=row, column=8, value=comp)
+                cc8.alignment = Alignment(horizontal="left"); cc8.font = f_body
                 txt(ws.cell(row=row, column=9, value=per))
-                ws.cell(row=row, column=10,
-                        value=f"=SUMIFS({R(Fa)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
-                ws.cell(row=row, column=11,
-                        value=f"=SUMIFS({R(Fb)},{R(RB)},$H{row},{R(RE)},$I{row})").number_format = ACCT2
-                ws.cell(row=row, column=12, value=f"=J{row}-K{row}").number_format = ACCT2
+                c10 = ws.cell(row=row, column=10,
+                              value=f"=SUMIFS({R(Fa)},{R(RB)},$H{row},{R(RE)},$I{row})")
+                c10.number_format = ACCT2; c10.font = f_body
+                c11 = ws.cell(row=row, column=11,
+                              value=f"=SUMIFS({R(Fb)},{R(RB)},$H{row},{R(RE)},$I{row})")
+                c11.number_format = ACCT2; c11.font = f_body
+                c12 = ws.cell(row=row, column=12, value=f"=J{row}-K{row}")
+                c12.number_format = ACCT2; c12.font = f_body
                 mc = ws.cell(row=row, column=13,
                              value=f'=COUNTIFS({R(RB)},$H{row},{R(RE)},$I{row},{R(Kst)},"Open Item")')
                 mc.number_format = CNT_FMT
-                mc.alignment = Alignment(horizontal="center")
+                mc.alignment = Alignment(horizontal="center"); mc.font = f_body
             cp_tot = cp_start + len(combos)
-            ws.cell(row=cp_tot, column=9, value="Total").font = Font(bold=True)
+            ws.cell(row=cp_tot, column=9, value="Total").font = f_bold
             for col, base in ((10, "J"), (11, "K")):
                 cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
-                cc.font = Font(bold=True); cc.number_format = ACCT2
+                cc.font = f_bold; cc.number_format = ACCT2
             for col, base in ((12, "L"), (13, "M")):
                 cc = ws.cell(row=cp_tot, column=col, value=f"=SUM({base}{cp_start}:{base}{cp_tot-1})")
-                cc.font = Font(bold=True)
+                cc.font = f_bold
             acc_tot = max(acc_tot, cp_tot)
 
     # ---- Headlines (driver narrative; Calibri, matching v15) ----
@@ -1230,24 +1300,10 @@ def write_report(results, config, out_path, df_a=None, df_b=None, src_name=None)
     _write_source_tab(ws_sa, df_a, meta_a, sa, sign=sign_a, norm=norm)
     _write_source_tab(ws_sb, df_b, meta_b, sb, sign=sign_b, norm=norm)
     info = _write_reconciliation(ws_recon, df_a, df_b, config, meta_a, meta_b, sa, sb)
-    narr_rows = _write_dashboard(ws_dash, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narrative, src_name)
+    _write_dashboard(ws_dash, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narrative, src_name)
 
-    # Apply the report fonts: Cambria everywhere structural/numeric, leaving any cell already
-    # marked Arial (v15 uses Arial 10 for pulled text data / row labels) untouched.
-    from openpyxl.styles import Font
-    for ws in wb.worksheets:
-        for row in ws.iter_rows():
-            for c in row:
-                if c.value is None or c.font.name == "Arial":
-                    continue
-                f = c.font
-                c.font = Font(name=REPORT_FONT, size=f.size, bold=f.bold,
-                              italic=f.italic, color=f.color)
-    # v15 renders the headlines narrative in Calibri; restore it after the Cambria pass.
-    for row in narr_rows:
-        cell = ws_dash.cell(row=row, column=1)
-        cell.font = Font(name="Calibri", color=NARR_C)
-
+    # Fonts are applied as each cell is created (shared Font objects in the writers above), so there
+    # is no whole-workbook styling pass - important for large reconciliations.
     wb.save(out_path)
     return counts
 
