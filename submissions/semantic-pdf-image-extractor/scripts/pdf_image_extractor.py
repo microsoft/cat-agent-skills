@@ -744,10 +744,17 @@ def command_package(args: argparse.Namespace) -> None:
         archive.unlink()
     included = 0
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
+        allowed_roots = {"manifest.json", "summary.md", "pages", "assets", "context", "diagnostics"}
         for source in sorted(output_dir.rglob("*")):
-            if source.is_file() and not source.is_symlink() and "__pycache__" not in source.parts:
-                bundle.write(source, source.relative_to(output_dir).as_posix())
-                included += 1
+            if not source.is_file() or source.is_symlink() or "__pycache__" in source.parts:
+                continue
+            if source.suffix.lower() == ".pdf":
+                continue
+            rel = source.relative_to(output_dir)
+            if rel.parts[0] not in allowed_roots:
+                continue
+            bundle.write(source, rel.as_posix())
+            included += 1
     print(f"Packaged {included} file(s) in {archive}")
 
 
