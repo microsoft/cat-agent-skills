@@ -278,13 +278,18 @@ def command_package(args: argparse.Namespace) -> None:
     require((output_dir / "summary.md").is_file(), "summary.md is required")
 
     archive = Path(args.archive).resolve()
+    require(not archive.is_relative_to(output_dir), "archive must be outside the output directory")
     archive.parent.mkdir(parents=True, exist_ok=True)
     if archive.exists():
         archive.unlink()
     included = 0
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
         for source in sorted(output_dir.rglob("*")):
-            if source.is_file() and "__pycache__" not in source.parts:
+            if (
+                source.is_file()
+                and not source.is_symlink()
+                and "__pycache__" not in source.parts
+            ):
                 bundle.write(source, source.relative_to(output_dir).as_posix())
                 included += 1
     print(f"Packaged {included} file(s) in {archive}")
