@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "visual-work-instruction-manifest/1.0",
+  "generatedAt": null,
+  "document": {
+    "id": "replace-with-stable-document-id",
+    "sourceFile": "source.pdf",
+    "sha256": null,
+    "title": null,
+    "purpose": null,
+    "languages": []
+  },
+  "pages": [
+    {
+      "pageNumber": 1,
+      "image": "pages/page-0001.png",
+      "title": null,
+      "warnings": [],
+      "status": "review-required",
+      "reviewReasons": [
+        "Replace this template entry with evidence from the source document."
+      ]
+    }
+  ],
+  "instructions": [],
+  "review": {
+    "required": true,
+    "instructionIds": [],
+    "notes": [
+      "Manifest template has not yet been populated."
+    ]
+  },
+  "limitations": []
+}
