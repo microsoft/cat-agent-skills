@@ -1,0 +1,14 @@
+{
+  "kind": "route",
+  "title": "Melbourne Stops — Schematic",
+  "profile": "driving",
+  "stops": [
+    { "name": "CBD",          "lat": -37.8136, "lon": 144.9631, "icon": "office" },
+    { "name": "Fitzroy",      "lat": -37.7986, "lon": 144.9793, "icon": "shop" },
+    { "name": "South Yarra",  "lat": -37.8390, "lon": 144.9929, "icon": "shop" },
+    { "name": "St Kilda",     "lat": -37.8676, "lon": 144.9809, "icon": "check" }
+  ],
+  "round_trip": true,
+  "html": true,
+  "out_prefix": "out/melbourne_schematic"
+}
