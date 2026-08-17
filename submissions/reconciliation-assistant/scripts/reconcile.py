@@ -452,9 +452,15 @@ def tie_out(results, total_a, total_b, abs_tol):
         elif st == "Unmatched (B)" and r.get("amount_b") is not None:
             explained -= r["amount_b"]
     left = total_a - total_b
-    closed = abs(left - explained) <= max(abs_tol, 0.01)
+    residual = left - explained
+    # Amounts are quantized to cents, so evaluate the identity at cent precision: rounding the
+    # residual to 2dp removes binary floating-point accumulation noise without masking a genuine
+    # one-cent break (which the old "floor the threshold at 0.01" logic incorrectly accepted in
+    # exact mode). A configured absolute tolerance is still honored; in exact mode (abs_tol 0) only
+    # an exact cent-level match ties out.
+    closed = abs(round(residual, 2)) <= abs_tol
     return {"total_a": total_a, "total_b": total_b, "net_difference": left,
-            "explained": explained, "residual": left - explained, "tied_out": closed}
+            "explained": explained, "residual": residual, "tied_out": closed}
 
 
 # ----------------------------- output -----------------------------
