@@ -29,9 +29,9 @@ jobs:
       should_deploy: ${{ steps.ratings.outputs.should_deploy }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -81,7 +81,7 @@ jobs:
         run: npm run build
       - name: Upload Pages artifact
         if: steps.ratings.outputs.should_deploy == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: dist
 
@@ -95,7 +95,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
         continue-on-error: true
       # deploy-pages hard-caps its polling at 10 minutes and cancels at that
       # boundary, even when Pages finishes the deployment shortly afterward.
