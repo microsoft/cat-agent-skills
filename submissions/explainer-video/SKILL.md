@@ -35,7 +35,7 @@ finished video in `output/`, not a deck and not a script.
 
 Establish, from the conversation first and only then by asking: **subject**, **audience**
 (newcomer / practitioner / exec), **target length** (default ~2 minutes ≈ 6-8 beats), and the
-**angle** ("when to use each option", "how it works", "what changed"). Use `core-AskUserQuestion`
+**angle** ("when to use each option", "how it works", "what changed"). Use `AskUserQuestion`
 once — never a chain of questions.
 
 Always ask the **visual style** in that same card: `dark` (navy slides, colour-coded sections,
@@ -46,10 +46,10 @@ Ask whether they have **screenshots** to include if the subject is a product, to
 ### 2. Gather (only what the video actually needs)
 
 - **Research when it matters** — external facts, product capabilities, statistics, "what's new":
-  use `host-web_search` / `host-web_fetch`, or the `deep-research-agent` when claims need citing.
+  use `web_search` / `web_fetch`, or the `deep-research-agent` when claims need citing.
   Skip research entirely when the subject is already covered by this conversation or the user's
   own content. Never research a topic the user has already explained.
-- **Internal subjects** — pull from `m365_search-SearchM365`, `sharepoint_onedrive-ReadFileContent`,
+- **Internal subjects** — pull from `SearchM365`, `ReadFileContent`,
   meeting transcripts. Ground every internal claim in what those return.
 - **Screenshots** — `Glob input/**/*` and check any `<attached_files>` block. Screenshots are used
   **as supplied**: framed, optionally box-highlighted, never regenerated or redrawn, so the product
@@ -89,7 +89,7 @@ Accents: `blue`, `green`, `purple`, `orange`, `teal`, `red` — one per section,
 
 ### 4. Generate the b-roll
 
-One photo per beat that has no screenshot, via `host-ImageGenerate` (`quality="medium"`,
+One photo per beat that has no screenshot, via `ImageGenerate` (`quality="medium"`,
 `orientation="landscape"`, `size="large"`, `destination="working"`). Issue the calls in parallel —
 each takes ~2 minutes. Prompt pattern that works:
 
@@ -102,7 +102,7 @@ ask for real individuals, real brand logos, or legible on-screen text (the model
 
 ### 5. Record the narration
 
-`host-PodcastGenerate` with `format="single_host"` and **one turn per beat, in beat order** — the
+`PodcastGenerate` with `format="single_host"` and **one turn per beat, in beat order** — the
 renderer detects the pauses between turns to cut the scenes. Keep each turn conversational and
 self-contained; write numbers and symbols as words. It returns the MP3 path and duration.
 
@@ -123,7 +123,7 @@ it mid-flight.
 Publish the finished file:
 
 ```
-host-CopyArtifact(surface="output", source="working/<name>.mp4", destination="<name>.mp4")
+CopyArtifact(surface="output", source="working/<name>.mp4", destination="<name>.mp4")
 ```
 
 Then `Glob output/**/*` to confirm it landed before telling the user it is ready.
@@ -131,7 +131,7 @@ Then `Glob output/**/*` to confirm it landed before telling the user it is ready
 ## Output Format
 
 Deliver to `output/`: the **MP4** (1080p, H.264 + AAC, burned-in captions), plus the narration MP3
-and script text that `host-PodcastGenerate` already writes there. In chat, state the exact
+and script text that `PodcastGenerate` already writes there. In chat, state the exact
 filename, the true runtime, and what each section covers — then offer the likely next edits
 (different b-roll, longer script, add screenshots, a light-style version).
 

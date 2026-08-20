@@ -18,8 +18,26 @@ import argparse, json, os, textwrap
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 W, H = 1920, 1080
-FB = "/usr/share/fonts/metric-compat/Carlito-Bold.ttf"
-FR = "/usr/share/fonts/metric-compat/Carlito-Regular.ttf"
+
+
+def resolve_font(weight):
+    filename = f"Carlito-{weight}.ttf"
+    candidates = [
+        f"/usr/share/fonts/metric-compat/{filename}",
+        f"/usr/share/fonts/truetype/crosextra/{filename}",
+        f"/usr/share/fonts/truetype/carlito/{filename}",
+        f"/usr/share/fonts/truetype/liberation2/LiberationSans{'-Bold' if weight == 'Bold' else ''}.ttf",
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    raise RuntimeError(
+        f"Required {weight.lower()} font not found. Install Carlito or Liberation Sans."
+    )
+
+
+FB = resolve_font("Bold")
+FR = resolve_font("Regular")
 
 ACCENTS = {"blue": (0, 120, 212), "green": (22, 138, 40), "purple": (146, 92, 224),
            "orange": (214, 96, 24), "teal": (0, 140, 150), "red": (196, 60, 60)}
@@ -192,7 +210,12 @@ def main():
     ap.add_argument("--out", default="working/cards")
     a = ap.parse_args()
     sb = json.load(open(a.storyboard))
-    th = THEMES[sb.get("style", "dark")]
+    style = sb.get("style", "dark")
+    if style not in THEMES:
+        raise ValueError(
+            f"Unsupported storyboard style {style!r}; choose one of: {', '.join(THEMES)}"
+        )
+    th = THEMES[style]
     os.makedirs(a.out, exist_ok=True)
     made = []
     for i, beat in enumerate(sb["beats"], 1):

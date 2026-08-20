@@ -25,8 +25,16 @@ def run(cmd, **kw):
 
 
 def audio_duration(path):
-    out = subprocess.run([FFMPEG, "-i", path], capture_output=True, text=True).stderr
+    try:
+        out = subprocess.run(
+            [FFMPEG, "-i", path], capture_output=True, text=True
+        ).stderr
+    except FileNotFoundError as exc:
+        raise RuntimeError("ffmpeg is required to render the explainer video.") from exc
     m = re.search(r"Duration: (\d+):(\d+):([\d.]+)", out)
+    if not m:
+        detail = out.strip()[-500:] or "ffmpeg returned no diagnostic output"
+        raise RuntimeError(f"Could not read audio duration from {path!r}: {detail}")
     h, mi, s = m.groups()
     return int(h) * 3600 + int(mi) * 60 + float(s)
 
