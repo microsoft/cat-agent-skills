@@ -286,9 +286,9 @@ Pausing that one for 4 weeks. Say "resume lunch" to bring it back.
 - Keep quoted content short: the output is retained in run history.
 - If a source is unavailable, say which one and report on the rest rather than failing the whole run.
 
-## Running on a schedule
+## Resources
 
-The skill is the artifact; automations are thin wrappers that invoke it with a scope. `references/install-automation.md` sets up the two: a gated morning `today` on working days, and an unconditional end-of-week `week` that also runs `ahead`. Build and test the skill by hand before wrapping it; the automations add only a clock, and both stay read-only and self-only.
+- `references/install-automation.md` - the procedure for creating the two recurring automations, to follow when the user asks for the report to arrive on its own. Automations are thin wrappers that invoke this skill with a scope; they add only a clock, and both stay read-only and self-only.
 
 ## What was verified, and what it cost
 

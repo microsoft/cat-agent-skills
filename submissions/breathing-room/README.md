@@ -148,7 +148,16 @@ The skill never writes to your calendar or your mailbox, never sends, moves or d
 
 ## Running on a schedule
 
-It works on demand, but the point of a mirror is that it catches you before the week is gone, so it is built to run on its own. Two thin automations do that: a **morning check** on working days that stays quiet unless the day is genuinely dense, and an **end-of-week** note that always lands, with the coming week folded in while there is still time to act. Both only read and only ever look at you. The paste-ready setup is in `references/install-automation.md`.
+It works on demand, but the point of a mirror is that it catches you before the week is gone, so it is built to run on its own. Ask Scout for it in plain language - "have Breathing Room run every morning", "send me the weekly one on Friday" - and it creates the automation for you.
+
+There are two, and they are independent:
+
+- **Morning check**, on working days, early enough to land before your first meeting. It stays quiet unless the day is genuinely dense: an unremarkable morning gets one line with a number and nothing else.
+- **End of week**, once a week. This one always lands, including to tell you the week was quiet, and the coming week is folded into it while there is still time to act.
+
+If you only want one, start with the weekly. It always produces something, so its first run actually shows you what the skill does.
+
+Both are created disabled, deliberately. Run each once by hand, look at what it produces, then enable it yourself. Keep the Teams notification on: the report *is* the run output, so the notification is the only thing that surfaces it. Neither automation writes to your calendar, and neither ever looks at anyone but you.
 
 ## Config reference
 
