@@ -1,5 +1,5 @@
 // findagent.js — list agents (name + id) and environments to locate your target agent
-const { chromium } = require('playwright');
+const { chromium } = require('./require-playwright');
 const fs = require('fs');
 const path = require('path');
 const C = require('./common');

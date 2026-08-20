@@ -1,7 +1,9 @@
 $src = "$env:LOCALAPPDATA\Microsoft\Edge\User Data"
 $dst = "$env:USERPROFILE\.copilot\video-work\edge-tenant"
 
-Get-CimInstance Win32_Process -Filter "Name='msedge.exe' OR Name='node.exe'" |
+# Close the REAL Edge (never the MCP/automation browser) so its profile files unlock for
+# copying. Unrelated to the recording workflow's own Node processes, so node.exe is left alone.
+Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" |
   Where-Object { $_.CommandLine -notlike '*m-playwright-profiles*' -and $_.CommandLine -notlike '*ms-playwright*' } |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Start-Sleep 3

@@ -77,16 +77,7 @@ A slideshow of static screenshots is almost never what the user wants. They want
 
 ## Prerequisites
 
-**Install these ONCE, GLOBALLY, so every future chat has them without reinstalling.** Check each first; only install if missing. After changing PATH, refresh the *current* shell with `$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [Environment]::GetEnvironmentVariable("Path","User")` (new chats pick it up automatically).
-
-| Need | Make it global (persist across chats) |
-| ---- | -------------- |
-| Node + Playwright (library) | Check: `node -e "require('playwright')"` via global root, or `npm ls -g playwright`. If missing: **`npm install -g playwright`** (global, not in a throwaway work dir). The recorder loads it via NODE_PATH = `npm root -g`. |
-| ffmpeg + ffprobe | Check: `ffmpeg -version`. If missing: `winget install --id Gyan.FFmpeg -e --accept-source-agreements --accept-package-agreements --disable-interactivity`, then **copy `ffmpeg.exe`/`ffprobe.exe` into `C:\Users\<user>\.copilot\bin` and add that folder to the User PATH** (`[Environment]::SetEnvironmentVariable("Path", $userPath + ";C:\Users\<user>\.copilot\bin", "User")`). The stable folder survives ffmpeg version bumps. |
-| edge-tts (Ava neural TTS, headless path) | Check: `python -c "import edge_tts"`. If missing: **`pip install edge-tts`** (user install is fine — `python -m edge_tts` then works in every chat). For the bare `edge-tts` CLI, add the Python **Scripts** dir (e.g. `C:\Users\<user>\AppData\Roaming\Python\Python3XX\Scripts`) to the User PATH. Voice: `en-US-AvaNeural`. |
-| Logged-in browser | The MCP Playwright browser holds the user's session. Profile dir typically `C:\Users\<user>\AppData\Local\ms-playwright\mcp-msedge`, Edge at `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`. For a **different tenant**, **clone** the user's real Edge profile to a non-default `User Data` root and launch that with the matching `--profile-directory` (see below) — Playwright cannot attach to Edge's default data dir. |
-
-> Once installed globally, they persist across chats (ffmpeg/ffprobe in `.copilot\bin`, edge-tts user install, playwright global). Just verify first; don't reinstall unless a check fails.
+**Windows only** (PowerShell, Win32 window APIs, `msedge.exe`, ffmpeg `gdigrab` desktop capture) — this skill does not currently have macOS/Linux capture backends. See `README.md` for the one-time global install steps (Node + Playwright, ffmpeg/ffprobe, edge-tts) and how to check each is already present before installing.
 
 ### Ready-made scripts (`scripts/`)
 
@@ -95,7 +86,7 @@ Working, battle-tested versions live next to this file. Copy them into the task'
 | Script | Purpose |
 | ------ | ------- |
 | `clone.ps1` | Kill real Edge, clone the tenant profile to a non-default root (caches excluded), regex-patch `Preferences`. **Re-run whenever auth breaks.** |
-| `prep.ps1` | Between runs: kill stale Edge/node, clear `Singleton*` locks, reset `exit_type`/`exited_cleanly`. Run before every launch. |
+| `prep.ps1` | Between runs: kill stale Edge (cloned profile only) and this workflow's own Node processes, clear `Singleton*` locks, reset `exit_type`/`exited_cleanly`. Run before every launch. |
 | `maximize.ps1` | Win32 `MoveWindow`+`SW_MAXIMIZE` on the cloned-profile Edge window (the only thing that reliably resizes it). |
 | `arrange.ps1` | Side-by-side placement (browser left, Scout right) for §1b dual capture. |
 | `common.js` | Shared launch `ARGS`, the `settle()` auth/stability loop, `dismissPopups()`, `logViewport()`, `maximizeWindow()`. |
@@ -223,7 +214,7 @@ The user sees the automated window while it records; a tiny 800×600 window that
 > Reference that passes for Copilot Studio at 1920 wide: viewport **1920×880**. Treat this as a starting point, still verify per app/screen.
 
 - Confirm the target URL and the scenario steps (prompts to type / buttons to click) with the user.
-- **Free the browser profile first.** Only one process can lock the persistent profile. Kill any Edge processes using the profile dir before launching the recorder (see `scripts/free-profile.ps1`), otherwise `launchPersistentContext` fails with "Failed to launch… Opening in existing browser session".
+- **Free the browser profile first.** Only one process can lock the persistent profile. Kill any Edge processes using the profile dir before launching the recorder (see `scripts/prep.ps1`, which also clears stale `Singleton*` lock files and normalizes the crash-restore flags), otherwise `launchPersistentContext` fails with "Failed to launch… Opening in existing browser session".
 - Run `scripts/recorder.js` (template provided) **only after the visibility gate passes**. It launches the logged-in profile, records page video, drives the chat/app with human-like typing, waits for each response to stabilize, holds for readability, then closes to flush the `.webm`.
 - **Submit reliably:** prefer clicking the Send button and confirm the input box empties; pressing Enter alone can concatenate prompts into one bubble. The template's `submit()` handles this.
 - **Copilot Studio's Build/Preview/Evaluate/Monitor switcher is a `menuitemradio` DROPDOWN behind a single "Build" button, not tabs.** `getByRole('tab', {name: /Preview/i})` will silently find nothing and `openTestPane()` will time out waiting for the chat input. Two fixes, prefer the first:

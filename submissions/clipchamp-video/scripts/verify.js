@@ -1,5 +1,5 @@
 // verify.js — MANDATORY GATE: prove window fills the screen and the chat input bar is in-frame.
-const { chromium } = require('playwright');
+const { chromium } = require('./require-playwright');
 const path = require('path');
 const C = require('./common');
 

@@ -38,13 +38,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function maximizeWindow(log) {
   try {
     const out = require('child_process').execSync(
-      `powershell -NoProfile -ExecutionPolicy Bypass -File "${path.join(OUT, 'maximize.ps1')}"`,
+      `powershell -NoProfile -ExecutionPolicy Bypass -File "${path.join(__dirname, 'maximize.ps1')}"`,
       { encoding: 'utf8', timeout: 60000 });
     if (log) log('maximize: ' + out.trim());
   } catch (e) { if (log) log('maximize ERR ' + e.message); }
 }
 
 function mkLog(file) {
+  fs.mkdirSync(OUT, { recursive: true });
   const p = path.join(OUT, file);
   fs.writeFileSync(p, '');
   return m => fs.appendFileSync(p, `[${new Date().toISOString()}] ${m}\n`);
@@ -67,7 +68,7 @@ async function settle(page, log, budgetMs = 240000, needStable = 4) {
   const t0 = Date.now(); let stable = 0;
   while (Date.now() - t0 < budgetMs) {
     const h = host(page.url());
-    if (h.endsWith('login.microsoftonline.com') || h.endsWith('login.live.com')) {
+    if (h.endsWith('login.microsoftonline.com') || h.endsWith('login.microsoft.com') || h.endsWith('login.live.com')) {
       stable = 0;
       // Replace 'youraccount@yourtenant' with the email/tenant you sign in with.
       try { const tile = page.locator('div[data-test-id="youraccount@yourtenant.onmicrosoft.com"], div[role="button"]:has-text("youraccount@yourtenant"), small:has-text("youraccount@yourtenant")').first();

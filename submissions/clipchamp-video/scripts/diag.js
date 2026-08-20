@@ -1,5 +1,5 @@
 // diag.js — screenshot the bots list at intervals to see what actually renders
-const { chromium } = require('playwright');
+const { chromium } = require('./require-playwright');
 const fs = require('fs');
 const path = require('path');
 const C = require('./common');

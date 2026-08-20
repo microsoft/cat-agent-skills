@@ -1,6 +1,6 @@
 // recorder.js — records a Copilot Studio agent demo: overview/instructions/skills/tools
 // + a handful of live test turns. Edit PROMPTS/MAXES/HOLDS below for your own scenario.
-const { chromium } = require('playwright');
+const { chromium } = require('./require-playwright');
 const fs = require('fs');
 const path = require('path');
 const C = require('./common');
