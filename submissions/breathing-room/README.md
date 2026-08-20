@@ -2,9 +2,20 @@
 
 Some weeks you can feel the density before you can name it. Six meetings a day, no window between them, mail going out at 22:00, and a Saturday that quietly turned into a working day. By the time it is obvious, the week is already gone.
 
-Breathing Room reports that in numbers, from your own calendar and what you actually send. It tells you where the room is, where it is not, and which single meeting is the most movable when there is one worth moving. Then it stops.
+Breathing Room reports that in numbers, from your own calendar and what you actually send. It tells you where the room is, where it is not, and which meetings are the most movable when there is one worth moving. Then it stops.
 
 It is a mirror on rhythm, not a productivity tool. It never rates your output, never tells you to work more or less, and there is no "you should" anywhere in what it writes.
+
+## Using it
+
+Nothing to set up and nothing to configure. Once the skill is imported into Scout, ask for it in plain language:
+
+- "how does today look", "where are my gaps" - the day ahead
+- "how was my week", "how did last week go" - the week just past
+- "what does next week look like", "am I filling up" - the days still to come
+- "what can I move", "help me free up Thursday" - what could be reclaimed
+
+It answers in the language you write in. To have it arrive on its own rather than waiting to be asked, see [Running on a schedule](#running-on-a-schedule).
 
 ## Three scopes
 
@@ -110,6 +121,8 @@ Two weekends out of the last four had sent activity.
 Next week is already at 22h of meetings with 3 days still open.
 ```
 
+Four findings, which is the ceiling: load, fragmentation, evenings, weekends. The closing line comes from `ahead`, folded into the weekly note by the automation, and does not count against the four.
+
 `ahead`:
 
 ```
@@ -129,7 +142,9 @@ The output follows the language you write in. The structure never changes, only 
 
 ## Permissions
 
-Calendar and mail are needed; Teams adds the evening and weekend signal and can be left off. Nothing else is required: no shell, no filesystem, no browser. The skill only reads, so there is no write to approve.
+Calendar access is required. Mail and Teams only feed the evening and weekend signal in the weekly report, and either can be turned off in `sources`. Nothing else is needed, and nothing outside your own calendar and sent items is ever read.
+
+The skill never writes to your calendar or your mailbox, never sends, moves or declines anything. It may run a short computation over the data it just fetched, because five weeks of overlapping events is arithmetic and doing it in prose is where numbers drift. The only thing it keeps between runs is the small state above.
 
 ## Running on a schedule
 

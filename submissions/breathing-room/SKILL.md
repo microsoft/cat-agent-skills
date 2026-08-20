@@ -108,7 +108,6 @@ Leave is a first-class case, not a quiet week. Use the leave signal from Step 1.
 
 `today` is calendar only.
 
-
 **Mail.** Sent items only, identified by the sender address being the user's. Take the hourly distribution of sends, and count those after `workEnd`, before `workStart`, and on non-working days. Delayed sends surface at delivery time, so a user who already schedules their mail looks quiet here. That is intended; do not try to correct for it.
 
 **Teams.** Reach the messages in two steps: list the chats that moved during the window, then read the messages of each. A chat object carries `topic`, `members` and `lastUpdatedDateTime` but no message content; only the per-chat message list carries `from`, `replyToId` and a timestamp, which are the three fields this rule needs. Asking for messages without going through the chats first is what makes this signal look unavailable.
@@ -161,7 +160,7 @@ Check the day count before writing a boundary finding, not after. "6 Teams threa
 
 ### `ahead` - factual, and actionable when a week is filling
 
-Looks at J+3 to J+10, while declining is still possible. This scope carries the most value: the other two describe what already happened, this one can still be changed.
+Looks three to ten days out, while declining is still possible. This scope carries the most value: the other two describe what already happened, this one can still be changed.
 
 | Rule | Fires when | Output |
 |---|---|---|
@@ -257,7 +256,7 @@ Two weekends out of the last four had sent activity.
 Next week is already at 22h of meetings with 3 days still open.
 ```
 
-Four observations is the ceiling. The weekend finding deliberately carries no suggestion: it is a trend, and proposing something there would be preachy.
+This example sits exactly on the ceiling of four: load, fragmentation, evenings, weekends. The closing line about next week belongs to `ahead`, folded into the weekly note by the automation, and does not count against the four. The weekend finding deliberately carries no suggestion: it is a trend, and proposing something there would be preachy.
 
 ### `ahead`
 
