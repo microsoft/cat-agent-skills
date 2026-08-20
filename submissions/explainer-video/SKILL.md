@@ -24,7 +24,7 @@ finished video in `output/`, not a deck and not a script.
 
 - **Slides for live presenting** → `pptx`. A deck is not a video.
 - **A single image, diagram or infographic** → `image-operations` / `pptx`.
-- **Audio only** (podcast, briefing) → call `host-PodcastGenerate` directly.
+- **Audio only** (podcast, briefing) → call `PodcastGenerate` directly.
 - **A written explainer** (SOP, guide, one-pager) → `docx`.
 - **Marketing film, live action, real people's likenesses, licensed footage or music** — not
   possible here. Say so plainly and offer the b-roll style this skill can do.
