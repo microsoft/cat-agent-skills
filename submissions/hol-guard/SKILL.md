@@ -18,8 +18,16 @@ Use the real HOL Guard commands for runtime protection and evidence. Do not repl
 
 ## Install and verify
 
+First try Guard directly:
+
 ```bash
-command -v hol-guard
+hol-guard status
+hol-guard detect --json
+```
+
+If the executable is missing, prefer an isolated install and then rerun the checks:
+
+```bash
 pipx install hol-guard
 hol-guard status
 hol-guard detect --json
@@ -92,11 +100,21 @@ hol-guard sync
 
 ## Verify an agent package
 
-`plugin-scanner` is a separate distribution:
+`plugin-scanner` is a separate distribution. Try the tool directly first:
 
 ```bash
-command -v plugin-scanner
+plugin-scanner --version
+```
+
+If the executable is missing, install it in isolation:
+
+```bash
 pipx install plugin-scanner
+```
+
+Then run both checks from the relevant package root:
+
+```bash
 plugin-scanner lint .
 plugin-scanner verify .
 ```

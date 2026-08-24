@@ -1,7 +1,7 @@
 {
   "name": "HOL Guard",
   "description": "Protect local AI harnesses before tools run, review approvals and receipts, and verify agent plugins, skills, MCP servers, and packages.",
-  "platforms": ["Copilot Studio", "Cowork", "Scout"],
+  "platforms": ["Scout"],
   "tags": ["security", "runtime", "agents", "tooling", "mcp", "verification"],
   "author": "Hashgraph Online",
   "authorUrl": "https://github.com/hashgraph-online",
