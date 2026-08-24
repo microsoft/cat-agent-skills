@@ -90,7 +90,7 @@ hol-guard events
 hol-guard explain <artifact-id>
 ```
 
-Cloud sync is optional and user-directed:
+Cloud sync is optional and user-directed. Do not run `hol-guard connect` or any `hol-guard sync` command unless the user has explicitly asked for or confirmed Cloud pairing/sync. Before running either, explain that local protection works without Cloud and summarize the planned upload scope: Cloud receipt/decision-memory sync and redacted summaries where optional receipt sync applies. Then ask for confirmation.
 
 ```bash
 hol-guard connect
