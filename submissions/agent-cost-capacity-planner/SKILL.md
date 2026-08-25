@@ -174,9 +174,9 @@ keeps the rate table, the feature stacking and the zero-rating consistent across
 scenarios. The script does not model the GitHub Copilot harness.
 
 ```bash
-python3 scripts/forecast.py --schema > model.json   # annotated starting point
-# edit model.json to describe the agent and its volumes
-python3 scripts/forecast.py model.json --json results.json
+python3 ./scripts/forecast.py --schema > model.json   # annotated starting point
+# edit model.json to describe the agent and its volumes (run from the skill folder)
+python3 ./scripts/forecast.py model.json --json results.json
 ```
 
 The config must declare `"harness": "standard"`; the script rejects missing or different
