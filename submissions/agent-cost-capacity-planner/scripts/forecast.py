@@ -162,9 +162,14 @@ def population_credits(pop, scenario, turns_key):
     # Voice bills per minute and includes core agent activity for that minute.
     voice = pop.get("voice")
     if voice:
-        rate = VOICE_RATES_PER_MINUTE[voice["tier"]]
+        tier = voice.get("tier")
+        if tier not in VOICE_RATES_PER_MINUTE:
+            raise ValueError(f"population '{pop['name']}': unknown voice tier {tier!r}")
+        if "minutes_per_session" not in voice:
+            raise ValueError(f"population '{pop['name']}': voice.minutes_per_session is required")
+        rate = VOICE_RATES_PER_MINUTE[tier]
         minutes = sessions * float(voice["minutes_per_session"])
-        per_path[f"voice ({voice['tier']})"] = rate * minutes
+        per_path[f"voice ({tier})"] = rate * minutes
         feature_totals["voice"] = feature_totals.get("voice", 0.0) + rate * minutes
 
     total = sum(per_path.values())
