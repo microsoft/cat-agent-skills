@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-Copilot Credit forecast engine for Microsoft Copilot Studio agents.
+Copilot Credit forecast engine for standard-harness Microsoft Copilot Studio agents.
 
 Reads a JSON model of an agent's design and expected volumes, and produces a
 three-scenario credit and cost forecast, a ranked list of cost hotspots, a
 sensitivity analysis, and a purchasing-model comparison.
+
+This engine does not model agents powered by the GitHub Copilot harness. That
+harness uses a separate usage-based model covering build, test, evaluation, and
+runtime activity.
 
 Usage:
     python3 forecast.py config.json
@@ -24,6 +28,7 @@ import sys
 from copy import deepcopy
 
 RATES_VERIFIED_ON = "2026-08-24"
+SUPPORTED_HARNESS = "standard"
 
 # Credits per single execution of the feature.
 RATES = {
@@ -51,6 +56,16 @@ BASE_TYPES = ("classic_answer", "generative_answer", "agent_action")
 # --------------------------------------------------------------------------
 # Credit model
 # --------------------------------------------------------------------------
+
+def require_supported_harness(cfg):
+    """Reject configs for harnesses this feature-rate model does not support."""
+    harness = cfg.get("harness")
+    if harness != SUPPORTED_HARNESS:
+        supplied = "missing" if harness is None else repr(harness)
+        raise ValueError(
+            f"config harness is {supplied}; expected '{SUPPORTED_HARNESS}'. "
+            "GitHub Copilot harness agents require a separate range-based model."
+        )
 
 def path_credits(path):
     """Credits consumed by one execution of a conversation path.
@@ -293,7 +308,7 @@ def n(x, dp=0):
 
 def report(cfg, results, lines):
     w = lines.append
-    w(f"# Copilot Credit forecast — {cfg.get('agent', 'unnamed agent')}")
+    w(f"# Standard-harness Copilot Credit forecast — {cfg.get('agent', 'unnamed agent')}")
     w("")
     w(f"Rates verified on **{RATES_VERIFIED_ON}**. Re-verify before circulating.")
     w("")
@@ -389,6 +404,7 @@ def report(cfg, results, lines):
 
 
 EXAMPLE = {
+    "harness": "standard",
     "agent": "HR Assistant",
     "assumptions": [
         "Turns per session estimated from comparable Q&A agents; replace after 2 weeks live.",
@@ -471,13 +487,19 @@ def main():
     with open(args.config) as fh:
         cfg = json.load(fh)
 
+    try:
+        require_supported_harness(cfg)
+    except ValueError as exc:
+        ap.error(str(exc))
+
     results = [run_scenario(cfg, s, t) for s, t in SCENARIOS]
     lines = report(cfg, results, [])
     print("\n".join(lines))
 
     if args.json:
         with open(args.json, "w") as fh:
-            json.dump({"rates_verified_on": RATES_VERIFIED_ON,
+            json.dump({"harness": SUPPORTED_HARNESS,
+                       "rates_verified_on": RATES_VERIFIED_ON,
                        "rates": RATES,
                        "scenarios": results}, fh, indent=2)
         print(f"\n[structured results written to {args.json}]", file=sys.stderr)

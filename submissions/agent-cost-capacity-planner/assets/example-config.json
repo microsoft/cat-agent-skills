@@ -1,4 +1,5 @@
 {
+  "harness": "standard",
   "agent": "HR Assistant",
   "assumptions": [
     "Turns per session estimated from comparable Q&A agents; replace after 2 weeks live.",
