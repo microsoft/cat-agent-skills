@@ -47,7 +47,7 @@ hol-guard status
 
 Supported harness targets include `codex`, `claude-code`, `copilot`, `cursor`, `gemini`, `hermes`, `openclaw`, `opencode`, and `antigravity`.
 
-Useful aliases include `claude` for `claude-code`, `gemini-cli` for `gemini`, `open-code` for `opencode`, `open-claw` for `openclaw`, and `copilot-cli` for `copilot`.
+Use the exact harness identifiers above. The documented additional install alias is `claude` for `claude-code`.
 
 For Hermes, use the harness-specific bootstrap when needed:
 
