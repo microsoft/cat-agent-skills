@@ -1,0 +1,9 @@
+{
+  "name": "AI Governance Agent Blueprint",
+  "description": "A reusable pattern for building a Copilot Studio agent that gives grounded, policy-safe AI guidance to staff and students, with built-in guardrails against prompt injection, confidential-data entry, and scope drift.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["governance", "policy", "compliance", "responsible-ai", "agent-design", "guardrails", "higher-education"],
+  "author": "Amal Ranawaka",
+  "authorUrl": "https://github.com/amalranawaka",
+  "version": "1.0.0"
+}
