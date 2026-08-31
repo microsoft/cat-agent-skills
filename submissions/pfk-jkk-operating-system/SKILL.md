@@ -7,6 +7,12 @@ description: "Use this skill whenever the user wants to turn project meeting not
 
 Create a shared operating flow for products and services. Apply PFK to make one end-to-end flow visible and continuously improve it. Apply JKK to ensure each owner completes work to a clear good-product standard before handoff.
 
+## Terminology and Origin
+
+When users ask what PFK or JKK means, use [the PFK/JKK foundations reference](./references/pfk-jkk-foundations.md). Explain JKK as a quality-at-the-source practice associated with the Toyota Production System (TPS). Explain PFK as this skill's practical combination of visible end-to-end process flow and Kaizen; do not claim that PFK is an official, fixed Toyota program name.
+
+Connect the method to its usable TPS and Lean patterns: Jidoka for surfacing and resolving quality problems, Just-in-Time and pull for managing flow, visual management for exposing work and blockers, standardized work for repeatable execution, and Kaizen for continuous improvement. Explain that these patterns apply to project management, product delivery, IT operations, customer support, and service delivery whenever work crosses handoffs.
+
 ## Core Principles
 
 - All material work belongs on one visible flow.
