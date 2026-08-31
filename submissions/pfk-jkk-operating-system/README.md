@@ -29,7 +29,15 @@ The goal is not to impose a factory metaphor or add bureaucracy. The goal is to 
 - Concise questions for gaps that would change the flow or its quality standard.
 - A whole-process Mermaid diagram with normal handoffs, quality gates, rework loops, and blocker escalation.
 - A JKK node card for every meaningful process outcome.
+- Node-level work items with the required knowledge, expected artifacts, and completion evidence.
+- A node-linked knowledge index for templates, examples, runbooks, policies, training, and automation.
 - A Kaizen backlog and change record for continuous improvement.
+
+## From Pilot to Standard Work
+
+Run a new flow for two to four delivery cycles before treating it as standard work. Use delivery evidence to improve unclear handoffs, missing acceptance criteria, slow steps, and ineffective toolboxes.
+
+Once the flow is stable, each person can use a node-centric execution view for the nodes they own or contribute to. It shows the ordered work items, required inputs, knowledge links, completion evidence, escalation route, and receiving role. A new team member is ready when they can complete a representative assigned node and meet its good-product standard without relying on private tribal knowledge.
 
 ## Typical Prompts
 

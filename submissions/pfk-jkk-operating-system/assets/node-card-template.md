@@ -23,6 +23,19 @@
 | Verification owner | Who confirms each criterion |
 | Toolbox | Templates, checklists, examples, systems, automation, and knowledge links |
 
+## Executable Work Items
+
+| Work item ID | Action | Accountable role | Required knowledge | Expected artifact | Completion evidence | Target time |
+| --- | --- | --- | --- | --- | --- | --- |
+| N1-W1 | | | | | | |
+
+## Knowledge Inputs and Outputs
+
+| Type | Canonical link or location | Owner | Version or review date | Use or update requirement |
+| --- | --- | --- | --- | --- |
+| Input | | | | |
+| Output | | | | |
+
 ## Handoff and Exceptions
 
 | Field | Definition |

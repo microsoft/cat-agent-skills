@@ -53,9 +53,11 @@ Ask concise, numbered questions only when missing information changes the flow b
 2. Reconstruct the current flow from evidence. Capture actions, handoffs, approvals, wait states, rework, and exceptions. Add every material action to a node or explicitly remove it from the required process.
 3. Create a whole-process map from [the Mermaid template](./assets/whole-process-flow-template.mmd). Read left to right from trigger to outcome. Use solid arrows for normal handoffs, labeled decision nodes for conditional routes, dashed arrows for feedback or rework, and visible quality gates before accepted handoffs. Add an Andon escalation node for blockers outside a node's authority or time expectation.
 4. Create a JKK node card for every meaningful outcome using [the node-card template](./assets/node-card-template.md). Each card needs a stable ID, accountable role, input, deliverable, key actions, time expectation, good-product standard, verification owner, toolbox, failed-check response, and allowed exception path.
-5. Use [the flow package template](./assets/flow-package-template.md) to track the boundary, evidence, open decisions, artifacts, and flow changes. Never renumber an existing node only because the flow changes.
-6. When saving is requested and the host can write files, keep editable materials together in `flows/<flow-name>/`: `flow.md`, Mermaid source, `nodes/N<id>-<short-name>.md`, and optional rendered SVG or PNG. Mermaid source and node cards are the source of truth; generated images are derived views.
-7. Map approved node contracts to the working toolchain. Use work-item states, checklists, linked artifacts, automated CI or approval gates, and visible, time-bound exceptions. Do not add a workflow state merely to describe a meeting or person.
+5. Turn every key action into one or more executable work items. Each work item must name the action, accountable person or role, required knowledge, expected artifact, completion evidence, and target time. Decompose only until a capable new team member can execute the item without relying on unstated tribal knowledge.
+6. Build a node-linked knowledge base from [the knowledge index template](./assets/knowledge-index-template.md). Record each reusable template, example, runbook, policy, decision record, training item, and automation with one canonical link, owner, version or review date, and the node IDs that use it. Link to existing material instead of copying it into every node card.
+7. Use [the flow package template](./assets/flow-package-template.md) to track the boundary, evidence, open decisions, artifacts, knowledge index, and flow changes. Never renumber an existing node only because the flow changes.
+8. When saving is requested and the host can write files, keep editable materials together in `flows/<flow-name>/`: `flow.md`, Mermaid source, `knowledge-index.md`, `nodes/N<id>-<short-name>.md`, and optional rendered SVG or PNG. Mermaid source and node cards are the source of truth; generated images are derived views.
+9. Map approved node contracts to the working toolchain. Use work-item states, checklists, linked artifacts, automated CI or approval gates, and visible, time-bound exceptions. Do not add a workflow state merely to describe a meeting or person.
 
 ## Quality at the Source
 
@@ -84,6 +86,12 @@ Do not silently modify unrelated nodes. Preserve the prior version or show the e
 
 Pilot one or two repeatable flows for two to four delivery cycles. Review lead time, waiting time, first-pass rate, rework count, escaped defects, blocker age, exception count, and work occurring outside the shared flow. For each material issue, change the earliest preventative node and record the hypothesis, owner, expected measure, and review date.
 
+## Standardize and Onboard
+
+After two to four cycles, promote the flow from pilot to standard work only when the team has resolved material open decisions, confirmed the node contracts against delivery evidence, and updated the relevant templates, runbooks, examples, or automation.
+
+For every person, provide a node-centric execution view containing only the nodes they own or contribute to. It must show their work items in order, required inputs, knowledge links, completion evidence, escalation route, and receiving role. A new team member is ready when they can use this view to complete a representative assigned node, find the required knowledge without private guidance, and pass the node's good-product standard. Record onboarding gaps as Kaizen items rather than relying on informal coaching.
+
 ## Completion Check
 
-The flow is ready to pilot only when every material activity and handoff is visible; every node has an owner, input, deliverable, time expectation, good-product standard, and toolbox; pass criteria are independently checkable; failed checks block or explicitly govern handoff; inferred and conflicting rules are resolved or visibly open; and a recurring improvement review is scheduled.
+The flow is ready to pilot only when every material activity and handoff is visible; every node has an owner, input, deliverable, executable work items, time expectation, good-product standard, and toolbox; each work item identifies its knowledge and completion evidence; pass criteria are independently checkable; failed checks block or explicitly govern handoff; inferred and conflicting rules are resolved or visibly open; and a recurring improvement review is scheduled.

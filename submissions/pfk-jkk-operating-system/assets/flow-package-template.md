@@ -29,7 +29,12 @@
 | --- | --- | --- |
 | `current-state.mmd` | Observed workflow | |
 | `future-state.mmd` | Proposed standard workflow | |
+| `knowledge-index.md` | Node-linked reusable knowledge base | |
 | `nodes/N1-<short-name>.md` | JKK node contract | |
+
+## Knowledge Base Index
+
+Use [the knowledge index template](./knowledge-index-template.md) to maintain the detailed register. Include only one canonical link per reusable item and list every node that uses it.
 
 ## Change Log
 
