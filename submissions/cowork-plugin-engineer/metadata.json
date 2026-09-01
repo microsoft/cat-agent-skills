@@ -1,0 +1,20 @@
+{
+  "name": "Copilot Cowork Plugin Engineer",
+  "description": "Create, import, validate, authenticate, package, evaluate, and troubleshoot Microsoft Copilot Cowork plugins with repeatable engineering guardrails.",
+  "platforms": ["Cowork"],
+  "tags": [
+    "cowork",
+    "plugins",
+    "skills",
+    "mcp",
+    "oauth",
+    "validation",
+    "evaluations",
+    "developer-tools"
+  ],
+  "author": "Srinivas Varukala",
+  "authorUrl": "https://github.com/svarukala",
+  "version": "1.0.0",
+  "createdAt": "2026-08-31",
+  "updatedAt": "2026-08-31"
+}
