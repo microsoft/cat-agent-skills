@@ -1,0 +1,11 @@
+{
+  "name": "Numeric Sanity Checker",
+  "description": "Verifies the arithmetic in a report before it ships: do subtotals sum to the stated total, do percentages sum to 100, does a percent-change figure actually match the two numbers it's derived from.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["accuracy", "data", "quality", "scripts", "guardrail", "reporting"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
