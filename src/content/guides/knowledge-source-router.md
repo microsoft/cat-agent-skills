@@ -21,6 +21,18 @@ The router reverses that order:
 It also reports unassigned files and relevant documents excluded by the
 country filter, making the answer's boundaries explicit.
 
+## An intentionally strict example
+
+A capable agent may not need instructions this prescriptive to use metadata
+filtering and knowledge search correctly. This skill deliberately demonstrates
+a stricter flow so the sequence is explicit, repeatable, and easy to inspect.
+
+Use it as both a working routing pattern and an example of how the two tools
+complement each other: `sharepoint_metadata_filter` determines which documents
+apply, and `knowledge_search_sharepoint` searches their contents through
+`scopeUrls`. Adapt the level of instruction to the agent and scenario rather
+than assuming every implementation needs every guardrail in this skill.
+
 ## Requirements
 
 Use this skill with a Copilot Studio agent that has:
