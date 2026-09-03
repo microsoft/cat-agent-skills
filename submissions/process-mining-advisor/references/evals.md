@@ -32,7 +32,7 @@ Use these scenarios to test activation, evidence discipline, lifecycle coverage,
 
 **Prompt:** "Analyze every slow case, not just the first page."
 
-**Expected:** Use `get_cases_with_metrics` with explicit `itemsPerPage`/`itemsToSkip`, continue while `offset + limit < totalCount`, and state whether retrieval is complete.
+**Expected:** Use `get_cases_with_metrics` with explicit `itemsPerPage`/`itemsToSkip`, continue while `itemsToSkip + itemsPerPage < totalCount`, and state whether retrieval is complete.
 
 **Failure:** Treats one page as the full population or silently changes filters between pages.
 

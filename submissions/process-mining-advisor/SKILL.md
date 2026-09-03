@@ -83,7 +83,7 @@ Filter and pagination discipline:
 - Different filter types combine with **AND**; multiple filters of the same type combine with **OR**. Confirm inclusivity/exclusivity.
 - Validate attribute names against `get_process_details` and values against `get_attribute_values`.
 - Validate ISO 8601 timeframe order, metric/data-type compatibility, nonempty arrays, and custom metric ID when required.
-- Set `itemsPerPage` and `itemsToSkip` explicitly for list operations. Continue while `offset + limit < totalCount`; if not all pages are retrieved, label the result partial.
+- Set `itemsPerPage` and `itemsToSkip` explicitly for list operations. Continue while `itemsToSkip + itemsPerPage < totalCount`; if not all pages are retrieved, label the result partial.
 - Apply timeframe and attribute filters early to reduce data volume. Do not over-filter silently.
 - The server handles long-running analytics and progress notifications; do not invent client-side polling behavior.
 - Surface `InvalidParams`, `InvalidRequest`, and `InternalError` outcomes rather than replacing them with success-shaped answers.
