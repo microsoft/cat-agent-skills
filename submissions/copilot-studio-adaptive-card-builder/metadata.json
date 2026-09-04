@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Adaptive Card Builder",
+  "description": "Turn a plain-language interaction requirement into a validated, paste-ready Adaptive Card package with Copilot Studio wiring, mappings, accessibility guidance, sample data, and a text fallback.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["copilot-studio", "adaptive-cards", "maker", "accessibility", "validation", "power-fx"],
+  "author": "Marc Pascal Solling",
+  "authorUrl": "https://github.com/MarcPmedC",
+  "version": "1.0.0",
+  "createdAt": "2026-09-03",
+  "updatedAt": "2026-09-03"
+}
