@@ -95,16 +95,34 @@ DESTRUCTIVE_TERMS = {
     "format device",
     "drop database",
 }
+def normalize_sensitive_name(value: str) -> str:
+    return "".join(character for character in value.lower() if character.isalnum())
+
+
 SECRET_FIELD_TERMS = {
-    "apikey",
-    "api_key",
-    "access_token",
+    "api key",
+    "access token",
+    "auth token",
+    "bearer token",
+    "client secret",
+    "connection string",
+    "credentials",
+    "id token",
+    "passphrase",
     "password",
+    "password hash",
     "passwd",
-    "private_key",
+    "private key",
+    "refresh token",
+    "sas token",
     "secret",
+    "secret key",
+    "signing key",
     "token",
     "credential",
+}
+NORMALIZED_SECRET_FIELD_TERMS = {
+    normalize_sensitive_name(term) for term in SECRET_FIELD_TERMS
 }
 SECRET_VALUE_PATTERNS = (
     re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{12,}", re.IGNORECASE),
@@ -1112,8 +1130,8 @@ class CardLinter:
             )
 
     def _check_secret_field(self, input_id: Any, label: Any, path: str) -> None:
-        normalized = f"{input_id or ''} {label or ''}".lower().replace(" ", "_")
-        if any(term in normalized for term in SECRET_FIELD_TERMS):
+        normalized = normalize_sensitive_name(f"{input_id or ''} {label or ''}")
+        if any(term in normalized for term in NORMALIZED_SECRET_FIELD_TERMS):
             self.error(
                 "PRIVACY.SECRET_INPUT",
                 path,
@@ -1150,8 +1168,8 @@ class CardLinter:
     def _scan_sensitive_values(self, value: Any, path: str) -> None:
         if isinstance(value, dict):
             for key, child in value.items():
-                normalized_key = key.lower().replace("-", "_")
-                if any(term == normalized_key for term in SECRET_FIELD_TERMS):
+                normalized_key = normalize_sensitive_name(key)
+                if normalized_key in NORMALIZED_SECRET_FIELD_TERMS:
                     self.error(
                         "PRIVACY.SECRET_PROPERTY",
                         f"{path}.{key}",

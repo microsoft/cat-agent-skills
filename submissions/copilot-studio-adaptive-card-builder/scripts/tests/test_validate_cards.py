@@ -255,6 +255,40 @@ class CardLinterTests(unittest.TestCase):
         result = self.lint(card)
         self.assertIn("PRIVACY.SECRET_INPUT", self.codes(result))
 
+    def test_secret_property_separator_variants_are_rejected(self):
+        for key in (
+            "accessToken",
+            "apiKey",
+            "access_token",
+            "api-key",
+            "private.key",
+            "clientSecret",
+            "refresh token",
+        ):
+            with self.subTest(key=key):
+                card = base_card()
+                action = submit_action()
+                action["data"][key] = "synthetic-value"
+                card["actions"] = [action]
+                result = self.lint(card)
+                self.assertIn("PRIVACY.SECRET_PROPERTY", self.codes(result))
+
+    def test_innocuous_property_names_are_not_rejected(self):
+        card = base_card()
+        action = submit_action()
+        action["data"].update(
+            {
+                "tokenizer": "word-piece",
+                "secretary": "Sample User",
+                "credentialType": "training",
+                "accessTokenStatus": "not-configured",
+                "apiKeyLabel": "integration setting",
+            }
+        )
+        card["actions"] = [action]
+        result = self.lint(card)
+        self.assertNotIn("PRIVACY.SECRET_PROPERTY", self.codes(result))
+
     def test_embedded_token_is_rejected(self):
         card = base_card()
         card["body"][0]["text"] = "Bearer " + ("a" * 26)
