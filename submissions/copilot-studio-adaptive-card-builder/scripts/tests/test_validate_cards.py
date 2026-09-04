@@ -254,7 +254,25 @@ class CardLinterTests(unittest.TestCase):
         card = base_card()
         card["body"][0]["text"] = "${Topic.Title}"
         result = self.lint(card)
-        self.assertIn("DYNAMIC.TEMPLATE", self.codes(result))
+        matches = [
+            item
+            for item in result.errors
+            if item.code == "DYNAMIC.TEMPLATE" and item.path == "$.body[0].text"
+        ]
+        self.assertEqual(len(matches), 1)
+
+    def test_diagnostic_deduplication_preserves_distinct_findings(self):
+        linter = validate_cards.CardLinter("portable-1.5", "auto")
+        linter.error("TEST.CODE", "$.value", "Test message.")
+        linter.error("TEST.CODE", "$.value", "Test message.")
+        linter.warning("TEST.CODE", "$.value", "Test message.")
+        linter.error("TEST.OTHER_CODE", "$.value", "Test message.")
+        linter.error("TEST.CODE", "$.other", "Test message.")
+        linter.error("TEST.CODE", "$.value", "Other message.")
+
+        self.assertEqual(len(linter.errors), 4)
+        self.assertEqual(len(linter.warnings), 1)
+        self.assertEqual(len({*linter.errors, *linter.warnings}), 5)
 
     def test_http_open_url_is_rejected(self):
         card = base_card()

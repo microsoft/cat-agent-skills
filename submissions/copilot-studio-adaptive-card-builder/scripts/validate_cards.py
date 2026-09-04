@@ -235,6 +235,7 @@ class CardLinter:
         self.requested_mode = requested_mode
         self.errors: list[Diagnostic] = []
         self.warnings: list[Diagnostic] = []
+        self._diagnostics: set[Diagnostic] = set()
         self.card_version = (0, 0)
         self.input_ids: dict[str, str] = {}
         self.confirmation_toggles: list[dict[str, Any]] = []
@@ -243,10 +244,17 @@ class CardLinter:
         self.input_count = 0
 
     def error(self, code: str, path: str, message: str) -> None:
-        self.errors.append(Diagnostic("error", code, path, message))
+        self._record_diagnostic(Diagnostic("error", code, path, message))
 
     def warning(self, code: str, path: str, message: str) -> None:
-        self.warnings.append(Diagnostic("warning", code, path, message))
+        self._record_diagnostic(Diagnostic("warning", code, path, message))
+
+    def _record_diagnostic(self, diagnostic: Diagnostic) -> None:
+        if diagnostic in self._diagnostics:
+            return
+        self._diagnostics.add(diagnostic)
+        target = self.errors if diagnostic.severity == "error" else self.warnings
+        target.append(diagnostic)
 
     def lint(self, card: Any, source: str) -> LintResult:
         if not isinstance(card, dict):
