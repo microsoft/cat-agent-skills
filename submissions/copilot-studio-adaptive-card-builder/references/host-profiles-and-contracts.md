@@ -214,6 +214,7 @@ validation:
   scope: bounded semantic lint, not official schema validation
   profile: portable-1.5
   mode: interactive
+  working_directory: skill root
   command: python scripts/validate_cards.py card.json --profile portable-1.5 --mode interactive
   errors: 0
   warnings: 0

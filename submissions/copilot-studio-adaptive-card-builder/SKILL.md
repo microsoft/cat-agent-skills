@@ -142,10 +142,11 @@ For a dynamic card:
 
 ### 5. Validate
 
-When the bundled script can run, execute:
+When the bundled script can run, execute it from the skill root (the directory
+containing `SKILL.md`). Replace the card path, profile, and mode as needed:
 
-```text
-python scripts/validate_cards.py <card.json> --profile <profile> --mode <interactive|informational>
+```shell
+python scripts/validate_cards.py card.json --profile portable-1.5 --mode interactive
 ```
 
 Repair every error. Review every warning. Run again until the card has no errors.

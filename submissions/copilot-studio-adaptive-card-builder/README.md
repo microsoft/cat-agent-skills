@@ -56,14 +56,14 @@ The response should contain:
 
 From the skill directory:
 
-```powershell
-python scripts\validate_cards.py assets\templates --profile portable-1.5
+```shell
+python scripts/validate_cards.py assets/templates --profile portable-1.5
 ```
 
 Validate a generated card and require a specific node mode:
 
-```powershell
-python scripts\validate_cards.py card.json --profile teams-1.5 --mode interactive
+```shell
+python scripts/validate_cards.py card.json --profile teams-1.5 --mode interactive
 ```
 
 Machine-readable output is available with `--format json`. Add `--warnings-as-errors` for a stricter quality gate.
