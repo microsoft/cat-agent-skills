@@ -105,6 +105,13 @@ Every `Action.Submit` must have a descriptive title and a `data` object containi
 
 Keep each `actionSubmitId` unique. Downstream logic must validate the action identity before acting.
 
+Adaptive Card validation cannot make one input required only for selected submit
+actions. Keep conditionally required inputs optional in the card, then enforce
+the rule downstream after branching on the trusted expected action identity. For
+the approval template, allow `reviewComment` to be blank for Approve. For Reject
+or Request changes, trim `reviewComment`; if it is blank, reprompt and do not
+record or invoke the decision.
+
 For destructive or irreversible operations:
 
 * add a clearly worded `Input.Toggle` confirmation;

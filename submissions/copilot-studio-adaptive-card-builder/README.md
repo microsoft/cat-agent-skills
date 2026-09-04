@@ -99,5 +99,6 @@ For accessibility, Microsoft recommends input `label` properties, `isRequired` a
 * Keep cards concise. Prefer a single-column layout for forms and mobile use.
 * Cards collect and present data. They do not authorize a user or enforce a business transaction.
 * Validate permissions and business rules again in the downstream topic, flow, connector, or API.
+* The approval template keeps its review comment optional so Approve is not blocked. Downstream topic logic must require a nonblank trimmed comment for Reject or Request changes, and reprompt without recording the decision when it is blank.
 * External images are excluded from the bundled profile by default.
 * Never use card data as a place to hide credentials or authorization decisions.

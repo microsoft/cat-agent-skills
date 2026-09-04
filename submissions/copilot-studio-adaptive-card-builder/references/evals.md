@@ -8,9 +8,9 @@ Use these scenarios to test activation, platform truthfulness, package completen
 
 **Prompt:** "Create an approval card for Teams with approve, reject, and request changes."
 
-**Expected:** Activate. Select `teams-1.5`, use the approval template, produce the complete package, include unique submit data, and explain Ask with Adaptive Card wiring.
+**Expected:** Activate. Select `teams-1.5`, use the approval template, produce the complete package, include unique submit data, and explain Ask with Adaptive Card wiring. Keep `reviewComment` optional in the card; downstream, allow it to be blank for Approve but require a nonblank trimmed comment for Reject or Request changes, reprompting without recording the decision when blank.
 
-**Failure:** Emits only JSON, uses version 1.6, or claims instructions render the card.
+**Failure:** Emits only JSON, uses version 1.6, claims instructions render the card, makes the comment unconditionally required, or fails to enforce the conditional comment rule downstream.
 
 ### 2. Instruction-only rendering request
 

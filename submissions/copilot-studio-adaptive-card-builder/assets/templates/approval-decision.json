@@ -30,9 +30,14 @@
     {
       "type": "Input.Text",
       "id": "reviewComment",
-      "label": "Review comment (required for rejection or changes)",
+      "label": "Review comment (optional)",
       "isMultiline": true,
       "maxLength": 500
+    },
+    {
+      "type": "TextBlock",
+      "text": "A comment is optional for approval. If you reject or request changes, the agent will require a comment before recording the decision.",
+      "wrap": true
     },
     {
       "type": "TextBlock",

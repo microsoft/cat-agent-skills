@@ -48,7 +48,7 @@ This subset is not the full Adaptive Cards schema. A type outside it can be vali
 | `information-summary.json` | Informational | Present a concise record or decision summary | None |
 | `data-collection-form.json` | Interactive | Collect text, category, and due date | `requestTitle`, `requestCategory`, `requestedDate` |
 | `confirmation.json` | Interactive | Confirm or go back before a consequential step | `confirmed`, action identity |
-| `approval-decision.json` | Interactive | Approve, reject, or request changes with comments | `reviewComment`, action identity |
+| `approval-decision.json` | Interactive | Approve, reject, or request changes; comment is optional for approval and downstream-required for rejection or changes | `reviewComment`, action identity |
 | `choice-disambiguation.json` | Interactive | Resolve one ambiguous request from a controlled list | `selectedOption`, action identity |
 | `status-progress.json` | Informational | Show current state, owner, and next step | None |
 | `escalation-handoff.json` | Interactive | Capture a safe handoff summary and urgency | `handoffSummary`, `urgency`, action identity |
@@ -128,6 +128,22 @@ action:
 `actionSubmitId` identifies one button on one card version. `actionId` is a short stable branch key. `intent` gives a readable machine contract.
 
 `riskLevel` is required and must be `none`, `consequential`, or `destructive`. A destructive action also requires `confirmationInputId`, `requiresExplicitConfirmation: true`, and a matching initially-off required confirmation toggle with distinct on and off values. Escape actions can use `associatedInputs: "none"` when they must bypass incomplete form validation, but they must declare `riskLevel: "none"` and `isEscapeAction: true`. Consequential and destructive actions cannot bypass associated inputs.
+
+### Conditional downstream input validation
+
+Adaptive Card native validation applies to the card submission, not selectively
+to individual submit actions. Do not set `reviewComment` as card-required in the
+approval template, because that would also block Approve.
+
+After matching the submitted action against the trusted expected
+`actionSubmitId`:
+
+* **Approve:** `reviewComment` can be blank.
+* **Reject:** trim `reviewComment`; if blank, reprompt and do not record or invoke the decision.
+* **Request changes:** trim `reviewComment`; if blank, reprompt and do not record or invoke the decision.
+
+Treat action data as untrusted input. Configure these branch rules in the topic
+or downstream service rather than trusting a client-provided requirement flag.
 
 Do not put authorization claims, secrets, or trusted server state into action data. Users and clients can submit payloads independently of the intended visual flow.
 

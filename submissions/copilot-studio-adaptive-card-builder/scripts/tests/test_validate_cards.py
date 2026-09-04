@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 SCRIPT_PATH = Path(__file__).parents[1] / "validate_cards.py"
+SUBMISSION_ROOT = SCRIPT_PATH.parents[1]
 SPEC = importlib.util.spec_from_file_location("validate_cards", SCRIPT_PATH)
 assert SPEC and SPEC.loader
 validate_cards = importlib.util.module_from_spec(SPEC)
@@ -75,6 +76,31 @@ class CardLinterTests(unittest.TestCase):
         card["actions"] = [submit_action()]
         result = self.lint(card, mode="interactive")
         self.assertTrue(result.ok)
+
+    def test_approval_template_uses_downstream_conditional_comment_contract(self):
+        template_path = (
+            SUBMISSION_ROOT / "assets" / "templates" / "approval-decision.json"
+        )
+        card = json.loads(template_path.read_text(encoding="utf-8"))
+        review_comment = next(
+            element
+            for element in card["body"]
+            if element.get("id") == "reviewComment"
+        )
+        self.assertEqual(review_comment["label"], "Review comment (optional)")
+        self.assertNotIn("isRequired", review_comment)
+        self.assertNotIn("errorMessage", review_comment)
+
+        action_ids = {action["data"]["actionId"] for action in card["actions"]}
+        self.assertEqual(action_ids, {"approve", "reject", "request_changes"})
+        guidance = " ".join(
+            element.get("text", "")
+            for element in card["body"]
+            if element.get("type") == "TextBlock"
+        ).lower()
+        self.assertIn("optional for approval", guidance)
+        self.assertIn("reject or request changes", guidance)
+        self.assertIn("require a comment", guidance)
 
     def test_invalid_json_is_reported(self):
         with tempfile.TemporaryDirectory() as directory:
