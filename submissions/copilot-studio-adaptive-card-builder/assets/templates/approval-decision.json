@@ -1,0 +1,78 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Review request REQ-1042 and reply with approve, reject, or request changes.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Review request",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Request",
+          "value": "REQ-1042"
+        },
+        {
+          "title": "Requested by",
+          "value": "Sample User"
+        },
+        {
+          "title": "Summary",
+          "value": "Replace a damaged item"
+        }
+      ]
+    },
+    {
+      "type": "Input.Text",
+      "id": "reviewComment",
+      "label": "Review comment (required for rejection or changes)",
+      "isMultiline": true,
+      "maxLength": 500
+    },
+    {
+      "type": "TextBlock",
+      "text": "Your identity and permission must be checked again before the decision is committed.",
+      "wrap": true
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Approve",
+      "data": {
+        "cardId": "approval_decision_v1",
+        "actionId": "approve",
+        "actionSubmitId": "approval_decision_v1_approve",
+        "intent": "approval.approve",
+        "riskLevel": "consequential"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Reject",
+      "data": {
+        "cardId": "approval_decision_v1",
+        "actionId": "reject",
+        "actionSubmitId": "approval_decision_v1_reject",
+        "intent": "approval.reject",
+        "riskLevel": "consequential"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Request changes",
+      "data": {
+        "cardId": "approval_decision_v1",
+        "actionId": "request_changes",
+        "actionSubmitId": "approval_decision_v1_request_changes",
+        "intent": "approval.request_changes",
+        "riskLevel": "consequential"
+      }
+    }
+  ]
+}

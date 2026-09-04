@@ -1,0 +1,40 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Request REQ-1042 is in progress. The service desk is reviewing it.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Request in progress",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Request",
+          "value": "REQ-1042"
+        },
+        {
+          "title": "Status",
+          "value": "In progress"
+        },
+        {
+          "title": "Current owner",
+          "value": "Service desk"
+        },
+        {
+          "title": "Updated",
+          "value": "3 September 2026 at 15:30"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Next step: The service desk reviews the request and contacts you if more information is needed.",
+      "wrap": true
+    }
+  ]
+}
