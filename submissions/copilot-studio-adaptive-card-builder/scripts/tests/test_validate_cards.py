@@ -286,18 +286,81 @@ class CardLinterTests(unittest.TestCase):
         result = self.lint(card)
         self.assertIn("OPENURL.HTTPS", self.codes(result))
 
-    def test_secret_input_is_rejected(self):
-        card = base_card()
-        card["body"].append(
-            {
-                "type": "Input.Text",
-                "id": "apiToken",
-                "label": "API token",
-            }
-        )
-        card["actions"] = [submit_action()]
-        result = self.lint(card)
-        self.assertIn("PRIVACY.SECRET_INPUT", self.codes(result))
+    def test_secret_input_identifier_variants_are_rejected(self):
+        for input_id in (
+            "accessToken",
+            "access_token",
+            "apiKey",
+            "apiToken",
+            "clientSecret",
+            "refreshToken",
+            "bearerToken",
+            "idToken",
+            "sasToken",
+            "connectionString",
+            "passphrase",
+            "passwordHash",
+            "signingKey",
+        ):
+            with self.subTest(input_id=input_id):
+                card = base_card()
+                card["body"].append(
+                    {
+                        "type": "Input.Text",
+                        "id": input_id,
+                        "label": "Sensitive value",
+                    }
+                )
+                card["actions"] = [submit_action()]
+                result = self.lint(card)
+                self.assertIn("PRIVACY.SECRET_INPUT", self.codes(result))
+
+    def test_secret_input_natural_label_variants_are_rejected(self):
+        for label in (
+            "Enter access token",
+            "Please provide your API key",
+            "API-key",
+            "Private.key",
+            "Current client secret",
+            "Connection string (required)",
+        ):
+            with self.subTest(label=label):
+                card = base_card()
+                card["body"].append(
+                    {
+                        "type": "Input.Text",
+                        "id": "sensitiveValue",
+                        "label": label,
+                    }
+                )
+                card["actions"] = [submit_action()]
+                result = self.lint(card)
+                self.assertIn("PRIVACY.SECRET_INPUT", self.codes(result))
+
+    def test_innocuous_input_names_are_not_rejected(self):
+        for input_id, label in (
+            ("tokenizer", "Tokenizer"),
+            ("secretary", "Secretary"),
+            ("credentialType", "Credential type"),
+            ("accessTokenStatus", "Access token status"),
+            ("apiKeyLabel", "API key label"),
+            ("passwordPolicy", "Password policy"),
+            ("signingKeyStatus", "Signing key status"),
+            ("connectionStringFormat", "Connection string format"),
+            ("secretQuestion", "Secret question"),
+        ):
+            with self.subTest(input_id=input_id, label=label):
+                card = base_card()
+                card["body"].append(
+                    {
+                        "type": "Input.Text",
+                        "id": input_id,
+                        "label": label,
+                    }
+                )
+                card["actions"] = [submit_action()]
+                result = self.lint(card)
+                self.assertNotIn("PRIVACY.SECRET_INPUT", self.codes(result))
 
     def test_secret_property_separator_variants_are_rejected(self):
         for key in (

@@ -99,8 +99,15 @@ def normalize_sensitive_name(value: str) -> str:
     return "".join(character for character in value.lower() if character.isalnum())
 
 
+def tokenize_sensitive_name(value: str) -> list[str]:
+    value = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", value)
+    value = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", value)
+    return re.findall(r"[A-Za-z0-9]+", value.lower())
+
+
 SECRET_FIELD_TERMS = {
     "api key",
+    "api token",
     "access token",
     "auth token",
     "bearer token",
@@ -123,6 +130,27 @@ SECRET_FIELD_TERMS = {
 }
 NORMALIZED_SECRET_FIELD_TERMS = {
     normalize_sensitive_name(term) for term in SECRET_FIELD_TERMS
+}
+INPUT_ID_CONTEXT_TOKENS = {"field", "input", "value"}
+INPUT_LABEL_CONTEXT_TOKENS = {
+    "a",
+    "an",
+    "confirm",
+    "current",
+    "enter",
+    "field",
+    "here",
+    "new",
+    "old",
+    "optional",
+    "please",
+    "provide",
+    "repeat",
+    "required",
+    "the",
+    "this",
+    "value",
+    "your",
 }
 SECRET_VALUE_PATTERNS = (
     re.compile(r"\bBearer\s+[A-Za-z0-9._~+/=-]{12,}", re.IGNORECASE),
@@ -1138,8 +1166,21 @@ class CardLinter:
             )
 
     def _check_secret_field(self, input_id: Any, label: Any, path: str) -> None:
-        normalized = normalize_sensitive_name(f"{input_id or ''} {label or ''}")
-        if any(term in normalized for term in NORMALIZED_SECRET_FIELD_TERMS):
+        candidates = (
+            (input_id, INPUT_ID_CONTEXT_TOKENS),
+            (label, INPUT_LABEL_CONTEXT_TOKENS),
+        )
+        is_sensitive = any(
+            isinstance(value, str)
+            and "".join(
+                token
+                for token in tokenize_sensitive_name(value)
+                if token not in context_tokens
+            )
+            in NORMALIZED_SECRET_FIELD_TERMS
+            for value, context_tokens in candidates
+        )
+        if is_sensitive:
             self.error(
                 "PRIVACY.SECRET_INPUT",
                 path,
