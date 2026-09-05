@@ -1,0 +1,74 @@
+{
+  "template": "sample-template.docx",
+  "scalar_placeholders": [
+    "document.audience",
+    "document.owner",
+    "document.status",
+    "document.title",
+    "document.type",
+    "document.version",
+    "sections.appendix",
+    "sections.executive_summary",
+    "sections.purpose",
+    "sections.recommendations",
+    "sections.scope"
+  ],
+  "repeating_arrays": {
+    "findings": [
+      "finding",
+      "impact",
+      "owner"
+    ]
+  },
+  "parts": {
+    "word/document.xml": {
+      "scalar_placeholders": [
+        "document.audience",
+        "document.owner",
+        "document.status",
+        "document.title",
+        "document.type",
+        "document.version",
+        "sections.appendix",
+        "sections.executive_summary",
+        "sections.purpose",
+        "sections.recommendations",
+        "sections.scope"
+      ],
+      "repeating_arrays": {
+        "findings": [
+          "finding",
+          "impact",
+          "owner"
+        ]
+      }
+    },
+    "word/footer1.xml": {
+      "scalar_placeholders": [
+        "document.status",
+        "document.version"
+      ],
+      "repeating_arrays": {}
+    },
+    "word/header1.xml": {
+      "scalar_placeholders": [
+        "document.title"
+      ],
+      "repeating_arrays": {}
+    }
+  },
+  "word_fields": {
+    "word/footer1.xml": {
+      "instructions": [
+        "PAGE",
+        "NUMPAGES"
+      ],
+      "simple_fields": [],
+      "field_chars": {
+        "begin": 2,
+        "end": 2,
+        "separate": 2
+      }
+    }
+  }
+}
