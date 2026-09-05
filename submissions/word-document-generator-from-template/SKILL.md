@@ -40,7 +40,7 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Instructions
 
-1. Locate the runtime `.docx` template. Use the uploaded file, or retrieve the
+1. From the skill's root directory (the folder that contains `scripts/`, `assets/`, and `references/`), locate the runtime `.docx` template. Use the uploaded file, or retrieve the
    user-identified SharePoint / OneDrive / connector item into the working
    directory. Stop with the message under **Template handling** if unavailable.
 2. Inspect it before writing content:
