@@ -1,0 +1,12 @@
+{
+  "name": "Log Cowork Session Cost",
+  "description": "Turn the credits figure from /cost into a costed session write-up and one paste-ready row for your own Cowork cost log workbook, so you can see which models, effort levels, and habits are expensive.",
+  "platforms": ["Cowork"],
+  "tags": ["productivity", "cost", "finops", "excel", "reporting", "governance"],
+  "author": "Hamish Sheild",
+  "authorUrl": "https://apprising.co.nz",
+  "authorGithub": "Hamish-Sheild",
+  "version": "1.0.0",
+  "createdAt": "2026-08-19",
+  "updatedAt": "2026-09-02"
+}
