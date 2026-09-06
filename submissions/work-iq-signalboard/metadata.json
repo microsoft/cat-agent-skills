@@ -1,0 +1,11 @@
+{
+  "name": "Work IQ Signalboard",
+  "description": "Turn four weeks of Calendar, Mail, and Teams chat activity into a colorful dashboard of reconciled Work IQ counts.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["work-iq", "microsoft-365", "dashboard", "visualization", "work-patterns", "analytics"],
+  "author": "Andreas Adner",
+  "authorUrl": "https://github.com/adner",
+  "version": "2.0.0",
+  "createdAt": "2026-08-10",
+  "updatedAt": "2026-08-12"
+}

@@ -1,0 +1,39 @@
+{
+  "kind": "map",
+  "title": "Sydney weather snapshot",
+  "html": true,
+  "geojson": true,
+  "out_prefix": "weather_map",
+  "points": [
+    {
+      "name": "Sydney CBD",
+      "location": "Sydney",
+      "value": "24 C",
+      "icon": "sunny"
+    },
+    {
+      "name": "Bondi",
+      "location": "Bondi Beach",
+      "value": "23 C",
+      "icon": "partly-cloudy"
+    },
+    {
+      "name": "Manly",
+      "location": "Manly",
+      "value": "21 C",
+      "icon": "cloudy"
+    },
+    {
+      "name": "Parramatta",
+      "location": "Parramatta",
+      "value": "26 C",
+      "icon": "hot"
+    },
+    {
+      "name": "Airport",
+      "location": "Sydney Airport",
+      "value": "22 C · showers",
+      "icon": "rain"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Browser UAT Analyst",
+  "description": "Run evidence-driven UAT on any browser-based app — Copilot Studio, Power Platform, Dataverse, Dynamics 365, admin centres, or a custom web app — with Playwright execution, a screenshot evidence ledger, and failure classification that separates product defects from tenant config.",
+  "platforms": ["Scout"],
+  "tags": ["testing", "uat", "playwright", "quality", "copilot-studio", "power-platform", "automation"],
+  "author": "Al Macey",
+  "authorUrl": "https://github.com/amacey-msft",
+  "authorGithub": "amacey-msft",
+  "version": "1.0.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-04"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Cowork Use Case One-Pager",
+  "description": "Turn a Cowork conversation, into a one-page HTML use case write-up — narrative, impact figures, workflow steps, and outputs.",
+  "platforms": ["Cowork"],
+  "tags": ["productivity", "use-case", "html", "documents", "writing", "audit"],
+  "author": "Tim Sparks",
+  "authorUrl": "https://github.com/SparkyT",
+  "version": "1.0.1"
+}

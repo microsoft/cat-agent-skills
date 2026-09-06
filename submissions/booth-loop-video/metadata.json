@@ -1,0 +1,12 @@
+{
+  "name": "Booth Loop Video",
+  "description": "Generate a silent, looping 1920x1080 MP4 for a conference booth, kiosk, or lobby screen — rendered frame-by-frame in Python (Pillow + ffmpeg), with previews before the full render.",
+  "platforms": ["Scout"],
+  "tags": ["video", "animation", "python", "marketing", "events", "design", "ffmpeg"],
+  "author": "Al Macey",
+  "authorUrl": "https://github.com/amacey-msft",
+  "authorGithub": "amacey-msft",
+  "version": "1.0.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-04"
+}

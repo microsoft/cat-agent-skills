@@ -1,0 +1,12 @@
+{
+  "name": "Travel Cost Estimator",
+  "description": "Price a business trip from live fares in your corporate booking tool, benchmark the non-bookable lines against your own approved expense reports, and produce an estimate a manager can approve — with a hard guardrail that never enters the booking funnel.",
+  "platforms": ["Scout"],
+  "tags": ["travel", "expenses", "browser-automation", "playwright", "finance", "productivity"],
+  "author": "Al Macey",
+  "authorUrl": "https://github.com/amacey-msft",
+  "authorGithub": "amacey-msft",
+  "version": "1.0.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-04"
+}

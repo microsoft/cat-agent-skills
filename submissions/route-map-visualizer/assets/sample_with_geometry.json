@@ -1,0 +1,58 @@
+{
+  "kind": "route",
+  "title": "Sydney Delivery Run — Azure Maps",
+  "profile": "driving",
+  "route_source": "azure_maps",
+  "total_distance_m": 12800,
+  "total_duration_s": 1140,
+  "stops": [
+    { "name": "Depot",        "lat": -33.8600, "lon": 151.2100, "icon": "home",    "address": "1 George St, Sydney NSW" },
+    { "name": "Stop A",       "lat": -33.8825, "lon": 151.1490, "icon": "shop",    "address": "14 Parramatta Rd, Strathfield NSW" },
+    { "name": "Stop B",       "lat": -33.9021, "lon": 151.1814, "icon": "shop",    "address": "50 King St, Newtown NSW" },
+    { "name": "Stop C",       "lat": -33.8930, "lon": 151.2310, "icon": "truck",   "address": "88 Anzac Parade, Kensington NSW" }
+  ],
+  "route_geometry": [
+    { "lat": -33.8600, "lon": 151.2100 },
+    { "lat": -33.8620, "lon": 151.2050 },
+    { "lat": -33.8640, "lon": 151.1980 },
+    { "lat": -33.8680, "lon": 151.1870 },
+    { "lat": -33.8720, "lon": 151.1760 },
+    { "lat": -33.8780, "lon": 151.1620 },
+    { "lat": -33.8825, "lon": 151.1490 },
+    { "lat": -33.8860, "lon": 151.1560 },
+    { "lat": -33.8900, "lon": 151.1660 },
+    { "lat": -33.8940, "lon": 151.1730 },
+    { "lat": -33.9021, "lon": 151.1814 },
+    { "lat": -33.9000, "lon": 151.1920 },
+    { "lat": -33.8970, "lon": 151.2050 },
+    { "lat": -33.8950, "lon": 151.2180 },
+    { "lat": -33.8930, "lon": 151.2310 }
+  ],
+  "legs": [
+    {
+      "from": "Depot",
+      "to": "Stop A",
+      "distance_m": 5200,
+      "duration_s": 480,
+      "summary": "via Parramatta Rd"
+    },
+    {
+      "from": "Stop A",
+      "to": "Stop B",
+      "distance_m": 3900,
+      "duration_s": 360,
+      "summary": "via King St"
+    },
+    {
+      "from": "Stop B",
+      "to": "Stop C",
+      "distance_m": 3700,
+      "duration_s": 300,
+      "summary": "via Anzac Parade"
+    }
+  ],
+  "html": true,
+  "geojson": true,
+  "map_links": true,
+  "out_prefix": "out/sydney_delivery"
+}
