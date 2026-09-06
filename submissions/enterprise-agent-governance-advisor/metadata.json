@@ -1,0 +1,12 @@
+{
+  "name": "Enterprise Agent Governance Advisor",
+  "description": "Recommends a practical agent delivery path, governance tier, and next action for enterprise AI scenarios.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["enterprise-ai", "governance", "copilot-studio", "architecture", "decision-support"],
+  "author": "Allan Changar",
+  "authorUrl": "https://github.com/cheapskatechangar",
+  "version": "1.0.0",
+  "createdAt": "2026-09-06",
+  "updatedAt": "2026-09-06",
+  "coverColor": "indigo"
+}
