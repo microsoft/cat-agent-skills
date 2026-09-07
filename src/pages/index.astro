@@ -625,10 +625,12 @@ const allContributors = [...contributorMap.entries()]
     setImportMenu(false);
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      setImportMenu(false);
-      importMenuTrigger?.focus();
-    }
+    if (
+      event.key !== "Escape" ||
+      importMenuTrigger?.getAttribute("aria-expanded") !== "true"
+    ) return;
+    setImportMenu(false);
+    importMenuTrigger.focus();
   });
 
   copyCopilotStudioUrl?.addEventListener("click", async () => {

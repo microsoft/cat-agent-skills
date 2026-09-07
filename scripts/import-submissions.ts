@@ -393,7 +393,7 @@ function copilotStudioOutputDir(): string | undefined {
       rootFromOutput !== ".." &&
       !isAbsolute(rootFromOutput));
   if (outputContainsRoot) {
-    throw new Error("Copilot Studio output directory must not be the repository root or its parent");
+    throw new Error("Copilot Studio output directory must not be the repository root or any parent directory");
   }
   return outputDir;
 }
