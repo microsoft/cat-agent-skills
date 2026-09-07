@@ -75,10 +75,39 @@ jobs:
       # was merged. Idempotent: it rewrites the same files a same-repo PR did.
       - name: Import skill submissions
         if: steps.ratings.outputs.should_deploy == 'true'
-        run: npm run import:submissions
+        run: npm run import:submissions -- --copilot-studio-output "$RUNNER_TEMP/copilot-studio-skills"
       - name: Build
         if: steps.ratings.outputs.should_deploy == 'true'
         run: npm run build
+      - name: Publish Copilot Studio skill branch
+        if: steps.ratings.outputs.should_deploy == 'true'
+        env:
+          FEED_BRANCH: copilot-studio-skills
+          FEED_DIR: ${{ runner.temp }}/copilot-studio-skills
+        run: |
+          set -euo pipefail
+          publish_dir="$RUNNER_TEMP/copilot-studio-publish"
+
+          if git ls-remote --exit-code --heads origin "$FEED_BRANCH" >/dev/null; then
+            git fetch origin "refs/heads/$FEED_BRANCH:refs/remotes/origin/$FEED_BRANCH"
+            git worktree add --detach "$publish_dir" "origin/$FEED_BRANCH"
+          else
+            git worktree add --detach "$publish_dir" HEAD
+            git -C "$publish_dir" switch --orphan "$FEED_BRANCH"
+          fi
+
+          rsync -a --delete --exclude=".git" "$FEED_DIR/" "$publish_dir/"
+          git -C "$publish_dir" add -A
+
+          if git -C "$publish_dir" diff --cached --quiet; then
+            echo "Copilot Studio skill branch is current."
+            exit 0
+          fi
+
+          git -C "$publish_dir" config user.name "github-actions[bot]"
+          git -C "$publish_dir" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$publish_dir" commit -m "chore: refresh Copilot Studio skill feed"
+          git -C "$publish_dir" push origin "HEAD:refs/heads/$FEED_BRANCH"
       - name: Upload Pages artifact
         if: steps.ratings.outputs.should_deploy == 'true'
         uses: actions/upload-pages-artifact@v3

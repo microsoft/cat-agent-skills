@@ -36,6 +36,8 @@ const allTags = [...tagCounts.entries()].sort(
 // most-used tags inline — 3 on mobile, 8 on desktop — and moves the long tail
 // into a searchable "More tags" popover. Multi-select combines tags (match any).
 const popularTags = allTags.slice(0, 8);
+const copilotStudioImportUrl =
+  "https://github.com/microsoft/cat-agent-skills/tree/copilot-studio-skills";
 
 // Contributor directory for the "Filter by contributor" picker. One entry per
 // person (keyed the same way as the ?author= filter), carrying a display name,
@@ -142,6 +144,92 @@ const allContributors = [...contributorMap.entries()]
           ))
         }
       </div>
+      <div id="import-menu" class="relative ml-0 w-full sm:ml-auto sm:w-auto">
+        <button
+          id="import-menu-trigger"
+          type="button"
+          aria-expanded="false"
+          aria-haspopup="true"
+          class="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm font-semibold text-fg transition hover:border-accent/50 hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-4 w-4 text-accent-text"
+            aria-hidden="true"
+          >
+            <path d="M12 3v12"></path>
+            <path d="m8 11 4 4 4-4"></path>
+            <path d="M5 21h14"></path>
+          </svg>
+          Import skills
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-3.5 w-3.5 text-subtle transition"
+            id="import-menu-chevron"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6"></path>
+          </svg>
+        </button>
+        <div
+          id="import-menu-panel"
+          class="absolute right-0 top-full z-20 mt-2 hidden w-full min-w-72 rounded-xl border border-border bg-surface p-2 shadow-lg sm:w-80"
+        >
+          <p class="px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wider text-subtle">
+            Copy a catalog URL
+          </p>
+          <button
+            id="copy-copilot-studio-url"
+            type="button"
+            data-url={copilotStudioImportUrl}
+            data-clarity-event="copy_copilot_studio_import_url"
+            class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+          >
+            <span
+              class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#0078d4]/12 text-[#0067b8] dark:text-[#69b7f0]"
+              aria-hidden="true"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-4 w-4"
+              >
+                <rect x="8" y="8" width="11" height="11" rx="2"></rect>
+                <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"></path>
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold text-fg">Copilot Studio</span>
+              <span id="copy-copilot-studio-label" class="block text-xs text-muted">
+                Copy GitHub import URL
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
+      <span
+        id="copy-copilot-studio-status"
+        class="sr-only"
+        role="status"
+        aria-live="polite"
+      ></span>
     </div>
   </section>
 
@@ -498,6 +586,21 @@ const allContributors = [...contributorMap.entries()]
   const contributorChips = document.getElementById("contributor-chips")!;
   const sentinel = document.getElementById("scroll-sentinel")!;
   const sortSelect = document.getElementById("sort-select") as HTMLSelectElement;
+  const copyCopilotStudioUrl = document.getElementById(
+    "copy-copilot-studio-url"
+  ) as HTMLButtonElement | null;
+  const copyCopilotStudioLabel = document.getElementById(
+    "copy-copilot-studio-label"
+  );
+  const copyCopilotStudioStatus = document.getElementById(
+    "copy-copilot-studio-status"
+  );
+  const importMenu = document.getElementById("import-menu");
+  const importMenuTrigger = document.getElementById(
+    "import-menu-trigger"
+  ) as HTMLButtonElement | null;
+  const importMenuPanel = document.getElementById("import-menu-panel");
+  const importMenuChevron = document.getElementById("import-menu-chevron");
 
   const SORTS = ["featured", "rating", "downloads", "name", "newest"] as const;
   type SortMode = (typeof SORTS)[number];
@@ -510,6 +613,47 @@ const allContributors = [...contributorMap.entries()]
   let sortMode: SortMode = "featured";
   let shown = BATCH;
   let matched: HTMLElement[] = items;
+
+  function setImportMenu(open: boolean) {
+    importMenuPanel?.classList.toggle("hidden", !open);
+    importMenuChevron?.classList.toggle("rotate-180", open);
+    importMenuTrigger?.setAttribute("aria-expanded", String(open));
+  }
+
+  importMenuTrigger?.addEventListener("click", () => {
+    setImportMenu(importMenuPanel?.classList.contains("hidden") ?? false);
+  });
+  document.addEventListener("click", (event) => {
+    if (!importMenu || importMenu.contains(event.target as Node)) return;
+    setImportMenu(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setImportMenu(false);
+      importMenuTrigger?.focus();
+    }
+  });
+
+  copyCopilotStudioUrl?.addEventListener("click", async () => {
+    const url = copyCopilotStudioUrl.dataset.url;
+    if (!url) return;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      if (copyCopilotStudioLabel) copyCopilotStudioLabel.textContent = "Copied to clipboard";
+      if (copyCopilotStudioStatus) {
+        copyCopilotStudioStatus.textContent =
+          "Copilot Studio GitHub import URL copied to clipboard.";
+      }
+      window.setTimeout(() => {
+        if (copyCopilotStudioLabel) {
+          copyCopilotStudioLabel.textContent = "Copy GitHub import URL";
+        }
+      }, 2200);
+    } catch {
+      window.prompt("Copy this URL into Copilot Studio:", url);
+    }
+  });
 
   const num = (el: HTMLElement, key: string) => Number(el.dataset[key] ?? "0") || 0;
 

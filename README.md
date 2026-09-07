@@ -105,6 +105,18 @@ Write the agent instructions here as Markdown — this body becomes the
 > been retired; existing ones stay published.) See
 > [`submissions/README.md`](submissions/README.md) for the details.
 
+## Add Copilot Studio skills from GitHub
+
+In Copilot Studio, choose **Add skill** > **From GitHub** and paste this public
+folder URL:
+
+`https://github.com/microsoft/cat-agent-skills/tree/copilot-studio-skills`
+
+The dedicated branch is generated from submissions on `main` whose `platforms`
+include `Copilot Studio`. Its root contains only unpacked canonical skills with
+a root `SKILL.md` and their resources; gallery metadata and root human-facing
+READMEs are excluded.
+
 ## 📁 Project structure
 
 ```
