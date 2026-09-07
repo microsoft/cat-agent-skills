@@ -1,0 +1,176 @@
+{
+  "files": [
+    {
+      "bytes": 1173,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/__init__.py",
+      "sha256": "65257dc124e5f1d882170dbc6f8fb9a4f0e51b38f9ca1e0e0006978ba593c5ea"
+    },
+    {
+      "bytes": 1350,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/__main__.py",
+      "sha256": "29a6c0e5b11a58327f3ca7441a97551af6e459659bbd0884bd7c49dc37af5b54"
+    },
+    {
+      "bytes": 55455,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7 / original Colossal Cave data",
+      "path": "scripts/runtime/adventure/advent.dat",
+      "sha256": "ab024845bb60f1ff753b25103de578120db307c672575e7435aeede4c9cc15ff"
+    },
+    {
+      "bytes": 14770,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/data.py",
+      "sha256": "df18fe18ce0be811713849d07af6192057a6238390ff201a4b99addefb56e68a"
+    },
+    {
+      "bytes": 61027,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/game.py",
+      "sha256": "136c0eeedcf679cec297f63ec7028a3156bc27b8782571bc8a5fa3cee1759b02"
+    },
+    {
+      "bytes": 4898,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/model.py",
+      "sha256": "f9659b28ad1a2d876debeef5a3a485d5a2fddc55d06aa37e0ba1b8146178087f"
+    },
+    {
+      "bytes": 1515,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/prompt.py",
+      "sha256": "2153d89f150c6a7d1101df2adac105203683edacdeaaf0f2d04c4725c1abfb2c"
+    },
+    {
+      "bytes": 6595,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/README.txt",
+      "sha256": "4ff0ced51c90a94b85ecd6a8df637caaae5a180fd37bdc3096bc775566502305"
+    },
+    {
+      "bytes": 82,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": true,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/__init__.py",
+      "sha256": "de648dcf698ec1ed82b7ea75ab251759e245292196ef493e254886b8387de02a"
+    },
+    {
+      "bytes": 1727,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/syntax.txt",
+      "sha256": "74a5614935d7ec1e9730285787eac4f28607562b7d55456edd605c46c77e82f9"
+    },
+    {
+      "bytes": 1141,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/test_commands.py",
+      "sha256": "d27f2f86d21293fa9a47aaaabfd50b61a934f67a46be186b2e9017befa9542dd"
+    },
+    {
+      "bytes": 3321,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/test_data.py",
+      "sha256": "d71d70cce7a028f9b3f7f3274e12a5b2314d540826eaa1165854401e564be742"
+    },
+    {
+      "bytes": 1060,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/test_walks.py",
+      "sha256": "cf8bc54a8a1cf631e97688a822e7505eb3dd8435ef35abdd816cbc5ff36ebccd"
+    },
+    {
+      "bytes": 40802,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/vignettes.txt",
+      "sha256": "4f3a656184d6c3f58e81638a574e1e3e6737d49106326f6566d6cffab0af9398"
+    },
+    {
+      "bytes": 93838,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/walkthrough1.txt",
+      "sha256": "f6cd54db3feb562595f2ab7b6547ef96f0b372c348e468e4aa6e63f9fa4b286f"
+    },
+    {
+      "bytes": 34501,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/walkthrough2.txt",
+      "sha256": "763db8f7cbb86627f160fdc5ebae65ff26a853cc179368783a7210b1cc1340f5"
+    },
+    {
+      "bytes": 8998,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/walkthrough3.txt",
+      "sha256": "6770deebb7bdd03511ae3fba71142aa7786d7b49950daf046387d1ecbe7049bf"
+    },
+    {
+      "bytes": 9372,
+      "copyright": "Copyright 2010-2015 Brandon Rhodes; original Adventure content is public domain",
+      "license": "Apache-2.0 AND LicenseRef-Public-Domain",
+      "modified": false,
+      "origin": "Adventure 1.7",
+      "path": "scripts/runtime/adventure/tests/walkthrough4.txt",
+      "sha256": "eb2cdb60011c788a02e8dfbc24f6dd1dcd50f91daa7da2181f2af74a551e61a8"
+    }
+  ],
+  "schema": 1,
+  "sources": [
+    {
+      "archive": "adventure-1.7.tar.gz",
+      "archive_sha256": "fba584064d3b8b1ef6b62f6df6099092522d6bd3bce0525db002c54dc29ac6a1",
+      "name": "adventure",
+      "url": "https://files.pythonhosted.org/packages/source/a/adventure/adventure-1.7.tar.gz",
+      "version": "1.7"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Executive Blue",
+  "colors": {
+    "background": "F7F9FC",
+    "ink": "172033",
+    "muted": "5F6B7A",
+    "primary": "155EEF",
+    "primary_dark": "0B3B8C",
+    "secondary": "14B8A6",
+    "accent": "F97316",
+    "success": "16A34A",
+    "warning": "F59E0B",
+    "danger": "DC2626",
+    "line": "D7DEE8",
+    "white": "FFFFFF"
+  },
+  "fonts": {
+    "title": "Aptos Display",
+    "body": "Aptos"
+  },
+  "layout": {
+    "slide_width": 13.333,
+    "slide_height": 7.5,
+    "margin": 0.45
+  }
+}

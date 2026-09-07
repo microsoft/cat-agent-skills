@@ -1,0 +1,243 @@
+{
+  "title": "Power Platform Adoption at KONE",
+  "author": "Ferran Chopo",
+  "date": "2026-07-14",
+  "slides": [
+    {
+      "layout": "title",
+      "title": "Power Platform Adoption at KONE",
+      "subtitle": "From ideas to enterprise-grade solutions",
+      "author": "Ferran Chopo | Forward Forever",
+      "date": "July 2026"
+    },
+    {
+      "layout": "agenda",
+      "title": "Agenda",
+      "subtitle": "What we'll cover today",
+      "items": [
+        "Where we started",
+        "What we've built",
+        "Idea Incubation model",
+        "Hackathon highlights",
+        "Roadmap for FY26"
+      ]
+    },
+    {
+      "layout": "section",
+      "title": "Where we started",
+      "subtitle": "Baseline in early 2025"
+    },
+    {
+      "layout": "content",
+      "title": "Adoption pillars",
+      "subtitle": "Four workstreams running in parallel",
+      "bullets": [
+        "Webinars for makers across regions",
+        "Citizen Development Idea Challenge",
+        "PowerUp Hackathon with SME coaching",
+        "Idea incubation sessions per team",
+        "Roadshows tailored to business units"
+      ],
+      "notes": "Emphasise that all four pillars feed the same backlog."
+    },
+    {
+      "layout": "two-column",
+      "title": "Backlog snapshot",
+      "columns": [
+        {
+          "title": "By product",
+          "bullets": [
+            "Power BI",
+            "Power Apps",
+            "Power Automate"
+          ]
+        },
+        {
+          "title": "By opportunity",
+          "bullets": [
+            "Automation of manual work",
+            "Reporting consolidation",
+            "New citizen-built tools"
+          ]
+        }
+      ]
+    },
+    {
+      "layout": "cards",
+      "title": "Idea Incubation model",
+      "cards": [
+        {
+          "title": "Discover",
+          "body": "Team surfaces pain points and ideas."
+        },
+        {
+          "title": "Shape",
+          "body": "SME workshops turn ideas into a PoC scope."
+        },
+        {
+          "title": "Build",
+          "body": "Maker + SME pair produce a PoC in weeks."
+        },
+        {
+          "title": "Scale",
+          "body": "Governance review, then production rollout."
+        }
+      ]
+    },
+    {
+      "layout": "quote",
+      "quote": "Adoption grows when makers see their ideas become real tools their teammates rely on.",
+      "attribution": "KONE PowerUp participant, 2025"
+    },
+    {
+      "layout": "chart",
+      "title": "Monthly active makers",
+      "subtitle": "Trend across the first half of 2026",
+      "chart": {
+        "type": "line",
+        "categories": [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun"
+        ],
+        "series": [
+          {
+            "name": "Finland",
+            "values": [
+              42,
+              48,
+              55,
+              63,
+              70,
+              78
+            ]
+          },
+          {
+            "name": "Spain",
+            "values": [
+              18,
+              22,
+              27,
+              30,
+              34,
+              39
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "layout": "chart",
+      "title": "Ideas per product per quarter",
+      "subtitle": "Stacked view of the full pipeline",
+      "chart": {
+        "type": "column",
+        "stacked": true,
+        "categories": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ],
+        "series": [
+          {
+            "name": "Ideas",
+            "values": [
+              12,
+              18,
+              22,
+              30
+            ]
+          },
+          {
+            "name": "In progress",
+            "values": [
+              4,
+              8,
+              10,
+              14
+            ]
+          },
+          {
+            "name": "Done",
+            "values": [
+              2,
+              5,
+              7,
+              12
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "layout": "chart",
+      "title": "Backlog by product",
+      "subtitle": "Q3 2026 snapshot",
+      "chart": {
+        "type": "column",
+        "categories": [
+          "Power BI",
+          "Power Apps",
+          "Power Automate",
+          "Copilot Studio"
+        ],
+        "series": [
+          {
+            "name": "Ideas",
+            "values": [
+              42,
+              31,
+              18,
+              5
+            ]
+          },
+          {
+            "name": "Delivered",
+            "values": [
+              12,
+              9,
+              6,
+              1
+            ]
+          }
+        ]
+      },
+      "notes": "Copilot Studio backlog is small but growing fast."
+    },
+    {
+      "layout": "chart",
+      "title": "Adoption effort split",
+      "subtitle": "Where the team's time went in Q3",
+      "chart": {
+        "type": "donut",
+        "categories": [
+          "Webinars",
+          "Hackathon",
+          "Incubation",
+          "Roadshows"
+        ],
+        "series": [
+          {
+            "name": "Effort",
+            "values": [
+              25,
+              35,
+              25,
+              15
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "layout": "closing",
+      "title": "Thank you",
+      "subtitle": "Let's build the next wave together",
+      "contact": "ferran.chopo@forwardforever.com"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "distribution": "exponential",
+  "scale": 4.2,
+  "simulations": 10000,
+  "chart_title": "Time between support tickets (hours)",
+  "x_axis_label": "Hours",
+  "html": true
+}

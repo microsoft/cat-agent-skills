@@ -1,0 +1,10 @@
+{
+  "distribution": "triangular",
+  "low": 12,
+  "peak": 18,
+  "high": 45,
+  "simulations": 10000,
+  "chart_title": "Cloud migration duration (days)",
+  "x_axis_label": "Days",
+  "out_prefix": "sample_triangular"
+}

@@ -1,0 +1,8 @@
+{
+  "distribution": "poisson",
+  "lambda": 3.5,
+  "simulations": 10000,
+  "chart_title": "Server outages per month",
+  "x_axis_label": "Outage count",
+  "html": true
+}

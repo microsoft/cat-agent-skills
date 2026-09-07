@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "defaults": {
+    "powerpoint": null,
+    "word": null
+  },
+  "templates": [
+    {
+      "id": "default-powerpoint-template",
+      "enabled": false,
+      "format": "powerpoint",
+      "inspectionMode": "auto",
+      "brandRules": {
+        "brandName": "{{BRAND_NAME}}",
+        "titleFont": "{{POWERPOINT_TITLE_FONT}}",
+        "bodyFont": "{{POWERPOINT_BODY_FONT}}",
+        "primaryColor": "{{PRIMARY_COLOR_HEX}}",
+        "secondaryColor": "{{SECONDARY_COLOR_HEX}}",
+        "accentColor": "{{ACCENT_COLOR_HEX}}",
+        "additionalGuidance": "{{POWERPOINT_BRAND_GUIDANCE}}"
+      },
+      "sources": [
+        {
+          "type": "sharepointKnowledge",
+          "url": "{{POWERPOINT_TEMPLATE_SHAREPOINT_URL}}",
+          "fileName": "{{POWERPOINT_TEMPLATE_FILE_NAME}}",
+          "knowledgeSourceName": "{{SHAREPOINT_KNOWLEDGE_SOURCE_NAME}}"
+        }
+      ],
+      "priority": 100,
+      "useWhen": [
+        "branded presentation",
+        "organization presentation",
+        "marketing presentation",
+        "community presentation",
+        "communications presentation",
+        "executive presentation",
+        "customer presentation",
+        "PowerPoint presentation",
+        "slide deck",
+        "presentation",
+        "deck",
+        "slides"
+      ]
+    },
+    {
+      "id": "executive-summary-presentation",
+      "enabled": false,
+      "format": "powerpoint",
+      "sources": [
+        {
+          "type": "sharepointKnowledge",
+          "url": "{{EXECUTIVE_SUMMARY_PPT_SHAREPOINT_URL}}",
+          "fileName": "{{EXECUTIVE_SUMMARY_PPT_FILE_NAME}}",
+          "knowledgeSourceName": "{{SHAREPOINT_KNOWLEDGE_SOURCE_NAME}}"
+        }
+      ],
+      "priority": 200,
+      "useWhen": [
+        "executive summary presentation",
+        "leadership summary",
+        "board presentation",
+        "executive briefing"
+      ]
+    },
+    {
+      "id": "deep-dive-presentation",
+      "enabled": false,
+      "format": "powerpoint",
+      "sources": [
+        {
+          "type": "sharepointKnowledge",
+          "url": "{{DEEP_DIVE_PPT_SHAREPOINT_URL}}",
+          "fileName": "{{DEEP_DIVE_PPT_FILE_NAME}}",
+          "knowledgeSourceName": "{{SHAREPOINT_KNOWLEDGE_SOURCE_NAME}}"
+        }
+      ],
+      "priority": 200,
+      "useWhen": [
+        "deep dive presentation",
+        "technical deep dive",
+        "detailed analysis deck",
+        "solution architecture presentation"
+      ]
+    },
+    {
+      "id": "marketing-presentation",
+      "enabled": false,
+      "format": "powerpoint",
+      "sources": [
+        {
+          "type": "sharepointKnowledge",
+          "url": "{{MARKETING_PPT_SHAREPOINT_URL}}",
+          "fileName": "{{MARKETING_PPT_FILE_NAME}}",
+          "knowledgeSourceName": "{{SHAREPOINT_KNOWLEDGE_SOURCE_NAME}}"
+        }
+      ],
+      "priority": 200,
+      "useWhen": [
+        "marketing presentation",
+        "campaign deck",
+        "launch presentation",
+        "brand presentation"
+      ]
+    },
+    {
+      "id": "statement-of-work-document",
+      "enabled": false,
+      "format": "word",
+      "sources": [
+        {
+          "type": "sharepointKnowledge",
+          "url": "{{SOW_DOCX_SHAREPOINT_URL}}",
+          "fileName": "{{SOW_DOCX_FILE_NAME}}",
+          "knowledgeSourceName": "{{SHAREPOINT_KNOWLEDGE_SOURCE_NAME}}"
+        }
+      ],
+      "priority": 200,
+      "useWhen": [
+        "statement of work",
+        "SOW",
+        "scope of work",
+        "services agreement"
+      ]
+    },
+    {
+      "id": "formal-letter-document",
+      "enabled": false,
+      "format": "word",
+      "sources": [
+        {
+          "type": "sharepointKnowledge",
+          "url": "{{FORMAL_LETTER_DOCX_SHAREPOINT_URL}}",
+          "fileName": "{{FORMAL_LETTER_DOCX_FILE_NAME}}",
+          "knowledgeSourceName": "{{SHAREPOINT_KNOWLEDGE_SOURCE_NAME}}"
+        }
+      ],
+      "priority": 200,
+      "useWhen": [
+        "formal letter",
+        "business letter",
+        "customer letter",
+        "official correspondence"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1809 @@
+{
+  "schemaVersion": "1.0",
+  "snapshotId": "2026-07-14T07-27-33Z",
+  "capturedAt": "2026-07-14T07:27:33Z",
+  "skillVersion": "0.1.0",
+  "probeSuiteVersion": "0.1.0",
+  "catalogVersion": "1.1",
+  "runtime": {
+    "pythonVersion": "3.12.9",
+    "implementation": "CPython",
+    "platform": "Linux-6.12.8+-x86_64-with-glibc2.38",
+    "machine": "x86_64"
+  },
+  "pythonLibraries": [
+    {
+      "id": "python.package:annotated-doc",
+      "name": "annotated-doc",
+      "version": "0.0.4",
+      "status": "available",
+      "importName": "annotated_doc",
+      "category": "Utilities",
+      "description": "Attach inline documentation to values using the typing Annotated hint.",
+      "documentationUrl": "https://github.com/fastapi/annotated-doc",
+      "tags": [
+        "typing",
+        "documentation"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:annotated-types",
+      "name": "annotated-types",
+      "version": "0.7.0",
+      "status": "available",
+      "importName": "annotated_types",
+      "category": "Utilities",
+      "description": "Reusable constraint types for use with typing Annotated.",
+      "documentationUrl": "https://github.com/annotated-types/annotated-types",
+      "tags": [
+        "typing",
+        "validation"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:anyio",
+      "name": "anyio",
+      "version": "4.14.1",
+      "status": "available",
+      "importName": "anyio",
+      "category": "Networking",
+      "description": "Asynchronous concurrency and networking layer over asyncio and Trio.",
+      "documentationUrl": "https://anyio.readthedocs.io/",
+      "tags": [
+        "async",
+        "concurrency",
+        "networking"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:beautifulsoup4",
+      "name": "beautifulsoup4",
+      "version": "4.15.0",
+      "status": "available",
+      "importName": "bs4",
+      "category": "Web",
+      "description": "Parse and navigate HTML and XML documents.",
+      "documentationUrl": "https://www.crummy.com/software/BeautifulSoup/bs4/doc/",
+      "tags": [
+        "html",
+        "scraping",
+        "parsing"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:certifi",
+      "name": "certifi",
+      "version": "2026.6.17",
+      "status": "available",
+      "importName": "certifi",
+      "category": "Security",
+      "description": "Curated collection of Mozilla root CA certificates for TLS validation.",
+      "documentationUrl": "https://github.com/certifi/python-certifi",
+      "tags": [
+        "tls",
+        "certificates",
+        "security"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:cffi",
+      "name": "cffi",
+      "version": "2.1.0",
+      "status": "available",
+      "importName": "cffi",
+      "category": "Utilities",
+      "description": "Foreign Function Interface for calling C code from Python.",
+      "documentationUrl": "https://cffi.readthedocs.io/",
+      "tags": [
+        "ffi",
+        "c",
+        "bindings"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:charset-normalizer",
+      "name": "charset-normalizer",
+      "version": "3.4.9",
+      "status": "available",
+      "importName": "charset_normalizer",
+      "category": "Utilities",
+      "description": "Character-set detection and text encoding normalization.",
+      "documentationUrl": "https://charset-normalizer.readthedocs.io/",
+      "tags": [
+        "encoding",
+        "text"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:click",
+      "name": "click",
+      "version": "8.4.2",
+      "status": "available",
+      "importName": "click",
+      "category": "Utilities",
+      "description": "Composable toolkit for building command-line interfaces.",
+      "documentationUrl": "https://click.palletsprojects.com/",
+      "tags": [
+        "cli",
+        "commands"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:cobble",
+      "name": "cobble",
+      "version": "0.1.4",
+      "status": "available",
+      "importName": "cobble",
+      "category": "Utilities",
+      "description": "Create Python data objects with generated equality and repr methods.",
+      "documentationUrl": "https://github.com/mwilliamson/python-cobble",
+      "tags": [
+        "data",
+        "objects"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:contourpy",
+      "name": "contourpy",
+      "version": "1.3.3",
+      "status": "available",
+      "importName": "contourpy",
+      "category": "Visualization",
+      "description": "Calculate contour lines and filled contours from 2D grids.",
+      "documentationUrl": "https://contourpy.readthedocs.io/",
+      "tags": [
+        "contours",
+        "plotting"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:cryptography",
+      "name": "cryptography",
+      "version": "49.0.0",
+      "status": "available",
+      "importName": "cryptography",
+      "category": "Security",
+      "description": "Cryptographic recipes and primitives for Python.",
+      "documentationUrl": "https://cryptography.io/",
+      "tags": [
+        "crypto",
+        "encryption",
+        "security"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:cycler",
+      "name": "cycler",
+      "version": "0.12.1",
+      "status": "available",
+      "importName": "cycler",
+      "category": "Visualization",
+      "description": "Composable style cycles used by Matplotlib.",
+      "documentationUrl": "https://matplotlib.org/cycler/",
+      "tags": [
+        "plotting",
+        "styles"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:defusedxml",
+      "name": "defusedxml",
+      "version": "0.7.1",
+      "status": "available",
+      "importName": "defusedxml",
+      "category": "Security",
+      "description": "XML parsing hardened against denial-of-service and entity-expansion attacks.",
+      "documentationUrl": "https://github.com/tiran/defusedxml",
+      "tags": [
+        "xml",
+        "security"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:dracarys",
+      "name": "dracarys",
+      "version": "0.1.0",
+      "status": "available",
+      "importName": "dracarys",
+      "category": "AI",
+      "description": "Copilot Studio enhanced orchestrator that powers the agent.",
+      "documentationUrl": "https://learn.microsoft.com/microsoft-copilot-studio/agents-experience/overview",
+      "tags": [
+        "orchestrator",
+        "copilot-studio",
+        "agent"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:et-xmlfile",
+      "name": "et_xmlfile",
+      "version": "2.0.0",
+      "status": "available",
+      "importName": "et_xmlfile",
+      "category": "Office documents",
+      "description": "Low-memory helper for writing large XML files, used by openpyxl.",
+      "documentationUrl": "https://foss.heptapod.net/openpyxl/et_xmlfile",
+      "tags": [
+        "xml",
+        "excel"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:fastapi",
+      "name": "fastapi",
+      "version": "0.139.0",
+      "status": "available",
+      "importName": "fastapi",
+      "category": "Web",
+      "description": "Modern high-performance web framework for building APIs with type hints.",
+      "documentationUrl": "https://fastapi.tiangolo.com/",
+      "tags": [
+        "api",
+        "web",
+        "async"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:fastembed",
+      "name": "fastembed",
+      "version": "0.8.0",
+      "status": "available",
+      "importName": "fastembed",
+      "category": "AI",
+      "description": "Lightweight, fast library for generating text and image embeddings.",
+      "documentationUrl": "https://github.com/qdrant/fastembed",
+      "tags": [
+        "embeddings",
+        "nlp"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:filelock",
+      "name": "filelock",
+      "version": "3.29.7",
+      "status": "available",
+      "importName": "filelock",
+      "category": "Utilities",
+      "description": "Platform-independent advisory file locking mechanism.",
+      "documentationUrl": "https://py-filelock.readthedocs.io/",
+      "tags": [
+        "locking",
+        "concurrency"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:flatbuffers",
+      "name": "flatbuffers",
+      "version": "25.12.19",
+      "status": "available",
+      "importName": "flatbuffers",
+      "category": "Serialization",
+      "description": "Memory-efficient cross-platform serialization library.",
+      "documentationUrl": "https://flatbuffers.dev/",
+      "tags": [
+        "serialization",
+        "binary"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:fonttools",
+      "name": "fonttools",
+      "version": "4.63.0",
+      "status": "available",
+      "importName": "fontTools",
+      "category": "Utilities",
+      "description": "Read, write, and manipulate TrueType and OpenType fonts.",
+      "documentationUrl": "https://fonttools.readthedocs.io/",
+      "tags": [
+        "fonts",
+        "typography"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:fsspec",
+      "name": "fsspec",
+      "version": "2026.6.0",
+      "status": "available",
+      "importName": "fsspec",
+      "category": "Utilities",
+      "description": "Unified pythonic interface to local, remote, and embedded filesystems.",
+      "documentationUrl": "https://filesystem-spec.readthedocs.io/",
+      "tags": [
+        "filesystem",
+        "storage"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:github-copilot-sdk",
+      "name": "github-copilot-sdk",
+      "version": "1.0.2",
+      "status": "available",
+      "importName": "copilot",
+      "category": "AI",
+      "description": "Python SDK for programmatic control of the GitHub Copilot CLI over JSON-RPC.",
+      "documentationUrl": "https://github.com/github/copilot-sdk",
+      "tags": [
+        "copilot",
+        "sdk",
+        "agent"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:grpcio",
+      "name": "grpcio",
+      "version": "1.82.1",
+      "status": "available",
+      "importName": "grpc",
+      "category": "Networking",
+      "description": "gRPC framework for high-performance remote procedure calls.",
+      "documentationUrl": "https://grpc.io/",
+      "tags": [
+        "rpc",
+        "networking"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:grpcio-tools",
+      "name": "grpcio-tools",
+      "version": "1.82.1",
+      "status": "available",
+      "importName": "grpc_tools",
+      "category": "Networking",
+      "description": "Protocol Buffers and gRPC code-generation tools for Python.",
+      "documentationUrl": "https://grpc.io/",
+      "tags": [
+        "rpc",
+        "protobuf",
+        "codegen"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:h11",
+      "name": "h11",
+      "version": "0.16.0",
+      "status": "available",
+      "importName": "h11",
+      "category": "Networking",
+      "description": "Pure-Python, spec-compliant HTTP/1.1 protocol implementation.",
+      "documentationUrl": "https://h11.readthedocs.io/",
+      "tags": [
+        "http",
+        "protocol"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:hf-xet",
+      "name": "hf-xet",
+      "version": "1.5.1",
+      "status": "available",
+      "importName": "hf_xet",
+      "category": "AI",
+      "description": "Xet storage backend for fast Hugging Face Hub uploads and downloads.",
+      "documentationUrl": "https://github.com/huggingface/xet-core",
+      "tags": [
+        "huggingface",
+        "storage"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:httpcore",
+      "name": "httpcore",
+      "version": "1.0.9",
+      "status": "available",
+      "importName": "httpcore",
+      "category": "Networking",
+      "description": "Minimal low-level HTTP client that powers the HTTPX transport.",
+      "documentationUrl": "https://www.encode.io/httpcore/",
+      "tags": [
+        "http",
+        "client"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:httptools",
+      "name": "httptools",
+      "version": "0.8.0",
+      "status": "available",
+      "importName": "httptools",
+      "category": "Networking",
+      "description": "Fast HTTP request and response parser based on the Node.js parser.",
+      "documentationUrl": "https://github.com/MagicStack/httptools",
+      "tags": [
+        "http",
+        "parser"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:httpx",
+      "name": "httpx",
+      "version": "0.28.1",
+      "status": "available",
+      "importName": "httpx",
+      "category": "Networking",
+      "description": "Next-generation HTTP client with sync and async support.",
+      "documentationUrl": "https://www.python-httpx.org/",
+      "tags": [
+        "http",
+        "async",
+        "client"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:huggingface-hub",
+      "name": "huggingface_hub",
+      "version": "1.23.0",
+      "status": "available",
+      "importName": "huggingface_hub",
+      "category": "AI",
+      "description": "Client for sharing and downloading models and datasets on the Hugging Face Hub.",
+      "documentationUrl": "https://huggingface.co/docs/huggingface_hub",
+      "tags": [
+        "huggingface",
+        "models"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:idna",
+      "name": "idna",
+      "version": "3.18",
+      "status": "available",
+      "importName": "idna",
+      "category": "Networking",
+      "description": "Internationalized Domain Names in Applications (IDNA) encoding support.",
+      "documentationUrl": "https://github.com/kjd/idna",
+      "tags": [
+        "dns",
+        "encoding"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:jinja2",
+      "name": "Jinja2",
+      "version": "3.1.6",
+      "status": "available",
+      "importName": "jinja2",
+      "category": "Utilities",
+      "description": "Templating engine for generating text and HTML output.",
+      "documentationUrl": "https://jinja.palletsprojects.com/",
+      "tags": [
+        "template",
+        "html",
+        "rendering"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:kiwisolver",
+      "name": "kiwisolver",
+      "version": "1.5.0",
+      "status": "available",
+      "importName": "kiwisolver",
+      "category": "Visualization",
+      "description": "Fast implementation of the Cassowary constraint solver used by Matplotlib.",
+      "documentationUrl": "https://kiwisolver.readthedocs.io/",
+      "tags": [
+        "layout",
+        "solver"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:loguru",
+      "name": "loguru",
+      "version": "0.7.3",
+      "status": "available",
+      "importName": "loguru",
+      "category": "Utilities",
+      "description": "Simplified, opinionated logging for Python.",
+      "documentationUrl": "https://loguru.readthedocs.io/",
+      "tags": [
+        "logging"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:lxml",
+      "name": "lxml",
+      "version": "6.1.1",
+      "status": "available",
+      "importName": "lxml",
+      "category": "Web",
+      "description": "Fast XML and HTML parsing and XPath querying.",
+      "documentationUrl": "https://lxml.de/",
+      "tags": [
+        "xml",
+        "html",
+        "xpath"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:magika",
+      "name": "magika",
+      "version": "0.6.3",
+      "status": "available",
+      "importName": "magika",
+      "category": "AI",
+      "description": "Deep-learning-based file content type detection from Google.",
+      "documentationUrl": "https://google.github.io/magika/",
+      "tags": [
+        "file-type",
+        "detection"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:mammoth",
+      "name": "mammoth",
+      "version": "1.12.0",
+      "status": "available",
+      "importName": "mammoth",
+      "category": "Office documents",
+      "description": "Convert Word .docx documents to HTML or Markdown.",
+      "documentationUrl": "https://github.com/mwilliamson/python-mammoth",
+      "tags": [
+        "word",
+        "docx",
+        "convert"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:markdownify",
+      "name": "markdownify",
+      "version": "1.2.3",
+      "status": "available",
+      "importName": "markdownify",
+      "category": "Documents",
+      "description": "Convert HTML into Markdown.",
+      "documentationUrl": "https://github.com/matthewwithanm/python-markdownify",
+      "tags": [
+        "html",
+        "markdown"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:markitdown",
+      "name": "markitdown",
+      "version": "0.1.6",
+      "status": "available",
+      "importName": "markitdown",
+      "category": "Documents",
+      "description": "Convert files and Office documents to Markdown for LLM workflows.",
+      "documentationUrl": "https://github.com/microsoft/markitdown",
+      "tags": [
+        "markdown",
+        "convert"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:markupsafe",
+      "name": "MarkupSafe",
+      "version": "3.0.3",
+      "status": "available",
+      "importName": "markupsafe",
+      "category": "Web",
+      "description": "Safely add untrusted strings to HTML and XML markup.",
+      "documentationUrl": "https://markupsafe.palletsprojects.com/",
+      "tags": [
+        "html",
+        "escaping"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:matplotlib",
+      "name": "matplotlib",
+      "version": "3.11.0",
+      "status": "available",
+      "importName": "matplotlib",
+      "category": "Visualization",
+      "description": "Comprehensive library for creating static and animated plots.",
+      "documentationUrl": "https://matplotlib.org/stable/",
+      "tags": [
+        "plot",
+        "chart",
+        "visualization"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:mmh3",
+      "name": "mmh3",
+      "version": "5.2.1",
+      "status": "available",
+      "importName": "mmh3",
+      "category": "Utilities",
+      "description": "Python bindings for the MurmurHash3 non-cryptographic hash.",
+      "documentationUrl": "https://github.com/hajimes/mmh3",
+      "tags": [
+        "hashing"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:mpmath",
+      "name": "mpmath",
+      "version": "1.3.0",
+      "status": "available",
+      "importName": "mpmath",
+      "category": "Data science",
+      "description": "Arbitrary-precision floating-point arithmetic.",
+      "documentationUrl": "https://mpmath.org/",
+      "tags": [
+        "math",
+        "precision"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:narwhals",
+      "name": "narwhals",
+      "version": "2.23.0",
+      "status": "available",
+      "importName": "narwhals",
+      "category": "Data",
+      "description": "Compatibility layer for pandas, Polars, and other dataframe libraries.",
+      "documentationUrl": "https://narwhals-dev.github.io/narwhals/",
+      "tags": [
+        "dataframe",
+        "compatibility"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:noto-cjk-fonts",
+      "name": "noto-cjk-fonts",
+      "version": "1.0.0",
+      "status": "available",
+      "importName": "noto_cjk_fonts",
+      "category": "Documents",
+      "description": "Bundled Noto Sans and Serif CJK fonts for rendering Chinese, Japanese, and Korean text.",
+      "documentationUrl": "https://github.com/notofonts/noto-cjk",
+      "tags": [
+        "fonts",
+        "cjk"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:numpy",
+      "name": "numpy",
+      "version": "2.5.1",
+      "status": "available",
+      "importName": "numpy",
+      "category": "Data science",
+      "description": "Fundamental package for array computing and numerical work.",
+      "documentationUrl": "https://numpy.org/doc/",
+      "tags": [
+        "array",
+        "math",
+        "numeric"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:onnxruntime",
+      "name": "onnxruntime",
+      "version": "1.27.0",
+      "status": "available",
+      "importName": "onnxruntime",
+      "category": "AI",
+      "description": "Cross-platform inference and training accelerator for ONNX models.",
+      "documentationUrl": "https://onnxruntime.ai/",
+      "tags": [
+        "onnx",
+        "inference"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:opencv-python-headless",
+      "name": "opencv-python-headless",
+      "version": "5.0.0.93",
+      "status": "available",
+      "importName": "cv2",
+      "category": "Images",
+      "description": "OpenCV computer-vision library packaged without GUI dependencies.",
+      "documentationUrl": "https://docs.opencv.org/",
+      "tags": [
+        "computer-vision",
+        "images"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:openpyxl",
+      "name": "openpyxl",
+      "version": "3.1.5",
+      "status": "available",
+      "importName": "openpyxl",
+      "category": "Office documents",
+      "description": "Read, create, and modify Excel .xlsx workbooks.",
+      "documentationUrl": "https://openpyxl.readthedocs.io/",
+      "tags": [
+        "excel",
+        "spreadsheet",
+        "office"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:orjson",
+      "name": "orjson",
+      "version": "3.11.9",
+      "status": "available",
+      "importName": "orjson",
+      "category": "Serialization",
+      "description": "Fast JSON serialization library implemented in Rust.",
+      "documentationUrl": "https://github.com/ijl/orjson",
+      "tags": [
+        "json",
+        "serialization"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:packaging",
+      "name": "packaging",
+      "version": "26.2",
+      "status": "available",
+      "importName": "packaging",
+      "category": "Utilities",
+      "description": "Core utilities for Python package versions, specifiers, and markers.",
+      "documentationUrl": "https://packaging.pypa.io/",
+      "tags": [
+        "packaging",
+        "versions"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pandas",
+      "name": "pandas",
+      "version": "3.0.4",
+      "status": "available",
+      "importName": "pandas",
+      "category": "Data science",
+      "description": "Fast, flexible data structures for tabular data analysis.",
+      "documentationUrl": "https://pandas.pydata.org/docs/",
+      "tags": [
+        "dataframe",
+        "analysis",
+        "tabular"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pdfminer-six",
+      "name": "pdfminer.six",
+      "version": "20260107",
+      "status": "available",
+      "importName": "pdfminer",
+      "category": "Documents",
+      "description": "Extract text, layout, and metadata from PDF files.",
+      "documentationUrl": "https://pdfminersix.readthedocs.io/",
+      "tags": [
+        "pdf",
+        "extraction"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pdfplumber",
+      "name": "pdfplumber",
+      "version": "0.11.10",
+      "status": "available",
+      "importName": "pdfplumber",
+      "category": "Documents",
+      "description": "Extract text, tables, and shapes from PDFs, built on pdfminer.six.",
+      "documentationUrl": "https://github.com/jsvine/pdfplumber",
+      "tags": [
+        "pdf",
+        "tables"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pillow",
+      "name": "pillow",
+      "version": "12.3.0",
+      "status": "available",
+      "importName": "PIL",
+      "category": "Images",
+      "description": "Image processing library for opening, editing, and saving images.",
+      "documentationUrl": "https://pillow.readthedocs.io/",
+      "tags": [
+        "image",
+        "graphics",
+        "photo"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:plotly",
+      "name": "plotly",
+      "version": "6.9.0",
+      "status": "available",
+      "importName": "plotly",
+      "category": "Visualization",
+      "description": "Interactive, browser-based charting and plotting library.",
+      "documentationUrl": "https://plotly.com/python/",
+      "tags": [
+        "charts",
+        "interactive"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:protobuf",
+      "name": "protobuf",
+      "version": "7.36.0rc1",
+      "status": "available",
+      "importName": "google.protobuf",
+      "category": "Serialization",
+      "description": "Google Protocol Buffers language-neutral data serialization.",
+      "documentationUrl": "https://protobuf.dev/",
+      "tags": [
+        "serialization",
+        "protobuf"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:py-rust-stemmers",
+      "name": "py_rust_stemmers",
+      "version": "0.1.8",
+      "status": "available",
+      "importName": "py_rust_stemmers",
+      "category": "AI",
+      "description": "Fast Snowball word stemmers implemented in Rust.",
+      "documentationUrl": "https://github.com/qdrant/py-rust-stemmers",
+      "tags": [
+        "nlp",
+        "stemming"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pyarrow",
+      "name": "pyarrow",
+      "version": "25.0.0",
+      "status": "available",
+      "importName": "pyarrow",
+      "category": "Data",
+      "description": "Python bindings for Apache Arrow columnar in-memory data.",
+      "documentationUrl": "https://arrow.apache.org/docs/python/",
+      "tags": [
+        "arrow",
+        "columnar"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pyclipper",
+      "name": "pyclipper",
+      "version": "1.4.0",
+      "status": "available",
+      "importName": "pyclipper",
+      "category": "Images",
+      "description": "Python wrapper for the Clipper polygon clipping and offsetting library.",
+      "documentationUrl": "https://github.com/fonttools/pyclipper",
+      "tags": [
+        "geometry",
+        "polygons"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pycparser",
+      "name": "pycparser",
+      "version": "3.0",
+      "status": "available",
+      "importName": "pycparser",
+      "category": "Utilities",
+      "description": "Complete C99 parser written in pure Python.",
+      "documentationUrl": "https://github.com/eliben/pycparser",
+      "tags": [
+        "c",
+        "parser"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pydantic",
+      "name": "pydantic",
+      "version": "2.14.0a1",
+      "status": "available",
+      "importName": "pydantic",
+      "category": "Utilities",
+      "description": "Data validation and settings management using type hints.",
+      "documentationUrl": "https://docs.pydantic.dev/",
+      "tags": [
+        "validation",
+        "schema",
+        "typing"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pydantic-core",
+      "name": "pydantic_core",
+      "version": "2.47.0",
+      "status": "available",
+      "importName": "pydantic_core",
+      "category": "Utilities",
+      "description": "Rust-based validation core that powers Pydantic v2.",
+      "documentationUrl": "https://github.com/pydantic/pydantic-core",
+      "tags": [
+        "validation",
+        "core"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pydantic-settings",
+      "name": "pydantic-settings",
+      "version": "2.14.2",
+      "status": "available",
+      "importName": "pydantic_settings",
+      "category": "Utilities",
+      "description": "Settings management using Pydantic models and environment variables.",
+      "documentationUrl": "https://docs.pydantic.dev/latest/concepts/pydantic_settings/",
+      "tags": [
+        "settings",
+        "config"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pyjwt",
+      "name": "PyJWT",
+      "version": "2.13.0",
+      "status": "available",
+      "importName": "jwt",
+      "category": "Security",
+      "description": "Encode and decode JSON Web Tokens (JWT).",
+      "documentationUrl": "https://pyjwt.readthedocs.io/",
+      "tags": [
+        "jwt",
+        "auth",
+        "security"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pyparsing",
+      "name": "pyparsing",
+      "version": "3.3.2",
+      "status": "available",
+      "importName": "pyparsing",
+      "category": "Utilities",
+      "description": "Library for creating and executing grammar-based text parsers.",
+      "documentationUrl": "https://pyparsing-docs.readthedocs.io/",
+      "tags": [
+        "parsing",
+        "grammar"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pypdf",
+      "name": "pypdf",
+      "version": "6.14.2",
+      "status": "available",
+      "importName": "pypdf",
+      "category": "Documents",
+      "description": "Read, split, merge, and transform PDF files in pure Python.",
+      "documentationUrl": "https://pypdf.readthedocs.io/",
+      "tags": [
+        "pdf",
+        "document",
+        "merge"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pypdfium2",
+      "name": "pypdfium2",
+      "version": "5.11.0",
+      "status": "available",
+      "importName": "pypdfium2",
+      "category": "Documents",
+      "description": "Python bindings to PDFium for rendering and inspecting PDFs.",
+      "documentationUrl": "https://pypdfium2.readthedocs.io/",
+      "tags": [
+        "pdf",
+        "rendering"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:python-dateutil",
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "status": "available",
+      "importName": "dateutil",
+      "category": "Utilities",
+      "description": "Powerful extensions to the standard datetime module.",
+      "documentationUrl": "https://dateutil.readthedocs.io/",
+      "tags": [
+        "date",
+        "time",
+        "parsing"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:python-docx",
+      "name": "python-docx",
+      "version": "1.2.0",
+      "status": "available",
+      "importName": "docx",
+      "category": "Office documents",
+      "description": "Create and manage Microsoft Word .docx files.",
+      "documentationUrl": "https://python-docx.readthedocs.io/",
+      "tags": [
+        "word",
+        "office",
+        "document"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:python-dotenv",
+      "name": "python-dotenv",
+      "version": "1.2.2",
+      "status": "available",
+      "importName": "dotenv",
+      "category": "Utilities",
+      "description": "Load environment variables from .env files.",
+      "documentationUrl": "https://saurabh-kumar.com/python-dotenv/",
+      "tags": [
+        "env",
+        "config"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:python-pptx",
+      "name": "python-pptx",
+      "version": "1.0.2",
+      "status": "available",
+      "importName": "pptx",
+      "category": "Office documents",
+      "description": "Create and update Microsoft PowerPoint .pptx presentations.",
+      "documentationUrl": "https://python-pptx.readthedocs.io/",
+      "tags": [
+        "powerpoint",
+        "slides",
+        "office"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:pyyaml",
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "status": "available",
+      "importName": "yaml",
+      "category": "Serialization",
+      "description": "YAML parser and emitter for Python.",
+      "documentationUrl": "https://pyyaml.org/wiki/PyYAMLDocumentation",
+      "tags": [
+        "yaml",
+        "config",
+        "serialization"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:rank-bm25",
+      "name": "rank-bm25",
+      "version": "0.2.2",
+      "status": "available",
+      "importName": "rank_bm25",
+      "category": "AI",
+      "description": "Collection of BM25 ranking algorithms for information retrieval.",
+      "documentationUrl": "https://github.com/dorianbrown/rank_bm25",
+      "tags": [
+        "search",
+        "ranking"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:rapidocr-onnxruntime",
+      "name": "rapidocr-onnxruntime",
+      "version": "1.4.4",
+      "status": "available",
+      "importName": "rapidocr_onnxruntime",
+      "category": "AI",
+      "description": "OCR toolkit running PaddleOCR models via ONNX Runtime.",
+      "documentationUrl": "https://github.com/RapidAI/RapidOCR",
+      "tags": [
+        "ocr",
+        "onnx"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:reportlab",
+      "name": "reportlab",
+      "version": "5.0.0",
+      "status": "available",
+      "importName": "reportlab",
+      "category": "Documents",
+      "description": "Generate PDF documents and graphics programmatically.",
+      "documentationUrl": "https://docs.reportlab.com/",
+      "tags": [
+        "pdf",
+        "generation",
+        "report"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:requests",
+      "name": "requests",
+      "version": "2.34.2",
+      "status": "available",
+      "importName": "requests",
+      "category": "Networking",
+      "description": "Simple, human-friendly HTTP client for Python.",
+      "documentationUrl": "https://requests.readthedocs.io/",
+      "tags": [
+        "http",
+        "web",
+        "client"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:seaborn",
+      "name": "seaborn",
+      "version": "0.13.2",
+      "status": "available",
+      "importName": "seaborn",
+      "category": "Visualization",
+      "description": "Statistical data visualization built on Matplotlib.",
+      "documentationUrl": "https://seaborn.pydata.org/",
+      "tags": [
+        "plotting",
+        "statistics"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:setuptools",
+      "name": "setuptools",
+      "version": "83.0.0",
+      "status": "available",
+      "importName": "setuptools",
+      "category": "Utilities",
+      "description": "Build system and packaging tools for Python projects.",
+      "documentationUrl": "https://setuptools.pypa.io/",
+      "tags": [
+        "packaging",
+        "build"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:shapely",
+      "name": "shapely",
+      "version": "2.1.2",
+      "status": "available",
+      "importName": "shapely",
+      "category": "Data",
+      "description": "Manipulation and analysis of planar geometric objects.",
+      "documentationUrl": "https://shapely.readthedocs.io/",
+      "tags": [
+        "geometry",
+        "gis"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:six",
+      "name": "six",
+      "version": "1.17.0",
+      "status": "available",
+      "importName": "six",
+      "category": "Utilities",
+      "description": "Python 2 and 3 compatibility helpers.",
+      "documentationUrl": "https://six.readthedocs.io/",
+      "tags": [
+        "compatibility"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:soupsieve",
+      "name": "soupsieve",
+      "version": "2.8.4",
+      "status": "available",
+      "importName": "soupsieve",
+      "category": "Web",
+      "description": "CSS selector library used by Beautiful Soup.",
+      "documentationUrl": "https://facelessuser.github.io/soupsieve/",
+      "tags": [
+        "css",
+        "selectors"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:starlette",
+      "name": "starlette",
+      "version": "1.3.1",
+      "status": "available",
+      "importName": "starlette",
+      "category": "Web",
+      "description": "Lightweight ASGI framework and toolkit that underpins FastAPI.",
+      "documentationUrl": "https://www.starlette.io/",
+      "tags": [
+        "asgi",
+        "web"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:sympy",
+      "name": "sympy",
+      "version": "1.14.0",
+      "status": "available",
+      "importName": "sympy",
+      "category": "Data science",
+      "description": "Symbolic mathematics and computer algebra system.",
+      "documentationUrl": "https://docs.sympy.org/",
+      "tags": [
+        "math",
+        "symbolic"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:tabulate",
+      "name": "tabulate",
+      "version": "0.10.0",
+      "status": "available",
+      "importName": "tabulate",
+      "category": "Utilities",
+      "description": "Pretty-print tabular data in a variety of text formats.",
+      "documentationUrl": "https://github.com/astanin/python-tabulate",
+      "tags": [
+        "tables",
+        "formatting"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:tokenizers",
+      "name": "tokenizers",
+      "version": "0.23.1",
+      "status": "available",
+      "importName": "tokenizers",
+      "category": "AI",
+      "description": "Fast, production-ready text tokenizers from Hugging Face.",
+      "documentationUrl": "https://huggingface.co/docs/tokenizers",
+      "tags": [
+        "nlp",
+        "tokenization"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:tqdm",
+      "name": "tqdm",
+      "version": "4.68.4",
+      "status": "available",
+      "importName": "tqdm",
+      "category": "Utilities",
+      "description": "Fast, extensible progress bar for loops and iterables.",
+      "documentationUrl": "https://tqdm.github.io/",
+      "tags": [
+        "progress",
+        "cli"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:typing-extensions",
+      "name": "typing_extensions",
+      "version": "4.16.0",
+      "status": "available",
+      "importName": "typing_extensions",
+      "category": "Utilities",
+      "description": "Backported and experimental type hints for older Python versions.",
+      "documentationUrl": "https://typing-extensions.readthedocs.io/",
+      "tags": [
+        "typing"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:typing-inspection",
+      "name": "typing-inspection",
+      "version": "0.4.2",
+      "status": "available",
+      "importName": "typing_inspection",
+      "category": "Utilities",
+      "description": "Runtime inspection utilities for typing annotations.",
+      "documentationUrl": "https://github.com/pydantic/typing-inspection",
+      "tags": [
+        "typing",
+        "introspection"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:tzdata",
+      "name": "tzdata",
+      "version": "2026.3",
+      "status": "available",
+      "importName": "tzdata",
+      "category": "Utilities",
+      "description": "IANA time zone database packaged for Python.",
+      "documentationUrl": "https://tzdata.readthedocs.io/",
+      "tags": [
+        "timezone",
+        "date"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:urllib3",
+      "name": "urllib3",
+      "version": "2.7.0",
+      "status": "available",
+      "importName": "urllib3",
+      "category": "Networking",
+      "description": "Powerful, user-friendly HTTP client library.",
+      "documentationUrl": "https://urllib3.readthedocs.io/",
+      "tags": [
+        "http",
+        "client"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:uvicorn",
+      "name": "uvicorn",
+      "version": "0.51.0",
+      "status": "available",
+      "importName": "uvicorn",
+      "category": "Web",
+      "description": "Lightning-fast ASGI server implementation.",
+      "documentationUrl": "https://www.uvicorn.org/",
+      "tags": [
+        "asgi",
+        "server"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:uvloop",
+      "name": "uvloop",
+      "version": "0.22.1",
+      "status": "available",
+      "importName": "uvloop",
+      "category": "Networking",
+      "description": "Fast, drop-in replacement for the asyncio event loop built on libuv.",
+      "documentationUrl": "https://uvloop.readthedocs.io/",
+      "tags": [
+        "async",
+        "event-loop"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:watchfiles",
+      "name": "watchfiles",
+      "version": "1.2.0",
+      "status": "available",
+      "importName": "watchfiles",
+      "category": "Utilities",
+      "description": "Fast file-change watching and auto-reloading, powered by Rust.",
+      "documentationUrl": "https://watchfiles.helpmanual.io/",
+      "tags": [
+        "filesystem",
+        "reload"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:websockets",
+      "name": "websockets",
+      "version": "16.1",
+      "status": "available",
+      "importName": "websockets",
+      "category": "Networking",
+      "description": "Library for building WebSocket servers and clients with asyncio.",
+      "documentationUrl": "https://websockets.readthedocs.io/",
+      "tags": [
+        "websocket",
+        "async"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:wheel",
+      "name": "wheel",
+      "version": "0.43.0",
+      "status": "available",
+      "importName": "wheel",
+      "category": "Utilities",
+      "description": "Reference implementation of the Python wheel packaging format.",
+      "documentationUrl": "https://wheel.readthedocs.io/",
+      "tags": [
+        "packaging",
+        "build"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    },
+    {
+      "id": "python.package:xlsxwriter",
+      "name": "xlsxwriter",
+      "version": "3.2.9",
+      "status": "available",
+      "importName": "xlsxwriter",
+      "category": "Office documents",
+      "description": "Create Excel .xlsx files with formatting, charts, and formulas.",
+      "documentationUrl": "https://xlsxwriter.readthedocs.io/",
+      "tags": [
+        "excel",
+        "xlsx"
+      ],
+      "catalogStatus": "cataloged",
+      "descriptionSource": "catalog"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "python.runtime",
+      "status": "available",
+      "value": "3.12.9",
+      "details": {
+        "implementation": "CPython",
+        "platform": "Linux-6.12.8+-x86_64-with-glibc2.38",
+        "machine": "x86_64",
+        "pythonVersion": "3.12.9"
+      },
+      "confidence": "high",
+      "source": "runtime"
+    },
+    {
+      "id": "runtime.filesystem:temp-dir",
+      "status": "available",
+      "value": true,
+      "confidence": "high",
+      "source": "runtime"
+    },
+    {
+      "id": "runtime.filesystem:write",
+      "status": "unverified",
+      "value": null,
+      "confidence": "low",
+      "source": "skipped"
+    },
+    {
+      "id": "runtime.network:https",
+      "status": "unverified",
+      "value": null,
+      "confidence": "low",
+      "source": "skipped"
+    },
+    {
+      "id": "runtime.os",
+      "status": "available",
+      "value": "Linux",
+      "details": {
+        "system": "Linux",
+        "release": "6.12.8+",
+        "machine": "x86_64"
+      },
+      "confidence": "high",
+      "source": "runtime"
+    },
+    {
+      "id": "runtime.subprocess:exec",
+      "status": "unverified",
+      "value": null,
+      "confidence": "low",
+      "source": "skipped"
+    },
+    {
+      "id": "skill:agent-harness-explorer",
+      "name": "agent-harness-explorer",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "skill:analyzing-csv",
+      "name": "analyzing-csv",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "skill:analyzing-docx",
+      "name": "analyzing-docx",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "skill:analyzing-html",
+      "name": "analyzing-html",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "skill:analyzing-markdown",
+      "name": "analyzing-markdown",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "skill:analyzing-pdf",
+      "name": "analyzing-pdf",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "skill:analyzing-pptx",
+      "name": "analyzing-pptx",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "skill:analyzing-xlsx",
+      "name": "analyzing-xlsx",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:KnowledgeSearch",
+      "name": "KnowledgeSearch",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:bash",
+      "name": "bash",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:create",
+      "name": "create",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:edit",
+      "name": "edit",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:glob",
+      "name": "glob",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:grep",
+      "name": "grep",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:list_bash",
+      "name": "list_bash",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:read_bash",
+      "name": "read_bash",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:skill",
+      "name": "skill",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:stop_bash",
+      "name": "stop_bash",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    },
+    {
+      "id": "tool:view",
+      "name": "view",
+      "status": "available",
+      "confidence": "high",
+      "source": "agent-observed"
+    }
+  ],
+  "probes": [
+    {
+      "probeId": "python-runtime-packages",
+      "probeVersion": "0.1.0",
+      "status": "success",
+      "safetyLevel": "passive"
+    },
+    {
+      "probeId": "runtime-environment",
+      "probeVersion": "0.1.0",
+      "status": "success",
+      "safetyLevel": "passive"
+    },
+    {
+      "probeId": "tool-mcp-visibility",
+      "probeVersion": "0.1.0",
+      "status": "success",
+      "safetyLevel": "passive"
+    }
+  ],
+  "warnings": [],
+  "summary": {
+    "available": 119,
+    "visible": 19,
+    "restricted": 0,
+    "unknown": 3,
+    "libraries": 97,
+    "uncataloged": 0
+  },
+  "fingerprint": "sha256:a67d3bed117d3fd852664637c6928effb4f02b4645c1e57b902f72148ef5d5d6"
+}

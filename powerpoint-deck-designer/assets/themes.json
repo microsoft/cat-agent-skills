@@ -1,0 +1,124 @@
+{
+  "themes": [
+    {
+      "slug": "executive-blue",
+      "name": "Executive Blue",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#F4F6FA",
+        "primary": "#1F3A68",
+        "secondary": "#5B7BB0",
+        "accent": "#F2A900",
+        "text": "#1B1B1B",
+        "muted": "#6E7480"
+      },
+      "fonts": {
+        "heading": "Calibri",
+        "body": "Calibri"
+      },
+      "sizes": {
+        "title": 40,
+        "subtitle": 22,
+        "heading": 28,
+        "body": 18,
+        "caption": 11
+      }
+    },
+    {
+      "slug": "modern-slate",
+      "name": "Modern Slate",
+      "colors": {
+        "background": "#0F172A",
+        "surface": "#1E293B",
+        "primary": "#38BDF8",
+        "secondary": "#94A3B8",
+        "accent": "#F472B6",
+        "text": "#F8FAFC",
+        "muted": "#94A3B8"
+      },
+      "fonts": {
+        "heading": "Verdana",
+        "body": "Verdana"
+      },
+      "sizes": {
+        "title": 42,
+        "subtitle": 22,
+        "heading": 28,
+        "body": 18,
+        "caption": 11
+      }
+    },
+    {
+      "slug": "sustain-green",
+      "name": "Sustainability Green",
+      "colors": {
+        "background": "#FBFDF9",
+        "surface": "#EAF3E4",
+        "primary": "#2E7D32",
+        "secondary": "#66BB6A",
+        "accent": "#F9A825",
+        "text": "#1B2A17",
+        "muted": "#6B7A67"
+      },
+      "fonts": {
+        "heading": "Georgia",
+        "body": "Calibri"
+      },
+      "sizes": {
+        "title": 40,
+        "subtitle": 22,
+        "heading": 28,
+        "body": 18,
+        "caption": 11
+      }
+    },
+    {
+      "slug": "vibrant-pitch",
+      "name": "Vibrant Pitch",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#FFF3E6",
+        "primary": "#E64A19",
+        "secondary": "#455A64",
+        "accent": "#00838F",
+        "text": "#212121",
+        "muted": "#78909C"
+      },
+      "fonts": {
+        "heading": "Trebuchet MS",
+        "body": "Calibri"
+      },
+      "sizes": {
+        "title": 44,
+        "subtitle": 22,
+        "heading": 30,
+        "body": 18,
+        "caption": 11
+      }
+    },
+    {
+      "slug": "minimal-mono",
+      "name": "Minimal Mono",
+      "colors": {
+        "background": "#FFFFFF",
+        "surface": "#F2F2F2",
+        "primary": "#111111",
+        "secondary": "#555555",
+        "accent": "#0066FF",
+        "text": "#111111",
+        "muted": "#888888"
+      },
+      "fonts": {
+        "heading": "Arial",
+        "body": "Arial"
+      },
+      "sizes": {
+        "title": 40,
+        "subtitle": 22,
+        "heading": 26,
+        "body": 18,
+        "caption": 11
+      }
+    }
+  ]
+}

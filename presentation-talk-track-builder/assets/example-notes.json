@@ -1,0 +1,12 @@
+{
+  "slides": [
+    {
+      "slide": 1,
+      "speakerNotes": "Slide 1 — Opening\n\n\"Welcome, everyone, and thanks for joining. [pause] Today we're going to walk through three things: why this matters now, what we've built so far, and where we go next.\""
+    },
+    {
+      "slide": 2,
+      "speakerNotes": "Slide 2 — The problem\n\n\"Let me start with the problem, because it's the reason all of this exists. [pause] Our teams are spending most of their time on the mechanics of the work instead of the judgment inside the work — and that ratio has to change.\""
+    }
+  ]
+}

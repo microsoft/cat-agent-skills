@@ -1,0 +1,1505 @@
+>>> import io
+>>> from itertools import cycle, islice
+
+This file tests the behavior of the Adventure game in all sorts of
+specific situations that would be very tedious to arrange in actual
+walkthroughs.  As the basis for these tests, we will begin by starting a
+game, entering the building, and carrying the lamp.
+
+>>> import adventure
+>>> adventure.play(seed=3)
+WELCOME TO ADVENTURE!!  WOULD YOU LIKE INSTRUCTIONS?
+<BLANKLINE>
+>>> no
+YOU ARE STANDING AT THE END OF A ROAD BEFORE A SMALL BRICK BUILDING.
+AROUND YOU IS A FOREST.  A SMALL STREAM FLOWS OUT OF THE BUILDING AND
+DOWN A GULLY.
+<BLANKLINE>
+>>> brief
+OKAY, FROM NOW ON I'LL ONLY DESCRIBE A PLACE IN FULL THE FIRST TIME
+YOU COME TO IT.  TO GET THE FULL DESCRIPTION, SAY "LOOK".
+<BLANKLINE>
+>>> enter
+YOU ARE INSIDE A BUILDING, A WELL HOUSE FOR A LARGE SPRING.
+<BLANKLINE>
+THERE ARE SOME KEYS ON THE GROUND HERE.
+<BLANKLINE>
+THERE IS A SHINY BRASS LAMP NEARBY.
+<BLANKLINE>
+THERE IS FOOD HERE.
+<BLANKLINE>
+THERE IS A BOTTLE OF WATER HERE.
+<BLANKLINE>
+>>> on
+YOUR LAMP IS NOW ON.
+<BLANKLINE>
+>>> get(lamp)
+OK
+<BLANKLINE>
+>>> for _room in adventure._game.rooms.values():
+...     _room.times_described = 1  # to avoid long descriptions
+
+Now we can save this game.
+
+>>> savefile = io.BytesIO()
+>>> save(savefile)
+GAME SAVED
+<BLANKLINE>
+
+Now, all of the tests below can begin by calling this restart() function
+to place them back at the beginning of the adventure in a known state.
+If a room is specified, note that restart() performs two turns in the
+room before handing back control: the first when it asks the game to
+move the caller into that room, and the second when it calls look().
+
+>>> def restart(room=None, dwarves=False, objects=(), randoms=None):
+...     """Restart the whole Adventure game from our stringio file."""
+...
+...     global game
+...     savefile.seek(0)
+...     adventure.resume(savefile, quiet=True)
+...     game = adventure._game
+...     if room is not None:
+...         _go_to(room)
+...     room = game.loc
+...     if not dwarves:
+...         game.dwarf_stage = 2
+...         del game.dwarves[:]
+...     for obj in objects:
+...         if isinstance(obj, adventure.prompt.ReprTriggeredPhrase):
+...             obj = game.referent(game.vocabulary[obj.words[0]])
+...         obj.drop(room)
+...     if randoms is not None:
+...         game.random = list(randoms).pop
+
+>>> class go_to(object):
+...     """Special command that warps us directly to a location."""
+...
+...     def __init__(self, room):
+...         self.room = room
+...     def __repr__(self):
+...         game.output = ''
+...         _go_to(self.room)
+...         return game.output.rstrip('\n') + '\n'
+
+>>> def _go_to(room):
+...     game.move_to(game.rooms[room] if isinstance(room, int) else room)
+
+>>> def quiet(*args):
+...     """Run one or more commands without printing their result."""
+...
+...     for arg in args:
+...         repr(arg)
+...     return None
+
+With those definitions complete, we can proceed with the actual tests!
+
+---------------------------------------
+You Won't Get It Down The Steps, Either
+---------------------------------------
+
+>>> restart(room=18)
+>>> look
+THIS IS A LOW ROOM WITH A CRUDE NOTE ON THE WALL.  THE NOTE SAYS,
+"YOU WON'T GET IT UP THE STEPS".
+<BLANKLINE>
+THERE IS A LARGE SPARKLING NUGGET OF GOLD HERE!
+<BLANKLINE>
+>>> get(gold)
+OK
+<BLANKLINE>
+>>> go_to(13)
+YOU'RE IN BIRD CHAMBER.
+<BLANKLINE>
+A CHEERFUL LITTLE BIRD IS SITTING HERE SINGING.
+<BLANKLINE>
+>>> w
+YOU'RE AT TOP OF SMALL PIT.
+<BLANKLINE>
+>>> d
+YOU ARE AT THE BOTTOM OF THE PIT WITH A BROKEN NECK.
+<BLANKLINE>
+OH DEAR, YOU SEEM TO HAVE GOTTEN YOURSELF KILLED.  I MIGHT BE ABLE TO
+HELP YOU OUT, BUT I'VE NEVER REALLY DONE THIS BEFORE.  DO YOU WANT ME
+TO TRY TO REINCARNATE YOU?
+<BLANKLINE>
+THE TROLL IS NOWHERE TO BE SEEN.
+<BLANKLINE>
+>>> n
+OK
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 53 OUT OF A POSSIBLE 350 USING 9 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 78 MORE POINTS
+<BLANKLINE>
+>>> look
+YOU HAVE GOTTEN YOURSELF KILLED.
+<BLANKLINE>
+
+-------------------
+Pirates and dwarves
+-------------------
+
+If the dwarves activate when we are standing in one of their starting
+rooms, then does the dwarf at our location get moved successfully to the
+gold nuggets room?
+
+>>> restart(room=41, dwarves=True, randoms=[None, .9, .9, .99])
+>>> [ _dwarf.room.n for _dwarf in game.dwarves ]
+[19, 27, 33, 44, 64]
+>>> e
+A LITTLE DWARF JUST WALKED AROUND A CORNER, SAW YOU, THREW A LITTLE
+AXE AT YOU WHICH MISSED, CURSED, AND RAN AWAY.
+<BLANKLINE>
+YOU ARE ON THE WEST SIDE OF THE FISSURE IN THE HALL OF MISTS.
+<BLANKLINE>
+THERE IS A LITTLE AXE HERE.
+<BLANKLINE>
+THERE ARE DIAMONDS HERE!
+<BLANKLINE>
+>>> [ _dwarf.room.n for _dwarf in game.dwarves ]
+[19, 18, 33, 44, 64]
+
+If the pirate encounters us in the plover room or dark room, does he
+leave the platinum pyramid since learning how to remove it from the room
+is one of the game's puzzles?
+
+>>> restart(room=100, objects=[pyramid])
+>>> look
+YOU'RE IN A SMALL CHAMBER LIT BY AN EERIE GREEN LIGHT.  AN EXTREMELY
+NARROW TUNNEL EXITS TO THE WEST.  A DARK CORRIDOR LEADS NE.
+<BLANKLINE>
+THERE IS AN EMERALD HERE THE SIZE OF A PLOVER'S EGG!
+<BLANKLINE>
+THERE IS A PLATINUM PYRAMID HERE, 8 INCHES ON A SIDE!
+<BLANKLINE>
+>>> get(pyramid)
+OK
+<BLANKLINE>
+>>> get(emerald)
+OK
+<BLANKLINE>
+>>> game.pirate.room = game.loc
+>>> look
+OUT FROM THE SHADOWS BEHIND YOU POUNCES A BEARDED PIRATE!  "HAR, HAR,"
+HE CHORTLES, "I'LL JUST TAKE ALL THIS BOOTY AND HIDE IT AWAY WITH ME
+CHEST DEEP IN THE MAZE!"  HE SNATCHES YOUR TREASURE AND VANISHES INTO
+THE GLOOM.
+<BLANKLINE>
+YOU'RE IN A SMALL CHAMBER LIT BY AN EERIE GREEN LIGHT.  AN EXTREMELY
+NARROW TUNNEL EXITS TO THE WEST.  A DARK CORRIDOR LEADS NE.
+<BLANKLINE>
+>>> inventory
+YOU ARE CURRENTLY HOLDING THE FOLLOWING:
+<BLANKLINE>
+BRASS LANTERN
+PLATINUM PYRAMID
+<BLANKLINE>
+
+If we manage to collect all of the treasures before the pirate spots us,
+then when we find him he goes to hide his treasure chest in the maze
+without any other treasures to accompany it.
+
+>>> restart()
+>>> for t in game.treasures:
+...     if t == 'chest': continue
+...     t.drop(game.loc)
+>>> quiet(look)
+>>> game.dwarf_stage = 2
+>>> game.loc = game.pirate.room = game.rooms[69]
+>>> look
+THERE ARE FAINT RUSTLING NOISES FROM THE DARKNESS BEHIND YOU.  AS YOU
+TURN TOWARD THEM, THE BEAM OF YOUR LAMP FALLS ACROSS A BEARDED PIRATE.
+HE IS CARRYING A LARGE CHEST.  "SHIVER ME TIMBERS!" HE CRIES, "I'VE
+BEEN SPOTTED!  I'D BEST HIE MESELF OFF TO THE MAZE TO HIDE ME CHEST!"
+WITH THAT, HE VANISHES INTO THE GLOOM.
+<BLANKLINE>
+YOU ARE IN A SECRET N/S CANYON ABOVE A LARGE ROOM.
+<BLANKLINE>
+>>> go_to(game.chest_room)
+DEAD END
+<BLANKLINE>
+THE PIRATE'S TREASURE CHEST IS HERE!
+<BLANKLINE>
+
+If several dwarves throw knives that hit us, does a sensible message result?
+
+>>> restart(room=75, dwarves=True, randoms=(.05,.05,.05,.05,.05,.05))
+>>> game.dwarf_stage = 3
+>>> for _dwarf in game.dwarves:
+...     _dwarf.room = game.rooms[75]
+>>> look
+THERE ARE 5 THREATENING LITTLE DWARVES IN THE ROOM WITH YOU.
+<BLANKLINE>
+5 OF THEM THROW KNIVES AT YOU!
+<BLANKLINE>
+5 OF THEM GET YOU!
+<BLANKLINE>
+OH DEAR, YOU SEEM TO HAVE GOTTEN YOURSELF KILLED.  I MIGHT BE ABLE TO
+HELP YOU OUT, BUT I'VE NEVER REALLY DONE THIS BEFORE.  DO YOU WANT ME
+TO TRY TO REINCARNATE YOU?
+<BLANKLINE>
+
+If, when a treasure is found, the game figures out that all remaining
+treasures are impossible to acquire - like the jewelry in the south side
+chamber of the Hall of the Mountain King, if the bird dies before the
+snake is driven away - then the lamp should be reduced to only having 35
+turns left.
+
+>>> restart()
+>>> for t in game.treasures:
+...     if t == 'jewelry' or t == 'silver': continue
+...     t.drop(game.loc)
+>>> quiet(look)
+>>> game.bird.carry()
+>>> go_to(119)
+YOU ARE IN A SECRET CANYON WHICH EXITS TO THE NORTH AND EAST.
+<BLANKLINE>
+A HUGE GREEN FIERCE DRAGON BARS THE WAY!
+<BLANKLINE>
+>>> drop(bird)
+THE LITTLE BIRD ATTACKS THE GREEN DRAGON, AND IN AN ASTOUNDING FLURRY
+GETS BURNT TO A CINDER.  THE ASHES BLOW AWAY.
+<BLANKLINE>
+>>> game.lamp_turns
+326
+>>> go_to(28)
+YOU ARE IN A LOW N/S PASSAGE AT A HOLE IN THE FLOOR.  THE HOLE GOES
+DOWN TO AN E/W PASSAGE.
+<BLANKLINE>
+THERE ARE BARS OF SILVER HERE!
+<BLANKLINE>
+>>> game.lamp_turns
+35
+
+We should not be able to pick up a dwarf! (#21)
+
+>>> restart(room=75, dwarves=True, randoms=(1,.05,.05,.05,.05,.05,.3))
+>>> game.dwarf_stage = 3
+>>> game.dwarves[0].room = game.rooms[75]
+>>> take(dwarf)
+YOU CAN'T BE SERIOUS!
+<BLANKLINE>
+
+----------------------------------
+Making sure that hints are offered
+----------------------------------
+
+If you act confused, the game should offer you a hint.  Here are quick
+(but certainly not thorough!) tests of whether the logic for each hint
+allows it to be offered.
+
+>>> restart(room=8)
+>>> quiet(look, look)
+>>> look
+YOU ARE IN A 20-FOOT DEPRESSION FLOORED WITH BARE DIRT.  SET INTO THE
+DIRT IS A STRONG STEEL GRATE MOUNTED IN CONCRETE.  A DRY STREAMBED
+LEADS INTO THE DEPRESSION.
+<BLANKLINE>
+THE GRATE IS LOCKED.
+<BLANKLINE>
+ARE YOU TRYING TO GET INTO THE CAVE?
+<BLANKLINE>
+>>> yes
+THE GRATE IS VERY SOLID AND HAS A HARDENED STEEL LOCK.  YOU CANNOT
+ENTER WITHOUT A KEY, AND THERE ARE NO KEYS NEARBY.  I WOULD RECOMMEND
+LOOKING ELSEWHERE FOR THE KEYS.
+<BLANKLINE>
+
+>>> restart(room=13, objects=[rod])
+>>> quiet(get(rod), look, look)
+>>> get(bird)
+THE BIRD WAS UNAFRAID WHEN YOU ENTERED, BUT AS YOU APPROACH IT BECOMES
+DISTURBED AND YOU CANNOT CATCH IT.
+<BLANKLINE>
+ARE YOU TRYING TO CATCH THE BIRD?
+<BLANKLINE>
+>>> no
+OK
+<BLANKLINE>
+
+>>> restart(room=19)
+>>> quiet(*[ look ] * 6)
+>>> look
+YOU ARE IN THE HALL OF THE MOUNTAIN KING, WITH PASSAGES OFF IN ALL
+DIRECTIONS.
+<BLANKLINE>
+A HUGE GREEN FIERCE SNAKE BARS THE WAY!
+<BLANKLINE>
+ARE YOU TRYING TO SOMEHOW DEAL WITH THE SNAKE?
+<BLANKLINE>
+
+>>> restart(room=42, objects=[food])
+>>> quiet(get(food), s, n)
+>>> quiet(*islice(cycle((w, s, n)), 75 - 5))
+>>> look
+YOU ARE IN A MAZE OF TWISTY LITTLE PASSAGES, ALL ALIKE.
+<BLANKLINE>
+DO YOU NEED HELP GETTING OUT OF THE MAZE?
+<BLANKLINE>
+>>> yes
+YOU CAN MAKE THE PASSAGES LOOK LESS ALIKE BY DROPPING THINGS.
+<BLANKLINE>
+
+>>> quiet(restart(room=99))
+>>> quiet([ look ] * (25 - 2))
+>>> look
+YOU ARE IN AN ALCOVE.  A SMALL NW PATH SEEMS TO WIDEN AFTER A SHORT
+DISTANCE.  AN EXTREMELY TIGHT TUNNEL LEADS EAST.  IT LOOKS LIKE A VERY
+TIGHT SQUEEZE.  AN EERIE LIGHT CAN BE SEEN AT THE OTHER END.
+<BLANKLINE>
+ARE YOU TRYING TO EXPLORE BEYOND THE PLOVER ROOM?
+<BLANKLINE>
+
+>>> quiet(restart(room=108), [ look ] * (20 - 2))
+>>> look
+YOU ARE AT WITT'S END.  PASSAGES LEAD OFF IN *ALL* DIRECTIONS.
+<BLANKLINE>
+DO YOU NEED HELP GETTING OUT OF HERE?
+<BLANKLINE>
+
+------------------------
+Your lamp is getting dim
+------------------------
+
+There is an elaborate set of messages generated for the player as their
+lamp starts to grow dim.  You can, of course, replentish the lamp using
+batteries from the vending machine in the maze.
+
+>>> quiet(restart(room=34))
+>>> game.chest.prop = 1
+>>> quiet([ look ] * (330 - 30 - 3))
+>>> look
+YOUR LAMP IS GETTING DIM.  YOU'D BEST START WRAPPING THIS UP, UNLESS
+YOU CAN FIND SOME FRESH BATTERIES.  I SEEM TO RECALL THERE'S A VENDING
+MACHINE IN THE MAZE.  BRING SOME COINS WITH YOU.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+>>> quiet(go_to(30), get(coins))
+>>> go_to(140)
+DEAD END
+<BLANKLINE>
+THERE IS A MASSIVE VENDING MACHINE HERE.  THE INSTRUCTIONS ON IT READ:
+"DROP COINS HERE TO RECEIVE FRESH BATTERIES."
+<BLANKLINE>
+>>> drop(coins)
+THERE ARE FRESH BATTERIES HERE.
+<BLANKLINE>
+>>> look
+YOUR LAMP IS GETTING DIM.  I'M TAKING THE LIBERTY OF REPLACING THE
+BATTERIES.
+<BLANKLINE>
+DEAD END
+<BLANKLINE>
+THERE IS A MASSIVE VENDING MACHINE HERE.  THE INSTRUCTIONS ON IT READ:
+"DROP COINS HERE TO RECEIVE FRESH BATTERIES."
+<BLANKLINE>
+SOME WORN-OUT BATTERIES HAVE BEEN DISCARDED NEARBY.
+<BLANKLINE>
+>>> game.lamp_turns = 31
+>>> n
+YOUR LAMP IS GETTING DIM, AND YOU'RE OUT OF SPARE BATTERIES.  YOU'D
+BEST START WRAPPING THIS UP.
+<BLANKLINE>
+YOU ARE IN A LITTLE MAZE OF TWISTING PASSAGES, ALL DIFFERENT.
+<BLANKLINE>
+>>> game.lamp_turns = 1
+>>> n
+YOUR LAMP HAS RUN OUT OF POWER.
+<BLANKLINE>
+IT IS NOW PITCH DARK.  IF YOU PROCEED YOU WILL LIKELY FALL INTO A PIT.
+<BLANKLINE>
+>>> go_to(5)
+YOU'RE IN FOREST.
+<BLANKLINE>
+>>> w
+THERE'S NOT MUCH POINT IN WANDERING AROUND OUT HERE, AND YOU CAN'T
+EXPLORE THE CAVE WITHOUT A LAMP.  SO LET'S JUST CALL IT A DAY.
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 61 OUT OF A POSSIBLE 350 USING 309 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 70 MORE POINTS
+<BLANKLINE>
+
+If the batteries are in the user's inventory when replaced, then the old
+ones are tossed on the ground rather than remaining in the inventory.
+
+>>> restart(room=30)
+>>> quiet(get(coins), go_to(140), drop(coins))
+>>> get(batteries)
+OK
+<BLANKLINE>
+>>> game.chest.prop = 1
+>>> game.lamp_turns = 30
+>>> look
+YOUR LAMP IS GETTING DIM.  I'M TAKING THE LIBERTY OF REPLACING THE
+BATTERIES.
+<BLANKLINE>
+DEAD END
+<BLANKLINE>
+THERE IS A MASSIVE VENDING MACHINE HERE.  THE INSTRUCTIONS ON IT READ:
+"DROP COINS HERE TO RECEIVE FRESH BATTERIES."
+<BLANKLINE>
+SOME WORN-OUT BATTERIES HAVE BEEN DISCARDED NEARBY.
+<BLANKLINE>
+
+Finally, if you leave the batteries in the maze, you are warned to go
+back and get them.
+
+>>> quiet(restart(room=34), go_to(30), get(coins), go_to(140), drop(coins), n)
+>>> game.lamp_turns = 30
+>>> look
+YOUR LAMP IS GETTING DIM.  YOU'D BEST GO BACK FOR THOSE BATTERIES.
+<BLANKLINE>
+YOU ARE IN A LITTLE MAZE OF TWISTING PASSAGES, ALL DIFFERENT.
+<BLANKLINE>
+
+----------------------------------
+Basic and advanced command parsing
+----------------------------------
+
+Various complaints are associated with poorly-chosen requests.
+
+>>> quiet(restart(room=34))
+>>> enter(water)
+WHERE?
+<BLANKLINE>
+>>> quiet(go_to(7))
+>>> enter(water)
+YOUR FEET ARE NOW WET.
+<BLANKLINE>
+
+You can try to enter the house with the 'enter' command instead of just
+naming the house.
+
+>>> quiet(restart(room=1))
+>>> enter(house)
+YOU'RE INSIDE BUILDING.
+<BLANKLINE>
+THERE ARE SOME KEYS ON THE GROUND HERE.
+<BLANKLINE>
+THERE IS FOOD HERE.
+<BLANKLINE>
+THERE IS A BOTTLE OF WATER HERE.
+<BLANKLINE>
+
+Both "oil" and "water" can be used as verbs, despite officially being
+treated as nouns in the game vocabulary.
+
+>>> restart(room=94)
+>>> look
+YOU ARE AT ONE END OF AN IMMENSE NORTH/SOUTH PASSAGE.
+<BLANKLINE>
+THE WAY NORTH IS BARRED BY A MASSIVE, RUSTY, IRON DOOR.
+<BLANKLINE>
+>>> oil(door)
+I SEE NO OIL HERE.
+<BLANKLINE>
+>>> go_to(25)
+YOU'RE IN WEST PIT.
+<BLANKLINE>
+THERE IS A TINY LITTLE PLANT IN THE PIT, MURMURING "WATER, WATER, ..."
+<BLANKLINE>
+>>> water(plant)
+I SEE NO WATER HERE.
+<BLANKLINE>
+
+Various combinations of words yield somewhat sensible retorts; and
+several nouns invoke small special cases in the code, like "grate" also
+being a movement noun.
+
+>>> restart(room=4, dwarves=True)
+>>> look
+YOU ARE IN A VALLEY IN THE FOREST BESIDE A STREAM TUMBLING ALONG A
+ROCKY BED.
+<BLANKLINE>
+
+>>> game.do_command(['eat', 'pray', 'love'])
+"I DON'T KNOW THAT WORD.\n\n"
+
+>>> grate
+YOU'RE OUTSIDE GRATE.
+<BLANKLINE>
+THE GRATE IS LOCKED.
+<BLANKLINE>
+>>> go_to(12)
+YOU ARE IN AN AWKWARD SLOPING EAST/WEST CANYON.
+<BLANKLINE>
+>>> grate
+YOU'RE BELOW THE GRATE.
+<BLANKLINE>
+THE GRATE IS LOCKED.
+<BLANKLINE>
+
+>>> carry(dwarf)
+I SEE NO DWARF HERE.
+<BLANKLINE>
+
+>>> quiet(go_to(3))
+>>> get(water)
+OK
+<BLANKLINE>
+>>> inventory
+YOU ARE CURRENTLY HOLDING THE FOLLOWING:
+<BLANKLINE>
+BRASS LANTERN
+SMALL BOTTLE
+WATER IN THE BOTTLE
+<BLANKLINE>
+
+>>> get(knife)
+I SEE NO KNIFE HERE.
+<BLANKLINE>
+>>> game.dwarf_stage = 2
+>>> go_to(27)
+THERE IS A THREATENING LITTLE DWARF IN THE ROOM WITH YOU!
+<BLANKLINE>
+ONE SHARP NASTY KNIFE IS THROWN AT YOU!
+<BLANKLINE>
+IT MISSES!
+<BLANKLINE>
+YOU ARE ON THE WEST SIDE OF THE FISSURE IN THE HALL OF MISTS.
+<BLANKLINE>
+THERE ARE DIAMONDS HERE!
+<BLANKLINE>
+>>> get(knife)
+THE DWARVES' KNIVES VANISH AS THEY STRIKE THE WALLS OF THE CAVE.
+<BLANKLINE>
+>>> get(knife)
+I SEE NO KNIFE HERE.
+<BLANKLINE>
+
+>>> find(jewelry)
+I CAN ONLY TELL YOU WHAT YOU SEE AS YOU MOVE ABOUT AND MANIPULATE
+THINGS.  I CANNOT TELL YOU WHERE REMOTE THINGS ARE.
+<BLANKLINE>
+
+>>> lamp
+WHAT DO YOU WANT TO DO WITH THE LAMP?
+<BLANKLINE>
+
+>>> quiet(restart(randoms=(None, 0.1, None, 0.3, None, 0.9)))
+>>> carry(pour)
+I DON'T KNOW THAT WORD.
+<BLANKLINE>
+>>> jump(eat)
+I DON'T UNDERSTAND THAT!
+<BLANKLINE>
+>>> throw(drop)
+WHAT?
+<BLANKLINE>
+
+---------------
+Special motions
+---------------
+
+The "back" movement command has to handle several special cases, in case
+the previous location was an intermediate "forced" room, or if it simply
+cannot figure out how to return you to the previous location.
+
+>>> quiet(restart(room=65, randoms=(None, None, 0.001,)))
+>>> n
+YOU HAVE CRAWLED AROUND IN SOME LITTLE HOLES AND WOUND UP BACK IN THE
+MAIN PASSAGE.
+<BLANKLINE>
+YOU ARE IN BEDQUILT, A LONG EAST/WEST PASSAGE WITH HOLES EVERYWHERE.
+TO EXPLORE AT RANDOM SELECT NORTH, SOUTH, UP, OR DOWN.
+<BLANKLINE>
+>>> back
+SORRY, BUT I NO LONGER SEEM TO REMEMBER HOW IT WAS YOU GOT HERE.
+<BLANKLINE>
+YOU ARE IN BEDQUILT, A LONG EAST/WEST PASSAGE WITH HOLES EVERYWHERE.
+TO EXPLORE AT RANDOM SELECT NORTH, SOUTH, UP, OR DOWN.
+<BLANKLINE>
+
+While testing "back" on the beanstalk, we also test for whether we can
+run a command like "get" on the plant as seen from outside the pits.
+
+>>> quiet(restart(), get(bottle), go_to(25), pour(water))
+>>> quiet(go_to(113), get(water), go_to(25), pour(water))
+>>> go_to(88)
+YOU'RE IN NARROW CORRIDOR.
+<BLANKLINE>
+>>> d
+YOU'RE IN WEST PIT.
+<BLANKLINE>
+THERE IS A GIGANTIC BEANSTALK STRETCHING ALL THE WAY UP TO THE HOLE.
+<BLANKLINE>
+>>> back
+YOU CLAMBER UP THE PLANT AND SCURRY THROUGH THE HOLE AT THE TOP.
+<BLANKLINE>
+YOU'RE IN NARROW CORRIDOR.
+<BLANKLINE>
+>>> go_to(23)
+YOU'RE AT WEST END OF TWOPIT ROOM.
+<BLANKLINE>
+THERE IS A HUGE BEANSTALK GROWING OUT OF THE WEST PIT UP TO THE HOLE.
+<BLANKLINE>
+>>> find(beanstalk)
+I BELIEVE WHAT YOU WANT IS RIGHT HERE WITH YOU.
+<BLANKLINE>
+>>> go_to(67)
+YOU'RE AT EAST END OF TWOPIT ROOM.
+<BLANKLINE>
+THERE IS A HUGE BEANSTALK GROWING OUT OF THE WEST PIT UP TO THE HOLE.
+<BLANKLINE>
+
+>>> go_to(91)
+YOU'RE AT STEEP INCLINE ABOVE LARGE ROOM.
+<BLANKLINE>
+>>> d
+YOU ARE IN A LARGE LOW ROOM.  CRAWLS LEAD NORTH, SE, AND SW.
+<BLANKLINE>
+>>> back
+YOU CAN'T GET THERE FROM HERE.
+<BLANKLINE>
+YOU ARE IN A LARGE LOW ROOM.  CRAWLS LEAD NORTH, SE, AND SW.
+<BLANKLINE>
+
+If the player tries walking back across the troll bridge while still
+carrying the bear, then disaster strikes: the bridge breaks beneath
+them, and both player and bear wind up dead at the bottom of the pit.
+But the game shows a bit of elegance, and refuses to strand the player's
+belongings out of reach, either at the pit bottom or where they were
+last standing on the far side of the troll bridge - since without the
+bridge, the items would be permanently lost!  (We also try feeding the
+bear a few times, to test some special cases in the feed() logic while
+we are at it.)
+
+>>> quiet(restart(), get(keys), go_to(123))
+>>> game.bear.carry()
+>>> game.bear.prop = 2
+>>> game.bear.is_fixed = False
+>>> w
+YOU ARE BEING FOLLOWED BY A VERY LARGE, TAME BEAR.
+<BLANKLINE>
+YOU'RE ON NE SIDE OF CHASM.
+<BLANKLINE>
+A RICKETY WOODEN BRIDGE EXTENDS ACROSS THE CHASM, VANISHING INTO THE
+MIST.  A SIGN POSTED ON THE BRIDGE READS, "STOP! PAY TROLL!"
+<BLANKLINE>
+A BURLY TROLL STANDS BY THE BRIDGE AND INSISTS YOU THROW HIM A
+TREASURE BEFORE YOU MAY CROSS.
+<BLANKLINE>
+>>> drop(bear)
+THE BEAR LUMBERS TOWARD THE TROLL, WHO LETS OUT A STARTLED SHRIEK AND
+SCURRIES AWAY.  THE BEAR SOON GIVES UP THE PURSUIT AND WANDERS BACK.
+<BLANKLINE>
+>>> feed(bear)
+THERE IS NOTHING HERE TO EAT.
+<BLANKLINE>
+>>> get(bear)
+OK
+<BLANKLINE>
+>>> sw
+JUST AS YOU REACH THE OTHER SIDE, THE BRIDGE BUCKLES BENEATH THE
+WEIGHT OF THE BEAR, WHICH WAS STILL FOLLOWING YOU AROUND.  YOU
+SCRABBLE DESPERATELY FOR SUPPORT, BUT AS THE BRIDGE COLLAPSES YOU
+STUMBLE BACK AND FALL INTO THE CHASM.
+<BLANKLINE>
+OH DEAR, YOU SEEM TO HAVE GOTTEN YOURSELF KILLED.  I MIGHT BE ABLE TO
+HELP YOU OUT, BUT I'VE NEVER REALLY DONE THIS BEFORE.  DO YOU WANT ME
+TO TRY TO REINCARNATE YOU?
+<BLANKLINE>
+>>> quiet(yes, leave, get(lamp), on)
+>>> go_to(117)
+YOU'RE ON SW SIDE OF CHASM.
+<BLANKLINE>
+THERE ARE SOME KEYS ON THE GROUND HERE.
+<BLANKLINE>
+THE WRECKAGE OF A BRIDGE (AND A DEAD BEAR) CAN BE SEEN AT THE BOTTOM
+OF THE CHASM.
+<BLANKLINE>
+THE TROLL IS NOWHERE TO BE SEEN.
+<BLANKLINE>
+>>> feed(bear)
+DON'T BE RIDICULOUS!
+<BLANKLINE>
+
+Several motion words elicit special messages when they do not apply.
+
+>>> quiet(restart(room=34))
+>>> onward
+I AM UNSURE HOW YOU ARE FACING.  USE COMPASS POINTS OR NEARBY OBJECTS.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+>>> left
+I AM UNSURE HOW YOU ARE FACING.  USE COMPASS POINTS OR NEARBY OBJECTS.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+>>> right
+I AM UNSURE HOW YOU ARE FACING.  USE COMPASS POINTS OR NEARBY OBJECTS.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+
+>>> leave
+I DON'T KNOW IN FROM OUT HERE.  USE COMPASS POINTS OR NAME SOMETHING
+IN THE GENERAL DIRECTION YOU WANT TO GO.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+>>> inward
+I DON'T KNOW IN FROM OUT HERE.  USE COMPASS POINTS OR NAME SOMETHING
+IN THE GENERAL DIRECTION YOU WANT TO GO.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+
+>>> xyzzy
+NOTHING HAPPENS.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+>>> plugh
+NOTHING HAPPENS.
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+
+>>> crawl
+WHICH WAY?
+<BLANKLINE>
+YOU ARE IN A JUMBLE OF ROCK, WITH CRACKS EVERYWHERE.
+<BLANKLINE>
+
+---------------
+Verb edge cases
+---------------
+
+And now, we exercise dozens of fiddly edge cases for verbs.
+
+>>> quiet(restart())
+>>> carry                       # ambiguous in the face of several objects
+CARRY WHAT?
+<BLANKLINE>
+
+>>> quiet(restart(room=25))
+>>> get(plant)
+THE PLANT HAS EXCEPTIONALLY DEEP ROOTS AND CANNOT BE PULLED FREE.
+<BLANKLINE>
+
+>>> quiet(restart(), go_to(24))
+>>> get(oil)
+YOU HAVE NOTHING IN WHICH TO CARRY IT.
+<BLANKLINE>
+>>> quiet(go_to(3), get(bottle), go_to(24))
+>>> get(oil)
+YOUR BOTTLE IS ALREADY FULL.
+<BLANKLINE>
+>>> get(bottle)
+YOU ARE ALREADY CARRYING IT!
+<BLANKLINE>
+>>> drop(oil)
+YOU AREN'T CARRYING IT!
+<BLANKLINE>
+>>> drop(water)
+OK
+<BLANKLINE>
+>>> look
+YOU ARE AT THE BOTTOM OF THE EASTERN PIT IN THE TWOPIT ROOM.  THERE IS
+A SMALL POOL OF OIL IN ONE CORNER OF THE PIT.
+<BLANKLINE>
+THERE IS A BOTTLE OF WATER HERE.
+<BLANKLINE>
+
+>>> restart(room=94, objects=[clam])
+>>> look
+YOU ARE AT ONE END OF AN IMMENSE NORTH/SOUTH PASSAGE.
+<BLANKLINE>
+THE WAY NORTH IS BARRED BY A MASSIVE, RUSTY, IRON DOOR.
+<BLANKLINE>
+THERE IS AN ENORMOUS CLAM HERE WITH ITS SHELL TIGHTLY CLOSED.
+<BLANKLINE>
+>>> unlock                      # two unlockable objects are present
+UNLOCK WHAT?
+<BLANKLINE>
+>>> quiet(s)
+>>> unlock                      # no unlockable objects also cause a problem
+THERE IS NOTHING HERE WITH A LOCK!
+<BLANKLINE>
+
+>>> restart(room=103, objects=[trident])
+>>> lock(clam)
+WHAT?
+<BLANKLINE>
+>>> quiet(get(clam), get(trident))
+>>> unlock
+I ADVISE YOU TO PUT DOWN THE CLAM BEFORE OPENING IT.  >STRAIN!<
+<BLANKLINE>
+>>> quiet(drop(clam))
+>>> unlock
+A GLISTENING PEARL FALLS OUT OF THE CLAM AND ROLLS AWAY.  GOODNESS,
+THIS MUST REALLY BE AN OYSTER.  (I NEVER WAS VERY GOOD AT IDENTIFYING
+BIVALVES.)  WHATEVER IT IS, IT HAS NOW SNAPPED SHUT AGAIN.
+<BLANKLINE>
+>>> unlock
+THE OYSTER CREAKS OPEN, REVEALING NOTHING BUT OYSTER INSIDE.  IT
+PROMPTLY SNAPS SHUT AGAIN.
+<BLANKLINE>
+
+>>> restart(room=94)
+>>> look
+YOU ARE AT ONE END OF AN IMMENSE NORTH/SOUTH PASSAGE.
+<BLANKLINE>
+THE WAY NORTH IS BARRED BY A MASSIVE, RUSTY, IRON DOOR.
+<BLANKLINE>
+>>> unlock
+THE DOOR IS EXTREMELY RUSTY AND REFUSES TO OPEN.
+<BLANKLINE>
+
+>>> restart()
+>>> unlock(keys)
+YOU CAN'T UNLOCK THE KEYS.
+<BLANKLINE>
+>>> quiet(get(keys), get(food), go_to(10))
+>>> unlock(cage)
+IT HAS NO LOCK.
+<BLANKLINE>
+>>> quiet(go_to(130))
+>>> lock(chain)
+IT WAS ALREADY LOCKED.
+<BLANKLINE>
+>>> unlock(chain)
+THERE IS NO WAY TO GET PAST THE BEAR TO UNLOCK THE CHAIN, WHICH IS
+PROBABLY JUST AS WELL.
+<BLANKLINE>
+>>> quiet(throw(food), unlock(chain))
+>>> unlock(chain)
+IT WAS ALREADY UNLOCKED.
+<BLANKLINE>
+>>> quiet(get(chain), w)
+>>> lock(chain)
+THERE IS NOTHING HERE TO WHICH THE CHAIN CAN BE LOCKED.
+<BLANKLINE>
+>>> quiet(e)
+>>> lock(chain)
+THE CHAIN IS NOW LOCKED.
+<BLANKLINE>
+>>> get(chain)
+THE CHAIN IS STILL LOCKED.
+<BLANKLINE>
+>>> lock(bear)
+I DON'T KNOW HOW TO LOCK OR UNLOCK SUCH A THING.
+<BLANKLINE>
+
+>>> restart()
+>>> off
+YOUR LAMP IS NOW OFF.
+<BLANKLINE>
+>>> quiet(drop(lamp), leave)
+>>> on
+YOU HAVE NO SOURCE OF LIGHT.
+<BLANKLINE>
+>>> off
+YOU HAVE NO SOURCE OF LIGHT.
+<BLANKLINE>
+>>> quiet(enter, get(lamp), on, plugh)
+>>> off
+YOUR LAMP IS NOW OFF.
+<BLANKLINE>
+IT IS NOW PITCH DARK.  IF YOU PROCEED YOU WILL LIKELY FALL INTO A PIT.
+<BLANKLINE>
+>>> quiet(on)
+>>> game.lamp_turns = 2
+>>> quiet(look)
+>>> look
+YOUR LAMP HAS RUN OUT OF POWER.
+<BLANKLINE>
+IT IS NOW PITCH DARK.  IF YOU PROCEED YOU WILL LIKELY FALL INTO A PIT.
+<BLANKLINE>
+>>> on
+YOUR LAMP HAS RUN OUT OF POWER.
+<BLANKLINE>
+
+>>> restart()
+>>> wave(lamp)
+NOTHING HAPPENS.
+<BLANKLINE>
+>>> wave(keys)
+YOU AREN'T CARRYING IT!
+<BLANKLINE>
+
+The "attack" verb is a particularly long test, because its intransitive
+form works hard to determine - in two stages, focusing first on real
+enemies and then on some harmless objects - what on earth you could
+possibly be designating as a target.
+
+>>> restart(dwarves=True)
+>>> attack
+THERE IS NOTHING HERE TO ATTACK.
+<BLANKLINE>
+>>> quiet(go_to(117))
+>>> attack
+TROLLS ARE CLOSE RELATIVES WITH THE ROCKS AND HAVE SKIN AS TOUGH AS
+THAT OF A RHINOCEROS.  THE TROLL FENDS OFF YOUR BLOWS EFFORTLESSLY.
+<BLANKLINE>
+>>> game.dwarf_stage = 2
+>>> game.dwarves[0].room = game.loc
+>>> attack                      # now there are two choices: dwarf and troll
+ATTACK WHAT?
+<BLANKLINE>
+>>> attack(dwarf)
+WITH WHAT?  YOUR BARE HANDS?
+<BLANKLINE>
+>>> quiet(go_to(103), get(clam), go_to(13))
+>>> attack                      # cannot decide between oyster and bird
+ATTACK WHAT?
+<BLANKLINE>
+>>> quiet(w, drop(clam), e)
+>>> attack
+THE LITTLE BIRD IS NOW DEAD.  ITS BODY DISAPPEARS.
+<BLANKLINE>
+>>> look                        # make sure the bird is really gone
+YOU ARE IN A SPLENDID CHAMBER THIRTY FEET HIGH.  THE WALLS ARE FROZEN
+RIVERS OF ORANGE STONE.  AN AWKWARD CANYON AND A GOOD PASSAGE EXIT
+FROM EAST AND WEST SIDES OF THE CHAMBER.
+<BLANKLINE>
+>>> quiet(w)
+>>> attack
+THE SHELL IS VERY STRONG AND IS IMPERVIOUS TO ATTACK.
+<BLANKLINE>
+>>> quiet(go_to(119))
+>>> attack(dragon)
+WITH WHAT?  YOUR BARE HANDS?
+<BLANKLINE>
+>>> quiet(yes)
+>>> attack(dragon)
+FOR CRYING OUT LOUD, THE POOR THING IS ALREADY DEAD!
+<BLANKLINE>
+
+>>> quiet(restart(), get(bottle))
+>>> pour
+YOUR BOTTLE IS EMPTY AND THE GROUND IS WET.
+<BLANKLINE>
+>>> pour
+POUR WHAT?
+<BLANKLINE>
+>>> quiet(go_to(24), get(oil), go_to(25))
+>>> pour(bottle)
+THE PLANT INDIGNANTLY SHAKES THE OIL OFF ITS LEAVES AND ASKS, "WATER?"
+<BLANKLINE>
+>>> quiet(go_to(24), get(oil))
+>>> pour
+YOUR BOTTLE IS EMPTY AND THE GROUND IS WET.
+<BLANKLINE>
+>>> pour(oil)
+YOU AREN'T CARRYING IT!
+<BLANKLINE>
+>>> pour(lamp)
+YOU CAN'T POUR THAT.
+<BLANKLINE>
+
+>>> restart()
+>>> eat
+THANK YOU, IT WAS DELICIOUS!
+<BLANKLINE>
+>>> eat
+EAT WHAT?
+<BLANKLINE>
+>>> quiet(go_to(13))
+>>> eat(bird)
+I THINK I JUST LOST MY APPETITE.
+<BLANKLINE>
+>>> quiet(e, e)
+>>> eat(rod)
+DON'T BE RIDICULOUS!
+<BLANKLINE>
+
+>>> quiet(restart(), get(bottle), leave, w)
+>>> drink
+THE BOTTLE OF WATER IS NOW EMPTY.
+<BLANKLINE>
+>>> drink
+DRINK WHAT?
+<BLANKLINE>
+>>> drink(lamp)
+DON'T BE RIDICULOUS!
+<BLANKLINE>
+
+>>> quiet(restart())
+>>> rub(lamp)
+RUBBING THE ELECTRIC LAMP IS NOT PARTICULARLY REWARDING.  ANYWAY,
+NOTHING EXCITING HAPPENS.
+<BLANKLINE>
+>>> rub(bottle)
+I THINK I JUST LOST MY APPETITE.
+<BLANKLINE>
+
+>>> quiet(restart(objects=[axe]), get(axe))
+>>> throw(food)
+YOU AREN'T CARRYING IT!
+<BLANKLINE>
+>>> quiet(get(food), leave)
+>>> throw(lamp)
+OK
+<BLANKLINE>
+>>> look
+YOU ARE STANDING AT THE END OF A ROAD BEFORE A SMALL BRICK BUILDING.
+AROUND YOU IS A FOREST.  A SMALL STREAM FLOWS OUT OF THE BUILDING AND
+DOWN A GULLY.
+<BLANKLINE>
+THERE IS A LAMP SHINING NEARBY.
+<BLANKLINE>
+>>> quiet(get(lamp), go_to(130))
+>>> throw(axe)
+THE AXE MISSES AND LANDS NEAR THE BEAR WHERE YOU CAN'T GET AT IT.
+<BLANKLINE>
+>>> get(axe)
+YOU CAN'T BE SERIOUS!
+<BLANKLINE>
+>>> throw(food)
+THE BEAR EAGERLY WOLFS DOWN YOUR FOOD, AFTER WHICH HE SEEMS TO CALM
+DOWN CONSIDERABLY AND EVEN BECOMES RATHER FRIENDLY.
+<BLANKLINE>
+>>> get(axe)
+OK
+<BLANKLINE>
+>>> quiet(leave)
+>>> throw(axe)
+THERE IS NOTHING HERE TO ATTACK.
+<BLANKLINE>
+
+>>> restart()
+>>> quit()
+DO YOU REALLY WANT TO QUIT NOW?
+<BLANKLINE>
+>>> no
+OK
+<BLANKLINE>
+>>> quit()
+DO YOU REALLY WANT TO QUIT NOW?
+<BLANKLINE>
+>>> yes
+OK
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 61 OUT OF A POSSIBLE 350 USING 7 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 70 MORE POINTS
+<BLANKLINE>
+
+>>> restart()
+>>> find(lamp)
+YOU ARE ALREADY CARRYING IT!
+<BLANKLINE>
+>>> find(keys)
+I BELIEVE WHAT YOU WANT IS RIGHT HERE WITH YOU.
+<BLANKLINE>
+
+>>> quiet(restart(), get(food), get(keys), go_to(130), throw(food), unlock)
+>>> get(bear)
+OK
+<BLANKLINE>
+>>> inventory
+YOU ARE CURRENTLY HOLDING THE FOLLOWING:
+<BLANKLINE>
+SET OF KEYS
+BRASS LANTERN
+YOU ARE BEING FOLLOWED BY A VERY LARGE, TAME BEAR.
+<BLANKLINE>
+
+>>> quiet(restart(dwarves=True), go_to(10), get(cage), go_to(13))
+>>> feed(bird)
+IT'S NOT HUNGRY (IT'S MERELY PININ' FOR THE FJORDS).  BESIDES, YOU
+HAVE NO BIRD SEED.
+<BLANKLINE>
+>>> quiet(get(bird), go_to(117))
+>>> feed(troll)
+GLUTTONY IS NOT ONE OF THE TROLL'S VICES.  AVARICE, HOWEVER, IS.
+<BLANKLINE>
+>>> quiet(go_to(119))
+>>> feed(dragon)
+THERE'S NOTHING HERE IT WANTS TO EAT (EXCEPT PERHAPS YOU).
+<BLANKLINE>
+>>> quiet(kill(dragon), yes)
+>>> feed(dragon)
+DON'T BE RIDICULOUS!
+<BLANKLINE>
+>>> quiet(go_to(19))
+>>> feed(snake)
+THE SNAKE HAS NOW DEVOURED YOUR BIRD.
+<BLANKLINE>
+>>> feed(snake)
+THERE'S NOTHING HERE IT WANTS TO EAT (EXCEPT PERHAPS YOU).
+<BLANKLINE>
+>>> game.dwarf_stage = 2
+>>> quiet(look)
+>>> feed(dwarf)
+THERE IS NOTHING HERE TO EAT.
+<BLANKLINE>
+>>> game.food.drop(game.loc)
+>>> feed(dwarf)
+YOU FOOL, DWARVES EAT ONLY COAL!  NOW YOU'VE MADE HIM *REALLY* MAD!!
+<BLANKLINE>
+>>> quiet(go_to(129), drop(food), e)
+>>> feed(bear)
+THERE'S NOTHING HERE IT WANTS TO EAT (EXCEPT PERHAPS YOU).
+<BLANKLINE>
+>>> feed(chain)
+I'M GAME.  WOULD YOU CARE TO EXPLAIN HOW?
+<BLANKLINE>
+
+>>> quiet(restart(), get(bottle), drink)
+>>> fill
+YOUR BOTTLE IS NOW FULL OF WATER.
+<BLANKLINE>
+>>> fill
+YOUR BOTTLE IS ALREADY FULL.
+<BLANKLINE>
+>>> quiet(drink, plugh)
+>>> fill
+THERE IS NOTHING HERE WITH WHICH TO FILL THE BOTTLE.
+<BLANKLINE>
+>>> quiet(drop(bottle), go_to(97))
+>>> fill(vase)
+YOU CAN'T FILL THAT.
+<BLANKLINE>
+>>> quiet(get(vase))
+>>> fill(vase)
+THERE IS NOTHING HERE WITH WHICH TO FILL THE VASE.
+<BLANKLINE>
+>>> quiet(go_to(38))
+>>> fill(vase)
+THE SUDDEN CHANGE IN TEMPERATURE HAS DELICATELY SHATTERED THE VASE.
+<BLANKLINE>
+>>> look
+YOU ARE IN THE BOTTOM OF A SMALL PIT WITH A LITTLE STREAM, WHICH
+ENTERS AND EXITS THROUGH TINY SLITS.
+<BLANKLINE>
+THE FLOOR IS LITTERED WITH WORTHLESS SHARDS OF POTTERY.
+<BLANKLINE>
+>>> get(vase)
+YOU CAN'T BE SERIOUS!
+<BLANKLINE>
+>>> fill(lamp)
+YOU CAN'T FILL THAT.
+<BLANKLINE>
+>>> fill
+FILL WHAT?
+<BLANKLINE>
+
+>>> restart()
+>>> blast
+BLASTING REQUIRES DYNAMITE.
+<BLANKLINE>
+
+>>> restart()
+>>> score
+IF YOU WERE TO QUIT NOW, YOU WOULD SCORE 57 OUT OF A POSSIBLE 350.
+<BLANKLINE>
+DO YOU INDEED WISH TO QUIT NOW?
+<BLANKLINE>
+>>> yes
+OK
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 61 OUT OF A POSSIBLE 350 USING 6 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 70 MORE POINTS
+<BLANKLINE>
+
+>>> quiet(restart(), go_to(92), fee, fie, foe)
+>>> foo                         # does nothing obvious since the eggs are here
+OK
+<BLANKLINE>
+>>> quiet(get(eggs), go_to(117))
+>>> throw(eggs)
+THE TROLL CATCHES YOUR TREASURE AND SCURRIES AWAY OUT OF SIGHT.
+<BLANKLINE>
+>>> quiet(fee, fie, foe)
+>>> foo
+DONE!
+<BLANKLINE>
+>>> cross                       # troll does not wait for us to cross!
+THE TROLL STEPS OUT FROM BENEATH THE BRIDGE AND BLOCKS YOUR WAY.
+<BLANKLINE>
+YOU'RE ON SW SIDE OF CHASM.
+<BLANKLINE>
+A RICKETY WOODEN BRIDGE EXTENDS ACROSS THE CHASM, VANISHING INTO THE
+MIST.  A SIGN POSTED ON THE BRIDGE READS, "STOP! PAY TROLL!"
+<BLANKLINE>
+A BURLY TROLL STANDS BY THE BRIDGE AND INSISTS YOU THROW HIM A
+TREASURE BEFORE YOU MAY CROSS.
+<BLANKLINE>
+
+>>> quiet(restart(), go_to(106))
+>>> read
+I'M AFRAID THE MAGAZINE IS WRITTEN IN DWARVISH.
+<BLANKLINE>
+>>> quiet(off)
+>>> read(magazine)
+I SEE NO MAGAZINE HERE.
+<BLANKLINE>
+>>> quiet(on, get(magazine), go_to(101))
+>>> read                        # confused by two choices
+READ WHAT?
+<BLANKLINE>
+>>> read(tablet)
+"CONGRATULATIONS ON BRINGING LIGHT INTO THE DARK-ROOM!"
+<BLANKLINE>
+>>> quiet(go_to(95), get(trident), go_to(103), unlock(clam), get(oyster))
+>>> read(oyster)
+HMMM, THIS LOOKS LIKE A CLUE, WHICH MEANS IT'LL COST YOU 10 POINTS TO
+READ IT.  SHOULD I GO AHEAD AND READ IT ANYWAY?
+<BLANKLINE>
+>>> yes
+IT SAYS, "THERE IS SOMETHING STRANGE ABOUT THIS PLACE, SUCH THAT ONE
+OF THE WORDS I'VE ALWAYS KNOWN NOW HAS A NEW EFFECT."
+<BLANKLINE>
+>>> read(oyster)
+IT SAYS THE SAME THING IT DID BEFORE.
+<BLANKLINE>
+>>> quiet(go_to(29), get(gold), go_to(112))
+>>> game.pirate.room = game.rooms[112]
+>>> look
+OUT FROM THE SHADOWS BEHIND YOU POUNCES A BEARDED PIRATE!  "HAR, HAR,"
+HE CHORTLES, "I'LL JUST TAKE ALL THIS BOOTY AND HIDE IT AWAY WITH ME
+CHEST DEEP IN THE MAZE!"  HE SNATCHES YOUR TREASURE AND VANISHES INTO
+THE GLOOM.
+<BLANKLINE>
+YOU ARE IN A LITTLE MAZE OF TWISTING PASSAGES, ALL DIFFERENT.
+<BLANKLINE>
+>>> s
+DEAD END
+<BLANKLINE>
+THERE IS A MESSAGE SCRAWLED IN THE DUST IN A FLOWERY SCRIPT, READING:
+"THIS IS NOT THE MAZE WHERE THE PIRATE LEAVES HIS TREASURE CHEST."
+<BLANKLINE>
+THERE IS A MASSIVE VENDING MACHINE HERE.  THE INSTRUCTIONS ON IT READ:
+"DROP COINS HERE TO RECEIVE FRESH BATTERIES."
+<BLANKLINE>
+>>> read(message)
+"THIS IS NOT THE MAZE WHERE THE PIRATE LEAVES HIS TREASURE CHEST."
+<BLANKLINE>
+>>> read(lamp)
+I'M AFRAID I DON'T UNDERSTAND.
+<BLANKLINE>
+
+>>> quiet(restart(), go_to(97))
+>>> smash(vase)
+YOU HAVE TAKEN THE VASE AND HURLED IT DELICATELY TO THE GROUND.
+<BLANKLINE>
+>>> get(vase)
+YOU CAN'T BE SERIOUS!
+<BLANKLINE>
+>>> quiet(restart(), go_to(97))
+>>> get(vase)                   # can we also break it while carrying it?
+OK
+<BLANKLINE>
+>>> smash(vase)
+YOU HAVE TAKEN THE VASE AND HURLED IT DELICATELY TO THE GROUND.
+<BLANKLINE>
+>>> inventory
+YOU ARE CURRENTLY HOLDING THE FOLLOWING:
+<BLANKLINE>
+BRASS LANTERN
+<BLANKLINE>
+>>> look
+THIS IS THE ORIENTAL ROOM.  ANCIENT ORIENTAL CAVE DRAWINGS COVER THE
+WALLS.  A GENTLY SLOPING PASSAGE LEADS UPWARD TO THE NORTH, ANOTHER
+PASSAGE LEADS SE, AND A HANDS AND KNEES CRAWL LEADS WEST.
+<BLANKLINE>
+THE FLOOR IS LITTERED WITH WORTHLESS SHARDS OF POTTERY.
+<BLANKLINE>
+>>> quiet(go_to(109))
+>>> smash(mirror)
+IT IS TOO FAR UP FOR YOU TO REACH.
+<BLANKLINE>
+>>> smash(lamp)
+IT IS BEYOND YOUR POWER TO DO THAT.
+<BLANKLINE>
+
+>>> quiet(restart())
+>>> wake(keys)
+DON'T BE RIDICULOUS!
+<BLANKLINE>
+
+>>> quiet(restart())
+>>> suspend
+PROVIDE "SUSPEND" WITH A FILENAME OR OPEN FILE
+<BLANKLINE>
+
+----------------
+Closing the cave
+----------------
+
+Finally, there are a few situations we need to test that relate
+specifically to the end-game.  For example, dying while the cave is
+closing causes a very abrupt ending to the game.
+
+>>> quiet(restart(), drop(lamp), go_to(13))
+>>> game.is_closing = 1
+>>> game.start_closing_cave()
+>>> w
+YOU FELL INTO A PIT AND BROKE EVERY BONE IN YOUR BODY!
+<BLANKLINE>
+IT LOOKS AS THOUGH YOU'RE DEAD.  WELL, SEEING AS HOW IT'S SO CLOSE TO
+CLOSING TIME ANYWAY, I THINK WE'LL JUST CALL IT A DAY.
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 78 OUT OF A POSSIBLE 350 USING 7 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 53 MORE POINTS
+<BLANKLINE>
+
+Now we reload our saved game one last time, take it through the ending,
+and then save anew so that we can do several tests in the repository.
+
+>>> quiet(restart(), get(keys), go_to(9))
+>>> game.is_closing = 1
+>>> game.start_closing_cave()
+>>> unlock
+A MYSTERIOUS RECORDED VOICE GROANS INTO LIFE AND ANNOUNCES:
+   "THIS EXIT IS CLOSED.  PLEASE LEAVE VIA MAIN OFFICE."
+<BLANKLINE>
+>>> game.clock2 = 1
+>>> w
+THE SEPULCHRAL VOICE ENTONES, "THE CAVE IS NOW CLOSED."  AS THE ECHOES
+FADE, THERE IS A BLINDING FLASH OF LIGHT (AND A SMALL PUFF OF ORANGE
+SMOKE). . . .    AS YOUR EYES REFOCUS, YOU LOOK AROUND AND FIND...
+<BLANKLINE>
+YOU'RE AT NE END.
+<BLANKLINE>
+>>> quiet(savefile.truncate())
+>>> savefile.seek(0)
+0
+>>> save(savefile)
+GAME SAVED
+<BLANKLINE>
+
+Most of the interesting end-game events are fatal, but not all.
+
+>>> quiet(restart(), sw)
+>>> get(cage)
+OK
+<BLANKLINE>
+>>> attack(bird)
+OH, LEAVE THE POOR UNHAPPY BIRD ALONE.
+<BLANKLINE>
+>>> drop(bird)
+THE LITTLE BIRD ATTACKS THE GREEN SNAKE, AND IN AN ASTOUNDING FLURRY
+DRIVES THE SNAKE AWAY.
+<BLANKLINE>
+THE RESULTING RUCKUS HAS AWAKENED THE DWARVES.  THERE ARE NOW SEVERAL
+THREATENING LITTLE DWARVES IN THE ROOM WITH YOU!  MOST OF THEM THROW
+KNIVES AT YOU!  ALL OF THEM GET YOU!
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 98 OUT OF A POSSIBLE 350 USING 13 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 33 MORE POINTS
+<BLANKLINE>
+
+>>> quiet(restart())
+>>> attack(dwarf)
+THE RESULTING RUCKUS HAS AWAKENED THE DWARVES.  THERE ARE NOW SEVERAL
+THREATENING LITTLE DWARVES IN THE ROOM WITH YOU!  MOST OF THEM THROW
+KNIVES AT YOU!  ALL OF THEM GET YOU!
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 98 OUT OF A POSSIBLE 350 USING 10 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 33 MORE POINTS
+<BLANKLINE>
+
+>>> quiet(restart(), sw)
+>>> get(rod)                    # grab the rusty-mark rod
+OK
+<BLANKLINE>
+>>> ne                          # move to where the rusty-star rods lie
+YOU'RE AT NE END.
+<BLANKLINE>
+>>> throw(rod)                  # will the correct rod get dropped?
+OK
+<BLANKLINE>
+>>> look
+YOU ARE AT THE NORTHEAST END OF AN IMMENSE ROOM, EVEN LARGER THAN THE
+GIANT ROOM.  IT APPEARS TO BE A REPOSITORY FOR THE "ADVENTURE"
+PROGRAM.  MASSIVE TORCHES FAR OVERHEAD BATHE THE ROOM WITH SMOKY
+YELLOW LIGHT.  SCATTERED ABOUT YOU CAN BE SEEN A PILE OF BOTTLES (ALL
+OF THEM EMPTY), A NURSERY OF YOUNG BEANSTALKS MURMURING QUIETLY, A BED
+OF OYSTERS, A BUNDLE OF BLACK RODS WITH RUSTY STARS ON THEIR ENDS, AND
+A COLLECTION OF BRASS LANTERNS.  OFF TO ONE SIDE A GREAT MANY DWARVES
+ARE SLEEPING ON THE FLOOR, SNORING LOUDLY.  A SIGN NEARBY READS: "DO
+NOT DISTURB THE DWARVES!"  AN IMMENSE MIRROR IS HANGING AGAINST ONE
+WALL, AND STRETCHES TO THE OTHER END OF THE ROOM, WHERE VARIOUS OTHER
+SUNDRY OBJECTS CAN BE GLIMPSED DIMLY IN THE DISTANCE.
+<BLANKLINE>
+A THREE FOOT BLACK ROD WITH A RUSTY MARK ON AN END LIES NEARBY.
+<BLANKLINE>
+
+>>> restart()
+>>> find(eggs)
+I DARESAY WHATEVER YOU WANT IS AROUND HERE SOMEWHERE.
+<BLANKLINE>
+>>> sw
+YOU'RE AT SW END.
+<BLANKLINE>
+>>> get(rod)
+OK
+<BLANKLINE>
+>>> blast
+THERE IS A LOUD EXPLOSION, AND YOU ARE SUDDENLY SPLASHED ACROSS THE
+WALLS OF THE ROOM.
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 113 OUT OF A POSSIBLE 350 USING 13 TURNS.
+<BLANKLINE>
+YOU HAVE ACHIEVED THE RATING: "EXPERIENCED ADVENTURER".
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 88 MORE POINTS
+<BLANKLINE>
+
+>>> restart()
+>>> shatter(mirror)
+YOU STRIKE THE MIRROR A RESOUNDING BLOW, WHEREUPON IT SHATTERS INTO A
+MYRIAD TINY FRAGMENTS.
+<BLANKLINE>
+THE RESULTING RUCKUS HAS AWAKENED THE DWARVES.  THERE ARE NOW SEVERAL
+THREATENING LITTLE DWARVES IN THE ROOM WITH YOU!  MOST OF THEM THROW
+KNIVES AT YOU!  ALL OF THEM GET YOU!
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 98 OUT OF A POSSIBLE 350 USING 10 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 33 MORE POINTS
+<BLANKLINE>
+
+>>> restart()
+>>> wake(dwarves)
+YOU PROD THE NEAREST DWARF, WHO WAKES UP GRUMPILY, TAKES ONE LOOK AT
+YOU, CURSES, AND GRABS FOR HIS AXE.
+<BLANKLINE>
+THE RESULTING RUCKUS HAS AWAKENED THE DWARVES.  THERE ARE NOW SEVERAL
+THREATENING LITTLE DWARVES IN THE ROOM WITH YOU!  MOST OF THEM THROW
+KNIVES AT YOU!  ALL OF THEM GET YOU!
+<BLANKLINE>
+<BLANKLINE>
+YOU SCORED 98 OUT OF A POSSIBLE 350 USING 10 TURNS.
+<BLANKLINE>
+YOUR SCORE QUALIFIES YOU AS A NOVICE CLASS ADVENTURER.
+<BLANKLINE>
+TO ACHIEVE THE NEXT HIGHER RATING, YOU NEED 33 MORE POINTS
+<BLANKLINE>

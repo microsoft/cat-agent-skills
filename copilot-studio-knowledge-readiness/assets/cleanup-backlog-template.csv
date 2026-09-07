@@ -1,0 +1,6 @@
+Priority,Severity,Task,Source,OwnerRole,Effort,AcceptanceCriteria,Status
+1,High,Resolve conflicting answers across duplicate policy pages,,Content owner,Medium,One canonical source is selected and duplicate pages are retired or redirected,Not started
+2,High,Review permissions for restricted content when ACL evidence is missing or unclear,,Site owner,Medium,Only intended audiences can access the connected source and the review evidence is documented,Not started
+3,Medium,Add or export owner and review metadata needed for assessment,,Content owner,Low,"Owner, lastReviewedDate, and effectiveDate are visible in the source or accompanying export",Not started
+4,Medium,Split mixed-topic long documents into focused pages,,Content owner,Medium,Each page has one primary intent and clear headings,Not started
+5,Low,Create validation test prompts,,Maker,Low,"Regression prompt set covers top intents, edge cases, and negative tests",Not started

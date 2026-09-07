@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cat-agent-skills/agent-harness-explorer/snapshot.schema.json",
+  "title": "Agent Harness Capability Snapshot",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "snapshotId",
+    "capturedAt",
+    "skillVersion",
+    "probeSuiteVersion",
+    "runtime",
+    "pythonLibraries",
+    "capabilities",
+    "summary",
+    "fingerprint"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string" },
+    "snapshotId": { "type": "string" },
+    "capturedAt": { "type": "string", "format": "date-time" },
+    "skillVersion": { "type": "string" },
+    "probeSuiteVersion": { "type": "string" },
+    "catalogVersion": { "type": ["string", "null"] },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "pythonVersion": { "type": "string" },
+        "implementation": { "type": "string" },
+        "platform": { "type": "string" },
+        "machine": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "pythonLibraries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "version", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^python\\.package:" },
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "status": { "type": "string" },
+          "importName": { "type": ["string", "null"] },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "documentationUrl": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "catalogStatus": {
+            "type": "string",
+            "enum": ["cataloged", "uncataloged"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "restricted",
+              "unknown",
+              "unverified",
+              "not-visible"
+            ]
+          },
+          "value": {},
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "source": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "probes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["probeId", "probeVersion", "status", "safetyLevel"],
+        "properties": {
+          "probeId": { "type": "string" },
+          "probeVersion": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["success", "partial", "failed", "skipped"]
+          },
+          "safetyLevel": {
+            "type": "string",
+            "enum": ["passive", "active-safe", "active-sensitive"]
+          }
+        }
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "available": { "type": "integer" },
+        "visible": { "type": "integer" },
+        "restricted": { "type": "integer" },
+        "unknown": { "type": "integer" },
+        "libraries": { "type": "integer" },
+        "uncataloged": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "fingerprint": { "type": "string", "pattern": "^sha256:" }
+  },
+  "additionalProperties": true
+}
