@@ -1,0 +1,11 @@
+{
+  "name": "Secrets Leak Guardrail",
+  "description": "Scan code, config, logs, or exported files for API keys, tokens, and passwords before they're shared. Flags every finding to the user instead of redacting silently.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["security", "guardrail", "secrets", "credentials", "scripts", "governance"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
