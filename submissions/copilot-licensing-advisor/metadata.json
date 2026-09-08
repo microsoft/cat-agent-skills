@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Licensing Advisor",
+  "description": "Interview-driven recommendation of the right Microsoft 365 Copilot, Copilot Studio, and Power Platform license mix, with costs fetched live at the time of the conversation instead of hardcoded prices.",
+  "platforms": ["Copilot Studio", "Cowork", "Scout"],
+  "tags": ["licensing", "microsoft-365", "copilot", "power-platform", "cost", "advisor"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
