@@ -1,0 +1,10 @@
+{
+  "name": "Cowork Task Route",
+  "description": "Show the skills, agents, and tools Cowork used to complete the current task as a concise ordered route.",
+  "platforms": ["Cowork"],
+  "tags": ["cowork", "productivity", "transparency"],
+  "author": "tanaveed",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
