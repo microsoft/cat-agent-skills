@@ -23,6 +23,7 @@ from cowork_plugin_utils import (  # noqa: E402
     assert_outline_png_pixels,
     find_npx_command,
     inspect_zip,
+    normalize_manifest_path,
     read_skill_metadata,
     temporary_workspace,
     validate_project,
@@ -153,6 +154,30 @@ class FrontmatterTests(WorkspaceTestCase):
                 )
                 with self.assertRaisesRegex(CoworkPluginError, "must be"):
                     read_skill_metadata(path)
+
+
+class ManifestPathTests(WorkspaceTestCase):
+    def test_rejects_paths_that_zip_validation_would_reject(self) -> None:
+        unsafe_paths = (
+            "skills/name:stream",
+            "skills/folder./SKILL.md",
+            "skills/folder /SKILL.md",
+            "skills/control\x1f/SKILL.md",
+        )
+        for path in unsafe_paths:
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(
+                    CoworkPluginError, "ZIP-unsafe|Windows-ambiguous"
+                ):
+                    normalize_manifest_path(path, "manifest path")
+
+    def test_accepts_portable_package_relative_path(self) -> None:
+        self.assertEqual(
+            normalize_manifest_path(
+                "./skills/review-helper/SKILL.md", "manifest path"
+            ).as_posix(),
+            "skills/review-helper/SKILL.md",
+        )
 
 
 class TemporaryWorkspaceTests(WorkspaceTestCase):

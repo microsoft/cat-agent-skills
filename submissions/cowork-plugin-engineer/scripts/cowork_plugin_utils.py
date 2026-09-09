@@ -146,6 +146,15 @@ def normalize_manifest_path(relative_path: str, label: str) -> PurePosixPath:
             f"{label} escapes or ambiguously addresses the package root: "
             f"{relative_path}"
         )
+    if (
+        ":" in normalized
+        or any(part.endswith((".", " ")) for part in parts)
+        or any(ord(character) < 32 for character in normalized)
+    ):
+        raise CoworkPluginError(
+            f"{label} uses a ZIP-unsafe or Windows-ambiguous path: "
+            f"{relative_path}"
+        )
     return PurePosixPath(*parts)
 
 
