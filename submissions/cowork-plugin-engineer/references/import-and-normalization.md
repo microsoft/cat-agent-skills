@@ -4,13 +4,8 @@
 
 Microsoft 365 Agents Toolkit imports Claude and Cursor plugins:
 
-```powershell
-atk import openplugin `
-  --path <staged-source> `
-  --output <destination> `
-  --website-url <https-url> `
-  --privacy-url <https-url> `
-  --terms-url <https-url>
+```sh
+npx --yes @microsoft/m365agentstoolkit-cli@1.1.15 import openplugin --path <staged-source> --output <destination> --website-url <https-url> --privacy-url <https-url> --terms-url <https-url>
 ```
 
 Always copy the source to a temporary staging directory first.

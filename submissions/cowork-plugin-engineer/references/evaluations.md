@@ -6,10 +6,11 @@ skill triggers correctly or that a connector returns the right result.
 
 ## Generate a draft suite
 
-```powershell
-pwsh -File .\scripts\New-CoworkPluginEvals.ps1 `
-  -ProjectPath <project-path>
+```sh
+python3 scripts/new_cowork_plugin_evals.py --project-path <project-path>
 ```
+
+On Windows, replace `python3` with `py -3`.
 
 The script writes `evals/evals.json` using Microsoft 365 Copilot evaluation
 schema v1.6.0. It creates:

@@ -21,6 +21,8 @@ plugin.zip
 ```
 
 The ZIP must not contain a wrapper directory.
+Package entries must use ZIP Store or Deflate compression; other compression
+methods are rejected before extraction.
 
 ## Manifest invariants
 
@@ -70,14 +72,15 @@ The ZIP must not contain a wrapper directory.
 
 The package is complete only when:
 
-1. `Test-CoworkPlugin.ps1` passes.
+1. `test_cowork_plugin.py` passes.
 2. `atk package` succeeds.
 3. `atk validate --package-file` succeeds.
-4. ZIP inspection confirms all manifest references are present at the root.
+4. Safe ZIP extraction and deep validation of the packaged manifest, icons,
+   skills, connectors, and tool descriptions succeeds.
 5. Authentication prerequisites are complete or the output is explicitly
    labeled a non-deployable draft.
 
 For a ZIP supplied without its source project, run
-`scripts/Test-CoworkPluginPackage.ps1`. It rejects unsafe archive paths and
+`scripts/test_cowork_plugin_package.py`. It rejects unsafe archive paths and
 wrapper directories before extraction, applies the same deep package checks,
 and runs Agents Toolkit validation.

@@ -36,11 +36,11 @@ Stop if Cowork support cannot be verified.
 
 Add a versioned template instead of overwriting the current one:
 
-```powershell
-Copy-Item `
-  .\assets\manifest.v<CURRENT>.template.json `
-  .\assets\manifest.v<TARGET>.template.json
+```sh
+python3 -c "from pathlib import Path; Path('assets/manifest.v<TARGET>.template.json').write_bytes(Path('assets/manifest.v<CURRENT>.template.json').read_bytes())"
 ```
+
+On Windows, replace `python3` with `py -3`.
 
 In the new template, update both:
 
@@ -56,8 +56,8 @@ alone constitutes an upgrade.
 
 ### 3. Update project scaffolding
 
-Update `scripts\New-CoworkPluginProject.ps1` to select the target template.
-Prefer adding or maintaining a `-ManifestVersion` parameter that maps supported
+Update `scripts/new_cowork_plugin_project.py` to select the target template.
+Prefer adding or maintaining a `--manifest-version` parameter that maps supported
 versions to their corresponding templates. Retain older templates while their
 manifest versions remain supported.
 
@@ -66,8 +66,8 @@ manifest versions remain supported.
 Review every manifest-version condition in:
 
 ```text
-scripts\Test-CoworkPlugin.ps1
-scripts\Test-CoworkPluginPackage.ps1
+scripts/test_cowork_plugin.py
+scripts/test_cowork_plugin_package.py
 ```
 
 Add rules required by the target schema. Preserve rules for older supported
@@ -89,8 +89,8 @@ Pay particular attention to:
 Review the default `AtkVersion` in:
 
 ```text
-scripts\Build-CoworkPlugin.ps1
-scripts\Test-CoworkPluginPackage.ps1
+scripts/build_cowork_plugin.py
+scripts/test_cowork_plugin_package.py
 ```
 
 Update the pinned version only after confirming that it supports the target
@@ -103,10 +103,10 @@ Review and update:
 ```text
 SKILL.md
 README.md
-references\package-contract.md
-references\import-and-normalization.md
-references\troubleshooting.md
-assets\manifest-upgrade-instructions.md
+references/package-contract.md
+references/import-and-normalization.md
+references/troubleshooting.md
+assets/manifest-upgrade-instructions.md
 ```
 
 Document version-specific behavior instead of presenting it as universal.
@@ -127,22 +127,14 @@ Exercise all relevant package shapes:
 
 Run:
 
-```powershell
-pwsh -File .\scripts\Test-CoworkPlugin.ps1 `
-  -ProjectPath <fixture>
-
-pwsh -File .\scripts\Build-CoworkPlugin.ps1 `
-  -ProjectPath <fixture> `
-  -AtkVersion <VERIFIED-TOOLKIT-VERSION>
-
-pwsh -File .\scripts\Test-CoworkPluginPackage.ps1 `
-  -PackagePath <fixture.zip> `
-  -AtkVersion <VERIFIED-TOOLKIT-VERSION>
-
-pwsh -File .\scripts\New-CoworkPluginEvals.ps1 `
-  -ProjectPath <fixture> `
-  -Force
+```sh
+python3 scripts/test_cowork_plugin.py --project-path <fixture>
+python3 scripts/build_cowork_plugin.py --project-path <fixture> --atk-version <VERIFIED-TOOLKIT-VERSION>
+python3 scripts/test_cowork_plugin_package.py --package-path <fixture.zip> --atk-version <VERIFIED-TOOLKIT-VERSION>
+python3 scripts/new_cowork_plugin_evals.py --project-path <fixture> --force
 ```
+
+On Windows, replace `python3` with `py -3`.
 
 The upgrade is complete only when the custom validators pass, Agents Toolkit
 packaging succeeds, all Toolkit validation rules pass, and generated ZIPs have
@@ -163,7 +155,7 @@ Open this project and use:
 
 > Upgrade the Cowork plugin engineering skill from manifest version
 > `<CURRENT>` to `<TARGET>`. Follow
-> `assets\manifest-upgrade-instructions.md`. Verify current Microsoft
+> `assets/manifest-upgrade-instructions.md`. Verify current Microsoft
 > documentation for Cowork support, rollout status, schema changes, and the
 > minimum Agents Toolkit version before editing. Preserve support for older
 > manifest versions where practical, update the scripts and documentation,

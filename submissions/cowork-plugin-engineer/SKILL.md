@@ -22,24 +22,24 @@ as separate gates.
    - Skills-only folder
    - Existing Agents Toolkit project
 4. Choose the workflow:
-   - New project: use `scripts/New-CoworkPluginProject.ps1`.
+   - New project: use `scripts/new_cowork_plugin_project.py`.
    - Open plugin import: follow
      [import-and-normalization.md](references/import-and-normalization.md).
    - Existing project: validate before editing.
-   - Existing ZIP: use `scripts/Test-CoworkPluginPackage.ps1`; never extract
+   - Existing ZIP: use `scripts/test_cowork_plugin_package.py`; never extract
      an untrusted archive without its path and expansion safeguards.
 5. If an MCP connector is present:
    - Discover tools through `initialize`, `notifications/initialized`, and
      `tools/list`; never invent tool names or schemas.
    - Read [authentication.md](references/authentication.md).
    - Reject unresolved OAuth placeholders before producing a deployable ZIP.
-6. Run `scripts/Test-CoworkPlugin.ps1`.
-7. Build through `scripts/Build-CoworkPlugin.ps1`. This uses Microsoft 365
+6. Run `scripts/test_cowork_plugin.py`.
+7. Build through `scripts/build_cowork_plugin.py`. This uses Microsoft 365
    Agents Toolkit (`atk`) for both packaging and package validation.
 8. Inspect the final ZIP and return its exact path.
 9. When evaluations are requested, read
    [evaluations.md](references/evaluations.md) and use
-   `scripts/New-CoworkPluginEvals.ps1`. Treat generated cases as drafts until
+   `scripts/new_cowork_plugin_evals.py`. Treat generated cases as drafts until
    every placeholder has an approved expected response.
 10. Sideload or deploy only when the user explicitly asks. Keep tenant-wide
    deployment approval-gated.
@@ -64,24 +64,25 @@ as separate gates.
 
 ## Standard commands
 
-```powershell
+Use `python3` in the Cowork Linux runtime and on Linux/macOS. On Windows,
+replace `python3` with `py -3`. Keep each command on one line so it works
+without shell-specific continuation syntax.
+
+```sh
 # Validate a project without building.
-pwsh -File .\scripts\Test-CoworkPlugin.ps1 -ProjectPath <project>
+python3 scripts/test_cowork_plugin.py --project-path <project>
 
 # Validate an existing ZIP without trusting its contents.
-pwsh -File .\scripts\Test-CoworkPluginPackage.ps1 -PackagePath <package.zip>
+python3 scripts/test_cowork_plugin_package.py --package-path <package.zip>
 
 # Insert the Teams Developer Portal OAuth client registration ID.
-pwsh -File .\scripts\Set-CoworkOAuthReference.ps1 `
-  -ProjectPath <project> `
-  -ConnectorId <connector-id> `
-  -OAuthConfigurationId <generated-id>
+python3 scripts/set_cowork_oauth_reference.py --project-path <project> --connector-id <connector-id> --oauth-configuration-id <generated-id>
 
 # Build and validate the upload package.
-pwsh -File .\scripts\Build-CoworkPlugin.ps1 -ProjectPath <project>
+python3 scripts/build_cowork_plugin.py --project-path <project>
 
 # Generate a draft behavioral evaluation suite.
-pwsh -File .\scripts\New-CoworkPluginEvals.ps1 -ProjectPath <project>
+python3 scripts/new_cowork_plugin_evals.py --project-path <project>
 ```
 
 ## Troubleshooting

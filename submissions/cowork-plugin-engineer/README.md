@@ -2,7 +2,7 @@
 
 Build and maintain Microsoft Copilot Cowork plugins with a repeatable,
 validation-first workflow. This Agent Skill combines practical guidance,
-versioned templates, and PowerShell automation to reduce mistakes across
+versioned templates, and Python 3.10+ automation to reduce mistakes across
 plugin structure, Model Context Protocol (MCP) connectors, OAuth, packaging,
 evaluation design, and manifest upgrades.
 
@@ -32,7 +32,7 @@ Use it to create and validate plugin packages in your own workspace.
 The guidance is useful in any Agent Skills host. To execute the included
 automation, the host or development machine needs:
 
-- PowerShell 7.2 or later.
+- Python 3.10 or later (`python3` on Linux/macOS; `py -3` on Windows).
 - Node.js and `npx`.
 - Network access when Microsoft 365 Agents Toolkit validation is requested.
 - A local plugin project or plugin ZIP for validation.
@@ -54,12 +54,12 @@ server-side allowed-client configuration.
 
 | Script | Purpose |
 |---|---|
-| `New-CoworkPluginProject.ps1` | Scaffold a new plugin project. |
-| `Test-CoworkPlugin.ps1` | Apply deep project and package checks. |
-| `Test-CoworkPluginPackage.ps1` | Safely validate a supplied ZIP. |
-| `Set-CoworkOAuthReference.ps1` | Set an OAuth registration ID and increment the package version. |
-| `Build-CoworkPlugin.ps1` | Package and validate with Agents Toolkit. |
-| `New-CoworkPluginEvals.ps1` | Generate a draft Microsoft 365 Copilot evaluation dataset. |
+| `new_cowork_plugin_project.py` | Scaffold a new plugin project. |
+| `test_cowork_plugin.py` | Apply deep project and package checks. |
+| `test_cowork_plugin_package.py` | Safely validate a supplied ZIP. |
+| `set_cowork_oauth_reference.py` | Set an OAuth registration ID and increment the package version. |
+| `build_cowork_plugin.py` | Package and validate with Agents Toolkit. |
+| `new_cowork_plugin_evals.py` | Generate a draft Microsoft 365 Copilot evaluation dataset. |
 
 ## Good to know
 
