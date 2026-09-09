@@ -5,6 +5,7 @@
 | Symptom | Layer | Likely cause | Action |
 |---|---|---|---|
 | Upload rejects missing `mcpToolDescription` | Manifest | Numbered schema requires a bundled tool file | Add a package-relative tool file captured from `tools/list` |
+| Outline icon passes dimensions but upload fails | Icon pixels | The PNG is opaque or contains non-white visible pixels | Use a 32x32 icon containing only visible white and transparent pixels |
 | Validator says tool-description file is absent although it is in the ZIP | Manifest path | Referenced path does not match the archive path or casing | Match the packaged file path and rebuild |
 | Nested skill name must match parent folder | Skill layout | Companion documents are named `SKILL.md` | Rename non-registered documents to `REFERENCE.md` or `CAPABILITY.md` |
 | `Invalid encoded OAuthConfigurationId` | OAuth lookup | Placeholder or wrong identifier in `referenceId` | Use Teams Developer Portal's generated OAuth client registration ID |

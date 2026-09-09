@@ -32,7 +32,7 @@ Use it to create and validate plugin packages in your own workspace.
 The guidance is useful in any Agent Skills host. To execute the included
 automation, the host or development machine needs:
 
-- PowerShell 7 or later.
+- PowerShell 7.2 or later.
 - Node.js and `npx`.
 - Network access when Microsoft 365 Agents Toolkit validation is requested.
 - A local plugin project or plugin ZIP for validation.

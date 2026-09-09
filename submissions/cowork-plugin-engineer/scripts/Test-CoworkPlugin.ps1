@@ -11,6 +11,53 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+if ($PSVersionTable.PSVersion -lt [version]'7.2') {
+    throw 'Test-CoworkPlugin.ps1 requires PowerShell 7.2 or later.'
+}
+
+if ($null -eq ('CoworkPluginValidation.NonBufferingReadStream' -as [type])) {
+    Add-Type -TypeDefinition @'
+using System;
+using System.IO;
+
+namespace CoworkPluginValidation
+{
+    public sealed class NonBufferingReadStream : Stream
+    {
+        private readonly Stream inner;
+
+        public NonBufferingReadStream(Stream inner)
+        {
+            this.inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        }
+
+        public override bool CanRead => inner.CanRead;
+        public override bool CanSeek => inner.CanSeek;
+        public override bool CanWrite => false;
+        public override long Length => inner.Length;
+        public override long Position
+        {
+            get => inner.Position;
+            set => inner.Position = value;
+        }
+
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) =>
+            inner.Seek(offset, origin);
+        public override void SetLength(long value) =>
+            throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count) =>
+            inner.Read(buffer, offset, Math.Min(count, 1));
+        public override int Read(Span<byte> buffer) =>
+            buffer.Length == 0 ? 0 : inner.Read(buffer.Slice(0, 1));
+        public override int ReadByte() => inner.ReadByte();
+    }
+}
+'@
+}
+
 function Get-PropertyValue {
     param(
         [Parameter(Mandatory)]$Object,
@@ -80,6 +127,334 @@ function Get-PngDimensions {
         ($bytes[22] -shl 8) -bor $bytes[23]
 
     [pscustomobject]@{ Width = $width; Height = $height }
+}
+
+function Read-PngUInt32 {
+    param(
+        [Parameter(Mandatory)][byte[]]$Bytes,
+        [Parameter(Mandatory)][int]$Offset
+    )
+
+    return ([uint32]$Bytes[$Offset] -shl 24) -bor
+        ([uint32]$Bytes[$Offset + 1] -shl 16) -bor
+        ([uint32]$Bytes[$Offset + 2] -shl 8) -bor
+        [uint32]$Bytes[$Offset + 3]
+}
+
+function Get-PngSample {
+    param(
+        [Parameter(Mandatory)][byte[]]$Row,
+        [Parameter(Mandatory)][int]$Index,
+        [Parameter(Mandatory)][int]$BitDepth
+    )
+
+    switch ($BitDepth) {
+        8 { return [int]$Row[$Index] }
+        16 {
+            $offset = $Index * 2
+            return ([int]$Row[$offset] -shl 8) -bor $Row[$offset + 1]
+        }
+        { $_ -in 1, 2, 4 } {
+            $samplesPerByte = 8 / $BitDepth
+            $byteIndex = [math]::Floor($Index / $samplesPerByte)
+            $sampleInByte = $Index % $samplesPerByte
+            $shift = 8 - $BitDepth - ($sampleInByte * $BitDepth)
+            $mask = (1 -shl $BitDepth) - 1
+            return ([int]$Row[$byteIndex] -shr $shift) -band $mask
+        }
+        default { throw "Unsupported PNG bit depth: $BitDepth" }
+    }
+}
+
+function Get-PaethPredictor {
+    param(
+        [int]$Left,
+        [int]$Up,
+        [int]$UpperLeft
+    )
+
+    $estimate = $Left + $Up - $UpperLeft
+    $leftDistance = [math]::Abs($estimate - $Left)
+    $upDistance = [math]::Abs($estimate - $Up)
+    $upperLeftDistance = [math]::Abs($estimate - $UpperLeft)
+    if ($leftDistance -le $upDistance -and
+        $leftDistance -le $upperLeftDistance) {
+        return $Left
+    }
+    if ($upDistance -le $upperLeftDistance) {
+        return $Up
+    }
+    return $UpperLeft
+}
+
+function Assert-OutlinePngPixels {
+    param([Parameter(Mandatory)][string]$Path)
+
+    $bytes = [IO.File]::ReadAllBytes($Path)
+    $offset = 8
+    $width = 0
+    $height = 0
+    $bitDepth = 0
+    $colorType = 0
+    $interlace = 0
+    [byte[]]$palette = @()
+    [byte[]]$transparency = @()
+    $foundIend = $false
+    $compressed = [IO.MemoryStream]::new()
+    try {
+        while ($offset + 12 -le $bytes.Length) {
+            $length = [int](Read-PngUInt32 $bytes $offset)
+            $type = [Text.Encoding]::ASCII.GetString($bytes, $offset + 4, 4)
+            $dataOffset = $offset + 8
+            if ($length -lt 0 -or $dataOffset + $length + 4 -gt $bytes.Length) {
+                throw "PNG contains an invalid chunk: $Path"
+            }
+
+            switch ($type) {
+                'IHDR' {
+                    if ($length -ne 13) {
+                        throw "PNG has an invalid IHDR chunk: $Path"
+                    }
+                    $width = [int](Read-PngUInt32 $bytes $dataOffset)
+                    $height = [int](Read-PngUInt32 $bytes ($dataOffset + 4))
+                    $bitDepth = $bytes[$dataOffset + 8]
+                    $colorType = $bytes[$dataOffset + 9]
+                    $interlace = $bytes[$dataOffset + 12]
+                }
+                'PLTE' {
+                    $palette = [byte[]]::new($length)
+                    [Array]::Copy($bytes, $dataOffset, $palette, 0, $length)
+                }
+                'tRNS' {
+                    $transparency = [byte[]]::new($length)
+                    [Array]::Copy($bytes, $dataOffset, $transparency, 0, $length)
+                }
+                'IDAT' { $compressed.Write($bytes, $dataOffset, $length) }
+                'IEND' {
+                    if ($length -ne 0) {
+                        throw "PNG has an invalid IEND chunk: $Path"
+                    }
+                    $foundIend = $true
+                }
+            }
+            $offset = $dataOffset + $length + 4
+            if ($foundIend) {
+                if ($offset -ne $bytes.Length) {
+                    throw "PNG contains data after its IEND chunk: $Path"
+                }
+                break
+            }
+        }
+        if (-not $foundIend) {
+            throw "PNG is missing its IEND chunk: $Path"
+        }
+
+        if ($width -ne 32 -or $height -ne 32) {
+            throw "outline.png must be 32x32; found ${width}x${height}."
+        }
+        if ($interlace -ne 0) {
+            throw 'outline.png must use a non-interlaced PNG encoding for pixel validation.'
+        }
+
+        $channels = switch ($colorType) {
+            0 { 1 }
+            2 { 3 }
+            3 { 1 }
+            4 { 2 }
+            6 { 4 }
+            default { throw "outline.png uses unsupported PNG color type $colorType." }
+        }
+        $validDepths = switch ($colorType) {
+            0 { @(1, 2, 4, 8, 16) }
+            2 { @(8, 16) }
+            3 { @(1, 2, 4, 8) }
+            4 { @(8, 16) }
+            6 { @(8, 16) }
+        }
+        if ($bitDepth -notin $validDepths) {
+            throw "outline.png uses unsupported bit depth $bitDepth for color type $colorType."
+        }
+        if ($colorType -eq 3 -and ($palette.Length -eq 0 -or
+            $palette.Length % 3 -ne 0)) {
+            throw 'outline.png has an invalid or missing PNG palette.'
+        }
+
+        $rowBytes = [int][math]::Ceiling($width * $channels * $bitDepth / 8)
+        $filterBytesPerPixel = [math]::Max(
+            1,
+            [int][math]::Ceiling($channels * $bitDepth / 8)
+        )
+        $compressed.Position = 0
+        $strictCompressed = [CoworkPluginValidation.NonBufferingReadStream]::new(
+            $compressed
+        )
+        $expectedBytes = ($rowBytes + 1) * $height
+        $scanlines = [byte[]]::new($expectedBytes)
+        $zlib = [IO.Compression.ZLibStream]::new(
+            $strictCompressed,
+            [IO.Compression.CompressionMode]::Decompress,
+            $true
+        )
+        try {
+            $totalRead = 0
+            while ($totalRead -lt $expectedBytes) {
+                $read = $zlib.Read(
+                    $scanlines,
+                    $totalRead,
+                    $expectedBytes - $totalRead
+                )
+                if ($read -eq 0) {
+                    break
+                }
+                $totalRead += $read
+            }
+            $overflow = [byte[]]::new(1)
+            if ($totalRead -ne $expectedBytes -or
+                $zlib.Read($overflow, 0, 1) -ne 0) {
+                throw 'outline.png has unexpected decompressed pixel data.'
+            }
+            if ($strictCompressed.Position -ne $strictCompressed.Length) {
+                throw 'outline.png IDAT contains data after its zlib stream.'
+            }
+        }
+        finally {
+            $zlib.Dispose()
+            $strictCompressed.Dispose()
+        }
+
+        $reconstructed = [byte[]]::new($rowBytes * $height)
+        for ($y = 0; $y -lt $height; $y++) {
+            $sourceOffset = $y * ($rowBytes + 1)
+            $filter = $scanlines[$sourceOffset]
+            for ($x = 0; $x -lt $rowBytes; $x++) {
+                $raw = [int]$scanlines[$sourceOffset + 1 + $x]
+                $targetOffset = ($y * $rowBytes) + $x
+                $left = if ($x -ge $filterBytesPerPixel) {
+                    [int]$reconstructed[$targetOffset - $filterBytesPerPixel]
+                } else { 0 }
+                $up = if ($y -gt 0) {
+                    [int]$reconstructed[$targetOffset - $rowBytes]
+                } else { 0 }
+                $upperLeft = if ($y -gt 0 -and $x -ge $filterBytesPerPixel) {
+                    [int]$reconstructed[
+                        $targetOffset - $rowBytes - $filterBytesPerPixel
+                    ]
+                } else { 0 }
+                $predictor = switch ($filter) {
+                    0 { 0 }
+                    1 { $left }
+                    2 { $up }
+                    3 { [math]::Floor(($left + $up) / 2) }
+                    4 { Get-PaethPredictor $left $up $upperLeft }
+                    default { throw "outline.png uses invalid PNG filter $filter." }
+                }
+                $reconstructed[$targetOffset] = [byte](($raw + $predictor) -band 255)
+            }
+        }
+
+        $maxSample = (1 -shl $bitDepth) - 1
+        if ($bitDepth -eq 16) {
+            $maxSample = 65535
+        }
+        $transparentPixels = 0
+        $visiblePixels = 0
+        for ($y = 0; $y -lt $height; $y++) {
+            $row = [byte[]]::new($rowBytes)
+            [Array]::Copy($reconstructed, $y * $rowBytes, $row, 0, $rowBytes)
+            for ($x = 0; $x -lt $width; $x++) {
+                $sampleIndex = $x * $channels
+                $channelMax = $maxSample
+                $alphaSample = $maxSample
+                switch ($colorType) {
+                    0 {
+                        $graySample = Get-PngSample $row $sampleIndex $bitDepth
+                        $redSample = $greenSample = $blueSample = $graySample
+                        if ($transparency.Length -ge 2) {
+                            $transparentGray = ([int]$transparency[0] -shl 8) -bor
+                                $transparency[1]
+                            if ($graySample -eq $transparentGray) {
+                                $alphaSample = 0
+                            }
+                        }
+                    }
+                    2 {
+                        $redSample = Get-PngSample $row $sampleIndex $bitDepth
+                        $greenSample = Get-PngSample $row ($sampleIndex + 1) $bitDepth
+                        $blueSample = Get-PngSample $row ($sampleIndex + 2) $bitDepth
+                        if ($transparency.Length -ge 6) {
+                            $transparentRed = ([int]$transparency[0] -shl 8) -bor
+                                $transparency[1]
+                            $transparentGreen = ([int]$transparency[2] -shl 8) -bor
+                                $transparency[3]
+                            $transparentBlue = ([int]$transparency[4] -shl 8) -bor
+                                $transparency[5]
+                            if ($redSample -eq $transparentRed -and
+                                $greenSample -eq $transparentGreen -and
+                                $blueSample -eq $transparentBlue) {
+                                $alphaSample = 0
+                            }
+                        }
+                    }
+                    3 {
+                        $paletteIndex = Get-PngSample $row $sampleIndex $bitDepth
+                        $paletteOffset = $paletteIndex * 3
+                        if ($paletteOffset + 2 -ge $palette.Length) {
+                            throw "outline.png references missing palette index $paletteIndex."
+                        }
+                        $channelMax = 255
+                        $redSample = $palette[$paletteOffset]
+                        $greenSample = $palette[$paletteOffset + 1]
+                        $blueSample = $palette[$paletteOffset + 2]
+                        $alphaSample = 255
+                        if ($paletteIndex -lt $transparency.Length) {
+                            $alphaSample = $transparency[$paletteIndex]
+                        }
+                    }
+                    4 {
+                        $graySample = Get-PngSample $row $sampleIndex $bitDepth
+                        $alphaSample = Get-PngSample $row ($sampleIndex + 1) $bitDepth
+                        $redSample = $greenSample = $blueSample = $graySample
+                    }
+                    6 {
+                        $redSample = Get-PngSample $row $sampleIndex $bitDepth
+                        $greenSample = Get-PngSample $row ($sampleIndex + 1) $bitDepth
+                        $blueSample = Get-PngSample $row ($sampleIndex + 2) $bitDepth
+                        $alphaSample = Get-PngSample $row ($sampleIndex + 3) $bitDepth
+                    }
+                }
+
+                if ($alphaSample -eq 0) {
+                    $transparentPixels++
+                }
+                else {
+                    $visiblePixels++
+                    if ($redSample -ne $channelMax -or
+                        $greenSample -ne $channelMax -or
+                        $blueSample -ne $channelMax) {
+                        $red = [int][math]::Round(
+                            $redSample * 255 / $channelMax
+                        )
+                        $green = [int][math]::Round(
+                            $greenSample * 255 / $channelMax
+                        )
+                        $blue = [int][math]::Round(
+                            $blueSample * 255 / $channelMax
+                        )
+                        $alpha = [int][math]::Round(
+                            $alphaSample * 255 / $channelMax
+                        )
+                        throw "outline.png contains a non-white visible pixel at ($x,$y): RGBA($red,$green,$blue,$alpha)."
+                    }
+                }
+            }
+        }
+        if ($transparentPixels -eq 0 -or $visiblePixels -eq 0) {
+            throw 'outline.png must contain both transparent and visible white pixels.'
+        }
+    }
+    finally {
+        $compressed.Dispose()
+    }
 }
 
 function Test-Placeholder {
@@ -219,6 +594,7 @@ if ($colorSize.Width -ne 192 -or $colorSize.Height -ne 192) {
 if ($outlineSize.Width -ne 32 -or $outlineSize.Height -ne 32) {
     throw "outline.png must be 32x32; found $($outlineSize.Width)x$($outlineSize.Height)."
 }
+Assert-OutlinePngPixels $outlinePath
 
 $skills = @((Get-PropertyValue $manifest 'agentSkills') | Where-Object { $null -ne $_ })
 $connectors = @((Get-PropertyValue $manifest 'agentConnectors') | Where-Object { $null -ne $_ })

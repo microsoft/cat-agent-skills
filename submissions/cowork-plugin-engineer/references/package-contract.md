@@ -30,7 +30,9 @@ The ZIP must not contain a wrapper directory.
 - Developer website, privacy, and terms URLs use HTTPS. Prefer the same domain.
 - Short and full names and descriptions satisfy schema length limits.
 - `color.png` is 192x192.
-- `outline.png` is 32x32, white and transparent.
+- `outline.png` is 32x32 and its decoded pixels contain both transparent and
+  visible regions. Every visible pixel is white; file format or alpha-channel
+  presence alone is not sufficient.
 - At least one `agentSkills` or `agentConnectors` entry exists.
 
 ## Skill invariants
