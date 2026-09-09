@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Agent Red Teamer",
+  "description": "Run automated AI red teaming against a Copilot Studio agent - simulate adversarial users with Azure AI Foundry / PyRIT attack strategies across safety risk categories, score Attack Success Rate, and produce a fixed, downloadable red-teaming report with a deploy / do-not-deploy verdict.",
+  "platforms": ["Copilot Studio", "Scout"],
+  "tags": ["red-teaming", "safety", "security", "responsible-ai", "evaluation", "pyrit", "azure-ai-foundry"],
+  "author": "Swarup Mishra",
+  "authorUrl": "https://github.com/1999Swarup",
+  "version": "1.0.0",
+  "createdAt": "2026-08-14",
+  "updatedAt": "2026-08-14"
+}
