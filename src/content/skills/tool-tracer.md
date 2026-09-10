@@ -3,6 +3,7 @@ name: Tool Tracer
 description: On-demand tool/action trace for Copilot Studio runs (`/special-debug tool-trace` → `tool_trace.json`).
 agentDescription: "Use ONLY when the user's message contains the exact command `/special-debug tool-trace` (optionally with `--full`); run the task normally, then write `tool_trace.json` summarizing tool/action/connector calls in order. Sensitive values (secrets, tokens, PII/PHI) are redacted by default; `--full` keeps them verbatim for an authorized admin."
 platforms: [Copilot Studio]
+category: agent-development
 tags: [transparency, observability, debugging, workflow, logging, json, productivity]
 author: Rafael Lopez Alcaraz
 authorUrl: "https://github.com/rafalcaraz"
