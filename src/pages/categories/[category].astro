@@ -1,0 +1,34 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import CategoryGallery from "../../components/CategoryGallery.astro";
+import { CATEGORIES, CATEGORY_LABELS, type Category } from "../../lib/categories";
+import { categorySubmissions } from "../../lib/gallery-filters";
+
+export async function getStaticPaths() {
+  const skills = (await getCollection("skills"))
+    .sort((a, b) => a.data.name.localeCompare(b.data.name));
+
+  return CATEGORIES.map((category) => ({
+    params: { category },
+    props: { category, ...categorySubmissions(skills, category) },
+  }));
+}
+
+interface Props {
+  category: Category;
+  microsoft: CollectionEntry<"skills">[];
+  community: CollectionEntry<"skills">[];
+}
+
+const { category, microsoft, community } = Astro.props;
+const label = CATEGORY_LABELS[category];
+---
+
+<Layout
+  title={`${label} skills and plugins`}
+  description={`Browse the complete collection of skills, plugins, and automations for ${label}, built by Microsoft and the community.`}
+>
+  <CategoryGallery category={category} microsoft={microsoft} community={community} />
+</Layout>

@@ -1,11 +1,12 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import SkillCard from "../components/SkillCard.astro";
+import SubmissionItem from "../components/SubmissionItem.astro";
+import SubmissionCarousel from "../components/SubmissionCarousel.astro";
 import { getCollection } from "astro:content";
 import { PLATFORMS, PLATFORM_COLORS, initials, coverGradient } from "../lib/skills";
 import { authorKey, normalizeLogin } from "../lib/badges";
-import { getRating } from "../lib/ratings";
-import { getDownloads } from "../lib/downloads";
+import { CATEGORIES, CATEGORY_LABELS } from "../lib/categories";
+import { partitionSubmissions } from "../lib/gallery-filters";
 
 const isSample = (s: { data: { tags: string[] } }) =>
   s.data.tags.includes("sample");
@@ -15,10 +16,11 @@ const skills = (await getCollection("skills")).sort((a, b) => {
   if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
   return a.data.name.localeCompare(b.data.name);
 });
+const { microsoft, community } = partitionSubmissions(skills);
 
 const platformCounts = new Map<string, number>();
 for (const skill of skills) {
-  for (const platform of skill.data.platforms) {
+  for (const platform of new Set(skill.data.platforms)) {
     platformCounts.set(platform, (platformCounts.get(platform) ?? 0) + 1);
   }
 }
@@ -67,24 +69,25 @@ const allContributors = [...contributorMap.entries()]
 <Layout>
   <!-- Hero -->
   <section class="border-b border-border bg-surface/40">
-    <div class="mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10">
+    <div class="mx-auto grid max-w-8xl gap-5 px-4 py-6 sm:px-6 sm:py-7 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] lg:items-center">
+      <div>
       <h1
         class="text-2xl font-bold tracking-tight text-fg sm:text-3xl"
       >
-        The gallery of skills for your AI agents
+        The gallery of skills and plugins for your AI agents
       </h1>
       <p class="mt-2 max-w-2xl text-muted">
-        Browse <span class="text-fg">skills and plugins contributed by the
-        community</span>: drop-in instructions and script bundles that teach your
-        agents new tricks. Find one, download the markdown (and scripts), and add
-        it to <span class="text-fg">Cowork</span>, <span
+        Find skills, plugins, and automations from <span class="text-fg">Microsoft
+        and the community</span>. Download a submission and add it to{" "}
+        <span class="text-fg">Cowork</span>, <span
           class="text-fg">Copilot Studio</span
         >, or <span class="text-fg">Scout</span>.
       </p>
+      </div>
 
       <!-- Search -->
-      <div class="mt-6 max-w-xl">
-        <label for="skill-search" class="sr-only">Search skills</label>
+      <div class="w-full">
+        <label for="skill-search" class="sr-only">Search all submissions</label>
         <div class="relative">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -100,7 +103,7 @@ const allContributors = [...contributorMap.entries()]
           <input
             id="skill-search"
             type="search"
-            placeholder="Search skills by name, contributor, description, or tag…"
+            placeholder="Search submissions by name, contributor, or topic…"
             autocomplete="off"
             class="w-full rounded-xl border border-border bg-surface py-2.5 pl-11 pr-4 text-fg placeholder:text-subtle outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/25"
           />
@@ -109,12 +112,27 @@ const allContributors = [...contributorMap.entries()]
     </div>
   </section>
 
-  <!-- Platform filters -->
-  <section class="border-b border-border bg-bg">
+  <section class="border-b border-border bg-bg" aria-label="Filter all submissions by category">
+    <div class="mx-auto max-w-8xl px-4 pt-5 pb-4 sm:px-6">
+      <div id="category-filters" class="flex flex-wrap items-center gap-2">
+        <button type="button" data-category="" class="category-chip rounded-full border border-accent bg-accent-soft px-4 py-2 text-sm font-semibold text-accent-text transition" aria-pressed="true">All</button>
+        {CATEGORIES.map((category) => (
+          <button type="button" data-category={category} class="category-chip rounded-full border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-muted transition hover:border-accent/40 hover:text-fg" aria-pressed="false">
+            {CATEGORY_LABELS[category]}
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <SubmissionCarousel id="microsoft-carousel" title="Built by Microsoft" submissions={microsoft} />
+
+  <!-- Platform and format filters -->
+  <section class="mt-7 border-y border-border bg-bg" aria-label="Shared submission filters">
     <div
       class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6"
     >
-      <span class="text-xs font-semibold uppercase tracking-wider text-subtle"
+      <span class="text-xs font-semibold uppercase tracking-wider text-subtle sm:w-18 sm:shrink-0"
         >Platform</span
       >
       <div id="platform-filters" class="flex flex-wrap gap-2">
@@ -137,7 +155,11 @@ const allContributors = [...contributorMap.entries()]
                 style={`background:${PLATFORM_COLORS[platform]}`}
               />
               {platform}
-              <span class="text-xs text-subtle">
+              <span
+                data-platform-count
+                class="text-right text-xs text-subtle tabular-nums"
+                style={`min-width: ${String(platformCounts.get(platform) ?? 0).length}ch`}
+              >
                 {platformCounts.get(platform) ?? 0}
               </span>
             </button>
@@ -228,6 +250,17 @@ const allContributors = [...contributorMap.entries()]
         aria-live="polite"
       ></span>
     </div>
+    <div class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 pb-4 sm:px-6">
+      <span id="format-filter-label" class="text-xs font-semibold uppercase tracking-wider text-subtle sm:w-18 sm:shrink-0">Format</span>
+      <div id="type-filters" class="flex flex-wrap gap-2" role="group" aria-labelledby="format-filter-label">
+        <button type="button" data-type="" class="type-chip rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition" aria-pressed="true">All</button>
+        {(["skill", "plugin", "automation"] as const).map((type) => (
+          <button type="button" data-type={type} class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg" aria-pressed="false">
+            {{ skill: "Skills", plugin: "Plugins", automation: "Automations" }[type]}
+          </button>
+        ))}
+      </div>
+    </div>
   </section>
 
   <!-- Tag filters -->
@@ -241,7 +274,7 @@ const allContributors = [...contributorMap.entries()]
           type="button"
           data-tag-all
           class="shrink-0 rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition"
-          aria-pressed="true">All</button
+          aria-pressed="true">All tags</button
         >
         {
           popularTags.map(([tag, count], i) => (
@@ -428,46 +461,23 @@ const allContributors = [...contributorMap.entries()]
     </div>
   </section>
 
+  <p id="filter-status" class="sr-only" role="status" aria-live="polite"></p>
+
   <!-- Gallery -->
   <section class="mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10">
 
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-lg font-semibold text-fg">
-        Skills <span id="result-count" class="text-muted"
-          >({skills.length})</span
+        Built by the community <span id="result-count" class="text-muted"
+          >({community.length})</span
         >
       </h2>
       <div class="flex flex-wrap items-center gap-3">
-        <div id="type-filters" class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            data-type=""
-            class="type-chip rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition"
-            aria-pressed="true">All</button
-          >
-          <button
-            type="button"
-            data-type="skill"
-            class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
-            aria-pressed="false">Skills</button
-          >
-          <button
-            type="button"
-            data-type="plugin"
-            class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
-            aria-pressed="false">Plugins</button
-          >
-          <button
-            type="button"
-            data-type="automation"
-            class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg"
-            aria-pressed="false">Automations</button
-          >
-        </div>
         <label class="flex items-center gap-2 text-sm text-muted">
-          <span class="hidden sm:inline">Sort by</span>
+          <span class="hidden sm:inline">Sort community</span>
           <select
             id="sort-select"
+            aria-label="Sort community submissions"
             class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none"
           >
             <option value="featured">Featured</option>
@@ -485,49 +495,14 @@ const allContributors = [...contributorMap.entries()]
       class="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(17rem,1fr))]"
     >
       {
-        skills.map((skill) => (
-          <div
-            class="skill-item"
-            data-name={skill.data.name.toLowerCase()}
-            data-desc={skill.data.description.toLowerCase()}
-            data-tags={skill.data.tags.join(",").toLowerCase()}
-            data-platforms={skill.data.platforms.join(",")}
-            data-type={skill.data.type}
-            data-author-name={skill.data.author}
-            data-author-login={normalizeLogin(skill.data.authorGithub)}
-            data-author-key={authorKey(skill.data.authorGithub, skill.data.author)}
-            data-rating={getRating(skill.id)}
-            data-downloads={getDownloads(skill.id)}
-            data-featured={skill.data.featured ? "1" : "0"}
-            data-sample={skill.data.tags.includes("sample") ? "1" : "0"}
-            data-updated={(
-              skill.data.updatedAt ??
-              skill.data.createdAt ??
-              new Date(0)
-            ).getTime()}
-          >
-            <SkillCard
-              slug={skill.id}
-              name={skill.data.name}
-              description={skill.data.description}
-              platforms={skill.data.platforms}
-              type={skill.data.type}
-              tags={skill.data.tags}
-              author={skill.data.author}
-              coverColor={skill.data.coverColor}
-              hasBundle={Boolean(skill.data.bundle)}
-              isInstaller={skill.data.type === "automation" && Boolean(skill.data.bundle?.endsWith(".zip"))}
-              rating={getRating(skill.id)}
-              downloads={getDownloads(skill.id)}
-              featured={skill.data.featured}
-            />
-          </div>
-        ))
+        community.map((submission) => <SubmissionItem submission={submission} />)
       }
     </div>
 
-    <p id="empty-state" class="hidden py-16 text-center text-muted">
-      No skills match your search. Try a different term or clear the filters.
+    <p id="empty-state" class="hidden rounded-xl border border-dashed border-border px-5 py-7 text-sm text-muted">
+      No community submissions match these filters.{" "}
+      <button type="button" data-clear-filters class="font-semibold text-accent-text underline underline-offset-4">Clear filters</button>
+      {" "}to browse all submissions.
     </p>
 
     <div id="scroll-sentinel" class="h-10"></div>
@@ -536,13 +511,38 @@ const allContributors = [...contributorMap.entries()]
 
 <script>
   import { initials, coverGradient } from "../lib/skills";
+  import { isCategory, type Category } from "../lib/categories";
+  import { countPlatforms, matchesFilters, type FilterableSubmission, type GalleryFilters } from "../lib/gallery-filters";
+  import { initSubmissionCarousel } from "../lib/submission-carousel";
 
   const BATCH = 12;
 
   const gallery = document.getElementById("gallery")!;
   const items = Array.from(
-    gallery.querySelectorAll<HTMLElement>(".skill-item")
+    gallery.querySelectorAll<HTMLElement>(".submission-item")
   );
+  const microsoftRoot = document.getElementById("microsoft-carousel")!;
+  const microsoftItems = Array.from(microsoftRoot.querySelectorAll<HTMLElement>(".submission-item"));
+  const allItems = [...microsoftItems, ...items];
+  const carousel = initSubmissionCarousel(microsoftRoot);
+  const filterStatus = document.getElementById("filter-status")!;
+  const categoryChips = Array.from(document.querySelectorAll<HTMLButtonElement>(".category-chip"));
+  const filterData = new Map<HTMLElement, FilterableSubmission>(allItems.map((el) => {
+    const d = el.dataset;
+    const category = d.category ?? "";
+    return [el, {
+      name: d.name ?? "",
+      description: d.desc ?? "",
+      tags: (d.tags ?? "").split(","),
+      platforms: (d.platforms ?? "").split(","),
+      type: d.type ?? "skill",
+      category: isCategory(category) ? category : "productivity",
+      builtByMicrosoft: d.builtByMicrosoft === "1",
+      authorName: d.authorName ?? "",
+      authorLogin: d.authorLogin ?? "",
+      authorKey: d.authorKey ?? "",
+    }];
+  }));
   const search = document.getElementById("skill-search") as HTMLInputElement;
   const tagRow = document.getElementById("tag-row")!;
   const tagAllBtn = tagRow.querySelector<HTMLButtonElement>("[data-tag-all]")!;
@@ -603,6 +603,7 @@ const allContributors = [...contributorMap.entries()]
   type SortMode = (typeof SORTS)[number];
 
   let query = "";
+  let activeCategory: Category | "" = "";
   const activeTags = new Set<string>();
   let activePlatform = "";
   let activeType = "";
@@ -656,21 +657,8 @@ const allContributors = [...contributorMap.entries()]
 
   const num = (el: HTMLElement, key: string) => Number(el.dataset[key] ?? "0") || 0;
 
-  function computeMatched(): HTMLElement[] {
-    return items.filter((el) => {
-      const tags = (el.dataset.tags ?? "").split(",");
-      const platforms = (el.dataset.platforms ?? "").split(",");
-      const tagOk =
-        activeTags.size === 0 || tags.some((t) => activeTags.has(t));
-      const platformOk = !activePlatform || platforms.includes(activePlatform);
-      const typeOk = !activeType || (el.dataset.type ?? "skill") === activeType;
-      const authorOk =
-        activeAuthors.size === 0 || activeAuthors.has(el.dataset.authorKey ?? "");
-      const author = `${el.dataset.authorName ?? ""} ${el.dataset.authorLogin ?? ""}`.toLowerCase();
-      const text = `${el.dataset.name} ${el.dataset.desc} ${el.dataset.tags} ${author}`;
-      const queryOk = !query || text.includes(query);
-      return tagOk && platformOk && typeOk && authorOk && queryOk;
-    });
+  function computeMatched(list: HTMLElement[], filters: GalleryFilters): HTMLElement[] {
+    return list.filter((el) => matchesFilters(filterData.get(el)!, filters));
   }
 
   function applySort(list: HTMLElement[]): HTMLElement[] {
@@ -730,7 +718,20 @@ const allContributors = [...contributorMap.entries()]
   }
 
   function refilter() {
-    matched = applySort(computeMatched());
+    const filters: GalleryFilters = {
+      query, category: activeCategory, platform: activePlatform, type: activeType,
+      tags: activeTags, authors: activeAuthors,
+    };
+    matched = applySort(computeMatched(items, filters));
+    const microsoftMatches = new Set(computeMatched(microsoftItems, filters));
+    const counts = countPlatforms(filterData.values(), filters);
+    platformChips.forEach((chip) => {
+      const count = chip.querySelector("[data-platform-count]");
+      if (count) count.textContent = String(counts.get(chip.dataset.platform ?? "") ?? 0);
+    });
+    microsoftItems.forEach((el) => { el.hidden = !microsoftMatches.has(el); });
+    carousel.update();
+    filterStatus.textContent = `${microsoftMatches.size} Microsoft and ${matched.length} community submissions match.`;
     shown = BATCH;
     reorderDom();
     render();
@@ -742,7 +743,7 @@ const allContributors = [...contributorMap.entries()]
   // in the filter row. Entry points are the skill detail-page byline and the
   // Contributors directory, which deep-link here to show everything a person made.
   function contributorMeta(key: string): { name: string; login: string } {
-    const rep = items.find((el) => (el.dataset.authorKey ?? "") === key);
+    const rep = allItems.find((el) => (el.dataset.authorKey ?? "") === key);
     return {
       name: rep?.dataset.authorName || key,
       login: rep?.dataset.authorLogin || "",
@@ -900,7 +901,7 @@ const allContributors = [...contributorMap.entries()]
 
   function paintChips(
     chips: HTMLButtonElement[],
-    key: "tag" | "platform" | "type",
+    key: "tag" | "platform" | "type" | "category",
     active: string
   ) {
     chips.forEach((c) => {
@@ -1053,6 +1054,39 @@ const allContributors = [...contributorMap.entries()]
     });
   });
 
+  categoryChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const category = chip.dataset.category ?? "";
+      activeCategory = isCategory(category) ? category : "";
+      paintChips(categoryChips, "category", activeCategory);
+      syncUrl();
+      refilter();
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>("[data-clear-filters]").forEach((button) => {
+    button.addEventListener("click", () => {
+      window.clearTimeout(t);
+      query = search.value = "";
+      activeCategory = "";
+      activePlatform = "";
+      activeType = "";
+      activeTags.clear();
+      activeAuthors.clear();
+      paintChips(categoryChips, "category", activeCategory);
+      paintChips(platformChips, "platform", activePlatform);
+      paintChips(typeChips, "type", activeType);
+      paintTags();
+      paintContributors();
+      renderContributorChips();
+      setTagPanel(false);
+      setContributorPanel(false);
+      syncUrl();
+      refilter();
+      search.focus({ preventScroll: true });
+    });
+  });
+
   // Sort dropdown
   sortSelect.addEventListener("change", () => {
     const v = sortSelect.value as SortMode;
@@ -1077,6 +1111,7 @@ const allContributors = [...contributorMap.entries()]
   function syncUrl() {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
+    if (activeCategory) params.set("category", activeCategory);
     if (activeTags.size) params.set("tag", [...activeTags].join(","));
     if (activePlatform) params.set("platform", activePlatform);
     if (activeType) params.set("type", activeType);
@@ -1090,6 +1125,8 @@ const allContributors = [...contributorMap.entries()]
   function initFromUrl() {
     const params = new URLSearchParams(location.search);
     query = (params.get("q") ?? "").toLowerCase();
+    const category = params.get("category") ?? "";
+    activeCategory = isCategory(category) ? category : "";
     activeTags.clear();
     (params.get("tag") ?? "")
       .split(",")
@@ -1111,6 +1148,7 @@ const allContributors = [...contributorMap.entries()]
     paintTags();
     paintChips(platformChips, "platform", activePlatform);
     paintChips(typeChips, "type", activeType);
+    paintChips(categoryChips, "category", activeCategory);
     paintContributors();
     renderContributorChips();
     refilter();
@@ -1129,13 +1167,13 @@ const allContributors = [...contributorMap.entries()]
     try {
       sessionStorage.setItem(
         SCROLL_KEY,
-        JSON.stringify({ href: location.href, y: window.scrollY, shown })
+        JSON.stringify({ href: location.href, y: window.scrollY, shown, carousel: carousel.position() })
       );
     } catch {}
   }
 
   function restoreScroll() {
-    let saved: { href: string; y: number; shown: number } | null = null;
+    let saved: { href: string; y: number; shown: number; carousel?: number } | null = null;
     try {
       saved = JSON.parse(sessionStorage.getItem(SCROLL_KEY) ?? "null");
     } catch {}
@@ -1144,6 +1182,9 @@ const allContributors = [...contributorMap.entries()]
     // hold the saved offset, then restore it.
     shown = Math.min(Math.max(shown, saved.shown), matched.length);
     render();
+    if (typeof saved.carousel === "number" && Number.isFinite(saved.carousel)) {
+      carousel.restore(saved.carousel);
+    }
     window.scrollTo(0, saved.y);
   }
 

@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import SkillCover from "../../components/SkillCover.astro";
+import PluginDetails from "../../components/PluginDetails.astro";
 import { getCollection, render } from "astro:content";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -124,6 +125,7 @@ const authorProfileUrl =
         coverColor={d.coverColor}
         hasBundle={Boolean(d.bundle)}
         type={d.type}
+        pluginSkillCount={d.pluginSkills?.length}
         isInstaller={isInstaller}
         variant="hero"
       />
@@ -359,12 +361,17 @@ const authorProfileUrl =
               )}
 
               <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent-text">
-                Instructions
+                {isPlugin ? "Overview" : "Instructions"}
               </h2>
               <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
                 <Content />
               </article>
             </>
+          )
+        }
+        {
+          isPlugin && (
+            <PluginDetails skills={d.pluginSkills} connectors={d.pluginConnectors} />
           )
         }
       </div>
@@ -439,7 +446,7 @@ const authorProfileUrl =
                     class="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-border accent-accent"
                   />
                   <span>
-                    I understand that this is a community-provided {noun}. It runs with my agent's
+                    I understand that this submission runs with my agent's
                     permissions, so I should review it carefully and install it only if I trust the
                     source.
                   </span>

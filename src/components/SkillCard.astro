@@ -2,6 +2,7 @@
 import { withBase } from "../lib/url";
 import { coverGradient, initials, PLATFORM_COLORS } from "../lib/skills";
 import type { Platform, SkillType } from "../lib/skills";
+import { CATEGORY_LABELS, type Category } from "../lib/categories";
 
 interface Props {
   slug: string;
@@ -9,6 +10,9 @@ interface Props {
   description: string;
   platforms?: Platform[];
   type?: SkillType;
+  category?: Category;
+  builtByMicrosoft?: boolean;
+  variant?: "gallery" | "spotlight";
   tags?: string[];
   author?: string;
   coverColor?: string;
@@ -26,6 +30,9 @@ const {
   description,
   platforms = [],
   type = "skill",
+  category = "productivity",
+  builtByMicrosoft = false,
+  variant = "gallery",
   tags = [],
   author,
   coverColor,
@@ -52,19 +59,23 @@ const wrapperProps = isInteractive
   : { "aria-disabled": "true", title: "Sample / demo skill — placeholder content, not accessible" };
 ---
 
-<Wrapper class={wrapperClass} {...wrapperProps}>
+<Wrapper class:list={["submission-card", wrapperClass]} data-variant={variant} {...wrapperProps}>
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] font-medium text-muted">
+    <span>{CATEGORY_LABELS[category]}</span>
+    {builtByMicrosoft && <span class="text-accent-text">Built by Microsoft</span>}
+  </div>
   <!-- Header: monogram + name + platforms -->
   <div class="flex items-start gap-3">
     <div class="relative shrink-0">
       <span
-        class="grid h-11 w-11 place-items-center rounded-lg text-sm font-bold text-white shadow-sm"
+        class="submission-monogram grid h-11 w-11 place-items-center rounded-lg text-sm font-bold text-white shadow-sm"
         style={`background-image:${gradient}`}
         aria-hidden="true"
       >
         {mark}
       </span>
       {
-        featured && (
+        featured && !builtByMicrosoft && (
           <span
             class="absolute -right-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-white text-amber-500 shadow ring-1 ring-black/5"
             title="Hand-picked featured skill"
@@ -78,43 +89,52 @@ const wrapperProps = isInteractive
       }
     </div>
     <div class="min-w-0 flex-1">
-      <div class="flex items-start gap-1.5">
+      <div class="submission-heading flex flex-col items-start gap-1.5">
         <h3
-          class="line-clamp-2 min-w-0 font-semibold text-fg transition-colors group-hover:text-accent-text"
+          class="submission-title line-clamp-2 min-w-0 font-semibold text-fg transition-colors group-hover:text-accent-text"
           title={name}
         >
           {name}
         </h3>
-        {
-          isPlugin && (
-            <span
-              class="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-text"
-              title="A Cowork plugin (M365 app package)"
-            >
-              Plugin
-            </span>
-          )
-        }
-        {
-          isAutomation && (
-            <span
-              class="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-text"
-              title="A Scout automation (scheduled .json)"
-            >
-              Automation
-            </span>
-          )
-        }
-        {
-          isSample && (
-            <span
-              class="shrink-0 rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400"
-              title="A sample / demo skill — placeholder content"
-            >
-              Sample
-            </span>
-          )
-        }
+        <div class="submission-badges flex flex-wrap items-center gap-1.5">
+          {
+            isPlugin && (
+              <span
+                class="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-text"
+                title="A Cowork plugin (M365 app package)"
+              >
+                Plugin
+              </span>
+            )
+          }
+          {
+            type === "skill" && !isSample && (
+              <span class="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                Skill
+              </span>
+            )
+          }
+          {
+            isAutomation && (
+              <span
+                class="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-text"
+                title="A Scout automation (scheduled .json)"
+              >
+                Automation
+              </span>
+            )
+          }
+          {
+            isSample && (
+              <span
+                class="shrink-0 rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400"
+                title="A sample / demo skill — placeholder content"
+              >
+                Sample
+              </span>
+            )
+          }
+        </div>
       </div>
       {
         platforms.length > 0 && (
@@ -135,9 +155,11 @@ const wrapperProps = isInteractive
   </div>
 
   <!-- Description — the tile's focus -->
-  <p class="mt-3 flex-1 text-sm leading-relaxed text-muted line-clamp-3">
-    {description}
-  </p>
+  <div class="mt-3 flex-1">
+    <p class="submission-description text-sm leading-relaxed text-muted line-clamp-3">
+      {description}
+    </p>
+  </div>
 
   <!-- Footer: tags + rating/download hints -->
   <div
@@ -212,3 +234,42 @@ const wrapperProps = isInteractive
     </span>
   </div>
 </Wrapper>
+
+<style>
+  .submission-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .submission-card[data-variant="spotlight"] {
+    min-height: 21rem;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border-color: color-mix(in srgb, var(--border) 65%, var(--surface));
+    background: color-mix(in srgb, var(--accent-soft) 20%, var(--surface));
+  }
+  .submission-card[data-variant="spotlight"]:where(a:hover) {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--surface));
+  }
+  [data-variant="spotlight"] .submission-monogram {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.125rem;
+  }
+  [data-variant="spotlight"] .submission-title {
+    width: 100%;
+    font-size: 1.4rem;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    -webkit-line-clamp: 3;
+  }
+  [data-variant="spotlight"] .submission-description {
+    font-size: 0.9375rem;
+    -webkit-line-clamp: 4;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .submission-card {
+      transition: none;
+      transform: none;
+    }
+  }
+</style>
