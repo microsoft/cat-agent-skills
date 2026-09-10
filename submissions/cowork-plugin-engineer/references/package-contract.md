@@ -32,6 +32,9 @@ methods are rejected before extraction.
 - Developer website, privacy, and terms URLs use HTTPS. Prefer the same domain.
 - Short and full names and descriptions satisfy schema length limits.
 - `color.png` is 192x192.
+- Both icons must decode successfully. The local decoder supports
+  non-interlaced PNGs only; re-export interlaced icons without interlacing
+  before validation. This is a local decoder limitation, not a host requirement.
 - `outline.png` is 32x32 and its decoded pixels contain both transparent and
   visible regions. Every visible pixel is white; file format or alpha-channel
   presence alone is not sufficient.
@@ -60,6 +63,10 @@ methods are rejected before extraction.
   `./tools/file.json` resolve within the package root.
 - The tool-description file exists in the ZIP and contains unique tool names,
   descriptions, and JSON input schemas.
+- Each tool's `inputSchema` is an object with `type: "object"`. If present,
+  `properties` is a mapping of schemas and `required` is an array of unique
+  strings. These are local structural checks, not complete JSON Schema
+  meta-validation or proof that inputs will work against the server.
 - `None` has no `referenceId`.
 - `OAuthPluginVault` has the generated OAuth client registration ID, never a
   human-readable placeholder.

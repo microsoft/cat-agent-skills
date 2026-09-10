@@ -68,6 +68,7 @@ Review every manifest-version condition in:
 ```text
 scripts/test_cowork_plugin.py
 scripts/test_cowork_plugin_package.py
+scripts/cowork_plugin_utils.py
 ```
 
 Add rules required by the target schema. Preserve rules for older supported
@@ -86,11 +87,13 @@ Pay particular attention to:
 
 ### 5. Update the Agents Toolkit baseline only when required
 
-Review the default `AtkVersion` in:
+Review the shared `ATK_VERSION` constant in `scripts/cowork_plugin_utils.py`,
+the `--atk-version` defaults that import it, and the pinned import command in:
 
 ```text
 scripts/build_cowork_plugin.py
 scripts/test_cowork_plugin_package.py
+references/import-and-normalization.md
 ```
 
 Update the pinned version only after confirming that it supports the target

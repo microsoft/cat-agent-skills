@@ -21,7 +21,7 @@ Use it to create and validate plugin packages in your own workspace.
   its contents.
 - Package and validate plugins with Microsoft 365 Agents Toolkit.
 - Generate draft `evals.json` suites for skill routing, instruction following,
-  MCP tool usage, safety, and regression coverage.
+  MCP tool usage, and safety; extend these drafts with domain regressions.
 - Diagnose upload failures, connector retry loops, OAuth lookup failures, and
   MCP handshake or tool-execution problems.
 - Apply a controlled upgrade process when Microsoft releases a new Cowork

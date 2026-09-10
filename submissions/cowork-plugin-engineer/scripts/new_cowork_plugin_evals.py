@@ -16,6 +16,7 @@ from cowork_plugin_utils import (
     print_result,
     read_json,
     read_skill_metadata,
+    required_text,
     resolve_in_root,
     validate_project,
     write_json,
@@ -112,41 +113,22 @@ def generate_evaluations(
         remote = as_object(
             get_property(tool_source, "remoteMcpServer"), "remoteMcpServer"
         )
-        tool_description = get_property(remote, "mcpToolDescription")
-        tools: list[Any] = []
-        if isinstance(tool_description, dict) and isinstance(
-            tool_description.get("file"), str
-        ):
-            tool_path = resolve_in_root(
-                package_root,
-                tool_description["file"],
-                f"connector '{connector_id}' tool file",
-            )
-            tool_document = as_object(
-                read_json(tool_path, "tool description"), "tool description"
-            )
-            tools = as_list(get_property(tool_document, "tools"), "tools")
+        tool_description = as_object(
+            get_property(remote, "mcpToolDescription"), "mcpToolDescription"
+        )
+        tool_path = resolve_in_root(
+            package_root,
+            required_text(tool_description, "file", "mcpToolDescription.file"),
+            f"connector '{connector_id}' tool file",
+        )
+        tool_document = as_object(
+            read_json(tool_path, "tool description"), "tool description"
+        )
+        tools = as_list(get_property(tool_document, "tools"), "tools")
         if not tools:
-            tool_index += 1
-            items.append(
-                {
-                    "prompt": (
-                        "[REPLACE: Add a request that should use connector "
-                        f"'{connector_id}'.]"
-                    ),
-                    "expected_response": (
-                        "[REPLACE: Add the expected grounded result and error "
-                        "behavior.]"
-                    ),
-                    "testId": f"TOOL-{tool_index:03d}",
-                    "category": "tool-usage",
-                    "notes": (
-                        "Connector-level draft because no static tools were "
-                        f"available for '{connector_id}'."
-                    ),
-                }
+            raise CoworkPluginError(
+                f"Connector '{connector_id}' tool description has no tools."
             )
-            continue
         for tool_value in tools:
             tool = as_object(tool_value, "tool")
             tool_index += 1

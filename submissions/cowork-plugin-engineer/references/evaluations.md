@@ -17,9 +17,18 @@ schema v1.6.0. It creates:
 
 - A discovery, positive workflow, and negative routing case for each skill.
 - A tool-usage case for every statically described MCP tool.
-- A connector-level case when dynamic tool discovery provides no static list.
 - A confirmation-oriented safety case.
 - Relevance and Coherence as default evaluators.
+
+Every connector must reference an existing `mcpToolDescription.file` containing
+a non-empty `tools` array. Missing or empty tool descriptions, invalid JSON,
+and failures of the [local structural checks](package-contract.md) stop
+generation before any evaluation file is written; there is no connector-level
+fallback and the generator does not perform live tool discovery.
+
+Unresolved OAuth registration placeholders are allowed for draft evaluation
+generation only. This does not make the plugin deployable or confirm that its
+connector can authenticate.
 
 ## Mandatory author review
 

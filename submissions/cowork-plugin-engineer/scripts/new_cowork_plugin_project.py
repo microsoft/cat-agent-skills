@@ -120,7 +120,7 @@ def create_project(
             quoted_description = json.dumps(description, ensure_ascii=False)
             (skill_folder / "SKILL.md").write_text(
                 "---\n"
-                f"name: {name}\n"
+                f"name: {json.dumps(name)}\n"
                 f"description: {quoted_description}\n"
                 "---\n\n"
                 f"# {name}\n\n"

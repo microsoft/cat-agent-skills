@@ -421,7 +421,7 @@ def _read_png_chunks(path: Path) -> tuple[dict[str, int], bytes, bytes, bytes]:
             compressed.extend(chunk_data)
             if len(compressed) > MAX_OUTLINE_COMPRESSED_BYTES:
                 raise CoworkPluginError(
-                    "outline.png IDAT data exceeds the compressed-size "
+                    "PNG IDAT data exceeds the compressed-size "
                     f"safety limit: {path}"
                 )
         elif type_name == "IEND":
@@ -491,11 +491,11 @@ def _bounded_zlib_decompress(compressed: bytes, expected_bytes: int) -> bytes:
             output += decompressor.flush(expected_bytes + 1 - len(output))
     except zlib.error as exc:
         raise CoworkPluginError(
-            f"outline.png has invalid zlib data: {exc}"
+            f"PNG has invalid zlib data: {exc}"
         ) from exc
     if len(output) != expected_bytes:
         raise CoworkPluginError(
-            "outline.png has unexpected decompressed pixel data."
+            "PNG has unexpected decompressed pixel data."
         )
     if (
         not decompressor.eof
@@ -503,25 +503,32 @@ def _bounded_zlib_decompress(compressed: bytes, expected_bytes: int) -> bytes:
         or decompressor.unused_data
     ):
         raise CoworkPluginError(
-            "outline.png IDAT contains an incomplete or trailing zlib stream."
+            "PNG IDAT contains an incomplete or trailing zlib stream."
         )
     return output
 
 
 def assert_outline_png_pixels(path: Path) -> None:
+    _assert_icon_png_pixels(path, outline=True)
+
+
+def _assert_icon_png_pixels(path: Path, *, outline: bool) -> None:
     ihdr, palette, transparency, compressed = _read_png_chunks(path)
     width = ihdr["width"]
     height = ihdr["height"]
     bit_depth = ihdr["bit_depth"]
     color_type = ihdr["color_type"]
     interlace = ihdr["interlace"]
-    if (width, height) != (32, 32):
+    label = "outline.png" if outline else "color.png"
+    expected_size = 32 if outline else 192
+    if (width, height) != (expected_size, expected_size):
         raise CoworkPluginError(
-            f"outline.png must be 32x32; found {width}x{height}."
+            f"{label} must be {expected_size}x{expected_size}; "
+            f"found {width}x{height}."
         )
     if interlace != 0:
         raise CoworkPluginError(
-            "outline.png must use a non-interlaced PNG encoding for pixel "
+            f"{label} must use a non-interlaced PNG encoding for pixel "
             "validation."
         )
 
@@ -535,30 +542,30 @@ def assert_outline_png_pixels(path: Path) -> None:
     }
     if color_type not in channels_by_type:
         raise CoworkPluginError(
-            f"outline.png uses unsupported PNG color type {color_type}."
+            f"{label} uses unsupported PNG color type {color_type}."
         )
     if bit_depth not in depths_by_type[color_type]:
         raise CoworkPluginError(
-            "outline.png uses unsupported bit depth "
+            f"{label} uses unsupported bit depth "
             f"{bit_depth} for color type {color_type}."
         )
     if color_type == 3 and (
         not palette or len(palette) % 3 or len(palette) > 768
     ):
         raise CoworkPluginError(
-            "outline.png has an invalid or missing PNG palette."
+            f"{label} has an invalid or missing PNG palette."
         )
     if color_type == 3 and len(transparency) > len(palette) // 3:
         raise CoworkPluginError(
-            "outline.png transparency exceeds its PNG palette."
+            f"{label} transparency exceeds its PNG palette."
         )
     if color_type == 0 and len(transparency) not in (0, 2):
-        raise CoworkPluginError("outline.png has invalid grayscale transparency.")
+        raise CoworkPluginError(f"{label} has invalid grayscale transparency.")
     if color_type == 2 and len(transparency) not in (0, 6):
-        raise CoworkPluginError("outline.png has invalid truecolor transparency.")
+        raise CoworkPluginError(f"{label} has invalid truecolor transparency.")
     if color_type in (4, 6) and transparency:
         raise CoworkPluginError(
-            "outline.png cannot use tRNS with an alpha color type."
+            f"{label} cannot use tRNS with an alpha color type."
         )
 
     channels = channels_by_type[color_type]
@@ -601,7 +608,7 @@ def assert_outline_png_pixels(path: Path) -> None:
                 predictor = _paeth(left, up, upper_left)
             else:
                 raise CoworkPluginError(
-                    f"outline.png uses invalid PNG filter {filter_type}."
+                    f"{label} uses invalid PNG filter {filter_type}."
                 )
             reconstructed[target_offset] = (raw + predictor) & 0xFF
 
@@ -638,7 +645,7 @@ def assert_outline_png_pixels(path: Path) -> None:
                 palette_offset = palette_index * 3
                 if palette_offset + 2 >= len(palette):
                     raise CoworkPluginError(
-                        "outline.png references missing palette index "
+                        f"{label} references missing palette index "
                         f"{palette_index}."
                     )
                 pixel_max = 255
@@ -664,7 +671,9 @@ def assert_outline_png_pixels(path: Path) -> None:
                 transparent_pixels += 1
             else:
                 visible_pixels += 1
-                if (red, green, blue) != (pixel_max, pixel_max, pixel_max):
+                if outline and (red, green, blue) != (
+                    pixel_max, pixel_max, pixel_max
+                ):
                     rgba = tuple(
                         round(sample * 255 / pixel_max)
                         for sample in (red, green, blue)
@@ -673,7 +682,7 @@ def assert_outline_png_pixels(path: Path) -> None:
                         "outline.png contains a non-white visible pixel at "
                         f"({x},{y}): RGBA{rgba}."
                     )
-    if not transparent_pixels or not visible_pixels:
+    if outline and (not transparent_pixels or not visible_pixels):
         raise CoworkPluginError(
             "outline.png must contain both transparent and visible white pixels."
         )
@@ -758,6 +767,7 @@ def validate_project(
             f"{outline_size[0]}x{outline_size[1]}."
         )
     assert_outline_png_pixels(outline_path)
+    _assert_icon_png_pixels(color_path, outline=False)
 
     skills = as_list(get_property(manifest, "agentSkills"), "agentSkills")
     connectors = as_list(
@@ -898,10 +908,38 @@ def validate_project(
                 tool, "name", f"connector '{connector_id}' tool name"
             )
             required_text(tool, "description", f"tool '{tool_name}' description")
-            if get_property(tool, "inputSchema") is None:
+            input_schema = as_object(
+                get_property(tool, "inputSchema"),
+                f"Tool '{tool_name}' inputSchema",
+            )
+            if input_schema.get("type") != "object":
                 raise CoworkPluginError(
-                    f"Tool '{tool_name}' is missing inputSchema."
+                    f"Tool '{tool_name}' inputSchema.type must be object."
                 )
+            if "properties" in input_schema:
+                properties = as_object(
+                    input_schema["properties"],
+                    f"Tool '{tool_name}' inputSchema.properties",
+                )
+                if any(
+                    not isinstance(value, (dict, bool))
+                    for value in properties.values()
+                ):
+                    raise CoworkPluginError(
+                        f"Tool '{tool_name}' inputSchema properties must "
+                        "contain schema objects or booleans."
+                    )
+            if "required" in input_schema:
+                required = input_schema["required"]
+                if (
+                    not isinstance(required, list)
+                    or any(not isinstance(value, str) for value in required)
+                    or len(required) != len(set(required))
+                ):
+                    raise CoworkPluginError(
+                        f"Tool '{tool_name}' inputSchema.required must be "
+                        "an array of unique strings."
+                    )
             normalized_tool_name = tool_name.casefold()
             if normalized_tool_name in tool_names:
                 raise CoworkPluginError(
