@@ -1,0 +1,20 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.store-task-promotion-execution.v1",
+  "title": "Store Task & Promotion Execution contract v1",
+  "description": "Chains pack-ingest -> store-map -> readiness-check -> exception-raise -> brief-draft. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "campaign_id", "store"],
+  "properties": {
+    "contract_version": { "const": "rtl.store-task-promotion-execution.v1" },
+    "campaign_id": { "type": "string" }, "launch_date": { "type": "string" },
+    "store": { "type": "object" },
+    "requirements": { "type": "array", "items": { "type": "object" } },
+    "readiness": { "type": "object", "properties": {
+        "items": { "type": "array", "items": { "type": "object",
+          "required": ["req_id", "status", "source", "citation"],
+          "properties": { "req_id": {"type": "string"}, "status": {"enum": ["ready", "missing", "conflict", "not_applicable"]},
+            "detail": {"type": "string"}, "source": {"type": "string"}, "citation": {"type": "string"} } } },
+        "completeness_pct": { "type": "number" },
+        "price_conflicts": { "type": "array", "items": { "type": "object" } },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "exceptions": { "type": "array", "items": { "type": "object" } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

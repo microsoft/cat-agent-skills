@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "e6009cd5-65f9-56b7-8126-3c43ddb786bf",
+    "developer": {
+        "name": "Microsoft Retail & CPG Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Store Associate Assist",
+        "full": "Store Associate Assist"
+    },
+    "description": {
+        "short": "Retail Wave 1 Cowork plugin: the associate's cited answer on the floor. Takes",
+        "full": "Retail Wave 1 Cowork plugin: the associate's cited answer on the floor. Takes the question with store, role and department context; retrieves the applicable policy, product attributes and current promotion; resolves the policy and compares products deterministically (policy_resolve + product_compare engines); returns a cited answer or a drafted escalation. Answers and drafts only - it never overrides a price, authorises a refund, reserves inventory or changes a schedule."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/answer-draft"
+        },
+        {
+            "folder": "./skills/policy-retrieve"
+        },
+        {
+            "folder": "./skills/product-compare"
+        },
+        {
+            "folder": "./skills/promo-check"
+        },
+        {
+            "folder": "./skills/question-intake"
+        }
+    ]
+}

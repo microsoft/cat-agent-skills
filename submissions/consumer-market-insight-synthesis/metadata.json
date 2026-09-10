@@ -1,0 +1,22 @@
+{
+  "name": "Consumer & Market Insight Synthesis",
+  "description": "Prior research reused instead of re-commissioned: retrieve and rank prior research and panel extracts, compare trends across markets and periods, flag contradictory evidence rather than smoothing it, check usage rights and claim provenance, and draft a cited insight brief with a provenance record.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "cpg",
+    "insights",
+    "consumer-research",
+    "category",
+    "panel",
+    "provenance"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

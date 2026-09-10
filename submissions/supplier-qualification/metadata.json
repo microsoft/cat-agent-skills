@@ -1,0 +1,22 @@
+{
+  "name": "Supplier Qualification",
+  "description": "Qualify a new supplier on the evidence: gather the dossier of certs, financials, audits and PPAP elements, score risk across quality, financial and geographic dimensions, compare against the approved vendor list and category requirements, and draft the qualification memo with conditions.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "supply-chain",
+    "sourcing",
+    "supplier-qualification",
+    "ppap",
+    "apqp",
+    "risk"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-01",
+  "updatedAt": "2026-09-04",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}

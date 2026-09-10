@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "79fbc1b3-7cc9-5122-9153-a13f559ec701",
+    "developer": {
+        "name": "Microsoft Manufacturing Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Safety Incident Assist",
+        "full": "Safety Incident Assist"
+    },
+    "description": {
+        "short": "Manufacturing Wave 1 Cowork plugin: handle an EHS incident consistently.",
+        "full": "Manufacturing Wave 1 Cowork plugin: handle an EHS incident consistently. Receives the report from a form, email or voice note, classifies severity, near-miss and OSHA recordability plus reportability (deterministic recordability_classify), routes to the right investigator and builds the owner-notification list with regulatory clocks (deterministic routing_notify), then drafts the incident summary and root-cause (RCA) template. Draft-first; keeps the reporting checklist and audit trail intact. NOT auto-filing OSHA reports or auto-notifying (a human signs off). Grounded in OSHA 300/300A, ISO 45001, JHA/HIRA and internal EHS policy."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/ehs-knowledge-retrieve"
+        },
+        {
+            "folder": "./skills/incident-intake"
+        },
+        {
+            "folder": "./skills/incident-writeup"
+        },
+        {
+            "folder": "./skills/routing-notify"
+        },
+        {
+            "folder": "./skills/severity-recordability"
+        }
+    ]
+}

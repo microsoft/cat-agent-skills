@@ -1,0 +1,6 @@
+[
+  {"study_id": "STUDY-2411", "title": "Gen-Z snacking occasions UK/DE", "market": "UK", "period": "2025-Q4", "topics": ["gen-z", "snacking"], "metric": "snacking_occasions_per_week", "value": 8.1, "method": "online panel n=4200"},
+  {"study_id": "STUDY-2502", "title": "Snacking tracker W1 2026", "market": "UK", "period": "2026-Q1", "topics": ["gen-z", "snacking"], "metric": "snacking_occasions_per_week", "value": 8.9, "method": "in-home diary n=1800"},
+  {"study_id": "STUDY-2308", "title": "Better-for-you snacking 2023", "market": "UK", "period": "2023-Q3", "topics": ["gen-z", "snacking", "health"], "metric": "snacking_occasions_per_week", "value": 9.4, "method": "online panel n=3900"},
+  {"study_id": "PANEL-2601", "title": "UK convenience panel H1-26", "market": "UK", "period": "2026-H1", "topics": ["gen-z", "snacking", "convenience"], "metric": "gen_z_penetration_pct", "value": 61.0, "method": "retail panel"}
+]

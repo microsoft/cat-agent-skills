@@ -1,0 +1,225 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mfg.supplier-disruption.v1",
+  "title": "Supplier Disruption Agent contract v1",
+  "description": "Versioned contract chaining disruption-intake -> supply-knowledge-retrieve -> shortage-impact-map -> mitigation-recommend -> disruption-writeup. Carries data + confidence + provenance + citations on every hop so the shortage-to-impact mapping, the mitigation choice and the escalation are auditable and mechanical. Bump the version only on breaking schema changes.",
+  "type": "object",
+  "required": ["contract_version", "disruption_id", "supplier_or_po"],
+  "properties": {
+    "contract_version": { "const": "mfg.supplier-disruption.v1" },
+    "disruption_id": { "type": "string" },
+    "trigger_channel": { "type": "string", "description": "po_record | shipment_feed | supplier_email | portal_notice" },
+    "disruption_type": { "type": "string", "description": "late_po | shipment_delay | shortage | supplier_notice" },
+    "supplier_or_po": { "type": "string", "description": "supplier name and/or PO number the disruption is anchored on" },
+    "supplier": { "type": "string" },
+    "po_number": { "type": "string" },
+    "reported_at": { "type": "string" },
+    "promised_date": { "type": "string", "description": "original promised delivery date" },
+    "revised_date": { "type": "string", "description": "revised / confirmed delivery date (the delay)" },
+    "short_qty": { "type": ["number", "null"], "description": "shorted quantity of the part" },
+    "reason": { "type": "string" },
+    "description": { "type": "string" },
+    "part": {
+      "type": "object",
+      "description": "The short/delayed part the disruption is about.",
+      "properties": {
+        "part_no": { "type": "string" },
+        "description": { "type": "string" },
+        "uom": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "supply": {
+      "type": "object",
+      "description": "ERP/MRP supply position for the part (sourcing-standards-excerpts.md). Read by shortage_impact_map and mitigation_recommend.",
+      "properties": {
+        "on_hand": { "type": "number" },
+        "on_order": { "type": "number", "description": "quantity on the delayed PO, arriving on revised_date" },
+        "safety_stock": { "type": "number" },
+        "lead_time_days": { "type": "number" },
+        "single_source": { "type": "boolean" },
+        "substitutes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "part_no": { "type": "string" },
+              "description": { "type": "string" },
+              "approved": { "type": "boolean" },
+              "available_qty": { "type": "number" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "alternates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "supplier": { "type": "string" },
+              "lead_time_days": { "type": "number" },
+              "qualified": { "type": "boolean" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "source": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "retrieved": {
+      "type": "object",
+      "description": "Grounding retrieved by supply-knowledge-retrieve: BOM/where-used, open orders, supplier master, standards.",
+      "properties": {
+        "bom": { "type": "array", "items": { "type": "object" } },
+        "open_orders": {
+          "type": "array",
+          "description": "Open production and sales orders that consume the part (where-used). Read by shortage_impact_map.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "order_id": { "type": "string" },
+              "order_type": { "type": "string", "description": "production | sales" },
+              "product": { "type": "string" },
+              "line": { "type": "string" },
+              "finished_qty": { "type": "number" },
+              "per_unit": { "type": "number", "description": "qty of the short part per finished unit (BOM)" },
+              "need_by": { "type": "string" },
+              "customer": { "type": "string" },
+              "high_runner": { "type": "boolean" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "supplier_master": { "type": "array", "items": { "type": "object" } },
+        "standards": { "type": "array", "items": { "type": "object" } },
+        "source": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "history": {
+      "type": "object",
+      "description": "Supplier on-time / delivery history for the part or supplier.",
+      "properties": {
+        "window_days": { "type": "integer" },
+        "late_count": { "type": "integer" },
+        "on_time_pct": { "type": ["number", "null"] },
+        "chronic_pattern": { "type": "boolean", "description": "supplier is repeatedly late (systemic signal)" },
+        "prior_shipments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "po_number": { "type": "string" },
+              "date": { "type": "string" },
+              "part_no": { "type": "string" },
+              "promised_date": { "type": "string" },
+              "actual_date": { "type": "string" },
+              "days_late": { "type": "number" },
+              "citation": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "impact_map": {
+      "type": "array",
+      "description": "Per-order impact rows produced by shortage_impact_map (engine 1).",
+      "items": {
+        "type": "object",
+        "required": ["status", "source"],
+        "properties": {
+          "order_id": { "type": "string" },
+          "order_type": { "type": "string" },
+          "product": { "type": "string" },
+          "line": { "type": "string" },
+          "customer": { "type": "string" },
+          "need_by": { "type": "string" },
+          "qty_at_risk": { "type": "number" },
+          "status": { "type": "string", "description": "covered | covered_by_incoming | at_risk | line_down | late_shipment" },
+          "severity": { "enum": ["none", "low", "medium", "high", "critical"] },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "impact_summary": {
+      "type": "object",
+      "properties": {
+        "worst_severity": { "enum": ["none", "low", "medium", "high", "critical"] },
+        "first_impact_date": { "type": ["string", "null"] },
+        "affected_products": { "type": "integer" },
+        "affected_orders": { "type": "integer" },
+        "affected_sales_orders": { "type": "integer" },
+        "total_qty_at_risk": { "type": "number" },
+        "below_safety_stock": { "type": "boolean" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "citation": { "type": "string" }
+      }
+    },
+    "mitigation": {
+      "type": "object",
+      "properties": {
+        "option": { "type": "string", "description": "expedite | substitute | reschedule" },
+        "urgency": { "type": "string", "description": "routine | elevated | urgent | immediate" },
+        "rationale": { "type": "string" },
+        "actions": { "type": "array", "items": { "type": "string" } },
+        "substitute_part": {
+          "type": "object",
+          "properties": {
+            "part_no": { "type": "string" },
+            "approved": { "type": "boolean" },
+            "available_qty": { "type": "number" },
+            "citation": { "type": "string" }
+          }
+        },
+        "alternate_supplier": {
+          "type": "object",
+          "properties": {
+            "supplier": { "type": "string" },
+            "lead_time_days": { "type": "number" },
+            "qualified": { "type": "boolean" },
+            "citation": { "type": "string" }
+          }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "citation": { "type": "string" }
+      }
+    },
+    "notifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": { "type": "string" },
+          "name": { "type": "string" },
+          "reason": { "type": "string" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "next_best_action": { "type": "string" },
+    "writeup": {
+      "type": "object",
+      "properties": {
+        "draft": { "type": "boolean" },
+        "audience": { "type": "string", "description": "buyer | production_planner | materials_manager" },
+        "supplier_followup": { "type": "string" },
+        "escalation_brief": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": { "type": "array", "items": { "type": "string" } },
+        "generated_at": { "type": "string" },
+        "demo_scenario": { "type": "string" }
+      }
+    }
+  }
+}

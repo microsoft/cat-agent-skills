@@ -1,0 +1,22 @@
+{
+  "name": "Engineering Change & BOM",
+  "description": "Turn a change request into a decision: read the ECR, spec delta and BOM, trace impact across the BOM with where-used, classify form/fit/function impact and flag interface violations, roll up document and inventory dispositions, and draft the ECN with the affected-item list.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "engineering-change",
+    "ecr",
+    "ecn",
+    "bom",
+    "where-used",
+    "plm"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-01",
+  "updatedAt": "2026-09-04",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}
