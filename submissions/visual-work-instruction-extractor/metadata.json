@@ -1,0 +1,17 @@
+{
+  "name": "Visual Work Instruction Extractor",
+  "description": "Turn scanned or flattened PDF work documents into reviewable instruction steps, evidence crops, safety context, part details, and traceable full-page fallbacks.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "pdf",
+    "images",
+    "work-instructions",
+    "document-processing",
+    "computer-vision"
+  ],
+  "author": "Bas",
+  "authorUrl": "https://github.com/basvb1992",
+  "version": "1.0.0"
+}
