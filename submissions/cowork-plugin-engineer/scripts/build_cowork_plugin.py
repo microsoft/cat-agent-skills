@@ -33,14 +33,14 @@ def main() -> int:
             raise CoworkPluginError(
                 f"m365agents.yml is required for atk packaging: {workflow}"
             )
-        validate_project(project)
+        validation = validate_project(project)
+        manifest = Path(validation.manifest_path)
         output = (
             Path(args.output_path).expanduser()
             if args.output_path
-            else project / "appPackage" / "build" / "appPackage.zip"
+            else manifest.parent / "build" / "appPackage.zip"
         ).resolve(strict=False)
         output.parent.mkdir(parents=True, exist_ok=True)
-        manifest = project / "appPackage" / "manifest.json"
         run_atk(
             [
                 "package",
