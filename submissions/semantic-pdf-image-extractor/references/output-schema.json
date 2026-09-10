@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semantic-pdf-image-manifest:1.0",
+  "title": "Semantic PDF Image Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generatedAt", "request", "documents", "assets", "duplicateGroups", "exclusions", "review", "limitations"],
+  "properties": {
+    "schemaVersion": {"const": "semantic-pdf-image-manifest/1.0"},
+    "generatedAt": {"type": ["string", "null"], "format": "date-time"},
+    "request": {"$ref": "#/$defs/request"},
+    "documents": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/document"}},
+    "assets": {"type": "array", "items": {"$ref": "#/$defs/asset"}},
+    "duplicateGroups": {"type": "array", "items": {"$ref": "#/$defs/duplicateGroup"}},
+    "exclusions": {"$ref": "#/$defs/exclusions"},
+    "review": {"$ref": "#/$defs/review"},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "relativePath": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$)).+"},
+    "nullableRelativePath": {"anyOf": [{"$ref": "#/$defs/relativePath"}, {"type": "null"}]},
+    "box": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "number", "minimum": 0, "maximum": 1},
+        {"type": "number", "minimum": 0, "maximum": 1},
+        {"type": "number", "minimum": 0, "maximum": 1},
+        {"type": "number", "minimum": 0, "maximum": 1}
+      ],
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "nullableBox": {"anyOf": [{"$ref": "#/$defs/box"}, {"type": "null"}]},
+    "status": {"enum": ["verified", "best-effort", "review-required"]},
+    "assetType": {"enum": ["photo", "diagram", "chart", "map", "screenshot", "illustration", "table-image", "logo", "icon", "composite", "other"]},
+    "stringArray": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "includeTypes", "excludeTypes", "includeDecorative", "preserveContext", "pageRanges"],
+      "properties": {
+        "mode": {"enum": ["meaningful", "all-visuals", "photos", "diagrams", "charts", "custom"]},
+        "includeTypes": {"type": "array", "items": {"$ref": "#/$defs/assetType"}, "uniqueItems": true},
+        "excludeTypes": {"type": "array", "items": {"$ref": "#/$defs/assetType"}, "uniqueItems": true},
+        "includeDecorative": {"type": "boolean"},
+        "preserveContext": {"type": "boolean"},
+        "pageRanges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["documentId", "from", "to"],
+            "properties": {
+              "documentId": {"$ref": "#/$defs/id"},
+              "from": {"type": "integer", "minimum": 1},
+              "to": {"type": "integer", "minimum": 1}
+            }
+          }
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sourceFile", "sha256", "title", "languages", "pageCount", "pages"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "sourceFile": {"type": "string", "minLength": 1},
+        "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "title": {"type": ["string", "null"]},
+        "languages": {"$ref": "#/$defs/stringArray"},
+        "pageCount": {"type": "integer", "minimum": 1},
+        "pages": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/page"}}
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pageNumber", "image", "width", "height", "status", "reviewReasons"],
+      "properties": {
+        "pageNumber": {"type": "integer", "minimum": 1},
+        "image": {"$ref": "#/$defs/relativePath"},
+        "width": {"type": ["integer", "null"], "minimum": 1},
+        "height": {"type": ["integer", "null"], "minimum": 1},
+        "status": {"$ref": "#/$defs/status"},
+        "reviewReasons": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "assetType", "semanticRole", "description", "labels", "keywords", "occurrences", "duplicateGroupId"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "assetType": {"$ref": "#/$defs/assetType"},
+        "semanticRole": {"enum": ["informational", "decorative", "branding", "navigation", "uncertain"]},
+        "description": {"type": ["string", "null"]},
+        "labels": {"$ref": "#/$defs/stringArray"},
+        "keywords": {"$ref": "#/$defs/stringArray"},
+        "occurrences": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/occurrence"}},
+        "duplicateGroupId": {"anyOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]}
+      }
+    },
+    "occurrence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "documentId", "pageNumber", "sourceRegion", "contextRegion", "assetImage", "contextImage", "fullPageFallback", "caption", "nearbyText", "quality", "extractionMethod", "confidence", "status", "reviewReasons"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "documentId": {"$ref": "#/$defs/id"},
+        "pageNumber": {"type": "integer", "minimum": 1},
+        "sourceRegion": {"$ref": "#/$defs/box"},
+        "contextRegion": {"$ref": "#/$defs/nullableBox"},
+        "assetImage": {"$ref": "#/$defs/relativePath"},
+        "contextImage": {"$ref": "#/$defs/nullableRelativePath"},
+        "fullPageFallback": {"$ref": "#/$defs/relativePath"},
+        "caption": {"type": ["string", "null"]},
+        "nearbyText": {"type": ["string", "null"]},
+        "quality": {"$ref": "#/$defs/quality"},
+        "extractionMethod": {"enum": ["native-vision", "ocr-and-vision", "text-layer-and-vision", "embedded-object-and-vision", "manual"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "status": {"$ref": "#/$defs/status"},
+        "reviewReasons": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fileBytes", "sha256", "perceptualHash", "resolutionStatus"],
+      "properties": {
+        "width": {"type": ["integer", "null"], "minimum": 1},
+        "height": {"type": ["integer", "null"], "minimum": 1},
+        "fileBytes": {"type": ["integer", "null"], "minimum": 0},
+        "sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+        "perceptualHash": {"type": ["string", "null"], "pattern": "^[a-f0-9]{16}$"},
+        "resolutionStatus": {"enum": ["sufficient", "low-resolution", "unreadable", "unknown"]}
+      }
+    },
+    "duplicateGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "canonicalAssetId", "memberAssetIds", "matchType", "confidence", "reviewed"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "canonicalAssetId": {"$ref": "#/$defs/id"},
+        "memberAssetIds": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+        "matchType": {"enum": ["exact", "near-duplicate", "semantic-variant"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "reviewed": {"type": "boolean"}
+      }
+    },
+    "exclusions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalCandidates", "byReason"],
+      "properties": {
+        "totalCandidates": {"type": "integer", "minimum": 0},
+        "byReason": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "assetIds", "occurrenceIds", "notes"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "assetIds": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+        "occurrenceIds": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
