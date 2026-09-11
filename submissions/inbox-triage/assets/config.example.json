@@ -1,0 +1,56 @@
+{
+  "lookbackDays": 90,
+  "activeThreadWindowDays": 14,
+  "protection": {
+    "unreadRecentProtectionDays": 3,
+    "allowlist": [],
+    "sensitiveDomains": [
+      "hr.example.com",
+      "legal.example.com",
+      "finance.example.com",
+      "security.example.com"
+    ],
+    "sensitiveLocalParts": [
+      "hr",
+      "payroll",
+      "benefits",
+      "legal",
+      "compliance",
+      "finance",
+      "treasury",
+      "security"
+    ]
+  },
+  "resolvedThreadMinAgeDays": 60,
+  "pastEventMinAgeDays": 7,
+  "sampleSendersPerBucket": 5,
+  "folders": {
+    "root": "Inbox Triage",
+    "newsletters": "Inbox Triage/Newsletters",
+    "notifications": "Inbox Triage/Notifications",
+    "pastEvents": "Inbox Triage/Past events",
+    "resolved": "Inbox Triage/Resolved",
+    "duplicates": "Inbox Triage/Duplicates"
+  },
+  "buckets": {
+    "newsletters": { "enabled": true },
+    "notifications": { "enabled": true },
+    "pastEvents": { "enabled": true },
+    "resolved": { "enabled": true },
+    "duplicates": { "enabled": true }
+  },
+  "meetingResponsePrefixes": [
+    "Accepted:",
+    "Declined:",
+    "Tentative:",
+    "Canceled:",
+    "Cancelled:",
+    "Updated invitation:",
+    "Meeting Forward Notification:"
+  ],
+  "unsubscribe": {
+    "extractAndDisplay": true,
+    "everClick": false
+  }
+}
+
