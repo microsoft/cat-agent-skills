@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mfg.maintenance-triage.v1",
+  "title": "Maintenance Triage contract v1",
+  "description": "Versioned contract chaining fault-intake -> history-retrieve -> failure-mode-rank -> criticality-rank -> work-order-update. Carries data + confidence + provenance + citations on every hop so escalation is mechanical. Bump the version only on breaking schema changes.",
+  "type": "object",
+  "required": ["contract_version", "asset_id", "symptoms"],
+  "properties": {
+    "contract_version": { "const": "mfg.maintenance-triage.v1" },
+    "work_order_id": { "type": "string" },
+    "asset_id": { "type": "string" },
+    "asset_name": { "type": "string" },
+    "asset_class": { "type": "string", "description": "equipment class, e.g. centrifugal_pump, gearbox, vfd" },
+    "asset_criticality": { "enum": ["A", "B", "C"], "description": "A=critical, B=essential, C=non-critical (asset-criticality-matrix.md #1)" },
+    "downtime_cost_per_hr": { "type": ["number", "null"] },
+    "location": { "type": "string" },
+    "reported_by": { "type": "string" },
+    "reported_at": { "type": "string" },
+    "fault_description": { "type": "string" },
+    "alarm_codes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code"],
+        "properties": {
+          "code": { "type": "string" },
+          "description": { "type": "string" },
+          "timestamp": { "type": "string" },
+          "count": { "type": "integer" },
+          "source": { "type": "string" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "symptoms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "confidence", "source"],
+        "properties": {
+          "name": { "type": "string" },
+          "detail": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "window_days": { "type": "integer" },
+        "repeat_failures": { "type": "integer" },
+        "prior_work_orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "wo_id": { "type": "string" },
+              "date": { "type": "string" },
+              "failure_mode": { "type": "string" },
+              "action_taken": { "type": "string" },
+              "downtime_hr": { "type": "number" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "pm_compliance": { "type": "string" },
+        "source": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "manual_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "document": { "type": "string" },
+          "section": { "type": "string" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "ranked_causes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["failure_mode", "confidence", "source", "citation"],
+        "properties": {
+          "rank": { "type": "integer" },
+          "failure_mode": { "type": "string" },
+          "match_score": { "type": "number" },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "recommended_fix": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "priority": {
+      "type": "object",
+      "required": ["level", "confidence", "source"],
+      "properties": {
+        "level": { "enum": ["P1", "P2", "P3", "P4"] },
+        "score": { "type": "number" },
+        "downtime_cost_estimate": { "type": ["number", "null"] },
+        "response_target": { "type": "string" },
+        "rationale": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "citation": { "type": "string" }
+      }
+    },
+    "recommended_action": { "type": "string" },
+    "work_order_update": {
+      "type": "object",
+      "properties": {
+        "draft": { "type": "boolean" },
+        "status": { "type": "string" },
+        "summary": { "type": "string" },
+        "parts": { "type": "array", "items": { "type": "string" } },
+        "labor_hours_est": { "type": "number" },
+        "assigned_trade": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": { "type": "array", "items": { "type": "string" } },
+        "generated_at": { "type": "string" },
+        "demo_scenario": { "type": "string" }
+      }
+    }
+  }
+}

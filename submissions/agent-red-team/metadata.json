@@ -1,4 +1,5 @@
 {
+  "category": "agent-development",
   "name": "Agent Red Team",
   "description": "Adversarial assurance review for agents you own: prompt injection, oversharing, leakage and tool misuse, mapped to fixes.",
   "platforms": ["Copilot Studio", "Cowork"],

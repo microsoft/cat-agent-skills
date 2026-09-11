@@ -1,0 +1,66 @@
+---
+import type { CollectionEntry } from "astro:content";
+import SubmissionItem from "./SubmissionItem.astro";
+import { CATEGORY_LABELS, type Category } from "../lib/categories";
+import { withBase } from "../lib/url";
+
+interface Props {
+  category: Category;
+  microsoft: CollectionEntry<"skills">[];
+  community: CollectionEntry<"skills">[];
+}
+
+const { category, microsoft, community } = Astro.props;
+const empty = microsoft.length === 0 && community.length === 0;
+---
+
+<header class="mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10">
+  <a
+    href={withBase("/")}
+    class="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-fg"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    All skills and plugins
+  </a>
+  <h1 class="mt-4 text-3xl font-bold tracking-tight text-fg sm:text-4xl">
+    {CATEGORY_LABELS[category]}
+  </h1>
+  {empty && <p class="mt-5 text-muted">Nothing to see here.</p>}
+</header>
+
+{
+  microsoft.length > 0 && (
+    <section class="border-y border-border bg-surface/40" aria-labelledby="category-microsoft-heading">
+      <div class="mx-auto max-w-8xl px-4 py-7 sm:px-6 sm:py-8">
+        <h2 id="category-microsoft-heading" class="text-xl font-bold tracking-tight text-fg sm:text-2xl">
+          Built by Microsoft <span class="text-base font-normal text-muted">({microsoft.length})</span>
+        </h2>
+        <div id="category-microsoft-grid" class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]">
+          {microsoft.map((submission) => <SubmissionItem submission={submission} />)}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+{
+  community.length > 0 && (
+    <section class="mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10" aria-labelledby="category-community-heading">
+      <h2 id="category-community-heading" class="text-lg font-semibold text-fg">
+        Built by the community <span class="text-muted">({community.length})</span>
+      </h2>
+      <div id="category-community-grid" class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(17rem,1fr))]">
+        {community.map((submission) => <SubmissionItem submission={submission} />)}
+      </div>
+    </section>
+  )
+}

@@ -3,6 +3,7 @@ name: Knowledge Corpus Curator
 description: "Review uploaded knowledge-source files for duplication, redundancy, staleness, overlap, and potentially conflicting guidance, then produce an evidence-based curation backlog."
 agentDescription: "Use this skill whenever a user asks to audit, curate, clean up, deduplicate, rationalize, or assess files used by an AI knowledge source. Require the user to upload copies of the source files, analyze those complete files locally, and use configured knowledge sources only to validate findings."
 platforms: [Copilot Studio]
+category: agent-development
 tags: [knowledge, sharepoint, governance, deduplication, documents, uploads, excel]
 author: Doug Bellingeri
 authorUrl: "https://github.com/CATDAB"

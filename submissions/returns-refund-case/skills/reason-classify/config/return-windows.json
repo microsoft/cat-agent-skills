@@ -1,0 +1,3 @@
+{ "windows_days": {"fashion": 30, "electronics": 15, "home": 30, "software_opened": 0},
+  "receiptless_limit": 50.0, "receiptless_frequency_threshold_90d": 3,
+  "citation": "config/return-windows.json (customer-tuned per retailer sub-segment)" }

@@ -1,0 +1,39 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "7fd2d3ec-08be-5bc3-9b86-356aec51c52c",
+    "developer": {
+        "name": "Microsoft Manufacturing Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Supplier Qualification",
+        "full": "Supplier Qualification"
+    },
+    "description": {
+        "short": "Manufacturing Wave 2 Cowork plugin: qualify a new supplier. Gathers the supplier",
+        "full": "Manufacturing Wave 2 Cowork plugin: qualify a new supplier. Gathers the supplier dossier (certs, financials, audits, PPAP elements); scores risk across quality, financial and geographic dimensions (risk_score engine); compares against the approved vendor list and category requirements (avl_match engine); drafts the qualification memo with conditions. Draft-first; document-grounded."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/avl-compare"
+        },
+        {
+            "folder": "./skills/dossier-ingest"
+        },
+        {
+            "folder": "./skills/qualification-memo"
+        },
+        {
+            "folder": "./skills/risk-score"
+        }
+    ]
+}

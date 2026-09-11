@@ -1,0 +1,24 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.returns-refund-case.v1",
+  "title": "Returns & Refund Case contract v1",
+  "description": "Chains return-intake -> policy-retrieve -> reason-classify -> eligibility-check (Govern) -> case-packet. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "case_id", "return_request"],
+  "properties": {
+    "contract_version": { "const": "rtl.returns-refund-case.v1" },
+    "case_id": { "type": "string" },
+    "return_request": { "type": "object" },
+    "order": { "type": "object" }, "customer_history": { "type": "object" },
+    "reason": { "type": "object", "properties": {
+        "category": { "type": "string" }, "confidence": { "type": "number" },
+        "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "eligibility": { "type": "object", "properties": {
+        "determination": { "enum": ["eligible", "ineligible", "needs_evidence"] },
+        "clause": { "type": ["string", "null"] }, "detail": { "type": "string" },
+        "missing_evidence": { "type": "array", "items": { "type": "string" } },
+        "recommendation": { "enum": ["refund", "exchange", "repair", "decline", "hold_for_review"] },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "fraud_signals": { "type": "array", "items": { "type": "object",
+        "required": ["signal", "source", "citation"],
+        "properties": { "signal": {"type": "string"}, "detail": {"type": "string"},
+          "source": {"type": "string"}, "citation": {"type": "string"} } } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

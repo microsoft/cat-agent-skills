@@ -6,6 +6,7 @@ interface Props {
   name: string;
   platforms?: Platform[];
   type?: SkillType;
+  pluginSkillCount?: number;
   tags?: string[];
   coverColor?: string;
   hasBundle?: boolean;
@@ -21,6 +22,7 @@ const {
   name,
   platforms = [],
   type = "skill",
+  pluginSkillCount,
   tags = [],
   coverColor,
   hasBundle = false,
@@ -98,7 +100,7 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
               >
                 <path d="M10 3v4a1 1 0 0 1-1 1H5m14 0h-4a1 1 0 0 1-1-1V3m0 18v-4a1 1 0 0 1 1-1h4M5 16h4a1 1 0 0 1 1 1v4M4 8h16v8H4z" />
               </svg>
-              Plugin
+              Plugin{pluginSkillCount !== undefined && ` · ${pluginSkillCount} ${pluginSkillCount === 1 ? "skill" : "skills"}`}
             </span>
           )
         }

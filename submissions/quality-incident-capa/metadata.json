@@ -1,0 +1,22 @@
+{
+  "name": "Quality Incident & CAPA",
+  "description": "Take an open NCR through to a closed CAPA: read the incident, complaint and inspection data, establish root cause with a structured method, build corrective and preventive actions with mandatory effectiveness checks, validate closure readiness, and draft the 8D report cited to the clause.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "quality",
+    "capa",
+    "8d",
+    "root-cause",
+    "ncr",
+    "iso-9001"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-01",
+  "updatedAt": "2026-09-04",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}

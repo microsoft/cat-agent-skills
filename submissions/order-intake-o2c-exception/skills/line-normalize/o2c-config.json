@@ -1,0 +1,2 @@
+{ "action_level": "L2", "price_tolerance_pct": 5.0, "qty_band_multiplier": 4.0,
+  "citation": "config/o2c-config.json (customer-promoted action level; L2 = exceptions routed, creation human-approved)" }

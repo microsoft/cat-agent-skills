@@ -1,0 +1,23 @@
+{
+  "name": "Quality Inspection & Nonconformance",
+  "description": "Clear an inspection lot end to end: read the part spec, drawing, inspection plan, CoC and measurement export, compare every actual against tolerance, grade each defect by severity and disposition, and draft the nonconformance report with every call cited back to the spec.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "quality",
+    "inspection",
+    "ncr",
+    "nonconformance",
+    "tolerance",
+    "mrb"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "2.0.0",
+  "createdAt": "2026-08-01",
+  "updatedAt": "2026-09-04",
+  "featured": true,
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}

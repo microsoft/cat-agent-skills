@@ -1,0 +1,4 @@
+{ "STUDY-2411": {"license": "syndicated-internal-only", "external_use": false, "geographies": ["UK", "DE"], "expires": "2027-03-31", "citation": "rights register row STUDY-2411"},
+  "STUDY-2502": {"license": "proprietary", "external_use": true, "geographies": ["GLOBAL"], "expires": null, "citation": "rights register row STUDY-2502"},
+  "PANEL-2601": {"license": "syndicated", "external_use": false, "geographies": ["UK"], "expires": "2026-06-30", "citation": "rights register row PANEL-2601"},
+  "STUDY-2308": {"license": "proprietary", "external_use": true, "geographies": ["GLOBAL"], "expires": null, "citation": "rights register row STUDY-2308"} }
