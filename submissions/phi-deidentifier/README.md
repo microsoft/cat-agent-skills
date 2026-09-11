@@ -39,7 +39,8 @@ de-identification by name — the agent treats it as a reflex.
 ## How it works — a hybrid you can defend
 
 - **Deterministic core (system of record).** A regex + offline-lexicon engine
-  removes structured identifiers — SSN, MRN, phone/fax, email, URLs, IPs, dates
+  removes structured identifiers — SSN (dashed, spaced, or labelled), MRN,
+  phone/fax (US, international, and labelled), email, URLs, IPs, dates
   (reduced to year), ZIP (truncated to 3 digits), street/city, account, license,
   and device numbers — reproducibly, every run.
 - **Model recall booster.** For unusual person names in free prose that a regex
@@ -48,7 +49,8 @@ de-identification by name — the agent treats it as a reflex.
   change the audit trail.
 - **Built-in guard.** After redacting, it verifies the identifiers it detected
   actually vanished from the output, and lists anything that needs a human's eyes
-  under `needs_human_review`.
+  under `needs_human_review` — including any unlabelled 7+ digit number that reads
+  like an identifier it couldn't confidently anchor.
 
 ## What you get back
 
