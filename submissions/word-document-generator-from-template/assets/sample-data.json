@@ -1,0 +1,41 @@
+{
+  "document": {
+    "title": "Quarterly Operations Report",
+    "type": "Report",
+    "owner": "Operations",
+    "version": "1.0",
+    "status": "Draft",
+    "audience": "Leadership team"
+  },
+  "sections": {
+    "executive_summary": "Operations remained stable during the quarter.\nThree priority findings require follow-up.",
+    "purpose": "Summarize quarterly operating performance using approved records and identify actions for the next reporting period.",
+    "scope": "Covers service delivery, incident response, and supplier operations for the reporting quarter.",
+    "recommendations": "Confirm action owners and due dates.\nReview progress at the next monthly operations meeting.",
+    "appendix": "Source extracts and detailed calculations are retained with the approved reporting evidence."
+  },
+  "findings": [
+    {
+      "finding": "Service response targets were met.",
+      "impact": "Customer commitments remained on track.",
+      "owner": "Service Delivery"
+    },
+    {
+      "finding": "Two supplier actions remain open.",
+      "impact": "Minor schedule risk next quarter.",
+      "owner": "Vendor Management"
+    },
+    {
+      "finding": "Incident review completion improved.",
+      "impact": "Faster closure and stronger traceability.",
+      "owner": "Operations Assurance"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "SRC-001",
+      "title": "Approved quarterly operations dataset",
+      "type": "connector"
+    }
+  ]
+}
