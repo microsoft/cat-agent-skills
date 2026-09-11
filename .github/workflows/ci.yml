@@ -37,14 +37,14 @@ jobs:
         run: npm test
 
       # Same-repo PRs get a write token: extract submission zips into the site
-      # (writes src/content/skills/*.md + public/bundles/*.zip) and commit the
-      # result back to the PR branch. Hard-fails on missing/invalid metadata.
+      # and commit the result back to the PR branch. Hard-fails on
+      # missing/invalid metadata.
       # `authorGithub` is resolved purely from each submission's own metadata
       # (an explicit handle, or a github.com/<login> authorUrl) — never the
       # PR/merger login — so attribution is stable no matter who lands the skill.
       - name: Import skill submissions
         if: github.event.pull_request.head.repo.full_name == github.repository
-        run: npm run import:submissions
+        run: npm run import:submissions -- --copilot-studio-output "$RUNNER_TEMP/copilot-studio-skills"
 
       - name: Commit extracted skills
         if: github.event.pull_request.head.repo.full_name == github.repository
