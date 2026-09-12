@@ -72,10 +72,11 @@ Decision rules
 {{decision_rules}}
 
 Ambiguity behavior
-If two labels are equally supported or required evidence is missing, return {{ambiguous_label_or_behavior}} and explain the missing discriminator in one sentence.
+Include `Cannot determine` as one of the allowed values in {{labels}}.
+If two labels are equally supported or required evidence is missing, return `Cannot determine` and explain the missing discriminator in one sentence.
 
 Output
-Label: <allowed label>
+Label: <one allowed label, including Cannot determine>
 Reason: <one concise evidence-based reason>
 ```
 
