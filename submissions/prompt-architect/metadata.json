@@ -1,0 +1,12 @@
+{
+  "name": "Prompt Architect",
+  "description": "Turn rough prompts into reusable, testable prompt contracts with variables, output rules, failure behavior, and regression tests.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["prompt-engineering", "prompts", "authoring", "quality", "testing"],
+  "author": "Allan Changar",
+  "authorUrl": "https://github.com/cheapskatechangar",
+  "version": "1.0.0",
+  "createdAt": "2026-09-12",
+  "updatedAt": "2026-09-12",
+  "coverColor": "indigo"
+}
