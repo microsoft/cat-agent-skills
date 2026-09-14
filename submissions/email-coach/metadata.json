@@ -1,0 +1,11 @@
+{
+  "name": "Email Coach",
+  "description": "Turns a rough draft into a sharper email and explains every change, so your next email is better before you write it.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["email", "writing", "communication", "coaching"],
+  "author": "Tony Brooks, FutureAbility",
+  "authorUrl": "https://github.com/Fab-Tony",
+  "version": "1.0.0",
+  "createdAt": "2026-08-17",
+  "updatedAt": "2026-08-17"
+}
