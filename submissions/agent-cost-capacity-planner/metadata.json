@@ -1,0 +1,8 @@
+{
+  "name": "Agent Cost & Capacity Planner",
+  "description": "Forecast a standard-harness Copilot Studio agent's Copilot Credit consumption and cost, and route GitHub Copilot harness estimates to the correct model.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["copilot-studio", "finops", "cost", "licensing", "capacity-planning", "governance", "architecture", "assessment"],
+  "author": "Marco Zama",
+  "version": "1.0.0"
+}
