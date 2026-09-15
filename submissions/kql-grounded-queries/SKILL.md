@@ -26,17 +26,26 @@ published column reference at all.
    authoritative, which timestamp column is correct, and which operators exist. If
    the user did not say, state the assumption you are making.
 
-2. **Keep candidate names inside the tenant until their public status is
+2. **Keep candidate table names inside the tenant until their public status is
    established.** Read the surface's index first — that sends nothing of the
-   user's — and only a name you find listed there counts as **published** and may
-   go out to a reference lookup or a search. Everything else is
+   user's — and only a table you find listed there counts as **published** and may
+   go out to a reference lookup or a search. Every other table is
    **tenant-specific**, and that is the default rather than the exception: not
-   only `_CL` suffixes and workspace functions but any name the index does not
-   carry and any name the user supplied, whatever it looks like. A custom table is
+   only `_CL` suffixes and workspace functions but any table the index does not
+   carry and any table the user supplied, whatever it looks like. A custom table is
    under no obligation to follow a naming convention, so a suffix test decides
    nothing — presence in the index does.
 
-   Tenant-specific names never leave. No lookup, no search, not even to find out
+   **This is about table names, because a table name is what goes into a URL or a
+   search string.** Column names never leave in the first place: a column is
+   verified by looking for it in the schema you already fetched for its table,
+   which is a comparison you make locally and sends nothing. So a column the user
+   pasted is checked against the published page like any other, and there is no
+   reason to ask them for a schema they can read off a reference you are already
+   holding. The columns that do need the tenant are the ones belonging to a
+   tenant-specific table, and they arrive with that table's schema.
+
+   Tenant-specific tables never leave. No lookup, no search, not even to find out
    whether they are documented, because the name is sent either way. They go to
    the portal's schema tab or a `getschema` run, and a redacted name is fine where
    the real one is sensitive. Where no documentation tool exists at all there is
