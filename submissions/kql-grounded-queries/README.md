@@ -38,8 +38,8 @@ ones that never use the word:
 
 What comes back is a query, the documentation pages that were checked with links, and
 the assumptions being made — custom tables, connector coverage, licence gates,
-ingestion lag. If a table or column cannot be verified, you get told that instead of a
-query.
+ingestion lag. Where an identifier cannot be verified, you are told so instead of
+being handed a query built on it.
 
 ## Good to know
 
@@ -48,9 +48,9 @@ something that would have appeared instantly takes several tool calls. For quick
 exploration that is a poor trade. For anything going into a workbook, a detection rule
 or a customer report, it is the version worth trusting.
 
-**A 404 is a result.** If a table's reference page does not resolve, the name is wrong
-or the table is custom — the skill says which it thinks and asks, rather than reaching
-for a similar name.
+**A 404 is a result.** If a table's reference page does not resolve, the name is wrong,
+the table is custom, or it is in preview with nothing published yet. The skill says
+which the evidence supports and asks, rather than reaching for a similar name.
 
 **Snapshot tables catch people out.** `AgentsInfo` stores repeated snapshots, so
 `summarize arg_max(Timestamp, *)` without `by AgentId` returns a single row — a whole

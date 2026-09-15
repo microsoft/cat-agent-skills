@@ -34,8 +34,11 @@ published column reference at all.
    if one is connected, otherwise a direct page fetch. Read off the exact column
    list and record the URL.
 
-   A page that does not resolve is information, not failure: the table name is
-   wrong or the table is custom. Report which you think it is.
+   A page that does not resolve is information, not failure. It means one of three
+   things: the name is wrong, the table is custom to the tenant, or the table is in
+   preview with no reference published yet. Say which the evidence supports. Where
+   nothing distinguishes them, report the schema as unavailable rather than picking
+   one — the three have different remedies.
 
 4. **Retrieve prior art.** Search published queries for the verified tables and
    adapt proven patterns rather than composing from nothing. KQL Search
@@ -68,15 +71,24 @@ published column reference at all.
 
 - Never substitute a plausible name for one you could not verify. Say what you
   checked and stop.
-- If the user insists on an unverified identifier, include it marked
-  `// UNVERIFIED` inline and list it under assumptions. Never pass it off silently.
+- **Never put an unverified identifier into a query on your own initiative.** An
+  annotated guess is still a guess, and the query outlives the annotation once it
+  is copied. What to do instead depends on why verification failed:
+  - **The documentation exists and the name is not in it** — the name is wrong.
+    Stop and report. Name the verified alternative if the reference makes one
+    obvious, but do not quietly swap it in.
+  - **No schema is published** (preview tables, custom `*_CL` tables, workspace
+    functions) — ask the user for the schema. What they supply becomes your
+    source and the result is marked environment-dependent. Only if they cannot
+    supply it may a column go in guarded by `column_ifexists()`, with the query
+    flagged as requiring in-tenant validation and stated plainly as a hedge rather
+    than verification.
+  - **The user states the identifier exists in their tenant** — their assertion is
+    the source, and it is weaker than documentation. Mark it `// UNVERIFIED`
+    inline, record under assumptions that the user supplied it, and never let it
+    read as documented.
 - Verify queries the user pastes in before modifying them. Plenty of KQL in
   circulation references columns that were renamed underneath it.
-- For custom `*_CL` tables and workspace functions, ask the user for the schema
-  rather than assuming one, and mark the result environment-dependent.
-- Where no published schema exists (some preview tables), guard columns with
-  `column_ifexists()`, flag the query as requiring in-tenant validation, and say
-  plainly that this is a hedge rather than verification.
 - Microsoft Learn schema pages win over community content and repository queries.
   Note any conflict you find.
 - Verifying that a table exists in documentation says nothing about whether it is
