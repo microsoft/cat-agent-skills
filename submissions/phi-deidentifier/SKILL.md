@@ -1,18 +1,18 @@
 ---
-name: PHI De-identifier
-description: Redact the 18 HIPAA Safe Harbor identifiers from clinical text (or produce a Limited Data Set) with consistent pseudonym tokens and an audit manifest of what was removed.
-agentDescription: "Use this skill whenever the user asks to de-identify, redact, anonymise, scrub, or remove PHI/PII from clinical text, notes, transcripts, or documents before sharing, exporting, or using them for analytics, testing, or demos — e.g. \"de-identify this note\", \"strip patient info\", \"make this HIPAA Safe Harbor compliant\", \"produce a limited data set\". It removes the 18 HIPAA Safe Harbor identifiers and emits an audit manifest of what was removed. Run the bundled scripts/deidentify.py — do NOT hand-write redaction regexes yourself. This skill prepares de-identified text and an audit trail for human review; it does NOT certify legal compliance or make a formal expert determination."
-platforms: [Cowork, Copilot Studio, Scout]
-tags: [healthcare, hls, phi, privacy, redaction, hipaa, compliance, scripts]
-author: Rafael Lopez Alcaraz
-authorUrl: "https://github.com/rafalcaraz"
-authorGithub: rafalcaraz
-version: 1.1.0
-createdAt: 2026-07-19
-updatedAt: 2026-07-21
-featured: true
-bundle: bundles/phi-deidentifier.zip
+name: phi-deidentifier
+description: >-
+  Use this skill whenever the user asks to de-identify, redact, anonymise,
+  scrub, or remove PHI/PII from clinical text, notes, transcripts, or documents
+  before sharing, exporting, or using them for analytics, testing, or
+  demos — e.g. "de-identify this note", "strip patient info", "make this HIPAA
+  Safe Harbor compliant", "produce a limited data set". It removes the 18 HIPAA
+  Safe Harbor identifiers and emits an audit manifest of what was removed. Run
+  the bundled scripts/deidentify.py — do NOT hand-write redaction regexes
+  yourself. This skill prepares de-identified text and an audit trail for human
+  review; it does NOT certify legal compliance or make a formal expert
+  determination.
 ---
+
 # PHI De-identifier
 
 De-identify clinical / health text to the **HIPAA Safe Harbor** standard (or a
