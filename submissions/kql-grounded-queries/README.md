@@ -48,12 +48,12 @@ something that would have appeared instantly takes several tool calls. For quick
 exploration that is a poor trade. For anything going into a workbook, a detection rule
 or a customer report, it is the version worth trusting.
 
-**A 404 is a result — a failed lookup is not.** A timeout, a 403 or a URL template that
-has moved says nothing about the schema, so the skill retries, tries the index page, and
-then tells you the lookup failed. Only a page that comes back without the table is
-evidence, and then the name is wrong, the table is custom, or it is in preview with
-nothing published yet. The skill says which the evidence supports and asks, rather than
-reaching for a similar name.
+**A 404 is not a verdict.** Learn serves one for a slug it does not recognise as readily
+as for a table that does not exist, so a 404 on its own — like a timeout or a 403 — means
+the lookup failed, and the skill says so. What settles it is the index page: a schema
+index that does not list your table is evidence, and then the name is wrong, the table is
+custom, or it is in preview with nothing published yet. The skill says which the evidence
+supports and asks, rather than reaching for a similar name.
 
 **Snapshot tables catch people out.** `AgentsInfo` stores repeated snapshots, so
 `summarize arg_max(Timestamp, *)` without `by AgentId` returns a single row — a whole
@@ -64,9 +64,10 @@ finds them.
 **Preview tables are the hard limit.** Where no column reference has been published,
 nothing can be verified. The skill asks you for the schema — the portal's schema tab
 or a `getschema` run — and stops if you do not have it. Ask and you can have a
-`column_ifexists()` version, but it is a diagnostic, not a query to keep: a wrong
-column name resolves quietly to the default, so it runs, returns nothing, and reads
-as a clean negative.
+`column_ifexists()` version, but it is a diagnostic, not a query to keep: a column
+that is not there resolves silently to the default for every row, so a filter on it
+matches nothing or everything and a `summarize` collapses into one bucket. It runs,
+and what comes back is a false negative wearing the shape of a real result.
 
 **Documentation is not your tenant.** Confirming a table exists says nothing about
 whether it is populated for you. That is a licensing and connector question, and the

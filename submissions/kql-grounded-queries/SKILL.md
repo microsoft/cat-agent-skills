@@ -36,17 +36,20 @@ published column reference at all.
    if one is connected, otherwise a direct page fetch. Read off the exact column
    list and record the URL.
 
-   **Separate a failed retrieval from a documented absence.** A timeout, a 403, a
-   redirect that does not land, or a URL template that has moved tells you nothing
-   about the schema. Retry once, try the index page, and if it still fails say the
-   lookup failed and stop — never convert a retrieval error into a conclusion about
-   the table.
+   **A failed lookup is not a verdict.** A timeout, a 403, a redirect that does not
+   land, a URL template that has moved — and a 404, which Learn also serves for a
+   slug it simply does not recognise — say nothing on their own about the schema.
+   Retry once, then go to the index page. Never convert a retrieval result into a
+   conclusion about the table.
 
-   A page that is retrieved and does not have the table is information, not failure.
-   It means one of three things: the name is wrong, the table is custom to the
+   **Absence is established by a page you actually read**: an index that lists the
+   surface's schema and does not list your table. That is information, not failure,
+   and it means one of three things — the name is wrong, the table is custom to the
    tenant, or the table is in preview with no reference published yet. Say which the
    evidence supports. Where nothing distinguishes them, report the schema as
-   unavailable rather than picking one — the three have different remedies.
+   unavailable rather than picking one; the three have different remedies. Where you
+   could not read an index either, the answer is that the lookup failed, and you
+   stop there.
 
 4. **Retrieve prior art.** Search published queries for the verified tables and
    adapt proven patterns rather than composing from nothing. KQL Search
@@ -109,9 +112,11 @@ published column reference at all.
     verified against their tenant rather than against Learn, and the result is
     marked environment-dependent throughout. If they cannot supply it, stop.
     A `column_ifexists()` version is offered only if the user asks for one, and it
-    is labelled a diagnostic rather than a query to keep: a wrong name resolves
-    quietly to the default value, so the query runs, returns nothing, and looks
-    like a clean negative. Say that in the answer, every time.
+    is labelled a diagnostic rather than a query to keep: a name that is not there
+    resolves silently to the default for every row, so a filter on it matches
+    nothing or everything and a `summarize` collapses into one bucket. The query
+    runs, and what comes back is a false negative wearing the shape of a real
+    result. Say that in the answer, every time.
   - **The user asserts an identifier without a schema to back it** — that is a
     claim about their environment, not a source. It does not put the name in the
     query. Ask for the schema tab or a `getschema` run, which turns it into the
