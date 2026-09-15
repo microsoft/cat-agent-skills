@@ -22,9 +22,18 @@ published column reference at all.
    authoritative, which timestamp column is correct, and which operators exist. If
    the user did not say, state the assumption you are making.
 
-2. **List candidate tables** and treat them as unproven.
+2. **List candidate tables, and sort them before anything leaves the tenant.** Two
+   piles. **Published** — tables Microsoft documents, which go to step 3.
+   **Tenant-specific** — anything ending `_CL`, workspace functions, and any table
+   the user describes as their own, which never leave: no Learn lookup, no search,
+   not even to find out whether they are documented, because the name is sent
+   either way. Those go straight to the schema tab or a `getschema` run, and a
+   redacted name is fine if the real one is sensitive. Where you cannot tell which
+   pile a name belongs in, ask rather than guessing outward. Everything on both
+   piles is unproven until verified.
 
-3. **Verify every table against its reference page** before writing anything. These
+3. **Verify every published candidate against its reference page** before writing
+   anything — the tenant-specific pile is already on its own path. These
    templates are a shortcut, not the authority — the index pages below carry the
    real link for every table, so when a template does not land, take the URL from
    the index rather than trying another spelling:
@@ -67,12 +76,15 @@ published column reference at all.
    direct fetch. Re-verify the columns those queries use — published queries go
    stale too.
 
-   **Search on table names and generic technique keywords only.** This step sends
-   text to services outside the tenant, and a hunt usually arrives wrapped in the
-   detail that makes it sensitive. Account names, UPNs, hostnames, device names, IP
-   addresses, internal domains, case or ticket references, file paths and any value
-   the user pasted from their own data stay out of the search string. Search for
-   `AgentsInfo blueprint` rather than for the agent, the owner or the tenant.
+   **Search published table names and generic technique keywords, nothing else.**
+   This step sends text to services outside the tenant, and a hunt usually arrives
+   wrapped in the detail that makes it sensitive. Out of the search string: account
+   names, UPNs, hostnames, device names, IP addresses, internal domains, case or
+   ticket references, file paths, any value the user pasted from their own data,
+   and every name from the tenant-specific pile in step 2. Search for `AgentsInfo
+   blueprint` rather than for the agent, the owner or the tenant. Where the
+   published pile is empty and all you have is tenant-specific names, skip the
+   search and say so — there is nothing here you are allowed to send.
 
    This step depends on a capability you may not have. If nothing here is available,
    say the prior-art step was skipped and compose from the verified schemas alone —
@@ -115,6 +127,10 @@ published column reference at all.
 
 ## Output format
 
+Two shapes, and the first one is not always available.
+
+**When you have a query:**
+
 - **Query** — KQL targeting the confirmed surface.
 - **Sources verified** — each table with the documentation URL checked; each
   adapted query with its link. Where the prior-art step was skipped for want of a
@@ -122,6 +138,15 @@ published column reference at all.
 - **Assumptions and environment dependencies** — custom tables, connector
   coverage, licence-gated tables, ingestion lag.
 - **Notes** (optional) — performance, tuning, portability between surfaces.
+
+**When verification did not get there** — no lookup capability in this session, a
+lookup that failed, an index that does not list the table, or a tenant-specific
+table whose schema the user could not supply — there is no **Query** section at
+all. Do not leave it empty and do not fill it with something unverified. Say what
+you were trying to verify, what you checked and what came back, which of those
+four it was, and what would unblock it: a documentation tool, the reference URLs
+for the user to open, or the schema tab output. A clear account of the gap is the
+deliverable in that case.
 
 ## Guardrails
 
