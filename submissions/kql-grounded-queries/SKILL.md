@@ -28,17 +28,25 @@ published column reference at all.
    URLs are deterministic:
    - Log Analytics / Sentinel: `https://learn.microsoft.com/azure/azure-monitor/reference/tables/{TableName}`
    - Defender XDR: `https://learn.microsoft.com/defender-xdr/advanced-hunting-{tablename}-table` (lowercase)
-   - Indexes: `.../reference/tables-index` and `.../defender-xdr/advanced-hunting-schema-tables`
+   - Log Analytics index: `https://learn.microsoft.com/azure/azure-monitor/reference/tables-index`
+   - Defender XDR index: `https://learn.microsoft.com/defender-xdr/advanced-hunting-schema-tables`
+   - Sentinel data lake asset tables: `https://learn.microsoft.com/azure/sentinel/datalake/asset-data-tables`
 
    Use whatever documentation tool the host provides — a Microsoft Learn MCP server
    if one is connected, otherwise a direct page fetch. Read off the exact column
    list and record the URL.
 
-   A page that does not resolve is information, not failure. It means one of three
-   things: the name is wrong, the table is custom to the tenant, or the table is in
-   preview with no reference published yet. Say which the evidence supports. Where
-   nothing distinguishes them, report the schema as unavailable rather than picking
-   one — the three have different remedies.
+   **Separate a failed retrieval from a documented absence.** A timeout, a 403, a
+   redirect that does not land, or a URL template that has moved tells you nothing
+   about the schema. Retry once, try the index page, and if it still fails say the
+   lookup failed and stop — never convert a retrieval error into a conclusion about
+   the table.
+
+   A page that is retrieved and does not have the table is information, not failure.
+   It means one of three things: the name is wrong, the table is custom to the
+   tenant, or the table is in preview with no reference published yet. Say which the
+   evidence supports. Where nothing distinguishes them, report the schema as
+   unavailable rather than picking one — the three have different remedies.
 
 4. **Retrieve prior art.** Search published queries for the verified tables and
    adapt proven patterns rather than composing from nothing. KQL Search
@@ -47,16 +55,34 @@ published column reference at all.
    those queries use — published queries go stale too.
 
 5. **Compose using only verified identifiers.** Time filter first, high-selectivity
-   `where` early, `has` / `has_any` over `contains`, explicit join kinds, an
-   explicit final `project`. Use `TimeGenerated` on Log Analytics and `Timestamp`
-   on Defender XDR. Handle dynamic columns per their documented type with
-   `parse_json()`, `tostring()` and `mv-expand`.
+   `where` early, explicit join kinds, an explicit final `project`. Handle dynamic
+   columns per their documented type with `parse_json()`, `tostring()` and
+   `mv-expand`.
+
+   `has` and `has_any` index whole terms and are the faster choice, but they are not
+   a drop-in replacement for `contains`: anything that needs substring matching —
+   inside a URL, a file path, a command line, a domain fragment — requires
+   `contains` or an explicit term split. Choose on the semantics the hunt needs and
+   say which you chose.
+
+   The timestamp column is a property of the surface and is never carried across:
+   `TimeGenerated` on Log Analytics and Sentinel, `Timestamp` on Defender XDR
+   Advanced Hunting, and on the Sentinel data lake whatever the table's own schema
+   documents. `TimeGenerated` is usual in the lake but not universal — federated
+   tables may lack it or carry it in a form the time range cannot use, and asset
+   tables also carry `_SnapshotTime` and `_ReceivedTime`. Read it off the schema
+   like any other column, and account for the lake's ingestion latency rather than
+   querying up to `now()`.
 
 6. **Self-check line by line before answering.** Every table in the verified set;
-   every column in that table's verified schema (watch for Defender-versus-Sentinel
-   differences on tables present in both); every operator supported on the target
-   surface; the correct timestamp column throughout. Fix any failure and re-check,
-   or report it as a gap. Never answer past a failed check.
+   every operator supported on the target surface; the correct timestamp column
+   throughout. Check the two kinds of column name differently: a **source column**
+   read from a table must appear in that table's verified schema (watch for
+   Defender-versus-Sentinel differences on tables present in both), while a name
+   created by the query itself — `extend`, `summarize`, a renaming `project`, a
+   join's right-hand prefix — is checked against the query's own dataflow, that it
+   is defined before it is used and not shadowed later. Fix any failure and
+   re-check, or report it as a gap. Never answer past a failed check.
 
 ## Output format
 
@@ -78,11 +104,13 @@ published column reference at all.
     Stop and report. Name the verified alternative if the reference makes one
     obvious, but do not quietly swap it in.
   - **No schema is published** (preview tables, custom `*_CL` tables, workspace
-    functions) — ask the user for the schema. What they supply becomes your
-    source and the result is marked environment-dependent. Only if they cannot
-    supply it may a column go in guarded by `column_ifexists()`, with the query
-    flagged as requiring in-tenant validation and stated plainly as a hedge rather
-    than verification.
+    functions) — ask the user for the schema, from the portal's schema tab or a
+    `getschema` run. What they supply becomes your source and the result is marked
+    environment-dependent. If they cannot supply it, the default is still to stop.
+    A `column_ifexists()` version is offered only if the user asks for one, and it
+    is labelled a diagnostic rather than a query to keep: a wrong name resolves
+    quietly to the default value, so the query runs, returns nothing, and looks
+    like a clean negative. Say that in the answer, every time.
   - **The user states the identifier exists in their tenant** — their assertion is
     the source, and it is weaker than documentation. Mark it `// UNVERIFIED`
     inline, record under assumptions that the user supplied it, and never let it

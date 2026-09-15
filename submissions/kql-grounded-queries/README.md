@@ -59,9 +59,11 @@ Microsoft's own published sample queries use the correct form, and the prior-art
 finds them.
 
 **Preview tables are the hard limit.** Where no column reference has been published,
-nothing can be verified. The skill guards columns with `column_ifexists()`, flags the
-query as needing in-tenant validation, and tells you that is a hedge rather than
-verification.
+nothing can be verified. The skill asks you for the schema — the portal's schema tab
+or a `getschema` run — and stops if you do not have it. Ask and you can have a
+`column_ifexists()` version, but it is a diagnostic, not a query to keep: a wrong
+column name resolves quietly to the default, so it runs, returns nothing, and reads
+as a clean negative.
 
 **Documentation is not your tenant.** Confirming a table exists says nothing about
 whether it is populated for you. That is a licensing and connector question, and the
