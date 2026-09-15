@@ -51,13 +51,17 @@ published column reference at all.
    **A page that resolves is not a table that is current.** A retired table's
    reference keeps working and keeps listing columns long after it stopped being
    the right answer, so read the notices at the top of the page and the table's
-   entry in the index before treating the columns as verified. `AIAgentsInfo`
-   returns a full column list today and carries a banner saying it is transitioning
-   to `AgentsInfo` and stays reachable only until 1 July 2026; `AADSignInEventsBeta`
-   does the same ahead of `EntraIdSignInEvents`. Where a replacement is named,
-   verify the replacement and write the query against that, and say in the answer
-   which name you moved off and why. Where the notice is a retirement with no
-   successor, that is a finding, not a footnote.
+   entry in the index before treating the columns as verified. Where a replacement
+   is named, verify the replacement and write the query against that, saying in the
+   answer which name you moved off and why. Where the notice is a retirement with
+   no successor, that is a finding, not a footnote.
+
+   The `AIAgentsInfo` / `AgentsInfo` and `AADSignInEventsBeta` /
+   `EntraIdSignInEvents` pairs are the shape to expect: a superseded table whose
+   reference still answers in full, under a banner naming what replaced it. Take
+   those as illustrations only. Any transition date you have seen, in this file or
+   in your own recall, is something to read off the page rather than assert —
+   retirements slip, and a page can sit past its stated date.
 
    **If the host gives you no way to read a page, stop here.** Say that verification
    is not possible in this session and that you are therefore not writing a query.
@@ -178,9 +182,14 @@ deliverable in that case.
 - **Never put an unverified identifier into a query on your own initiative.** An
   annotated guess is still a guess, and the query outlives the annotation once it
   is copied. What to do instead depends on why verification failed:
-  - **The documentation exists and the name is not in it** — the name is wrong.
-    Stop and report. Name the verified alternative if the reference makes one
-    obvious, but do not quietly swap it in.
+  - **The documentation you read does not contain the identifier.** For a column,
+    where you have the table's own reference and its column list does not include
+    yours, the name is wrong: stop and report, naming the verified alternative
+    where the reference makes one obvious, but never quietly swapping it in. For a
+    table missing from an index, this is not a verdict — it is step 3's three-way
+    call between a wrong name, a custom table and an unpublished preview, and the
+    last two have their own path below. Do not reject a table here that step 3 has
+    not settled.
   - **No schema is published** (preview tables, custom `*_CL` tables, workspace
     functions) — ask the user for the schema, from the portal's schema tab or a
     `getschema` run. What they supply becomes your source: the identifier is then
