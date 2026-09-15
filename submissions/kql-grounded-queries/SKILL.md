@@ -10,7 +10,10 @@ description: >-
   the table is custom and Microsoft does not document it.
 ---
 
-Never emit a table or column name you have not verified in this session. What you
+Never emit a table or column name you have not verified in this session. One
+exception exists, and it is opt-in, separately labelled and shaped differently from
+an ordinary answer: the unverified-schema diagnostic described under Guardrails and
+Output format. It is never produced unless the user asks for it by name. What you
 know about these schemas from training is a starting guess, not a fact: Microsoft
 security tables are renamed regularly, retired names appear more often in training
 data than the names that replaced them, and some preview tables ship with no
@@ -23,15 +26,22 @@ published column reference at all.
    authoritative, which timestamp column is correct, and which operators exist. If
    the user did not say, state the assumption you are making.
 
-2. **List candidate tables, and sort them before anything leaves the tenant.** Two
-   piles. **Published** — tables Microsoft documents, which go to step 3.
-   **Tenant-specific** — anything ending `_CL`, workspace functions, and any table
-   the user describes as their own, which never leave: no Learn lookup, no search,
-   not even to find out whether they are documented, because the name is sent
-   either way. Those go straight to the schema tab or a `getschema` run, and a
-   redacted name is fine if the real one is sensitive. Where you cannot tell which
-   pile a name belongs in, ask rather than guessing outward. Everything on both
-   piles is unproven until verified.
+2. **Keep candidate names inside the tenant until their public status is
+   established.** Read the surface's index first — that sends nothing of the
+   user's — and only a name you find listed there counts as **published** and may
+   go out to a reference lookup or a search. Everything else is
+   **tenant-specific**, and that is the default rather than the exception: not
+   only `_CL` suffixes and workspace functions but any name the index does not
+   carry and any name the user supplied, whatever it looks like. A custom table is
+   under no obligation to follow a naming convention, so a suffix test decides
+   nothing — presence in the index does.
+
+   Tenant-specific names never leave. No lookup, no search, not even to find out
+   whether they are documented, because the name is sent either way. They go to
+   the portal's schema tab or a `getschema` run, and a redacted name is fine where
+   the real one is sensitive. Where no documentation tool exists at all there is
+   no published pile, every name is tenant-specific, and step 3's stop applies.
+   Everything on both lists is unproven until verified.
 
 3. **Verify every published candidate against its reference page** before writing
    anything — the tenant-specific pile is already on its own path. These
@@ -150,7 +160,7 @@ published column reference at all.
 
 ## Output format
 
-Two shapes, and the first one is not always available.
+Three shapes. The first is not always available, and the second only exists on request.
 
 **When you have a query:**
 
@@ -165,6 +175,13 @@ Two shapes, and the first one is not always available.
 - **Assumptions and environment dependencies** — custom tables, connector
   coverage, licence-gated tables, ingestion lag.
 - **Notes** (optional) — performance, tuning, portability between surfaces.
+
+**When the user asked for a diagnostic** and no schema could be produced for an
+unpublished preview or custom table, the answer is headed **Diagnostic — not
+verified**, and there is no **Query** section: the KQL sits under that heading
+instead, every guarded column is listed by name, and the answer states that a
+missing column resolves to the default, so an empty result is not evidence of
+absence. This shape exists only on request.
 
 **When verification did not get there** — no lookup capability in this session, a
 lookup that failed, an index that does not list the table, or a tenant-specific
@@ -195,12 +212,13 @@ deliverable in that case.
     `getschema` run. What they supply becomes your source: the identifier is then
     verified against their tenant rather than against Learn, and the result is
     marked environment-dependent throughout. If they cannot supply it, stop.
-    A `column_ifexists()` version is offered only if the user asks for one, and it
-    is labelled a diagnostic rather than a query to keep: a name that is not there
-    resolves silently to the default for every row, so a filter on it matches
-    nothing or everything and a `summarize` collapses into one bucket. The query
-    runs, and what comes back is a false negative wearing the shape of a real
-    result. Say that in the answer, every time.
+    Where the user asks for a `column_ifexists()` version anyway, that is the one
+    exception to the rule at the top of this file, and it ships in the
+    **Diagnostic** shape under Output format — never as a **Query**. A name that
+    is not there resolves silently to the default for every row, so a filter on it
+    matches nothing or everything and a `summarize` collapses into one bucket. The
+    query runs, and what comes back is a false negative wearing the shape of a
+    real result. Say that in the answer, every time.
   - **The user asserts an identifier without a schema to back it** — that is a
     claim about their environment, not a source. It does not put the name in the
     query. Ask for the schema tab or a `getschema` run, which turns it into the
