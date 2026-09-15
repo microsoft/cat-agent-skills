@@ -47,10 +47,12 @@ ones that never use the word:
 - "Why is this query returning nothing?" (paste the query)
 - "Write a Sentinel detection for agents authenticating from a new country"
 
-What comes back is a query, the documentation pages that were checked with links, and
-the assumptions being made — custom tables, connector coverage, licence gates,
-ingestion lag. Where an identifier cannot be verified, you are told so instead of
-being handed a query built on it.
+What comes back is a query, the evidence behind every identifier in it, and the
+assumptions being made: custom tables, connector coverage, licence gates, ingestion
+lag. Evidence means a documentation link for a published table and the schema you
+supplied for one of your own, named as what it is rather than dressed up as the same
+thing. Where an identifier cannot be verified, you are told so instead of being handed
+a query built on it.
 
 ## Good to know
 

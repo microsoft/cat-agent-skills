@@ -5,8 +5,9 @@ description: >-
   Analytics or Defender XDR Advanced Hunting — writing one, fixing one,
   modifying one, or explaining one — including requests that never say "KQL"
   (for example "query SigninLogs", "hunt for phishing URLs in Defender",
-  "write a Sentinel detection"). Verify every table and column against Microsoft
-  documentation BEFORE composing any query.
+  "write a Sentinel detection"). Verify every table and column BEFORE composing any
+  query — against Microsoft documentation, or against the tenant's own schema where
+  the table is custom and Microsoft does not document it.
 ---
 
 Never emit a table or column name you have not verified in this session. What you
@@ -150,9 +151,13 @@ Two shapes, and the first one is not always available.
 **When you have a query:**
 
 - **Query** — KQL targeting the confirmed surface.
-- **Sources verified** — each table with the documentation URL checked; each
-  adapted query with its link. Where the prior-art step was skipped for want of a
-  search capability, say so here rather than leaving the section looking thin.
+- **Sources verified** — the evidence for each identifier, named by what it
+  actually is. A published table gets the documentation URL you read. A
+  tenant-specific or unpublished preview table gets the source the user supplied —
+  the portal's schema tab or a `getschema` run — and no URL, because none exists;
+  never reach for a plausible link to make the section look uniform. An adapted
+  query gets its link. Where the prior-art step was skipped for want of a search
+  capability, say so here rather than leaving the section looking thin.
 - **Assumptions and environment dependencies** — custom tables, connector
   coverage, licence-gated tables, ingestion lag.
 - **Notes** (optional) — performance, tuning, portability between surfaces.
