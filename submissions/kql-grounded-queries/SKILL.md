@@ -26,7 +26,7 @@ published column reference at all.
 
 3. **Verify every table against its reference page** before writing anything. The
    URLs are deterministic:
-   - Log Analytics / Sentinel: `https://learn.microsoft.com/azure/azure-monitor/reference/tables/{TableName}`
+   - Log Analytics / Sentinel: `https://learn.microsoft.com/azure/azure-monitor/reference/tables/{tablename}` (lowercase)
    - Defender XDR: `https://learn.microsoft.com/defender-xdr/advanced-hunting-{tablename}-table` (lowercase)
    - Log Analytics index: `https://learn.microsoft.com/azure/azure-monitor/reference/tables-index`
    - Defender XDR index: `https://learn.microsoft.com/defender-xdr/advanced-hunting-schema-tables`
@@ -95,10 +95,14 @@ published column reference at all.
    throughout. Check the two kinds of column name differently: a **source column**
    read from a table must appear in that table's verified schema (watch for
    Defender-versus-Sentinel differences on tables present in both), while a name
-   created by the query itself — `extend`, `summarize`, a renaming `project`, a
-   join's right-hand prefix — is checked against the query's own dataflow, that it
-   is defined before it is used and not shadowed later. Fix any failure and
-   re-check, or report it as a gap. Never answer past a failed check.
+   created by the query itself is checked against the query's own dataflow instead,
+   that it is defined before it is used and not shadowed later: `extend` results,
+   `summarize` outputs, a renaming `project`, and the columns a join invents when
+   both sides carry the same name — the right-hand one comes back with a numeric
+   suffix, so an inner join on `Key` returns `Key` *and* `Key1`. `$left` and
+   `$right` belong to the `on` clause and are not names you can project.
+   Fix any failure and re-check, or report it as a gap. Never answer past a failed
+   check.
 
 ## Output format
 
