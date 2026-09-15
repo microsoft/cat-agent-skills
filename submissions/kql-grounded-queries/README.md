@@ -28,6 +28,12 @@ connections make it considerably better:
 | **Microsoft Learn MCP** | Grounded documentation lookups instead of raw page fetches. |
 | **KQL Search MCP** (`kqlsearch.com`) | The community query corpus, searchable by table, keyword or technique. This is what makes the prior-art step work. |
 
+Both are outside your tenant, and the prior-art step is the one that sends text to a
+third party. The skill searches on table names and technique keywords only — account
+names, hostnames, IP addresses, internal domains, ticket references and anything you
+pasted from your own data stay out of the search string. Worth knowing before you point
+this at a live incident.
+
 Without the Learn MCP, schema verification still works through ordinary page fetches.
 Without a search capability the prior-art step is skipped altogether, and the answer
 says so — queries then come from the verified schemas alone.

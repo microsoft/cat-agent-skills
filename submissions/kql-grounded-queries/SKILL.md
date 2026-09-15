@@ -24,8 +24,10 @@ published column reference at all.
 
 2. **List candidate tables** and treat them as unproven.
 
-3. **Verify every table against its reference page** before writing anything. The
-   URLs are deterministic:
+3. **Verify every table against its reference page** before writing anything. These
+   templates are a shortcut, not the authority — the index pages below carry the
+   real link for every table, so when a template does not land, take the URL from
+   the index rather than trying another spelling:
    - Log Analytics / Sentinel: `https://learn.microsoft.com/azure/azure-monitor/reference/tables/{tablename}` (lowercase)
    - Defender XDR: `https://learn.microsoft.com/defender-xdr/advanced-hunting-{tablename}-table` (lowercase)
    - Log Analytics index: `https://learn.microsoft.com/azure/azure-monitor/reference/tables-index`
@@ -64,6 +66,13 @@ published column reference at all.
    Azure-Sentinel repository is the other source, reachable by web search or a
    direct fetch. Re-verify the columns those queries use — published queries go
    stale too.
+
+   **Search on table names and generic technique keywords only.** This step sends
+   text to services outside the tenant, and a hunt usually arrives wrapped in the
+   detail that makes it sensitive. Account names, UPNs, hostnames, device names, IP
+   addresses, internal domains, case or ticket references, file paths and any value
+   the user pasted from their own data stay out of the search string. Search for
+   `AgentsInfo blueprint` rather than for the agent, the owner or the tenant.
 
    This step depends on a capability you may not have. If nothing here is available,
    say the prior-art step was skipped and compose from the verified schemas alone —
@@ -140,7 +149,12 @@ published column reference at all.
     query. Ask for the schema tab or a `getschema` run, which turns it into the
     case above; until then the answer is the gap, not a marked-up guess.
 - Verify queries the user pastes in before modifying them. Plenty of KQL in
-  circulation references columns that were renamed underneath it.
+  circulation references columns that were renamed underneath it. Verifying a
+  pasted query means reading its identifiers, not searching for its contents — an
+  incident query can carry the incident in it.
+- Documentation lookups and prior-art searches leave the tenant. Schema lookups are
+  table and column names and carry nothing sensitive; searches are yours to keep
+  clean. Never put a value from the user's environment or data into either.
 - Microsoft Learn schema pages win over community content and repository queries.
   Note any conflict you find.
 - Verifying that a table exists in documentation says nothing about whether it is
