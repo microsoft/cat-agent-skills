@@ -33,8 +33,15 @@ published column reference at all.
    - Sentinel data lake asset tables: `https://learn.microsoft.com/azure/sentinel/datalake/asset-data-tables`
 
    Use whatever documentation tool the host provides — a Microsoft Learn MCP server
-   if one is connected, otherwise a direct page fetch. Read off the exact column
+   if one is connected, otherwise a fetch or browse tool. Read off the exact column
    list and record the URL.
+
+   **If the host gives you no way to read a page, stop here.** Say that verification
+   is not possible in this session and that you are therefore not writing a query.
+   Offer the reference URLs so the user can check the schema themselves. Your recall
+   of these schemas is not a substitute for the lookup — answering from it is the
+   failure this skill exists to prevent, and it is worse when the user has been told
+   the query was grounded.
 
    **A failed lookup is not a verdict.** A timeout, a 403, a redirect that does not
    land, a URL template that has moved — and a 404, which Learn also serves for a
@@ -51,11 +58,17 @@ published column reference at all.
    could not read an index either, the answer is that the lookup failed, and you
    stop there.
 
-4. **Retrieve prior art.** Search published queries for the verified tables and
-   adapt proven patterns rather than composing from nothing. KQL Search
-   (`kqlsearch.com`, available as an MCP server) indexes KQL published across
-   GitHub; the Azure-Sentinel repository is the other source. Re-verify the columns
-   those queries use — published queries go stale too.
+4. **Retrieve prior art, if you can.** Where a search is available, adapt proven
+   patterns rather than composing from nothing. KQL Search (`kqlsearch.com`,
+   available as an MCP server) indexes KQL published across GitHub; the
+   Azure-Sentinel repository is the other source, reachable by web search or a
+   direct fetch. Re-verify the columns those queries use — published queries go
+   stale too.
+
+   This step depends on a capability you may not have. If nothing here is available,
+   say the prior-art step was skipped and compose from the verified schemas alone —
+   that is a weaker result, not a blocked one, and the user should know which they
+   got. Never cite an adapted query you did not actually retrieve.
 
 5. **Compose using only verified identifiers.** Time filter first, high-selectivity
    `where` early, explicit join kinds, an explicit final `project`. Handle dynamic
@@ -91,7 +104,8 @@ published column reference at all.
 
 - **Query** — KQL targeting the confirmed surface.
 - **Sources verified** — each table with the documentation URL checked; each
-  adapted query with its link.
+  adapted query with its link. Where the prior-art step was skipped for want of a
+  search capability, say so here rather than leaving the section looking thin.
 - **Assumptions and environment dependencies** — custom tables, connector
   coverage, licence-gated tables, ingestion lag.
 - **Notes** (optional) — performance, tuning, portability between surfaces.

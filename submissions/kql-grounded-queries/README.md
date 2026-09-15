@@ -17,15 +17,20 @@ This skill stops the model answering until it has checked.
 
 ## Before you start
 
-Nothing is required — the skill works by fetching Microsoft Learn documentation pages
-directly. Two connections make it considerably better:
+One thing is required: some way for the agent to read a web page, whether that is a
+built-in fetch or browse tool or an MCP server. The skill is built around reading
+Microsoft Learn, and where a host offers no lookup at all it says verification is not
+possible and stops rather than falling back on what the model remembers. Two
+connections make it considerably better:
 
 | Connection | What it adds |
 |---|---|
 | **Microsoft Learn MCP** | Grounded documentation lookups instead of raw page fetches. |
 | **KQL Search MCP** (`kqlsearch.com`) | The community query corpus, searchable by table, keyword or technique. This is what makes the prior-art step work. |
 
-Without them, schema verification still functions and the prior-art step gets thin.
+Without the Learn MCP, schema verification still works through ordinary page fetches.
+Without a search capability the prior-art step is skipped altogether, and the answer
+says so — queries then come from the verified schemas alone.
 
 ## How to use it
 
