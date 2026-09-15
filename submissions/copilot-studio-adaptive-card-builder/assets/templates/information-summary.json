@@ -1,0 +1,36 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Request REQ-1042 is waiting for review. The service desk owns the next step.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Request summary",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Request",
+          "value": "REQ-1042"
+        },
+        {
+          "title": "Status",
+          "value": "Waiting for review"
+        },
+        {
+          "title": "Owner",
+          "value": "Service desk"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Next step: A reviewer will respond by 18 September 2026.",
+      "wrap": true
+    }
+  ]
+}

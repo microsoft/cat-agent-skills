@@ -1,0 +1,47 @@
+{
+  '$schema': "https://adaptivecards.io/schemas/adaptive-card.json",
+  type: "AdaptiveCard",
+  version: "1.5",
+  fallbackText: Concatenate(
+    "Request ",
+    Topic.RequestId,
+    " is ",
+    Topic.StatusText,
+    ". ",
+    Topic.NextStepText
+  ),
+  body: [
+    {
+      type: "TextBlock",
+      text: "Request status",
+      style: "heading",
+      wrap: true
+    },
+    {
+      type: "FactSet",
+      facts: [
+        {
+          title: "Request",
+          value: Topic.RequestId
+        },
+        {
+          title: "Status",
+          value: Topic.StatusText
+        },
+        {
+          title: "Current owner",
+          value: Topic.OwnerDisplayName
+        },
+        {
+          title: "Updated",
+          value: Topic.UpdatedText
+        }
+      ]
+    },
+    {
+      type: "TextBlock",
+      text: Concatenate("Next step: ", Topic.NextStepText),
+      wrap: true
+    }
+  ]
+}
