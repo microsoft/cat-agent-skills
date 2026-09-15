@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "87b0aa3d-e74c-5126-a855-1ea90ad1df08",
+    "developer": {
+        "name": "Microsoft Manufacturing Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Quality Incident Capa",
+        "full": "Quality Incident Capa"
+    },
+    "description": {
+        "short": "Manufacturing Wave 2 Cowork plugin: NCR to closed CAPA. Picks up where Quality",
+        "full": "Manufacturing Wave 2 Cowork plugin: NCR to closed CAPA. Picks up where Quality Inspection & Nonconformance (01) leaves off - reads the open NCR, complaint and inspection data; establishes root cause with a structured method (pareto + rca_tree engines); builds corrective and preventive actions with mandatory effectiveness checks (capa_logic engine); validates closure readiness (explicit Govern step); drafts the 8D / CAPA report cited to the clause. Draft-first; document-grounded."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/capa-build"
+        },
+        {
+            "folder": "./skills/closure-check"
+        },
+        {
+            "folder": "./skills/eightd-draft"
+        },
+        {
+            "folder": "./skills/ncr-intake"
+        },
+        {
+            "folder": "./skills/root-cause-analyze"
+        }
+    ]
+}

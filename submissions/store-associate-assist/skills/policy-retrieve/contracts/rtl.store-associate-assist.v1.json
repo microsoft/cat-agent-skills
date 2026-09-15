@@ -1,0 +1,17 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.store-associate-assist.v1",
+  "title": "Store Associate Assist contract v1",
+  "description": "Chains question-intake -> policy-retrieve -> product-compare/promo-check -> answer-draft. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "question"],
+  "properties": {
+    "contract_version": { "const": "rtl.store-associate-assist.v1" },
+    "question": { "type": "object" },
+    "store_context": { "type": "object" },
+    "policy_resolution": { "type": "object", "properties": {
+        "topic": { "type": "string" }, "applicable_clause": { "type": ["string", "null"] },
+        "determination": { "type": "string" }, "conditions": { "type": "array", "items": { "type": "string" } },
+        "in_scope": { "type": "boolean" },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "promo_check": { "type": "object" },
+    "product_comparison": { "type": "object" },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

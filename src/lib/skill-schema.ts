@@ -7,6 +7,7 @@
  */
 import { z } from "astro/zod";
 import { PLATFORMS } from "./skills";
+import { CATEGORIES } from "./categories";
 
 /** Zod schema for a skill's frontmatter metadata. */
 export const skillSchema = z.object({
@@ -26,6 +27,19 @@ export const skillSchema = z.object({
   // Scout automation (a scheduled `.json` of ordered prompt steps). Derived by
   // the importer, not authored; defaults keep existing skills unchanged.
   type: z.enum(["skill", "plugin", "automation"]).default("skill"),
+  category: z.enum(CATEGORIES).default("productivity"),
+  builtByMicrosoft: z.boolean().default(false),
+  // Package inventories are derived by the importer, never authored in metadata.
+  pluginSkills: z.array(z.object({
+    folder: z.string(),
+    name: z.string(),
+    description: z.string(),
+  })).optional(),
+  pluginConnectors: z.array(z.object({
+    id: z.string().optional(),
+    displayName: z.string().optional(),
+    description: z.string().optional(),
+  })).optional(),
   tags: z.array(z.string()).nonempty(),
   // Human-readable author (person or team) shown on the gallery card and detail
   // page. Required: every submission must declare who authored it. Comes from

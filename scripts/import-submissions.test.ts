@@ -7,10 +7,14 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdirSync, readFileSync, rmSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
+import matter from "gray-matter";
+import { skillSchema } from "../src/lib/skill-schema.ts";
+import { validateSkillData } from "./validate-skill.ts";
 import {
+  buildContent,
   buildMeta,
   CATALOG_PASSTHROUGH,
   targetsCopilotStudio,
@@ -26,6 +30,8 @@ test("derived fields always win over same-named catalog keys", () => {
       platforms: ["Cowork"],
       type: "plugin",
       bundle: "bundles/x.zip",
+      pluginSkills: [{ folder: "skills/x", name: "x", description: "From the skill" }],
+      pluginConnectors: [{ id: "actual-connector" }],
     },
     {
       name: "SIDECAR NAME",
@@ -34,6 +40,8 @@ test("derived fields always win over same-named catalog keys", () => {
       platforms: ["Scout"],
       type: "automation",
       bundle: "bundles/EVIL.zip",
+      pluginSkills: [{ name: "FAKE" }],
+      pluginConnectors: [{ id: "fake-connector" }],
     },
   );
   assert.equal(meta.name, "Display Name");
@@ -42,6 +50,8 @@ test("derived fields always win over same-named catalog keys", () => {
   assert.deepEqual(meta.platforms, ["Cowork"]);
   assert.equal(meta.type, "plugin");
   assert.equal(meta.bundle, "bundles/x.zip");
+  assert.deepEqual(meta.pluginSkills, [{ folder: "skills/x", name: "x", description: "From the skill" }]);
+  assert.deepEqual(meta.pluginConnectors, [{ id: "actual-connector" }]);
 });
 
 test("a metadata sidecar cannot override the SKILL.md agentDescription (the #140 regression)", () => {
@@ -65,6 +75,8 @@ test("only allowlisted catalog fields pass through; everything else is dropped",
     type: "automation",
     // allowlisted, human-authored:
     platforms: ["Cowork"],
+    category: "manufacturing",
+    builtByMicrosoft: true,
     tags: ["a", "b"],
     author: "Ada",
     authorUrl: "https://github.com/ada",
@@ -82,6 +94,8 @@ test("only allowlisted catalog fields pass through; everything else is dropped",
     dependencies: ["a"],
     capabilities: ["b"],
     evil: "leak",
+    pluginSkills: [{ name: "FAKE" }],
+    pluginConnectors: [{ id: "fake-connector" }],
   };
   const meta = buildMeta({ name: "N", description: "D" }, catalog);
 
@@ -96,6 +110,8 @@ test("only allowlisted catalog fields pass through; everything else is dropped",
     "dependencies",
     "capabilities",
     "evil",
+    "pluginSkills",
+    "pluginConnectors",
     // `type` is derived, not passthrough: a catalog-only `type` is dropped so a
     // skill can't self-declare its type (the schema defaults it instead).
     "type",
@@ -122,7 +138,7 @@ test("undefined catalog values are skipped", () => {
 });
 
 test("CATALOG_PASSTHROUGH never lists a canonical/derived field", () => {
-  for (const forbidden of ["name", "description", "agentDescription", "type", "bundle"]) {
+  for (const forbidden of ["name", "description", "agentDescription", "type", "bundle", "pluginSkills", "pluginConnectors"]) {
     assert.ok(
       !(CATALOG_PASSTHROUGH as readonly string[]).includes(forbidden),
       `"${forbidden}" must never be in the passthrough allowlist`,
@@ -138,7 +154,8 @@ test("Copilot Studio feed includes only skills declaring that platform", () => {
 });
 
 test("Copilot Studio export preserves canonical skill and nested resource paths", () => {
-  const output = mkdtempSync(join(tmpdir(), "copilot-studio-skills-"));
+  const output = join(process.cwd(), `.copilot-studio-skills-test-${randomUUID()}`);
+  mkdirSync(output);
   try {
     writeCopilotStudioSkill(output, "sample-skill", "---\nname: sample-skill\n---\n", [
       { path: "scripts/lib/helper.py", data: Buffer.from("print('ok')\n") },
@@ -158,7 +175,8 @@ test("Copilot Studio export preserves canonical skill and nested resource paths"
 });
 
 test("Copilot Studio export rejects resource path traversal", () => {
-  const output = mkdtempSync(join(tmpdir(), "copilot-studio-skills-"));
+  const output = join(process.cwd(), `.copilot-studio-skills-test-${randomUUID()}`);
+  mkdirSync(output);
   try {
     assert.throws(
       () =>
@@ -170,4 +188,51 @@ test("Copilot Studio export rejects resource path traversal", () => {
   } finally {
     rmSync(output, { recursive: true, force: true });
   }
+});
+
+test("new catalog fields and structured plugin inventories round-trip through frontmatter", () => {
+  const meta = buildMeta(
+    {
+      name: "Plugin",
+      description: "A plugin",
+      type: "plugin",
+      pluginSkills: [
+        { folder: "skills/example", name: "example", description: 'Use "quoted": values\nwith [brackets].' },
+      ],
+      pluginConnectors: [{ id: "mcp", description: "true", displayName: "MCP: connector" }],
+    },
+    {
+      platforms: ["Cowork"],
+      tags: ["plugin"],
+      author: "Ada",
+      category: "retail-cpg",
+      builtByMicrosoft: true,
+    },
+  );
+  const source = buildContent(meta, "\nOverview\n");
+  const parsed = matter(source).data;
+  assert.deepEqual(parsed, meta);
+  assert.equal(skillSchema.parse(parsed).builtByMicrosoft, true);
+  assert.deepEqual(skillSchema.parse(parsed).pluginSkills, meta.pluginSkills);
+  assert.deepEqual(skillSchema.parse(parsed).pluginConnectors, meta.pluginConnectors);
+  assert.equal(source, buildContent(meta, "\nOverview\n"));
+});
+
+test("catalog validation rejects invalid category and non-boolean Microsoft flags", () => {
+  const catalog = { platforms: ["Cowork"], tags: ["plugin"], author: "Ada" };
+  const derived = { name: "Plugin", description: "A plugin" };
+  for (const builtByMicrosoft of ["false", "true", 0, 1, null, [], {}]) {
+    const meta = buildMeta(derived, { ...catalog, builtByMicrosoft });
+    const result = validateSkillData(meta, "test");
+    assert.equal(result.ok, false, `must reject ${JSON.stringify(builtByMicrosoft)}`);
+    assert.ok(result.problems.some((p) => p.startsWith("builtByMicrosoft:")));
+  }
+  for (const builtByMicrosoft of [true, false, undefined]) {
+    const meta = buildMeta(derived, { ...catalog, builtByMicrosoft });
+    assert.equal(validateSkillData(meta, "test").ok, true);
+    assert.equal(skillSchema.parse(meta).builtByMicrosoft, builtByMicrosoft ?? false);
+  }
+  const invalid = buildMeta(derived, { ...catalog, category: "unknown-industry" });
+  assert.equal(validateSkillData(invalid, "test").ok, false);
+  assert.equal(skillSchema.parse(buildMeta(derived, catalog)).category, "productivity");
 });

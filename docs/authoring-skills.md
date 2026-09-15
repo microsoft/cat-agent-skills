@@ -11,7 +11,7 @@ edit `src/content/skills/` by hand.
 
 ## 1. The submission shape
 
-Every submission is a self-contained **unpacked** folder with the same layout:
+A single-skill submission is a self-contained **unpacked** folder:
 
 ```
 submissions/<slug>/
@@ -26,6 +26,9 @@ Copy [`../submissions/_template/`](../submissions/_template) to start. The
 `meeting-summarizer` → `/skills/meeting-summarizer`. Everything except the
 `metadata.*` and optional `README.md` sidecars is packaged into the downloadable
 bundle, and the detail page shows a **Download bundle** button.
+
+Multi-skill Cowork plugins are also one submission, with a different unpacked
+package layout; see the [plugin reference](../submissions/README.md#cowork-plugins).
 
 ## 2. Two descriptions (catalog vs. agent)
 
@@ -79,11 +82,18 @@ The catalog details, kept out of the agent file:
 | `updatedAt`   |          | date     | `YYYY-MM-DD` of the latest update.                                      |
 | `coverColor`  |          | string   | CSS color to override the auto-generated cover gradient.                |
 | `featured`    |          | boolean  | `true` to sort the skill to the top of the gallery.                     |
+| `category`    |          | string   | `manufacturing`, `retail-cpg`, `productivity` (default), or `agent-development`. |
+| `builtByMicrosoft` |      | boolean  | Default `false`. Set `true` for Microsoft-built submissions to appear in the carousel instead of the community grid. |
 
 (`bundle` is set automatically when you include `scripts/` — don't add it
 yourself.) The same fields work in a `metadata.yaml` if you prefer YAML. A
 missing or invalid **required** field fails the PR with a message listing exactly
 what's wrong.
+
+Categories are broad and stable; tags provide finer detail. The Microsoft flag
+changes placement only, not the meaning of a tile, its author attribution, or
+its detail page. Reviewers confirm provenance when it is set. Both fields stay
+in catalog metadata, not the agent-facing `SKILL.md`.
 
 If you bundle scripts, mention them in the instructions and include a `README.md`
 in the submission explaining requirements and usage.

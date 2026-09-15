@@ -1,0 +1,17 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.customer-service-order-support.v1",
+  "title": "Customer Service & Order Support contract v1",
+  "description": "Chains inquiry-intake -> context-assemble -> knowledge-retrieve -> resolution-draft / handoff-packet. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "inquiry"],
+  "properties": {
+    "contract_version": { "const": "rtl.customer-service-order-support.v1" },
+    "inquiry": { "type": "object" },
+    "intent": { "type": "object", "properties": {
+        "category": { "type": "string" }, "confidence": { "type": "number" },
+        "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "context": { "type": "object", "properties": {
+        "order": { "type": "object" }, "carrier": { "type": "object" }, "loyalty": { "type": "object" },
+        "contradictions": { "type": "array", "items": { "type": "string" } },
+        "resolution_path": { "type": "string" }, "goodwill_eligible": { "type": "boolean" },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

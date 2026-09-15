@@ -3,6 +3,7 @@ name: Skill Authoring Coach
 description: "Help makers design concise, reusable Agent Skills with clear triggers, instructions, resources, and packaging."
 agentDescription: "Use this skill when the user asks to create, improve, review, package, genericise, or submit an Agent Skill, SKILL.md file, skill metadata, or reusable agent instruction bundle."
 platforms: [Cowork, Copilot Studio, Scout]
+category: agent-development
 tags: [skills, authoring, documentation, productivity, agent]
 author: Simon Owen
 authorUrl: "https://github.com/SimonOwenDigital"

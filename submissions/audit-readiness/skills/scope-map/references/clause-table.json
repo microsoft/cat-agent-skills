@@ -1,0 +1,12 @@
+{
+  "ISO9001:2015": [
+    {"clause": "7.2",  "title": "Competence", "areas": ["all"], "required_evidence": ["training_record"], "max_age_days": 3650, "criticality": "major",
+     "note": "training records required for personnel in active roles; new assignments need records at assignment"},
+    {"clause": "8.7",  "title": "Control of nonconforming outputs", "areas": ["production", "quality"], "required_evidence": ["ncr_log"], "max_age_days": 365, "criticality": "major"},
+    {"clause": "9.1.3","title": "Analysis and evaluation", "areas": ["quality"], "required_evidence": ["quality_kpi_review"], "max_age_days": 365, "criticality": "minor"},
+    {"clause": "9.2",  "title": "Internal audit", "areas": ["all"], "required_evidence": ["internal_audit_report"], "max_age_days": 365, "criticality": "major",
+     "note": "coverage across every in-scope process area (audit-rules.md #2.1)"},
+    {"clause": "9.3",  "title": "Management review", "areas": ["all"], "required_evidence": ["management_review_minutes"], "max_age_days": 365, "criticality": "major"},
+    {"clause": "7.1.5","title": "Monitoring and measuring resources", "areas": ["quality", "production"], "required_evidence": ["calibration_record"], "max_age_days": 365, "criticality": "minor"}
+  ]
+}

@@ -13,9 +13,22 @@ deployed as a static site to GitHub Pages.
 
 - **Infinite-scroll gallery** with auto-generated branded covers (no image
   assets to maintain).
+- **Built by Microsoft carousel** with larger tiles above the community gallery.
+  Every tile is one submission, regardless of whether it contains a skill,
+  a multi-skill plugin, or an automation.
+- **Stable categories** shared across both sections: Manufacturing, Retail & CPG,
+  Productivity, and Agent development.
+- **Shareable category pages** at `/categories/manufacturing/`,
+  `/categories/retail-cpg/`, `/categories/productivity/`, and
+  `/categories/agent-development/` (under the site's base path). These are not
+  linked from the homepage navigation. Each lists the complete category in
+  full-width grids, Microsoft first and community second, using the same
+  submission detail pages. Empty publisher sections are omitted; a completely
+  empty category says "Nothing to see here." These pages are public, not private.
 - **Platform filtering** across Cowork, Copilot Studio, and Scout.
 - **Client-side search** and **tag filtering** with shareable
-  `?q=`/`?tag=`/`?platform=`/`?sort=` URLs.
+  `?q=`/`?category=`/`?tag=`/`?platform=`/`?sort=` URLs. Search, category,
+  platform, type, tag, and contributor filters affect both sections.
 - **Sort** by Featured, Top rated, Name, or Newest.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
 - **Skill ratings**: 👍 a skill with your GitHub account (via GitHub
@@ -31,14 +44,17 @@ deployed as a static site to GitHub Pages.
 ## 🚀 Local development
 
 ```bash
-npm install
-npm run dev      # start the dev server (http://localhost:4321/cat-agent-skills)
-npm run build    # production build into ./dist
-npm run preview  # preview the production build locally
+npm ci
+npm run import:submissions  # generate pages and bundles from submission source
+npm run dev                # http://localhost:4321/cat-agent-skills/
+npm run build              # production build into ./dist
+npm run astro -- preview   # preview the production build locally
 ```
 
 > The site is configured with a `base` path of `/cat-agent-skills`
 > for GitHub Pages, so local URLs include that prefix.
+> Generated files in `src/content/skills/`, `src/content/guides/`, and
+> `public/bundles/` are CI-owned; do not hand-commit local import output.
 
 ## 🧩 Adding a skill
 
@@ -48,7 +64,7 @@ generates the published page (and any download bundle) for you. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide.
 
 Every submission is a `submissions/<slug>/` folder with a `metadata.json` sidecar
-plus one skill payload — an **unpacked** `SKILL.md` (+ optional dirs):
+plus one payload. For a single skill, use an **unpacked** `SKILL.md` (+ optional dirs):
 
 ```
 submissions/<slug>/
@@ -60,6 +76,12 @@ submissions/<slug>/
     ├── references/ # optional docs
     └── assets/     # optional templates / data files
 ```
+
+For multi-skill Cowork plugins, submit an unpacked Microsoft 365 app package
+instead; see the [plugin layout](submissions/README.md#cowork-plugins).
+`builtByMicrosoft: true` in catalog metadata selects the carousel; false or
+omitted keeps a submission in the community gallery. The field is independent
+of author attribution, submission type, and featured ordering.
 
 A skill carries **two** descriptions: the **agent** description in `SKILL.md`
 frontmatter (what the model reads to decide when to invoke), and the **catalog**
@@ -98,11 +120,12 @@ Write the agent instructions here as Markdown — this body becomes the
 > one or more of `Cowork`, `Copilot Studio`, `Scout`). PRs run a build check that
 > validates every skill against the schema.
 
-> Besides single skills, you can submit a **Scout automation** (a `.json` export,
-> Scout-only). It drops into `submissions/<slug>/` the same way and is
-> auto-detected by its payload. (Cowork plugins and Scout automation installers
-> were `.zip` packages and are **no longer accepted** — `.zip` payloads have
-> been retired; existing ones stay published.) See
+> Besides single skills, we accept **Cowork plugins** as unpacked Microsoft 365
+> app packages and **Scout automations** as single `.json` exports. Both use a
+> `submissions/<slug>/` folder with metadata sidecars. New prepackaged `.zip`
+> submissions, including Scout automation installers, are not accepted; CI builds
+> downloadable plugin ZIPs from the unpacked source. Existing legacy ZIP entries
+> stay published. See
 > [`submissions/README.md`](submissions/README.md) for the details.
 
 ## Add Copilot Studio skills from GitHub

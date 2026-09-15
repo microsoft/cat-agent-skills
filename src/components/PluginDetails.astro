@@ -1,0 +1,94 @@
+---
+interface Props {
+  skills?: Array<{ folder: string; name: string; description: string }>;
+  connectors?: Array<{ id?: string; displayName?: string; description?: string }>;
+}
+
+const { skills = [], connectors = [] } = Astro.props;
+---
+
+<div class="mt-8 space-y-8 border-t border-border pt-7">
+  <section aria-labelledby="plugin-skills-heading">
+    <h2 id="plugin-skills-heading" class="text-lg font-semibold text-fg">
+      Skills in this plugin <span class="text-muted">({skills.length})</span>
+    </h2>
+    <p class="mt-2 text-sm text-muted">
+      One Microsoft 365 Copilot Cowork package, installed as a single plugin.
+    </p>
+    {
+      skills.length > 0 ? (
+        <ul class="mt-4 space-y-3">
+          {skills.map((skill) => (
+            <li class="rounded-xl border border-border bg-surface p-4">
+              <h3 class="break-words font-semibold text-fg">{skill.name}</h3>
+              <p class="mt-1 break-words text-sm leading-relaxed text-muted">
+                {skill.description}
+              </p>
+              <p class="mt-2 break-all font-mono text-xs text-subtle">{skill.folder}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="mt-3 text-sm text-muted">This package does not declare any skills.</p>
+      )
+    }
+  </section>
+
+  {
+    connectors.length > 0 && (
+      <section aria-labelledby="plugin-connectors-heading">
+        <h2 id="plugin-connectors-heading" class="text-lg font-semibold text-fg">
+          Connectors <span class="text-muted">({connectors.length})</span>
+        </h2>
+        <ul class="mt-4 space-y-3">
+          {connectors.map((connector) => (
+            <li class="rounded-xl border border-border bg-surface p-4">
+              <h3 class="break-words font-semibold text-fg">
+                {connector.displayName || connector.id || "Connector"}
+              </h3>
+              {connector.id && connector.displayName && (
+                <p class="mt-1 break-all font-mono text-xs text-subtle">{connector.id}</p>
+              )}
+              {connector.description && (
+                <p class="mt-2 break-words text-sm leading-relaxed text-muted">
+                  {connector.description}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+        <p class="mt-3 text-sm text-muted">
+          Review connector access and complete any required sign-in before use.
+        </p>
+      </section>
+    )
+  }
+
+  <section aria-labelledby="plugin-install-heading">
+    <h2 id="plugin-install-heading" class="text-lg font-semibold text-fg">Install in Cowork</h2>
+    <ol class="mt-3 list-decimal space-y-3 pl-5 text-sm leading-relaxed text-muted">
+      <li>Review this submission, acknowledge the trust notice, and download the plugin package (.zip).</li>
+      <li>
+        Upload the package through <strong class="text-fg">Microsoft 365 admin center › Manage apps ›
+        Upload custom app</strong>, following your organization’s custom-app policies.
+        For authorized testing, you can also sideload it with the{" "}
+        <a
+          href="https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/microsoft-365-agents-toolkit-cli"
+          class="text-accent-text underline hover:opacity-80"
+        >Microsoft 365 Agents Toolkit CLI</a>{" "}
+        using <code class="break-words text-xs text-fg">atk install --file-path &lt;zip&gt; --scope Personal</code>.
+      </li>
+      <li>
+        Open <strong class="text-fg">Cowork › Sources &amp; Skills › Plugins</strong> and
+        enable the plugin from <strong class="text-fg">Discover</strong>.
+      </li>
+    </ol>
+    <p class="mt-3 text-sm text-muted">
+      Cowork access and tenant approval may be required. See{" "}
+      <a
+        href="https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development"
+        class="text-accent-text underline hover:opacity-80"
+      >Build plugins for Copilot Cowork</a> for current requirements.
+    </p>
+  </section>
+</div>

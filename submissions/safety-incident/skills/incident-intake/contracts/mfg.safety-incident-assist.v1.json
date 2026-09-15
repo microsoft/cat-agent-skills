@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mfg.safety-incident-assist.v1",
+  "title": "Safety Incident Agent contract v1",
+  "description": "Versioned contract chaining incident-intake -> ehs-knowledge-retrieve -> severity-recordability -> routing-notify -> incident-writeup. Carries data + confidence + provenance + citations on every hop so classification, routing and notification are auditable and escalation is mechanical. Bump the version only on breaking schema changes.",
+  "type": "object",
+  "required": ["contract_version", "incident_id", "asset_or_area"],
+  "properties": {
+    "contract_version": { "const": "mfg.safety-incident-assist.v1" },
+    "incident_id": { "type": "string" },
+    "report_channel": { "type": "string", "description": "form | email | voice" },
+    "incident_type": { "type": "string", "description": "injury | illness | near_miss | property | environmental" },
+    "asset_or_area": { "type": "string" },
+    "location": { "type": "string" },
+    "occurred_at": { "type": "string" },
+    "reported_at": { "type": "string" },
+    "reported_by": { "type": "string" },
+    "description": { "type": "string" },
+    "injury": {
+      "type": "object",
+      "description": "Injury/illness detail used by the recordability engine (osha-recordability-rules.md).",
+      "properties": {
+        "employee": { "type": "string" },
+        "body_part": { "type": "string" },
+        "nature": { "type": "string", "description": "e.g. laceration, fracture, crush, strain, burn" },
+        "treatment_given": { "type": "string", "description": "none | first_aid | medical_treatment | hospitalization (osha-recordability-rules.md #2)" },
+        "outcome": { "type": "string", "description": "none | days_away | restricted_duty | job_transfer | in_patient_hospitalization | amputation | loss_of_eye | fatality (osha-recordability-rules.md #3)" },
+        "days_away": { "type": "integer" },
+        "citation": { "type": "string" }
+      }
+    },
+    "witnesses": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "role": { "type": "string" }, "citation": { "type": "string" } } } },
+    "immediate_actions": { "type": "string" },
+    "incident_factors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "confidence", "source"],
+        "properties": {
+          "name": { "type": "string" },
+          "detail": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "retrieved": {
+      "type": "object",
+      "properties": {
+        "osha_criteria": { "type": "array", "items": { "type": "object" } },
+        "iso_clauses": { "type": "array", "items": { "type": "object" } },
+        "jha": { "type": "array", "items": { "type": "object" } },
+        "policies": { "type": "array", "items": { "type": "object" } },
+        "prior_incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "incident_id": { "type": "string" },
+              "date": { "type": "string" },
+              "area": { "type": "string" },
+              "summary": { "type": "string" },
+              "recordable": { "type": "boolean" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "source": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "window_days": { "type": "integer" },
+        "repeat_count": { "type": "integer" },
+        "repeat_pattern": { "type": "boolean" },
+        "prior_incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "incident_id": { "type": "string" },
+              "date": { "type": "string" },
+              "area": { "type": "string" },
+              "asset_or_area": { "type": "string" },
+              "type": { "type": "string" },
+              "body_part": { "type": "string" },
+              "outcome": { "type": "string" },
+              "recordable": { "type": "boolean" },
+              "citation": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "required": ["severity", "confidence", "source"],
+      "properties": {
+        "severity": { "enum": ["low", "medium", "high", "critical"] },
+        "near_miss": { "type": "boolean" },
+        "recordable": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "boolean" },
+            "reason": { "type": "string" },
+            "osha_300_column": { "type": "string", "description": "e.g. G (days away), H (restricted/transfer), J (other recordable), or '' if not recordable" },
+            "citation": { "type": "string" }
+          }
+        },
+        "reportable": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "boolean" },
+            "type": { "type": "string", "description": "none | fatality | in_patient_hospitalization | amputation | loss_of_eye" },
+            "deadline_hours": { "type": ["number", "null"], "description": "8 for fatality, 24 for hospitalization/amputation/eye (osha-recordability-rules.md #4)" },
+            "authority": { "type": "string" },
+            "citation": { "type": "string" }
+          }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "citation": { "type": "string" }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "required": ["investigator", "source"],
+      "properties": {
+        "investigator": {
+          "type": "object",
+          "properties": {
+            "role": { "type": "string" },
+            "assignee": { "type": "string" },
+            "rationale": { "type": "string" },
+            "citation": { "type": "string" }
+          }
+        },
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["role"],
+            "properties": {
+              "role": { "type": "string" },
+              "name": { "type": "string" },
+              "reason": { "type": "string" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "regulatory_clocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "deadline_hours": { "type": "number" },
+              "due_by": { "type": "string" },
+              "authority": { "type": "string" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "citation": { "type": "string" }
+      }
+    },
+    "next_best_action": { "type": "string" },
+    "writeup": {
+      "type": "object",
+      "properties": {
+        "draft": { "type": "boolean" },
+        "audience": { "type": "string", "description": "ehs_manager | supervisor | plant_manager" },
+        "summary": { "type": "string" },
+        "rca_method": { "type": "string", "description": "5-Why | fishbone" },
+        "rca_template": { "type": "string" },
+        "reporting_checklist": { "type": "array", "items": { "type": "string" } },
+        "citation": { "type": "string" }
+      }
+    },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": { "type": "array", "items": { "type": "string" } },
+        "generated_at": { "type": "string" },
+        "demo_scenario": { "type": "string" }
+      }
+    }
+  }
+}

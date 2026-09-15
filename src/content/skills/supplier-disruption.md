@@ -1,0 +1,19 @@
+---
+name: Supplier Disruption Assist
+description: "Get ahead of a supply problem: take a late PO, shipment delay or supplier notice, map the shortage through BOM where-used to the affected products, lines, open orders and at-risk dates, recommend expedite / substitute / reschedule, and draft both the supplier follow-up and the internal escalation brief."
+platforms: [Cowork]
+type: plugin
+category: manufacturing
+builtByMicrosoft: true
+pluginSkills: [{"folder":"skills/disruption-intake","name":"disruption-intake","description":"Picks up a supply disruption from a PO record, shipment feed, supplier email or portal notice and pulls it into the mfg.supplier-disruption.v1 contract inputs. Use when the user says \"a PO is late\", \"our supplier is delayed\", \"we're short on a part\", \"process this supplier notice\", \"shipment is going to slip\", or when a Supplier Disruption Agent run begins."},{"folder":"skills/disruption-writeup","name":"disruption-writeup","description":"Drafts the supplier follow-up and the internal escalation brief from the assembled contract payload, with the impact and mitigation cited to the ERP/MRP, supplier master and rules. Use when the user says \"draft the supplier email\", \"write the escalation brief\", \"draft the follow-up\", \"give me the escalation\", \"write it up\", or after mitigation-recommend completes."},{"folder":"skills/mitigation-recommend","name":"mitigation-recommend","description":"Chooses the mitigation (expedite, substitute or reschedule) for a mapped shortage and computes the escalation tier and owner-notification list, deterministically. Use when the user says \"what do we do about it\", \"should we expedite or substitute\", \"recommend a mitigation\", \"who do we escalate to\", \"who do we notify\", or after shortage-impact-map completes."},{"folder":"skills/shortage-impact-map","name":"shortage-impact-map","description":"Maps a part shortage through BOM/where-used to the affected products, production lines and open orders, with the quantity and date at risk per order, deterministically. Use when the user says \"what does this shortage affect\", \"which lines and orders are hit\", \"when does this bite\", \"map the impact\", \"what's at risk\", or after supply-knowledge-retrieve completes."},{"folder":"skills/supply-knowledge-retrieve","name":"supply-knowledge-retrieve","description":"Retrieves the ERP/MRP supply position, supplier master, BOM/where-used and open orders relevant to a disruption and attaches them plus the supplier's delivery history to the mfg.supplier-disruption.v1 contract. Use when the user says \"what does this part go into\", \"where is this used\", \"what's our on-hand and lead time\", \"is this single-source\", \"has this supplier been late before\", or after disruption-intake completes."}]
+pluginConnectors: []
+tags: [supply-chain, procurement, shortage, po, erp, mrp]
+author: Industry Templates
+authorUrl: "https://github.com/SravaniSeethi"
+authorGithub: SravaniSeethi
+version: 1.0.0
+createdAt: 2026-08-01
+updatedAt: 2026-09-04
+bundle: bundles/supplier-disruption.zip
+---
+Manufacturing Wave 1 Cowork plugin: get ahead of a supply problem. Picks up a late PO, shipment delay, shortage or supplier notice, maps the shortage through BOM/where-used to the affected products, production lines, open orders and at-risk dates/quantities (deterministic shortage_impact_map), recommends a mitigation (expedite / substitute / reschedule) and computes an escalation tier (deterministic mitigation_recommend), then drafts the supplier follow-up and the internal escalation brief. Draft-first; nothing is auto-sent and no PO/ERP record is written. Starts from PO and email data; graduates to live monitoring when portal and ERP alerts are connected. Grounded in ERP/MRP (D365 SCM, SAP), PO & shipment data, supplier master and BOM/where-used.

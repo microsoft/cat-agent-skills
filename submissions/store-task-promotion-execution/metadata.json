@@ -1,0 +1,22 @@
+{
+  "name": "Store Task & Promotion Execution",
+  "description": "Turn the HQ campaign pack into a store-specific, verifiable execution plan before launch day: map requirements to the store's format and cluster, flag pricing and signage conflicts deterministically, rank exceptions by revenue impact, and draft the readiness checklist and shift brief.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "retailer",
+    "store-operations",
+    "promotion",
+    "campaign",
+    "execution",
+    "readiness"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-05",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

@@ -1,0 +1,6 @@
+[
+  {"promo_id": "P-3401", "name": "Coffee Week 20% off", "skus": ["GTIN-00012345678905", "GTIN-00098765432102"],
+   "clusters": ["urban-large", "suburban-standard"], "start": "2026-08-03", "end": "2026-08-09", "citation": "promo pack P-3401"},
+  {"promo_id": "P-3388", "name": "Headphone bundle $30 off", "skus": ["GTIN-00055577788812"],
+   "clusters": ["urban-large"], "start": "2026-07-20", "end": "2026-08-02", "citation": "promo pack P-3388"}
+]

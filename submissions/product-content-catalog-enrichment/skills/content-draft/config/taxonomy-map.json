@@ -1,0 +1,6 @@
+{ "mapping": {
+    "Product Name": "name", "Item Name": "name", "Weight (g)": "net_weight_g", "Net Wt": "net_weight_g",
+    "Color": "color", "Colour": "color", "Material": "material", "Country": "country_of_origin",
+    "Batteries?": "batteries_required", "Warranty (mo)": "warranty_months", "Description": "supplier_copy" },
+  "required_by_channel": { "marketplace": ["name", "net_weight_g", "color", "material", "country_of_origin"],
+                           "own-site": ["name", "color", "material"] } }

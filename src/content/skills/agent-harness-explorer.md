@@ -3,6 +3,7 @@ name: Agent Harness Explorer
 description: "Discover, document, and monitor what the agent harness can do — Python libraries, tools, MCP servers, and runtime capabilities — with repeatable, comparable snapshots."
 agentDescription: "Use this skill whenever the user wants to inspect, understand, snapshot, compare, or document the capabilities of the current agent harness — for example \"what can this harness do?\", \"which Python libraries are installed?\", \"what should I use to create Word documents?\", \"capture/remember a snapshot\", \"compare with my baseline\", or \"what changed since last week?\". Prefer this skill BEFORE guessing what the runtime supports."
 platforms: [Copilot Studio, Cowork, Scout]
+category: agent-development
 tags: [diagnostics, runtime, python, capabilities, snapshots, scripts]
 author: Chris Garty and Andrew Hess
 authorUrl: "https://github.com/ChrisGarty"
