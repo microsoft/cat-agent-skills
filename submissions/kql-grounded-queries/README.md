@@ -48,9 +48,12 @@ something that would have appeared instantly takes several tool calls. For quick
 exploration that is a poor trade. For anything going into a workbook, a detection rule
 or a customer report, it is the version worth trusting.
 
-**A 404 is a result.** If a table's reference page does not resolve, the name is wrong,
-the table is custom, or it is in preview with nothing published yet. The skill says
-which the evidence supports and asks, rather than reaching for a similar name.
+**A 404 is a result — a failed lookup is not.** A timeout, a 403 or a URL template that
+has moved says nothing about the schema, so the skill retries, tries the index page, and
+then tells you the lookup failed. Only a page that comes back without the table is
+evidence, and then the name is wrong, the table is custom, or it is in preview with
+nothing published yet. The skill says which the evidence supports and asks, rather than
+reaching for a similar name.
 
 **Snapshot tables catch people out.** `AgentsInfo` stores repeated snapshots, so
 `summarize arg_max(Timestamp, *)` without `by AgentId` returns a single row — a whole

@@ -105,16 +105,17 @@ published column reference at all.
     obvious, but do not quietly swap it in.
   - **No schema is published** (preview tables, custom `*_CL` tables, workspace
     functions) — ask the user for the schema, from the portal's schema tab or a
-    `getschema` run. What they supply becomes your source and the result is marked
-    environment-dependent. If they cannot supply it, the default is still to stop.
+    `getschema` run. What they supply becomes your source: the identifier is then
+    verified against their tenant rather than against Learn, and the result is
+    marked environment-dependent throughout. If they cannot supply it, stop.
     A `column_ifexists()` version is offered only if the user asks for one, and it
     is labelled a diagnostic rather than a query to keep: a wrong name resolves
     quietly to the default value, so the query runs, returns nothing, and looks
     like a clean negative. Say that in the answer, every time.
-  - **The user states the identifier exists in their tenant** — their assertion is
-    the source, and it is weaker than documentation. Mark it `// UNVERIFIED`
-    inline, record under assumptions that the user supplied it, and never let it
-    read as documented.
+  - **The user asserts an identifier without a schema to back it** — that is a
+    claim about their environment, not a source. It does not put the name in the
+    query. Ask for the schema tab or a `getschema` run, which turns it into the
+    case above; until then the answer is the gap, not a marked-up guess.
 - Verify queries the user pastes in before modifying them. Plenty of KQL in
   circulation references columns that were renamed underneath it.
 - Microsoft Learn schema pages win over community content and repository queries.
