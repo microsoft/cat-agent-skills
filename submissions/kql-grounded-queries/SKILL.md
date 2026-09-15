@@ -152,9 +152,13 @@ published column reference at all.
   circulation references columns that were renamed underneath it. Verifying a
   pasted query means reading its identifiers, not searching for its contents — an
   incident query can carry the incident in it.
-- Documentation lookups and prior-art searches leave the tenant. Schema lookups are
-  table and column names and carry nothing sensitive; searches are yours to keep
-  clean. Never put a value from the user's environment or data into either.
+- Documentation lookups and prior-art searches leave the tenant. Names Microsoft
+  publishes are safe to send; names from the user's environment are not. A custom
+  `*_CL` table or a workspace function can carry a project, a client or a case in
+  the name itself, so those are never looked up externally — verify them the way
+  the rule above says, from the schema tab or a `getschema` run, and work from a
+  redacted name if even that is sensitive.
+- Never put a value from the user's environment or data into a lookup or a search.
 - Microsoft Learn schema pages win over community content and repository queries.
   Note any conflict you find.
 - Verifying that a table exists in documentation says nothing about whether it is
