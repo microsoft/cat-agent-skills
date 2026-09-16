@@ -358,6 +358,26 @@ def _as_text(value: Any, path: str) -> str:
     )
 
 
+def _is_within_subtree(
+    row: etree._Element,
+    subtree: etree._Element,
+) -> bool:
+    """Return ``True`` only when *row* is still reachable from *subtree*.
+
+    Walking up through ``getparent()`` must eventually reach *subtree* itself
+    (which has no parent in its own tree, whether it is the document root or a
+    freshly deep-copied ``w:tr`` clone that has not yet been inserted).  Rows
+    inside a detached outer row terminate at that detached element instead and
+    therefore return ``False``.
+    """
+    current = row
+    while True:
+        parent = current.getparent()
+        if parent is None:
+            return current is subtree
+        current = parent
+
+
 def _expand_flat_cross_product(
     template_row: etree._Element,
     outer_items: list[Any],
@@ -487,11 +507,11 @@ def _expand_rows_in_subtree(
     """
     changed = False
     for row in list(subtree.iter(_w("tr"))):
-        # When called recursively on a w:tr clone, skip the subtree element itself.
-        if row is subtree:
-            continue
-        # Skip rows orphaned by a prior iteration's clone + remove cycle.
-        if row.getparent() is None:
+        # Skip the subtree element itself when called recursively on a w:tr clone,
+        # and skip any row that is no longer reachable from subtree — this covers
+        # both directly removed template rows (getparent() is None) and inner rows
+        # of a removed outer row (getparent() points into a detached fragment).
+        if row is subtree or not _is_within_subtree(row, subtree):
             continue
 
         all_keys = _tokens_in_element(row)

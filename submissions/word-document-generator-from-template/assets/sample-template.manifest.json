@@ -18,6 +18,10 @@
       "finding",
       "impact",
       "owner"
+    ],
+    "findings.hosts": [
+      "ip",
+      "name"
     ]
   },
   "parts": {
@@ -40,6 +44,10 @@
           "finding",
           "impact",
           "owner"
+        ],
+        "findings.hosts": [
+          "ip",
+          "name"
         ]
       }
     },

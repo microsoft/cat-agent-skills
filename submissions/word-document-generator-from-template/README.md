@@ -194,8 +194,8 @@ what was missing, and which sources were used — including connector names.
 - Sections are not added or removed unless you explicitly ask.
 - The original template in SharePoint, OneDrive, or the upload is never overwritten.
 - Supported replacement content is plain text (including line breaks). Rich
-  HTML/Markdown, nested repeating arrays, and placeholders spanning paragraphs
-  are intentionally rejected or out of scope.
+  HTML/Markdown conversion and placeholders spanning multiple paragraphs are
+  intentionally rejected or out of scope.
 - Filling fails loudly on malformed tokens, invalid JSON shapes, remaining
   placeholders, corrupt DOCX packages, or changed Word field instructions.
 - If no `.docx` template is available, generation stops with:
