@@ -49,7 +49,7 @@ Capture, with attribution:
 
 ## Step 3 — Build persona profiles
 
-Read `reference/persona-framework.md`, then profile each identifiable participant:
+Read `references/persona-framework.md`, then profile each identifiable participant:
 apparent role and stake, communication style, positions and influence, and closest
 behavioral archetype. Ground every claim in something the person said or did. With
 unlabeled speakers, infer distinct voices only when the text clearly supports it, and
@@ -57,7 +57,7 @@ mark the profile as inferred.
 
 ## Step 4 — Uncover the hidden layer
 
-Read `reference/hidden-insights-guide.md`, then check every category: the unsaid, tension
+Read `references/hidden-insights-guide.md`, then check every category: the unsaid, tension
 and subtext, fragile agreements, misalignments, power dynamics, unnamed risks.
 
 For each insight provide: evidence (quote or moment), interpretation, and confidence
@@ -66,7 +66,7 @@ reader would not see in the evidence or that would change no action.
 
 ## Step 5 — Deliver the report
 
-Use the structure in `asset/report-template.md`. Keep the section order; scale depth to
+Use the structure in `assets/report-template.md`. Keep the section order; scale depth to
 the material. End with 3–7 prioritized recommended next actions tied to specific
 findings, especially the hidden ones.
 

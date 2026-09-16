@@ -1,0 +1,11 @@
+{
+  "name": "SharePoint File Creation",
+  "description": "Generate a requested file, enforce a safe pre-upload size gate, and upload it to SharePoint without streaming bytes through the model.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["sharepoint", "files", "upload", "microsoft-365"],
+  "author": "Lewis Baybutt",
+  "authorUrl": "https://github.com/lewisdoesdev",
+  "version": "1.0.1",
+  "createdAt": "2026-09-14",
+  "updatedAt": "2026-09-15"
+}
