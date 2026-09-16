@@ -137,6 +137,27 @@ def build_sample(output: Path) -> None:
             cell.text = ""
             _split_token(cell.paragraphs[0], token)
 
+        document.add_heading("Findings: Affected Hosts", level=2)
+        nested_findings = document.add_table(rows=2, cols=3)
+        nested_findings.style = "Table Grid"
+        for cell, label in zip(
+            nested_findings.rows[0].cells,
+            ("Finding (Affected Hosts)", "Host Name", "Host IP"),
+        ):
+            cell.text = label
+            cell.paragraphs[0].runs[0].bold = True
+        nested_row = nested_findings.rows[1]
+        for cell, token in zip(
+            nested_row.cells,
+            (
+                "{{findings[].finding}}",
+                "{{findings[].hosts[].name}}",
+                "{{findings[].hosts[].ip}}",
+            ),
+        ):
+            cell.text = ""
+            _split_token(cell.paragraphs[0], token)
+
         document.add_heading("Recommendations", level=1)
         recommendations = document.add_paragraph()
         _split_token(recommendations, "{{sections.recommendations}}")

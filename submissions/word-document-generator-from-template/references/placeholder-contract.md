@@ -50,14 +50,71 @@ JSON:
 
 The sample row is cloned twice and removed. An empty or missing array removes
 the sample row and retains the table header. A row may reference exactly one
-array path. Nested repeating arrays are not supported.
+outer array path per nesting level.
 
-Nested array paths are allowed:
+Nested object paths within an array are allowed:
 
 ```text
 {{report.findings[].title}}
 {{report.findings[].rating}}
 ```
+
+## Nested repeating arrays
+
+### Flat cross-product rows
+
+Place a single sample row whose cells reference both an outer array and a nested
+inner array.  The engine produces one output row for every combination of outer
+item and inner item (outer × inner):
+
+| Finding | Affected Host | IP |
+| --- | --- | --- |
+| `{{findings[].finding}}` | `{{findings[].hosts[].name}}` | `{{findings[].hosts[].ip}}` |
+
+JSON:
+
+```json
+{
+  "findings": [
+    {
+      "finding": "Finding A",
+      "hosts": [
+        {"name": "host-1", "ip": "10.0.0.1"},
+        {"name": "host-2", "ip": "10.0.0.2"}
+      ]
+    },
+    {
+      "finding": "Finding B",
+      "hosts": [
+        {"name": "host-3", "ip": "10.0.0.3"}
+      ]
+    }
+  ]
+}
+```
+
+Output: 3 data rows (2 for Finding A + 1 for Finding B).  Outer fields such as
+`{{findings[].finding}}` are repeated on every inner row.
+
+Nesting may be arbitrarily deep: `{{a[].b[].c[].field}}` produces one row per
+`a × b × c` combination.  All tokens within a flat row must share the same
+outer array path, and all nested tokens at any given level must reference the
+same next-level array name.
+
+### Nested Word tables (Case A)
+
+Place a nested `w:tbl` inside a cell of the outer repeating row.  Give the
+inner table its own sample row that carries deeper tokens:
+
+```
+Outer table template row (repeats for each finding):
+  | {{findings[].finding}} | [inner table]         |
+                              inner template row:
+                              | {{findings[].hosts[].name}} |
+```
+
+Each outer clone gets the inner table expanded independently against that outer
+item's data, so inner rows are never mixed across outer items.
 
 ## Split Word runs
 
@@ -97,15 +154,18 @@ Do not use a Word field itself as a placeholder.
 - `.docx` input and output
 - Main body, tables, `header*.xml`, and `footer*.xml`
 - Scalar plain text, numbers, booleans, `null`, and line breaks
-- One repeating array per sample table row
+- One outer array per sample table row; arbitrarily deep nested arrays
+- Flat cross-product rows: one output row per outer × inner × … combination
+- Nested Word table rows: inner template rows expanded per outer item
 - Split tokens contained within one paragraph or one table cell paragraph
 
 ## Deliberate limits
 
 - No placeholder may span multiple paragraphs or table cells.
-- No nested repeating arrays.
 - No rich-text HTML/Markdown conversion inside a placeholder.
 - No placeholders inside field instructions.
+- A flat cross-product row may not mix tokens from a direct inner array and
+  tokens from a nested-table inner array in the same `w:tr`.
 - Content controls and legacy MERGEFIELD values are preserved, not used as the
   template syntax.
 - Text embedded in unsupported package parts is not filled.

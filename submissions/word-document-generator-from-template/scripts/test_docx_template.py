@@ -31,6 +31,21 @@ W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 NS = {"w": W}
 
 
+def _build_table_template(
+    output: Path,
+    headers: list[str],
+    tokens: list[str],
+) -> None:
+    """Build a minimal DOCX with one table: a header row and a template data row."""
+    doc = Document()
+    table = doc.add_table(rows=2, cols=len(tokens))
+    for cell, text in zip(table.rows[0].cells, headers):
+        cell.text = text
+    for cell, tok in zip(table.rows[1].cells, tokens):
+        cell.text = tok
+    doc.save(output)
+
+
 def _read_zip(path: Path) -> dict[str, bytes]:
     with zipfile.ZipFile(path, "r") as archive:
         return {name: archive.read(name) for name in archive.namelist()}
@@ -64,9 +79,14 @@ class DocxTemplateTests(unittest.TestCase):
         manifest = inspect_template(self.template)
         self.assertIn("document.title", manifest["scalar_placeholders"])
         self.assertIn("sections.executive_summary", manifest["scalar_placeholders"])
+        # Simple findings table contributes "finding", "impact", "owner";
+        # the nested hosts table adds "findings.hosts" with "ip" and "name".
         self.assertEqual(
             manifest["repeating_arrays"],
-            {"findings": ["finding", "impact", "owner"]},
+            {
+                "findings": ["finding", "impact", "owner"],
+                "findings.hosts": ["ip", "name"],
+            },
         )
         field_json = json.dumps(manifest["word_fields"])
         self.assertIn("PAGE", field_json)
@@ -86,7 +106,13 @@ class DocxTemplateTests(unittest.TestCase):
             hashlib.sha256(self.template.read_bytes()).hexdigest(), original_hash
         )
         self.assertTrue(report["field_signature_preserved"])
-        self.assertEqual(report["repeated_rows"], {"findings": 3})
+        # Simple findings table: 3 rows × 1 = 3 outer.
+        # Nested hosts table: 3 outer + 5 inner (2+1+2 hosts).
+        # repeated_rows["findings"] = 3 (simple) + 3 (nested outer) = 6.
+        self.assertEqual(
+            report["repeated_rows"],
+            {"findings": 6, "findings.hosts": 5},
+        )
         self.assertEqual(report["defaulted_fields"], [])
         self.assertTrue(report["validation"]["valid_docx"])
 
@@ -116,6 +142,12 @@ class DocxTemplateTests(unittest.TestCase):
             table for table in document.tables if table.rows[0].cells[0].text == "Finding"
         )
         self.assertEqual(len(findings_table.rows), 4)  # header + 3 items
+        hosts_table = next(
+            table
+            for table in document.tables
+            if table.rows[0].cells[0].text == "Finding (Affected Hosts)"
+        )
+        self.assertEqual(len(hosts_table.rows), 6)  # header + 5 cross-product rows (2+1+2)
 
     def test_newlines_become_word_line_breaks(self) -> None:
         output = self.root / "line-breaks.docx"
@@ -223,6 +255,150 @@ class DocxTemplateTests(unittest.TestCase):
         _write_zip(damaged, parts)
         with self.assertRaisesRegex(TemplateError, "field signature"):
             validate_docx(damaged, template_path=self.template)
+
+    # ------------------------------------------------------------------
+    # Nested repeating-array tests
+    # ------------------------------------------------------------------
+
+    def test_nested_array_inspect_manifest(self) -> None:
+        """inspect_template surfaces nested arrays as dotted flat keys."""
+        template = self.root / "nested-inspect.docx"
+        _build_table_template(
+            template,
+            headers=["Outer", "Inner"],
+            tokens=["{{outer[].label}}", "{{outer[].inner[].val}}"],
+        )
+        manifest = inspect_template(template)
+        self.assertEqual(
+            manifest["repeating_arrays"],
+            {"outer": ["label"], "outer.inner": ["val"]},
+        )
+
+    def test_nested_array_flat_row_expands_to_cross_product(self) -> None:
+        """A flat row with nested tokens produces one output row per outer×inner pair."""
+        template = self.root / "nested-flat.docx"
+        _build_table_template(
+            template,
+            headers=["Item", "Tag"],
+            tokens=["{{items[].name}}", "{{items[].tags[].value}}"],
+        )
+        data = {
+            "items": [
+                {"name": "A", "tags": [{"value": "t1"}, {"value": "t2"}]},
+                {"name": "B", "tags": [{"value": "t3"}]},
+            ]
+        }
+        output = self.root / "nested-flat-out.docx"
+        report = fill_template(template, data, output)
+
+        self.assertEqual(report["repeated_rows"], {"items": 2, "items.tags": 3})
+        self.assertEqual(report["defaulted_fields"], [])
+
+        document = Document(output)
+        table = document.tables[0]
+        self.assertEqual(len(table.rows), 4)  # header + 3 data rows (2+1)
+        data_texts = [
+            " ".join(cell.text for cell in row.cells)
+            for row in table.rows[1:]
+        ]
+        self.assertIn("A t1", data_texts)
+        self.assertIn("A t2", data_texts)
+        self.assertIn("B t3", data_texts)
+
+    def test_nested_array_outer_fields_repeat_per_inner_row(self) -> None:
+        """Outer leaf fields are duplicated across all inner rows for that item."""
+        template = self.root / "nested-outer-repeat.docx"
+        _build_table_template(
+            template,
+            headers=["Name", "Tag"],
+            tokens=["{{items[].name}}", "{{items[].tags[].value}}"],
+        )
+        data = {
+            "items": [
+                {"name": "X", "tags": [{"value": "a"}, {"value": "b"}]},
+            ]
+        }
+        output = self.root / "nested-outer-repeat-out.docx"
+        fill_template(template, data, output)
+
+        document = Document(output)
+        table = document.tables[0]
+        self.assertEqual(len(table.rows), 3)  # header + 2 rows
+        # Both data rows must carry "X" in the name column.
+        for row in table.rows[1:]:
+            self.assertEqual(row.cells[0].text, "X")
+
+    def test_nested_array_empty_inner_produces_no_rows(self) -> None:
+        """An outer item whose inner array is empty contributes zero output rows."""
+        template = self.root / "nested-empty-inner.docx"
+        _build_table_template(
+            template,
+            headers=["Item", "Tag"],
+            tokens=["{{items[].name}}", "{{items[].tags[].value}}"],
+        )
+        data = {
+            "items": [
+                {"name": "A", "tags": []},
+                {"name": "B", "tags": [{"value": "t1"}]},
+            ]
+        }
+        output = self.root / "nested-empty-inner-out.docx"
+        report = fill_template(template, data, output)
+
+        # items: 2 outer; tags: only 1 inner row generated (A contributes 0).
+        self.assertEqual(report["repeated_rows"], {"items": 2, "items.tags": 1})
+
+        document = Document(output)
+        table = document.tables[0]
+        self.assertEqual(len(table.rows), 2)  # header + 1 data row
+
+    def test_three_level_nesting(self) -> None:
+        """Tokens with three [] levels expand recursively via cross-product."""
+        template = self.root / "three-level.docx"
+        _build_table_template(
+            template,
+            headers=["Field"],
+            tokens=["{{a[].b[].c[].field}}"],
+        )
+        data = {
+            "a": [
+                {
+                    "b": [
+                        {"c": [{"field": "X"}, {"field": "Y"}]},
+                    ]
+                }
+            ]
+        }
+        output = self.root / "three-level-out.docx"
+        report = fill_template(template, data, output)
+
+        self.assertEqual(
+            report["repeated_rows"],
+            {"a": 1, "a.b": 1, "a.b.c": 2},
+        )
+        document = Document(output)
+        table = document.tables[0]
+        self.assertEqual(len(table.rows), 3)  # header + 2 data rows
+        values = [row.cells[0].text for row in table.rows[1:]]
+        self.assertEqual(sorted(values), ["X", "Y"])
+
+    def test_multiple_inner_arrays_in_same_row_fails(self) -> None:
+        """A flat row referencing two distinct inner arrays raises TemplateError."""
+        template = self.root / "multi-inner.docx"
+        _build_table_template(
+            template,
+            headers=["F1", "F2"],
+            tokens=["{{x[].a[].f1}}", "{{x[].b[].f2}}"],
+        )
+        data = {
+            "x": [
+                {"a": [{"f1": "v"}], "b": [{"f2": "w"}]},
+            ]
+        }
+        output = self.root / "multi-inner-out.docx"
+        with self.assertRaisesRegex(TemplateError, "only one nested array"):
+            fill_template(template, data, output)
+        self.assertFalse(output.exists())
 
     def test_cli_inspect_fill_validate(self) -> None:
         data_path = self.root / "data.json"

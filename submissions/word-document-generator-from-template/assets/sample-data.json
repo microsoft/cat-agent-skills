@@ -18,17 +18,28 @@
     {
       "finding": "Service response targets were met.",
       "impact": "Customer commitments remained on track.",
-      "owner": "Service Delivery"
+      "owner": "Service Delivery",
+      "hosts": [
+        {"name": "SVC-01", "ip": "10.0.1.10"},
+        {"name": "SVC-02", "ip": "10.0.1.11"}
+      ]
     },
     {
       "finding": "Two supplier actions remain open.",
       "impact": "Minor schedule risk next quarter.",
-      "owner": "Vendor Management"
+      "owner": "Vendor Management",
+      "hosts": [
+        {"name": "SUP-01", "ip": "10.0.2.10"}
+      ]
     },
     {
       "finding": "Incident review completion improved.",
       "impact": "Faster closure and stronger traceability.",
-      "owner": "Operations Assurance"
+      "owner": "Operations Assurance",
+      "hosts": [
+        {"name": "INC-01", "ip": "10.0.3.10"},
+        {"name": "INC-02", "ip": "10.0.3.11"}
+      ]
     }
   ],
   "sources": [

@@ -7,7 +7,8 @@ Word field instructions (PAGE, NUMPAGES, TOC, cross-references, and similar).
 
 Template contract:
   Scalars:        {{document.title}} or {{sections.purpose}}
-  Repeating rows: {{items[].name}} (one array path per template table row)
+  Repeating rows: {{items[].name}} (one outer array path per template table row;
+                  nested arrays supported: {{items[].sub[].field}})
 
 Usage:
   python docx_template.py inspect template.docx --output manifest.json
@@ -284,12 +285,18 @@ def _tokens_in_element(element: etree._Element) -> list[str]:
 
 
 def _array_token(key: str) -> tuple[str, str] | None:
+    """Parse the first array marker in *key*.
+
+    Returns ``(array_path, item_path)`` where *item_path* may itself contain
+    further ``[]`` markers for deeply nested arrays — callers recurse as needed.
+    Returns ``None`` when the key contains no ``[]`` marker.
+    """
     segments = key.split(".")
     marked = [i for i, segment in enumerate(segments) if segment.endswith("[]")]
     if not marked:
         return None
-    if len(marked) > 1:
-        raise TemplateError(f"Nested repeating arrays are not supported: {key}")
+    # Split at the FIRST [] only; the remainder (item_path) may contain
+    # additional [] markers for deeper nesting levels.
     index = marked[0]
     segments[index] = segments[index][:-2]
     array_path = ".".join(segments[: index + 1])
@@ -297,6 +304,30 @@ def _array_token(key: str) -> tuple[str, str] | None:
     if not item_path:
         raise TemplateError(f"Repeating token must name an item field: {key}")
     return array_path, item_path
+
+
+def _classify_array_token(
+    key: str,
+    path_prefix: str,
+    arrays: dict[str, set[str]],
+) -> None:
+    """Recursively register a (possibly nested) array token into *arrays*.
+
+    Flat dotted keys are used for each nesting level, e.g.::
+
+        {{findings[].title}}          → arrays["findings"].add("title")
+        {{findings[].hosts[].name}}   → arrays["findings.hosts"].add("name")
+    """
+    parsed = _array_token(key)
+    if parsed is None:
+        return
+    array_name, item_path = parsed
+    full_path = path_prefix + array_name
+    if "[]" in item_path:
+        # item_path is itself a nested array token; recurse to register deeper level.
+        _classify_array_token(item_path, full_path + ".", arrays)
+    else:
+        arrays.setdefault(full_path, set()).add(item_path)
 
 
 _MISSING = object()
@@ -327,71 +358,314 @@ def _as_text(value: Any, path: str) -> str:
     )
 
 
+def _expand_flat_cross_product(
+    template_row: etree._Element,
+    outer_items: list[Any],
+    local_outer_path: str,
+    missing_value: str,
+    report: FillReport,
+    token_prefix: str,
+    path_prefix: str,
+    parent: etree._Element,
+    insert_at_ref: list[int],
+) -> None:
+    """Recursively expand *template_row* for each (outer × inner × …) combination.
+
+    Fills tokens at the current nesting level and, when further ``[]`` markers
+    remain, recurses to handle the next level before inserting the final clones.
+    All clones are inserted into *parent* starting at ``insert_at_ref[0]``.
+    """
+    next_prefix = token_prefix + local_outer_path + "[]."
+    next_path = path_prefix + local_outer_path
+
+    for outer_idx, outer_item in enumerate(outer_items):
+        if not isinstance(outer_item, Mapping):
+            raise TemplateError(
+                f"{next_path}[{outer_idx}] must be a JSON object."
+            )
+        clone = copy.deepcopy(template_row)
+
+        def resolve_leaf(
+            key: str,
+            _oi: Mapping[str, Any] = outer_item,
+            _oidx: int = outer_idx,
+        ) -> str | None:
+            if not key.startswith(token_prefix):
+                return None
+            local = key[len(token_prefix):]
+            parsed = _array_token(local)
+            if parsed is None or parsed[0] != local_outer_path:
+                return None
+            item_path = parsed[1]
+            if "[]" in item_path:
+                return None  # leave nested tokens for the next recursion level
+            value = _lookup(_oi, item_path)
+            if value is _MISSING:
+                report.defaulted_fields.add(f"{next_path}[{_oidx}].{item_path}")
+                return missing_value
+            report.replaced_fields.add(f"{next_path}[{_oidx}].{item_path}")
+            return _as_text(value, f"{next_path}[].{item_path}")
+
+        for paragraph in clone.iter(_w("p")):
+            _replace_in_paragraph(paragraph, resolve_leaf, allow_array_tokens=True)
+
+        # Discover remaining nested tokens in this clone.
+        remaining_keys = _tokens_in_element(clone)
+        prefixed = [
+            (k, k[len(next_prefix):])
+            for k in remaining_keys
+            if k.startswith(next_prefix)
+        ]
+        next_array_locals = [
+            (orig, loc) for orig, loc in prefixed if _array_token(loc) is not None
+        ]
+
+        if next_array_locals:
+            next_outer_paths = {_array_token(loc)[0] for _, loc in next_array_locals}
+            if len(next_outer_paths) != 1:
+                raise TemplateError(
+                    "A repeating table row may reference only one array at each "
+                    "nesting level; found: "
+                    + ", ".join(sorted(str(p) for p in next_outer_paths))
+                )
+            next_outer_path = next(iter(next_outer_paths))
+            next_outer_items = _lookup(outer_item, next_outer_path)
+            if next_outer_items is _MISSING:
+                next_outer_items = []
+                report.defaulted_fields.add(f"{next_path}.{next_outer_path}")
+            if not isinstance(next_outer_items, list):
+                raise TemplateError(
+                    f"Nested repeating array "
+                    f"{(next_path + '.' + next_outer_path)!r} requires a JSON array."
+                )
+            # Track item count at the next nesting level.
+            next_level_key = next_path + "." + next_outer_path
+            report.repeated_rows[next_level_key] = (
+                report.repeated_rows.get(next_level_key, 0) + len(next_outer_items)
+            )
+            _expand_flat_cross_product(
+                clone,
+                next_outer_items,
+                next_outer_path,
+                missing_value,
+                report,
+                next_prefix,
+                next_path + ".",
+                parent,
+                insert_at_ref,
+            )
+        else:
+            parent.insert(insert_at_ref[0], clone)
+            insert_at_ref[0] += 1
+
+
+def _expand_rows_in_subtree(
+    subtree: etree._Element,
+    data: Mapping[str, Any],
+    missing_value: str,
+    report: FillReport,
+    *,
+    token_prefix: str = "",
+    path_prefix: str = "",
+) -> bool:
+    """Expand all template ``w:tr`` rows found within *subtree*.
+
+    *token_prefix* restricts which tokens are handled at this nesting depth
+    (e.g. ``"findings[]."`` when recursing inside a findings clone).  *data* is
+    the JSON object for the current nesting level.
+
+    Supports two expansion modes:
+
+    * **Case A — nested tables**: the outer template row contains a nested
+      ``w:tbl`` whose own template rows carry deeper tokens.  Each outer item
+      produces one clone; the recursive call expands inner rows within that
+      clone using the outer item as the data root.
+
+    * **Case B — flat cross-product**: every nested token lives directly in
+      the template row's cells (not in a sub-table).  One output row is
+      produced per combination of outer × inner × … items.
+    """
+    changed = False
+    for row in list(subtree.iter(_w("tr"))):
+        # When called recursively on a w:tr clone, skip the subtree element itself.
+        if row is subtree:
+            continue
+        # Skip rows orphaned by a prior iteration's clone + remove cycle.
+        if row.getparent() is None:
+            continue
+
+        all_keys = _tokens_in_element(row)
+        # Restrict to tokens that belong to the current prefix level.
+        local_map: dict[str, str] = {
+            k: k[len(token_prefix):]
+            for k in all_keys
+            if k.startswith(token_prefix)
+        }
+        array_locals = [
+            (orig, local)
+            for orig, local in local_map.items()
+            if _array_token(local) is not None
+        ]
+        if not array_locals:
+            continue
+
+        # All tokens in this row must share a single outermost array at this level.
+        local_outer_paths = {_array_token(local)[0] for _, local in array_locals}
+        if len(local_outer_paths) != 1:
+            raise TemplateError(
+                "A repeating table row may reference only one array at each "
+                "nesting level; found: "
+                + ", ".join(sorted(str(p) for p in local_outer_paths))
+            )
+        local_outer_path = next(iter(local_outer_paths))
+
+        outer_items = _lookup(data, local_outer_path)
+        if outer_items is _MISSING:
+            outer_items = []
+            report.defaulted_fields.add(path_prefix + local_outer_path)
+        if not isinstance(outer_items, list):
+            raise TemplateError(
+                f"Repeating row {(path_prefix + local_outer_path)!r} "
+                f"requires a JSON array."
+            )
+
+        parent = row.getparent()
+        if parent is None:
+            raise TemplateError("Repeating table row has no parent table.")
+
+        next_prefix = token_prefix + local_outer_path + "[]."
+        next_path = path_prefix + local_outer_path
+
+        # Separate nested (multi-level) tokens from leaf tokens.
+        nested_local_tokens = [
+            (orig, local)
+            for orig, local in array_locals
+            if "[]" in _array_token(local)[1]  # type: ignore[index]
+        ]
+
+        # Determine which nested tokens live in sub-table rows vs. direct cells.
+        sub_rows = [r for r in row.iter(_w("tr")) if r is not row]
+        sub_row_token_set: set[str] = {
+            t for sr in sub_rows for t in _tokens_in_element(sr)
+        }
+        nested_direct = [
+            (o, l) for o, l in nested_local_tokens if o not in sub_row_token_set
+        ]
+        nested_in_sub = [
+            (o, l) for o, l in nested_local_tokens if o in sub_row_token_set
+        ]
+
+        if nested_direct and nested_in_sub:
+            raise TemplateError(
+                "A template row may not mix nested-array tokens in direct cells "
+                "with nested-array tokens inside a nested table; "
+                "use separate tables for each array level."
+            )
+
+        # For flat cross-product rows, every nested token at this level must
+        # reference the same next-level array path.
+        if nested_direct:
+            inner_paths: set[str] = set()
+            for _, local in nested_direct:
+                item_path = _array_token(local)[1]  # type: ignore[index]
+                inner_parsed = _array_token(item_path)
+                if inner_parsed:
+                    inner_paths.add(inner_parsed[0])
+            if len(inner_paths) > 1:
+                raise TemplateError(
+                    "A flat repeating row may reference only one nested array "
+                    "at each level; found: " + ", ".join(sorted(inner_paths))
+                )
+
+        insert_at = parent.index(row)
+
+        if nested_direct:
+            # Case B — flat cross-product.
+            # Track the outer item count here; _expand_flat_cross_product
+            # accumulates counts for deeper levels.
+            report.repeated_rows[next_path] = (
+                report.repeated_rows.get(next_path, 0) + len(outer_items)
+            )
+            insert_at_ref = [insert_at]
+            _expand_flat_cross_product(
+                row,
+                outer_items,
+                local_outer_path,
+                missing_value,
+                report,
+                token_prefix,
+                path_prefix,
+                parent,
+                insert_at_ref,
+            )
+        else:
+            # Case A or simple — one clone per outer item.
+            for outer_idx, outer_item in enumerate(outer_items):
+                if not isinstance(outer_item, Mapping):
+                    raise TemplateError(
+                        f"{next_path}[{outer_idx}] must be a JSON object."
+                    )
+                clone = copy.deepcopy(row)
+
+                def resolve_outer(
+                    key: str,
+                    _oi: Mapping[str, Any] = outer_item,
+                    _oidx: int = outer_idx,
+                ) -> str | None:
+                    if not key.startswith(token_prefix):
+                        return None
+                    local = key[len(token_prefix):]
+                    parsed = _array_token(local)
+                    if parsed is None or parsed[0] != local_outer_path:
+                        return None
+                    item_path = parsed[1]
+                    if "[]" in item_path:
+                        return None  # leave nested for the recursive inner pass
+                    value = _lookup(_oi, item_path)
+                    if value is _MISSING:
+                        report.defaulted_fields.add(
+                            f"{next_path}[{_oidx}].{item_path}"
+                        )
+                        return missing_value
+                    report.replaced_fields.add(f"{next_path}[{_oidx}].{item_path}")
+                    return _as_text(value, f"{next_path}[].{item_path}")
+
+                for paragraph in clone.iter(_w("p")):
+                    _replace_in_paragraph(
+                        paragraph, resolve_outer, allow_array_tokens=True
+                    )
+
+                # Recursively expand nested sub-table rows within this clone (Case A).
+                if nested_local_tokens:
+                    _expand_rows_in_subtree(
+                        clone,
+                        outer_item,
+                        missing_value,
+                        report,
+                        token_prefix=next_prefix,
+                        path_prefix=next_path + ".",
+                    )
+
+                parent.insert(insert_at, clone)
+                insert_at += 1
+
+            report.repeated_rows[next_path] = (
+                report.repeated_rows.get(next_path, 0) + len(outer_items)
+            )
+
+        parent.remove(row)
+        changed = True
+
+    return changed
+
+
 def _expand_repeating_rows(
     root: etree._Element,
     data: Mapping[str, Any],
     missing_value: str,
     report: FillReport,
 ) -> bool:
-    changed = False
-    for row in list(root.iter(_w("tr"))):
-        array_tokens = [
-            key for key in _tokens_in_element(row) if _array_token(key) is not None
-        ]
-        if not array_tokens:
-            continue
-        roots = {_array_token(key)[0] for key in array_tokens}  # type: ignore[index]
-        if len(roots) != 1:
-            raise TemplateError(
-                "A repeating table row may reference only one array; found: "
-                + ", ".join(sorted(roots))
-            )
-        array_path = next(iter(roots))
-        items = _lookup(data, array_path)
-        if items is _MISSING:
-            items = []
-            report.defaulted_fields.add(array_path)
-        if not isinstance(items, list):
-            raise TemplateError(
-                f"Repeating row {array_path!r} requires a JSON array."
-            )
-        parent = row.getparent()
-        if parent is None:
-            raise TemplateError("Repeating table row has no parent table.")
-        insert_at = parent.index(row)
-        for item_index, item in enumerate(items):
-            if not isinstance(item, Mapping):
-                raise TemplateError(
-                    f"{array_path}[{item_index}] must be a JSON object."
-                )
-            clone = copy.deepcopy(row)
-
-            def resolve_array(key: str) -> str | None:
-                parsed = _array_token(key)
-                if parsed is None or parsed[0] != array_path:
-                    return None
-                item_path = parsed[1]
-                value = _lookup(item, item_path)
-                if value is _MISSING:
-                    report.defaulted_fields.add(
-                        f"{array_path}[{item_index}].{item_path}"
-                    )
-                    return missing_value
-                report.replaced_fields.add(
-                    f"{array_path}[{item_index}].{item_path}"
-                )
-                return _as_text(value, f"{array_path}[].{item_path}")
-
-            for paragraph in clone.iter(_w("p")):
-                _replace_in_paragraph(
-                    paragraph, resolve_array, allow_array_tokens=True
-                )
-            parent.insert(insert_at, clone)
-            insert_at += 1
-        parent.remove(row)
-        report.repeated_rows[array_path] = report.repeated_rows.get(array_path, 0) + len(items)
-        changed = True
-    return changed
+    return _expand_rows_in_subtree(root, data, missing_value, report)
 
 
 def _replace_scalars(
@@ -476,7 +750,7 @@ def _scan_part(
             if parsed is None:
                 scalar.add(key)
             else:
-                arrays.setdefault(parsed[0], set()).add(parsed[1])
+                _classify_array_token(key, "", arrays)
     return scalar, arrays, malformed
 
 
