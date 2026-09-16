@@ -40,9 +40,10 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Instructions
 
-1. From the skill's root directory (the folder that contains `scripts/`, `assets/`, and `references/`), locate the runtime `.docx` template. Use the uploaded file, or retrieve the
-   user-identified SharePoint / OneDrive / connector item into the working
-   directory. Stop with the message under **Template handling** if unavailable.
+1. From the skill's root directory (the folder that contains `scripts/`, `assets/`, and `references/`), locate the runtime `.docx` template and copy it to the working directory:
+   - **Uploaded file**: copy from the upload path to the working directory before use (for example `cp /app/uploads/<filename> ./template.docx`). Pass only the local copy to the engine; do not pass the upload path directly.
+   - **SharePoint / OneDrive / connector**: retrieve the item into the working directory.
+   Stop with the message under **Template handling** if the template cannot be located or copied.
 2. Inspect it before writing content:
 
    ```bash
@@ -179,9 +180,8 @@ reported by template inspection.
 ## Requirements
 
 The engine uses Python's standard library plus `lxml`, preinstalled in the
-Copilot Studio sandbox. The sample-template builder and tests additionally use
-preinstalled `python-docx` and Pillow. No network service or `pip install` is
-needed in Copilot Studio.
+Copilot Studio sandbox. No network service or `pip install` is needed in
+Copilot Studio.
 
 ## Quality and safety
 

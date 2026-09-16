@@ -55,7 +55,7 @@ text. The engine supports:
 - Put branding, page numbers, and classification in the **header / footer**.
 - Use **Heading 1** for every major section the finished document must keep.
 - Use a **one-row sample table** for anything that repeats (steps, findings, leave types, owners), with the array name followed by `[]`.
-- Name placeholders after the field: `{{document.title}}`, `{{sections.<heading>}}`.
+- Name placeholders after the field: `{{document.title}}`, `{{sections.section_name}}`.
 - Keep body cells short: `{{sections.purpose}}` or `[Insert from approved sources]`.
 
 **Don’t**
@@ -167,6 +167,8 @@ For the full grammar and limits, see
 | `references/placeholder-contract.md` | Exact grammar, supported scope, and limits |
 | `scripts/test_docx_template.py` | Automated regression suite |
 | `scripts/build_sample_template.py` | Rebuild the sample template |
+
+`scripts/build_sample_template.py` and `scripts/test_docx_template.py` additionally require `python-docx` and Pillow (preinstalled in the dev environment); no extra installs are needed to run the tests.
 
 ## Example requests
 

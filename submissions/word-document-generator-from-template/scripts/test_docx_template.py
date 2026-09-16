@@ -46,6 +46,61 @@ def _build_table_template(
     doc.save(output)
 
 
+def _build_nested_table_template(
+    output: Path,
+    outer_token: str,
+    inner_token: str,
+) -> None:
+    """Build a DOCX where an outer table's template row contains a nested w:tbl.
+
+    Column 1 of the template row holds *outer_token* (e.g. ``{{outer[].label}}``);
+    column 2 contains a nested inner table whose template row holds *inner_token*
+    (e.g. ``{{outer[].inner[].val}}``).  This exercises the Case A (nested-table)
+    expansion path in ``_expand_rows_in_subtree``.
+    """
+    WN = f"{{{W}}}"
+
+    # Build the outer 2-column, 2-row table with python-docx.
+    doc = Document()
+    table = doc.add_table(rows=2, cols=2)
+    table.rows[0].cells[0].text = "Outer"
+    table.rows[0].cells[1].text = "Inner"
+    table.rows[1].cells[0].text = outer_token
+    doc.save(output)
+
+    # Patch word/document.xml to embed an inner w:tbl in the second template cell.
+    parts = _read_zip(output)
+    root = etree.fromstring(parts["word/document.xml"])
+
+    outer_tbl = root.findall(f".//{WN}tbl")[0]
+    tmpl_row = outer_tbl.findall(f"{WN}tr")[1]
+    second_cell = tmpl_row.findall(f"{WN}tc")[1]
+
+    for p in list(second_cell.findall(f"{WN}p")):
+        second_cell.remove(p)
+
+    # Inner table: header row + template row.
+    inner_tbl = etree.SubElement(second_cell, f"{WN}tbl")
+
+    hdr_tr = etree.SubElement(inner_tbl, f"{WN}tr")
+    hdr_tc = etree.SubElement(hdr_tr, f"{WN}tc")
+    hdr_p = etree.SubElement(hdr_tc, f"{WN}p")
+    etree.SubElement(etree.SubElement(hdr_p, f"{WN}r"), f"{WN}t").text = "Inner"
+
+    tmpl_tr = etree.SubElement(inner_tbl, f"{WN}tr")
+    tmpl_tc = etree.SubElement(tmpl_tr, f"{WN}tc")
+    tmpl_p = etree.SubElement(tmpl_tc, f"{WN}p")
+    etree.SubElement(etree.SubElement(tmpl_p, f"{WN}r"), f"{WN}t").text = inner_token
+
+    # OOXML requires a trailing w:p after a w:tbl inside a w:tc.
+    etree.SubElement(second_cell, f"{WN}p")
+
+    parts["word/document.xml"] = etree.tostring(
+        root, encoding="UTF-8", xml_declaration=True
+    )
+    _write_zip(output, parts)
+
+
 def _read_zip(path: Path) -> dict[str, bytes]:
     with zipfile.ZipFile(path, "r") as archive:
         return {name: archive.read(name) for name in archive.namelist()}
@@ -399,6 +454,97 @@ class DocxTemplateTests(unittest.TestCase):
         with self.assertRaisesRegex(TemplateError, "only one nested array"):
             fill_template(template, data, output)
         self.assertFalse(output.exists())
+
+    # ------------------------------------------------------------------
+    # Case A: nested w:tbl inside an outer repeating row
+    # ------------------------------------------------------------------
+
+    def test_nested_table_case_a_expand(self) -> None:
+        """Case A: each outer item clones the outer row; inner rows expand per-item."""
+        template = self.root / "case-a-expand.docx"
+        _build_nested_table_template(
+            template,
+            outer_token="{{outer[].label}}",
+            inner_token="{{outer[].inner[].val}}",
+        )
+        data = {
+            "outer": [
+                {"label": "A", "inner": [{"val": "a1"}, {"val": "a2"}]},
+                {"label": "B", "inner": [{"val": "b1"}]},
+            ]
+        }
+        output = self.root / "case-a-expand-out.docx"
+        report = fill_template(template, data, output)
+
+        self.assertEqual(report["repeated_rows"], {"outer": 2, "outer.inner": 3})
+        self.assertEqual(report["defaulted_fields"], [])
+
+        doc_xml = _read_zip(output)["word/document.xml"]
+        root = etree.fromstring(doc_xml)
+        WN = f"{{{W}}}"
+
+        # Outer table has header + 2 data rows (one per outer item).
+        outer_tbl = root.findall(f".//{WN}tbl")[0]
+        outer_trs = outer_tbl.findall(f"{WN}tr")
+        self.assertEqual(len(outer_trs), 3)
+
+        # Outer label values are present in the output.
+        all_text = _visible_text(doc_xml)
+        for expected in ("A", "B", "a1", "a2", "b1"):
+            self.assertIn(expected, all_text)
+
+        # No unresolved tokens remain.
+        self.assertNotIn("{{", all_text)
+
+        # First data row's nested table has header + 2 inner rows (items a1, a2).
+        first_data_row = outer_trs[1]
+        inner_tbls_first = first_data_row.findall(f".//{WN}tbl")
+        self.assertEqual(len(inner_tbls_first), 1)
+        inner_trs_first = inner_tbls_first[0].findall(f"{WN}tr")
+        self.assertEqual(len(inner_trs_first), 3)  # header + 2
+
+        # Second data row's nested table has header + 1 inner row (item b1).
+        second_data_row = outer_trs[2]
+        inner_tbls_second = second_data_row.findall(f".//{WN}tbl")
+        self.assertEqual(len(inner_tbls_second), 1)
+        inner_trs_second = inner_tbls_second[0].findall(f"{WN}tr")
+        self.assertEqual(len(inner_trs_second), 2)  # header + 1
+
+    def test_nested_table_case_a_empty_inner_array(self) -> None:
+        """Case A: an outer item with an empty inner array still produces one outer row."""
+        template = self.root / "case-a-empty-inner.docx"
+        _build_nested_table_template(
+            template,
+            outer_token="{{outer[].label}}",
+            inner_token="{{outer[].inner[].val}}",
+        )
+        data = {"outer": [{"label": "X", "inner": []}]}
+        output = self.root / "case-a-empty-inner-out.docx"
+        report = fill_template(template, data, output)
+
+        self.assertEqual(report["repeated_rows"], {"outer": 1, "outer.inner": 0})
+        self.assertEqual(report["defaulted_fields"], [])
+
+        doc_xml = _read_zip(output)["word/document.xml"]
+        root = etree.fromstring(doc_xml)
+        WN = f"{{{W}}}"
+
+        # Outer table: header + 1 data row.
+        outer_tbl = root.findall(f".//{WN}tbl")[0]
+        outer_trs = outer_tbl.findall(f"{WN}tr")
+        self.assertEqual(len(outer_trs), 2)
+
+        # The data row's nested inner table has only its header row (template removed).
+        data_row = outer_trs[1]
+        inner_tbls = data_row.findall(f".//{WN}tbl")
+        self.assertEqual(len(inner_tbls), 1)
+        inner_trs = inner_tbls[0].findall(f"{WN}tr")
+        self.assertEqual(len(inner_trs), 1)
+
+        # Outer label "X" is filled; no unresolved tokens remain.
+        all_text = _visible_text(doc_xml)
+        self.assertIn("X", all_text)
+        self.assertNotIn("{{", all_text)
 
     def test_cli_inspect_fill_validate(self) -> None:
         data_path = self.root / "data.json"

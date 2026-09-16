@@ -34,6 +34,7 @@ from lxml import etree
 
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+W_STRICT = "http://purl.oclc.org/ooxml/wordprocessingml/main"
 XML = "http://www.w3.org/XML/1998/namespace"
 NS = {"w": W}
 XML_SPACE = f"{{{XML}}}space"
@@ -99,6 +100,22 @@ def _parse_xml(content: bytes, part_name: str) -> etree._Element:
         raise TemplateError(f"Invalid XML in {part_name}: {exc}") from exc
 
 
+def _assert_transitional_namespace(root: etree._Element, part: str) -> None:
+    """Raise TemplateError if *root* declares the Strict OOXML wordprocessingML namespace.
+
+    Strict OOXML uses a different namespace URI to the Transitional profile the
+    engine is built against.  Accepting a Strict package silently would leave
+    every token unfound and report false success.
+    """
+    ns_values = set(root.nsmap.values())
+    if W_STRICT in ns_values:
+        raise TemplateError(
+            f"Strict OOXML is not supported ({part!r} declares "
+            f"{W_STRICT!r}). Convert the document to Transitional OOXML "
+            "('Word 97-2003 compatible') before using this engine."
+        )
+
+
 def _serialize_xml(root: etree._Element) -> bytes:
     return etree.tostring(
         root,
@@ -154,6 +171,8 @@ def _read_package(path: str | os.PathLike[str]) -> tuple[
             metadata = {info.filename: info for info in infos}
     except (zipfile.BadZipFile, OSError) as exc:
         raise TemplateError(f"Cannot read DOCX package {source}: {exc}") from exc
+    doc_root = _parse_xml(content["word/document.xml"], "word/document.xml")
+    _assert_transitional_namespace(doc_root, "word/document.xml")
     return content, metadata
 
 
