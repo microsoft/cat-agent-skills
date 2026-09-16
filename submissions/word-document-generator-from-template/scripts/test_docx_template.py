@@ -257,6 +257,38 @@ class DocxTemplateTests(unittest.TestCase):
         with self.assertRaisesRegex(TemplateError, "Cannot read DOCX"):
             inspect_template(bad)
 
+    def test_write_to_non_writable_path_raises_template_error(self) -> None:
+        """fill_template raises TemplateError (not raw OSError) for bad output path."""
+        # Use an existing file as the 'parent directory' so mkdir/open both fail.
+        blocker = self.root / "blocker"
+        blocker.write_text("occupied", encoding="utf-8")
+        bad_output = blocker / "output.docx"
+        with self.assertRaises(TemplateError):
+            fill_template(self.template, self.data, bad_output)
+
+    def test_cli_write_failure_exits_with_code_2(self) -> None:
+        """CLI returns exit code 2 (not a traceback) when output cannot be written."""
+        data_path = self.root / "data.json"
+        data_path.write_text(json.dumps(self.data), encoding="utf-8")
+        blocker = self.root / "blocker2"
+        blocker.write_text("occupied", encoding="utf-8")
+        bad_output = str(blocker / "output.docx")
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(HERE / "docx_template.py"),
+                "fill",
+                str(self.template),
+                str(data_path),
+                bad_output,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Error:", result.stderr)
+
     def test_malformed_placeholder_is_rejected(self) -> None:
         parts = _read_zip(self.template)
         root = etree.fromstring(parts["word/document.xml"])
@@ -295,6 +327,43 @@ class DocxTemplateTests(unittest.TestCase):
         _write_zip(malformed, parts)
         with self.assertRaisesRegex(TemplateError, "Malformed placeholder"):
             inspect_template(malformed)
+
+    def test_payload_with_brace_sequences_does_not_raise(self) -> None:
+        """A JSON value containing {{...}} must not be mistaken for an unresolved token."""
+        data = copy.deepcopy(self.data)
+        data["sections"]["executive_summary"] = (
+            "Use {{name}} in the payload for dynamic content."
+        )
+        output = self.root / "brace-value.docx"
+        # fill_template and validate_docx must both succeed.
+        report = fill_template(self.template, data, output)
+        self.assertTrue(output.exists())
+        validate_docx(output, template_path=self.template)
+        # The ZWSP-escaped text should be present in the output XML.
+        doc_xml = _read_zip(output)["word/document.xml"]
+        raw = doc_xml.decode("utf-8")
+        self.assertIn("{" + "\u200B" + "{", raw)
+
+    def test_leftover_template_token_still_fails(self) -> None:
+        """validate_docx must raise when a genuine {{...}} token remains in the output."""
+        output = self.root / "filled-for-leftover.docx"
+        fill_template(self.template, self.data, output)
+        # Inject a raw token into the filled document XML.
+        WN = f"{{{W}}}"
+        parts = _read_zip(output)
+        root = etree.fromstring(parts["word/document.xml"])
+        first_p = root.find(f".//{WN}p")
+        assert first_p is not None
+        run = etree.SubElement(first_p, f"{WN}r")
+        t = etree.SubElement(run, f"{WN}t")
+        t.text = "{{orphan.token}}"
+        parts["word/document.xml"] = etree.tostring(
+            root, xml_declaration=True, encoding="UTF-8"
+        )
+        damaged = self.root / "leftover-damaged.docx"
+        _write_zip(damaged, parts)
+        with self.assertRaisesRegex(TemplateError, "[Uu]nresolved"):
+            validate_docx(damaged, template_path=self.template)
 
     def test_validate_detects_removed_live_field(self) -> None:
         output = self.root / "filled.docx"

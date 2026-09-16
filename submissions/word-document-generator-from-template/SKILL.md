@@ -40,46 +40,87 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Instructions
 
-1. From the skill's root directory (the folder that contains `scripts/`, `assets/`, and `references/`), locate the runtime `.docx` template and copy it to the working directory:
-   - **Uploaded file**: copy from the upload path to the working directory with a file API (for example, Python `shutil.copy2(upload_path, "template.docx")`); do not interpolate the user-supplied filename into a shell command.
-   - **SharePoint / OneDrive / connector**: retrieve the item into the working directory.
-   Stop with the message under **Template handling** if the template cannot be located or copied.
-2. Inspect it before writing content:
+1. Derive a **safe basename** from the requested output filename: keep only
+   `[A-Za-z0-9_-]` in the stem, replace any other character runs with `_`,
+   reject `..` and path separators, and keep a `.docx` extension.  Use this
+   stem throughout as `<stem>`.  All working files go under `/app/created/` so
+   Copilot Studio can surface them as attachments:
+
+   ```text
+   /app/created/<stem>-template.docx   ← local copy of the runtime template
+   /app/created/<stem>-data.json       ← serialised fill data
+   /app/created/<stem>.docx            ← completed document (the deliverable)
+   ```
+
+2. Locate the runtime `.docx` template and **copy it to
+   `/app/created/<stem>-template.docx`** before any other step:
+   - **Uploaded file**: use the file API (for example, Python
+     `shutil.copy2(upload_path, "/app/created/<stem>-template.docx")`); do
+     not interpolate the user-supplied filename into a shell command.
+   - **SharePoint / OneDrive / connector**: retrieve the item directly to that path.
+
+   Pass only `/app/created/<stem>-template.docx` to the engine; never use the
+   upload path directly.  Stop with the message under **Template handling** if
+   the template cannot be located or copied.
+
+3. Inspect the local copy before writing content:
 
    ```bash
-   python scripts/docx_template.py inspect template.docx --output manifest.json
+   python scripts/docx_template.py inspect /app/created/<stem>-template.docx \
+     --output /app/created/<stem>-manifest.json
    ```
 
    Read the manifest's exact scalar placeholders, repeating arrays, parts, and
    live Word fields. If inspection rejects the template, report the error; do
    not guess at its schema.
-3. Retrieve relevant information from approved knowledge, user files, and prior
+
+4. Retrieve relevant information from approved knowledge, user files, and prior
    tool/connector results already in the conversation. Prefer connector-returned
    records, dates, owners, and IDs over restating them from memory.
-4. Generate long documents section by section. Build a JSON object whose paths
+
+5. Generate long documents section by section. Build a JSON object whose paths
    exactly match the manifest. Use arrays for repeating table rows. Use
    `Not specified in approved sources` for unsupported facts.
-5. Validate the JSON conceptually: all required template fields are represented,
-   claims are grounded, and each array item supplies the expected row fields.
-6. Fill a **new** file with the deterministic engine:
 
-   ```bash
-   python scripts/docx_template.py fill template.docx data.json output.docx \
-     --summary fill-summary.json
+6. Validate the JSON conceptually: all required template fields are represented,
+   claims are grounded, and each array item supplies the expected row fields.
+   Then **write it to disk** so the fill command can read it:
+
+   ```python
+   from pathlib import Path
+   import json
+   Path("/app/created/<stem>-data.json").write_text(
+       json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+       encoding="utf-8",
+   )
    ```
 
-   Never set `output.docx` to the template path.
-7. Validate package integrity, unresolved tokens, and live Word fields:
+7. Fill a **new** file with the deterministic engine:
 
    ```bash
-   python scripts/docx_template.py validate output.docx \
-     --template template.docx --output validation.json
+   python scripts/docx_template.py fill \
+     /app/created/<stem>-template.docx \
+     /app/created/<stem>-data.json \
+     /app/created/<stem>.docx \
+     --summary /app/created/<stem>-fill-summary.json
+   ```
+
+   Never set the output path to the template path.
+
+8. Validate package integrity, unresolved tokens, and live Word fields:
+
+   ```bash
+   python scripts/docx_template.py validate \
+     /app/created/<stem>.docx \
+     --template /app/created/<stem>-template.docx \
+     --output /app/created/<stem>-validation.json
    ```
 
    Do not return a DOCX unless both commands succeed.
-8. Return the completed DOCX plus a short generation summary: output filename,
-   document type, sources used, filled/defaulted fields, repeated-row counts,
-   and validation status.
+
+9. Return `/app/created/<stem>.docx` as the completed document plus a short
+   generation summary: output filename, document type, sources used,
+   filled/defaulted fields, repeated-row counts, and validation status.
 
 ## Generation rules
 

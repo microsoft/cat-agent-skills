@@ -228,6 +228,20 @@ def _find_node_offset(
     raise TemplateError("Internal placeholder offset could not be mapped to a run.")
 
 
+_ZWSP = "\u200B"
+
+
+def _escape_brace_sequences(text: str) -> str:
+    """Insert a zero-width space between consecutive brace chars in *text*.
+
+    This prevents ``{{...}}`` sequences in user-supplied or missing-value
+    replacement text from being flagged as unresolved placeholders by
+    ``_unresolved_tokens``.  The zero-width space is invisible in Word but
+    breaks both ``TOKEN_CANDIDATE_RE`` and the literal ``{{`` / ``}}`` checks.
+    """
+    return text.replace("{{", "{" + _ZWSP + "{").replace("}}", "}" + _ZWSP + "}")
+
+
 def _replace_in_paragraph(
     paragraph: etree._Element,
     resolver: Callable[[str], str | None],
@@ -260,6 +274,9 @@ def _replace_in_paragraph(
         replacement = resolver(key)
         if replacement is None:
             continue
+        # Escape any {{...}} sequences in the replacement value so they are
+        # not treated as unresolved template placeholders after insertion.
+        replacement = _escape_brace_sequences(replacement)
 
         first_i, first, first_offset = _find_node_offset(spans, match.start())
         last_i, last, last_offset = _find_node_offset(
@@ -856,11 +873,14 @@ def _write_package(
     package: Mapping[str, bytes],
     metadata: Mapping[str, zipfile.ZipInfo],
 ) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(output_path, "w") as archive:
-        for name, content in package.items():
-            info = metadata[name]
-            archive.writestr(info, content)
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(output_path, "w") as archive:
+            for name, content in package.items():
+                info = metadata[name]
+                archive.writestr(info, content)
+    except OSError as exc:
+        raise TemplateError(f"Cannot write DOCX package {output_path}: {exc}") from exc
 
 
 def fill_template(
@@ -958,11 +978,14 @@ def _load_json(path: str | os.PathLike[str]) -> Any:
 
 def _write_json(data: Mapping[str, Any], destination: str | None) -> None:
     text = json.dumps(data, indent=2, ensure_ascii=False)
-    if destination:
-        path = Path(destination)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text + "\n", encoding="utf-8")
-    print(text)
+    try:
+        if destination:
+            path = Path(destination)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text + "\n", encoding="utf-8")
+        print(text)
+    except OSError as exc:
+        raise TemplateError(f"Cannot write JSON {destination}: {exc}") from exc
 
 
 def _build_cli() -> argparse.ArgumentParser:
@@ -1018,6 +1041,9 @@ def main(argv: Iterable[str] | None = None) -> int:
             _write_json(result, args.output)
         return 0
     except TemplateError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+    except OSError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
 

@@ -159,6 +159,18 @@ Do not use a Word field itself as a placeholder.
 - Nested Word table rows: inner template rows expanded per outer item
 - Split tokens contained within one paragraph or one table cell paragraph
 
+## Literal `{{` and `}}` in JSON values
+
+If a replacement value itself contains `{{...}}` text (for example
+`Use {{name}} in the payload`), the engine inserts a Unicode zero-width space
+(U+200B) between consecutive brace characters at the point of insertion.  The
+result is visually identical in Word (`{{name}}` still renders as `{{name}}`)
+but is not matched by the unresolved-placeholder scanner, so fill and validate
+succeed for otherwise valid content.
+
+Template-originated tokens that were never replaced are **not** escaped and
+therefore still fail the unresolved check as expected.
+
 ## Deliberate limits
 
 - No placeholder may span multiple paragraphs or table cells.
