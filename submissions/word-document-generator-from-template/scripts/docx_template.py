@@ -121,9 +121,16 @@ def _validate_zip_entries(infos: list[zipfile.ZipInfo]) -> None:
             f"{MAX_UNCOMPRESSED_BYTES})."
         )
     names = [info.filename for info in infos]
+    for name in names:
+        normalized = name.replace("\\", "/")
+        if (
+            normalized.startswith("/")
+            or re.match(r"^[A-Za-z]:", normalized)
+            or ".." in normalized.split("/")
+        ):
+            raise TemplateError(f"DOCX contains unsafe package entry name: {name!r}.")
     if len(names) != len(set(names)):
         raise TemplateError("DOCX contains duplicate package entry names.")
-    missing = REQUIRED_PARTS - set(names)
     if missing:
         raise TemplateError(
             "Not a valid DOCX package; missing: " + ", ".join(sorted(missing))
