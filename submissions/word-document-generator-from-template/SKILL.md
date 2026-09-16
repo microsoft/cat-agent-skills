@@ -41,7 +41,7 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 ## Instructions
 
 1. From the skill's root directory (the folder that contains `scripts/`, `assets/`, and `references/`), locate the runtime `.docx` template and copy it to the working directory:
-   - **Uploaded file**: copy from the upload path to the working directory before use (for example `cp /app/uploads/<filename> ./template.docx`). Pass only the local copy to the engine; do not pass the upload path directly.
+   - **Uploaded file**: copy from the upload path to the working directory with a file API (for example, Python `shutil.copy2(upload_path, "template.docx")`); do not interpolate the user-supplied filename into a shell command.
    - **SharePoint / OneDrive / connector**: retrieve the item into the working directory.
    Stop with the message under **Template handling** if the template cannot be located or copied.
 2. Inspect it before writing content:
