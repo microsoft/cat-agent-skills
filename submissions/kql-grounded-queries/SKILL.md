@@ -199,13 +199,17 @@ missing column resolves to the default, so an empty result is not evidence of
 absence. This shape exists only on request.
 
 **When verification did not get there** — no lookup capability in this session, a
-lookup that failed, an index that does not list the table, or a tenant-specific
-table whose schema the user could not supply — there is no **Query** section at
-all. Do not leave it empty and do not fill it with something unverified. Say what
-you were trying to verify, what you checked and what came back, which of those
-four it was, and what would unblock it: a documentation tool, the reference URLs
-for the user to open, or the schema tab output. A clear account of the gap is the
-deliverable in that case.
+lookup that failed, or a table whose schema nobody could supply — there is no
+**Query** section at all. Do not leave it empty and do not fill it with something
+unverified. Say what you were trying to verify, what you checked and what came
+back, which of those three it was, and what would unblock it: a documentation
+tool, the reference URLs for the user to open, or the schema tab output. A clear
+account of the gap is the deliverable in that case.
+
+A table missing from the index is not one of these. That routes to the tenant
+path in step 2 rather than ending anything, and a custom table verified against a
+schema the user supplied produces an ordinary query in the first shape above —
+sourced to that schema rather than to a URL, and marked environment-dependent.
 
 ## Guardrails
 
