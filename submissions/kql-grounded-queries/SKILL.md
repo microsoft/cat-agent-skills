@@ -220,12 +220,19 @@ sourced to that schema rather than to a URL, and marked environment-dependent.
   is copied. What to do instead depends on why verification failed:
   - **The documentation you read does not contain the identifier.** For a column,
     where you have the table's own reference and its column list does not include
-    yours, the name is wrong: stop and report, naming the verified alternative
-    where the reference makes one obvious, but never quietly swapping it in. For a
-    table missing from an index, this is not a verdict — it is step 3's three-way
-    call between a wrong name, a custom table and an unpublished preview, and the
-    last two have their own path below. Do not reject a table here that step 3 has
-    not settled.
+    yours, the name is unverified and most often wrong: say so, and name the
+    verified alternative where the reference makes one obvious, but never quietly
+    swap it in. It is not automatically a dead end, though. Documentation lags the
+    product, and a workspace transformation can add a column to a published table
+    that Learn will never list. If the user can show it in the schema tab or a
+    `getschema` run, that is the case below: the query proceeds on their schema,
+    marked environment-dependent. Stop only where neither the reference nor a
+    supplied schema carries it.
+
+    For a table missing from an index, this is not a verdict at all — it is step
+    3's three-way call between a wrong name, a custom table and an unpublished
+    preview, and the last two have their own path below. Do not reject a table
+    here that step 3 has not settled.
   - **No schema is published** (preview tables, custom `*_CL` tables, workspace
     functions) — ask the user for the schema, from the portal's schema tab or a
     `getschema` run. What they supply becomes your source: the identifier is then
