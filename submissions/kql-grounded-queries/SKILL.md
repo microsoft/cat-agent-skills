@@ -28,13 +28,19 @@ published column reference at all.
 
 2. **Keep candidate table names inside the tenant until their public status is
    established.** Read the surface's index first — that sends nothing of the
-   user's — and only a table you find listed there counts as **published** and may
-   go out to a reference lookup or a search. Every other table is
-   **tenant-specific**, and that is the default rather than the exception: not
-   only `_CL` suffixes and workspace functions but any table the index does not
-   carry and any table the user supplied, whatever it looks like. A custom table is
-   under no obligation to follow a naming convention, so a suffix test decides
-   nothing — presence in the index does.
+   user's — and check every candidate against it. Presence in the index is the
+   whole test, and it is the only one.
+
+   A table the index lists is **published**. It goes out to its reference page and
+   into searches normally, and it makes no difference whether you proposed the name
+   or the user did: `SigninLogs` is `SigninLogs` either way, and asking someone for
+   a schema they could read off a public page would be absurd.
+
+   A table the index does not list is **tenant-specific**, and that is where the
+   default sits. `_CL` suffixes and workspace functions land there, but so does any
+   other name the index does not carry, because a custom table is under no
+   obligation to follow a naming convention — a suffix test decides nothing, which
+   is why the index decides instead.
 
    **This is about table names, because a table name is what goes into a URL or a
    search string.** Column names never leave in the first place: a column is
