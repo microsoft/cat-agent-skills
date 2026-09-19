@@ -116,7 +116,109 @@ Outer table template row (repeats for each finding):
 Each outer clone gets the inner table expanded independently against that outer
 item's data, so inner rows are never mixed across outer items.
 
-## Split Word runs
+## Conditional blocks
+
+Templates can conditionally include or exclude entire paragraphs, tables, and
+table rows using `{{#if}}` / `{{#else}}` / `{{/if}}` and `{{#switch}}` /
+`{{#case}}` / `{{/switch}}` markers.  Each marker must be the only content in
+its paragraph or table row.  The engine removes false-branch content before
+scalar replacement and row expansion, so placeholders inside excluded branches
+are never evaluated.
+
+### If / else
+
+```text
+{{#if employee.type == "permanent"}}
+Annual salary: {{employee.annual_salary}}
+Pension contribution: {{employee.pension_rate}}
+{{#else}}
+Hourly rate: {{employee.hourly_rate}}
+Overtime multiplier: {{employee.overtime_multiplier}}
+{{/if}}
+```
+
+The `{{#else}}` branch is optional.
+
+**Condition forms:**
+
+| Syntax | Meaning |
+| --- | --- |
+| `{{#if path}}` | Truthy: non-empty string, non-zero number, `true`, non-null |
+| `{{#if path == "value"}}` | String equality |
+| `{{#if path == 42}}` | Numeric equality |
+| `{{#if path == true}}` | Boolean equality (`true` or `false`) |
+| `{{#if path == null}}` | Null check |
+| `{{#if path != value}}` | Negated equality (any of the above) |
+| `{{#if expr1 && expr2}}` | Both expressions must be true (AND) |
+| `{{#if expr1 \|\| expr2}}` | Either expression must be true (OR) |
+
+Dotted paths such as `employee.contract.type` are supported.  A missing path
+evaluates as falsy.
+
+`&&` binds tighter than `||` (standard precedence), so
+`a == "x" && b == "y" || c` means `(a == "x" && b == "y") || c`.
+Operators inside quoted string values are not treated as logical operators.
+
+### Switch / case
+
+```text
+{{#switch employee.status}}
+{{#case "active"}}
+Active since {{employee.start_date}}
+{{#case "terminated"}}
+Terminated on {{employee.end_date}}
+{{/switch}}
+```
+
+The first matching `{{#case}}` value wins.  If no case matches, all branches
+are removed.  Case values are compared as strings after `str()` coercion.
+
+### Scope
+
+Conditional blocks work at two levels:
+
+**Body level** — the `{{#if}}` / `{{#switch}}` marker is a standalone body
+paragraph.  The block can span body paragraphs, tables, and any mix of body
+content.
+
+**Table-row level** — the marker occupies its own table row (the row's only
+visible text is the marker).  The block spans rows within the same table.
+
+### JSON
+
+```json
+{
+  "employee": {
+    "type": "permanent",
+    "annual_salary": "90000",
+    "pension_rate": "5%",
+    "status": "active",
+    "start_date": "2022-01-01"
+  }
+}
+```
+
+### Inspect output
+
+`inspect` surfaces conditional paths in a new `conditional_paths` key:
+
+```json
+{
+  "conditional_paths": ["employee.status", "employee.type"],
+  "scalar_placeholders": ["employee.annual_salary", "employee.start_date"]
+}
+```
+
+### Deliberate limits
+
+- A conditional marker paragraph must contain **only** the marker — no other text.
+- `{{#if}}` and `{{#switch}}` blocks may not be nested inside one another.
+- A block cannot straddle a table boundary (e.g., `{{#if}}` in the body and
+  `{{/if}}` inside a table cell).
+- `{{#case}}` values are compared as strings; type-aware numeric comparison is
+  not supported.
+
+
 
 Word may store a visible token across several runs:
 

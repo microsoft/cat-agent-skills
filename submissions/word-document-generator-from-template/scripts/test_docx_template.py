@@ -666,5 +666,473 @@ class DocxTemplateTests(unittest.TestCase):
         )
 
 
+# ---------------------------------------------------------------------------
+# Helpers for conditional tests
+# ---------------------------------------------------------------------------
+
+def _build_body_conditional_template(
+    output: Path,
+    paragraphs: list[str],
+) -> None:
+    """Build a minimal DOCX whose body is a sequence of paragraphs from *paragraphs*."""
+    doc = Document()
+    for text in paragraphs:
+        doc.add_paragraph(text)
+    doc.save(output)
+
+
+def _build_table_conditional_template(
+    output: Path,
+    rows: list[str],
+) -> None:
+    """Build a DOCX with a single-column table; each entry in *rows* is one row."""
+    doc = Document()
+    table = doc.add_table(rows=len(rows), cols=1)
+    for i, text in enumerate(rows):
+        table.rows[i].cells[0].text = text
+    doc.save(output)
+
+
+class ConditionalTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    # ------------------------------------------------------------------
+    # _parse_condition unit tests (no DOCX needed)
+    # ------------------------------------------------------------------
+
+    def test_truthy_check_true(self) -> None:
+        from docx_template import _parse_condition, _MISSING
+        self.assertTrue(_parse_condition("a", {"a": "yes"}))
+        self.assertTrue(_parse_condition("a", {"a": 1}))
+        self.assertTrue(_parse_condition("a", {"a": True}))
+
+    def test_truthy_check_false(self) -> None:
+        from docx_template import _parse_condition
+        self.assertFalse(_parse_condition("a", {"a": ""}))
+        self.assertFalse(_parse_condition("a", {"a": 0}))
+        self.assertFalse(_parse_condition("a", {"a": False}))
+        self.assertFalse(_parse_condition("a", {"a": None}))
+        self.assertFalse(_parse_condition("a", {}))  # missing → falsy
+
+    def test_equality_string(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(_parse_condition('a == "permanent"', {"a": "permanent"}))
+        self.assertFalse(_parse_condition('a == "permanent"', {"a": "hourly"}))
+
+    def test_inequality_string(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(_parse_condition('a != "permanent"', {"a": "hourly"}))
+        self.assertFalse(_parse_condition('a != "permanent"', {"a": "permanent"}))
+
+    def test_equality_bool(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(_parse_condition("a == true", {"a": True}))
+        self.assertFalse(_parse_condition("a == true", {"a": False}))
+        self.assertTrue(_parse_condition("a == false", {"a": False}))
+
+    def test_equality_null(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(_parse_condition("a == null", {"a": None}))
+        self.assertFalse(_parse_condition("a == null", {"a": "x"}))
+
+    def test_equality_number(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(_parse_condition("a == 42", {"a": 42}))
+        self.assertFalse(_parse_condition("a == 42", {"a": 0}))
+
+    def test_nested_path(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(
+            _parse_condition('employee.type == "permanent"', {"employee": {"type": "permanent"}})
+        )
+
+    # ------------------------------------------------------------------
+    # Body-level if/else blocks
+    # ------------------------------------------------------------------
+
+    def test_if_true_branch_kept(self) -> None:
+        template = self.root / "if-true.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.is_active}}',
+            'Active employee text',
+            '{{/if}}',
+        ])
+        output = self.root / "if-true-out.docx"
+        report = fill_template(template, {"employee": {"is_active": True}}, output)
+        self.assertIn("employee.is_active", report["conditional_fields"])
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertIn("Active employee text", text)
+        self.assertNotIn("{{", text)
+
+    def test_if_false_branch_removed(self) -> None:
+        template = self.root / "if-false.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.is_active}}',
+            'Active employee text',
+            '{{/if}}',
+        ])
+        output = self.root / "if-false-out.docx"
+        fill_template(template, {"employee": {"is_active": False}}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertNotIn("Active employee text", text)
+        self.assertNotIn("{{", text)
+
+    def test_if_else_true(self) -> None:
+        template = self.root / "if-else-true.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.type == "permanent"}}',
+            'Annual salary',
+            '{{#else}}',
+            'Hourly rate',
+            '{{/if}}',
+        ])
+        output = self.root / "if-else-true-out.docx"
+        fill_template(template, {"employee": {"type": "permanent"}}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertIn("Annual salary", text)
+        self.assertNotIn("Hourly rate", text)
+        self.assertNotIn("{{", text)
+
+    def test_if_else_false(self) -> None:
+        template = self.root / "if-else-false.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.type == "permanent"}}',
+            'Annual salary',
+            '{{#else}}',
+            'Hourly rate',
+            '{{/if}}',
+        ])
+        output = self.root / "if-else-false-out.docx"
+        fill_template(template, {"employee": {"type": "hourly"}}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertNotIn("Annual salary", text)
+        self.assertIn("Hourly rate", text)
+        self.assertNotIn("{{", text)
+
+    def test_if_with_scalar_placeholders(self) -> None:
+        """Scalar tokens inside a kept branch are still filled."""
+        template = self.root / "if-scalar.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.type == "permanent"}}',
+            'Salary: {{employee.salary}}',
+            '{{/if}}',
+        ])
+        output = self.root / "if-scalar-out.docx"
+        fill_template(
+            template,
+            {"employee": {"type": "permanent", "salary": "90000"}},
+            output,
+        )
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertIn("90000", text)
+        self.assertNotIn("{{", text)
+
+    def test_missing_condition_path_is_falsy(self) -> None:
+        """A path that doesn't exist in JSON evaluates to false."""
+        template = self.root / "if-missing.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.bonus_eligible}}',
+            'Bonus info',
+            '{{/if}}',
+        ])
+        output = self.root / "if-missing-out.docx"
+        fill_template(template, {"employee": {}}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertNotIn("Bonus info", text)
+        self.assertNotIn("{{", text)
+
+    # ------------------------------------------------------------------
+    # inspect_template surfaces conditional paths
+    # ------------------------------------------------------------------
+
+    def test_inspect_reports_conditional_paths(self) -> None:
+        template = self.root / "inspect-cond.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.type == "permanent"}}',
+            'Salary: {{employee.salary}}',
+            '{{/if}}',
+            '{{#switch employee.status}}',
+            '{{#case "active"}}',
+            'Active',
+            '{{/switch}}',
+        ])
+        manifest = inspect_template(template)
+        self.assertIn("employee.type", manifest["conditional_paths"])
+        self.assertIn("employee.status", manifest["conditional_paths"])
+        self.assertIn("employee.salary", manifest["scalar_placeholders"])
+
+    # ------------------------------------------------------------------
+    # Switch / case
+    # ------------------------------------------------------------------
+
+    def test_switch_matching_case(self) -> None:
+        template = self.root / "switch-match.docx"
+        _build_body_conditional_template(template, [
+            '{{#switch employee.type}}',
+            '{{#case "permanent"}}',
+            'Permanent employee rules',
+            '{{#case "hourly"}}',
+            'Hourly employee rules',
+            '{{/switch}}',
+        ])
+        output = self.root / "switch-match-out.docx"
+        report = fill_template(template, {"employee": {"type": "permanent"}}, output)
+        self.assertIn("employee.type", report["conditional_fields"])
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertIn("Permanent employee rules", text)
+        self.assertNotIn("Hourly employee rules", text)
+        self.assertNotIn("{{", text)
+
+    def test_switch_second_case(self) -> None:
+        template = self.root / "switch-second.docx"
+        _build_body_conditional_template(template, [
+            '{{#switch employee.type}}',
+            '{{#case "permanent"}}',
+            'Permanent employee rules',
+            '{{#case "hourly"}}',
+            'Hourly employee rules',
+            '{{/switch}}',
+        ])
+        output = self.root / "switch-second-out.docx"
+        fill_template(template, {"employee": {"type": "hourly"}}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertNotIn("Permanent employee rules", text)
+        self.assertIn("Hourly employee rules", text)
+        self.assertNotIn("{{", text)
+
+    def test_switch_no_match_removes_all_cases(self) -> None:
+        template = self.root / "switch-nomatch.docx"
+        _build_body_conditional_template(template, [
+            '{{#switch employee.type}}',
+            '{{#case "permanent"}}',
+            'Permanent only',
+            '{{/switch}}',
+        ])
+        output = self.root / "switch-nomatch-out.docx"
+        fill_template(template, {"employee": {"type": "contractor"}}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertNotIn("Permanent only", text)
+        self.assertNotIn("{{", text)
+
+    # ------------------------------------------------------------------
+    # Table-row-level conditionals
+    # ------------------------------------------------------------------
+
+    def test_row_level_if_true(self) -> None:
+        template = self.root / "row-if-true.docx"
+        _build_table_conditional_template(template, [
+            'Header',
+            '{{#if show_bonus}}',
+            'Bonus row',
+            '{{/if}}',
+            'Footer row',
+        ])
+        output = self.root / "row-if-true-out.docx"
+        fill_template(template, {"show_bonus": True}, output)
+        doc = Document(output)
+        texts = [row.cells[0].text for row in doc.tables[0].rows]
+        self.assertIn("Bonus row", texts)
+
+    def test_row_level_if_false(self) -> None:
+        template = self.root / "row-if-false.docx"
+        _build_table_conditional_template(template, [
+            'Header',
+            '{{#if show_bonus}}',
+            'Bonus row',
+            '{{/if}}',
+            'Footer row',
+        ])
+        output = self.root / "row-if-false-out.docx"
+        fill_template(template, {"show_bonus": False}, output)
+        doc = Document(output)
+        texts = [row.cells[0].text for row in doc.tables[0].rows]
+        self.assertNotIn("Bonus row", texts)
+        self.assertIn("Header", texts)
+        self.assertIn("Footer row", texts)
+
+    def test_row_level_switch(self) -> None:
+        template = self.root / "row-switch.docx"
+        _build_table_conditional_template(template, [
+            'Header',
+            '{{#switch pay_type}}',
+            '{{#case "salary"}}',
+            'Salary row',
+            '{{#case "hourly"}}',
+            'Hourly row',
+            '{{/switch}}',
+        ])
+        output = self.root / "row-switch-out.docx"
+        fill_template(template, {"pay_type": "salary"}, output)
+        doc = Document(output)
+        texts = [row.cells[0].text for row in doc.tables[0].rows]
+        self.assertIn("Salary row", texts)
+        self.assertNotIn("Hourly row", texts)
+
+    # ------------------------------------------------------------------
+    # Interaction: conditionals + repeating rows
+    # ------------------------------------------------------------------
+
+    def test_conditional_block_with_enclosed_table(self) -> None:
+        """A conditional block that wraps an entire table keeps/removes it."""
+        from docx import Document as DocxDoc
+        template = self.root / "cond-table.docx"
+        doc = DocxDoc()
+        doc.add_paragraph("{{#if show_table}}")
+        tbl = doc.add_table(rows=2, cols=1)
+        tbl.rows[0].cells[0].text = "Header"
+        tbl.rows[1].cells[0].text = "Data"
+        doc.add_paragraph("{{/if}}")
+        doc.save(template)
+
+        # show_table=True — table is kept
+        out_true = self.root / "cond-table-true.docx"
+        fill_template(template, {"show_table": True}, out_true)
+        doc_true = DocxDoc(out_true)
+        self.assertEqual(len(doc_true.tables), 1)
+
+        # show_table=False — table is removed
+        out_false = self.root / "cond-table-false.docx"
+        fill_template(template, {"show_table": False}, out_false)
+        doc_false = DocxDoc(out_false)
+        self.assertEqual(len(doc_false.tables), 0)
+
+    # ------------------------------------------------------------------
+    # AND / OR logical operators
+    # ------------------------------------------------------------------
+
+    def test_and_both_true(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(
+            _parse_condition(
+                'employee.type == "permanent" && employee.status == "active"',
+                {"employee": {"type": "permanent", "status": "active"}},
+            )
+        )
+
+    def test_and_one_false(self) -> None:
+        from docx_template import _parse_condition
+        self.assertFalse(
+            _parse_condition(
+                'employee.type == "permanent" && employee.status == "active"',
+                {"employee": {"type": "permanent", "status": "terminated"}},
+            )
+        )
+
+    def test_or_first_true(self) -> None:
+        from docx_template import _parse_condition
+        self.assertTrue(
+            _parse_condition(
+                "employee.is_senior || employee.is_lead",
+                {"employee": {"is_senior": True, "is_lead": False}},
+            )
+        )
+
+    def test_or_both_false(self) -> None:
+        from docx_template import _parse_condition
+        self.assertFalse(
+            _parse_condition(
+                "employee.is_senior || employee.is_lead",
+                {"employee": {"is_senior": False, "is_lead": False}},
+            )
+        )
+
+    def test_and_precedence_over_or(self) -> None:
+        """a && b || c  should be read as (a && b) || c."""
+        from docx_template import _parse_condition
+        # a=false, b=false, c=true  → (false && false) || true = true
+        self.assertTrue(
+            _parse_condition(
+                'a == "x" && b == "y" || c == "z"',
+                {"a": "no", "b": "no", "c": "z"},
+            )
+        )
+        # a=true, b=false, c=false → (true && false) || false = false
+        self.assertFalse(
+            _parse_condition(
+                'a == "x" && b == "y" || c == "z"',
+                {"a": "x", "b": "no", "c": "no"},
+            )
+        )
+
+    def test_and_or_in_template(self) -> None:
+        """Full fill round-trip with a compound condition."""
+        template = self.root / "and-or.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.type == "permanent" && employee.status == "active"}}',
+            'Eligible for annual bonus',
+            '{{/if}}',
+        ])
+        output_yes = self.root / "and-or-yes.docx"
+        fill_template(
+            template,
+            {"employee": {"type": "permanent", "status": "active"}},
+            output_yes,
+        )
+        self.assertIn(
+            "Eligible for annual bonus",
+            _visible_text(_read_zip(output_yes)["word/document.xml"]),
+        )
+
+        output_no = self.root / "and-or-no.docx"
+        fill_template(
+            template,
+            {"employee": {"type": "permanent", "status": "terminated"}},
+            output_no,
+        )
+        self.assertNotIn(
+            "Eligible for annual bonus",
+            _visible_text(_read_zip(output_no)["word/document.xml"]),
+        )
+
+    def test_or_in_template(self) -> None:
+        """OR condition keeps the branch when either operand is true."""
+        template = self.root / "or-tpl.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.is_manager || employee.is_director}}',
+            'Leadership allowance',
+            '{{/if}}',
+        ])
+        output = self.root / "or-tpl-out.docx"
+        fill_template(
+            template,
+            {"employee": {"is_manager": False, "is_director": True}},
+            output,
+        )
+        self.assertIn(
+            "Leadership allowance",
+            _visible_text(_read_zip(output)["word/document.xml"]),
+        )
+
+    # ------------------------------------------------------------------
+    # Mismatched markers raise TemplateError
+    # ------------------------------------------------------------------
+
+    def test_unclosed_if_raises(self) -> None:
+        template = self.root / "unclosed-if.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.active}}',
+            'Some text',
+        ])
+        output = self.root / "unclosed-if-out.docx"
+        with self.assertRaisesRegex(TemplateError, r"\{\{#if\}\}|/if"):
+            fill_template(template, {"employee": {"active": True}}, output)
+
+    def test_unclosed_switch_raises(self) -> None:
+        template = self.root / "unclosed-switch.docx"
+        _build_body_conditional_template(template, [
+            '{{#switch employee.type}}',
+            '{{#case "x"}}',
+            'Some text',
+        ])
+        output = self.root / "unclosed-switch-out.docx"
+        with self.assertRaisesRegex(TemplateError, r"\{\{#switch\}\}|/switch"):
+            fill_template(template, {"employee": {"type": "x"}}, output)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

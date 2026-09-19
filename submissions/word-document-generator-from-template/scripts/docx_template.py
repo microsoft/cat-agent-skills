@@ -47,7 +47,29 @@ TOKEN_RE = re.compile(
     r"(?:\.[A-Za-z_][A-Za-z0-9_-]*(?:\[\])?)*)"
     r"\s*\}\}"
 )
-TOKEN_CANDIDATE_RE = re.compile(r"\{\{.*?\}\}", re.DOTALL)
+# Conditional block markers — each must occupy its own paragraph exclusively.
+COND_IF_RE = re.compile(
+    r"^\s*\{\{#if\s+(.+?)\s*\}\}\s*$"
+)
+COND_ELSE_RE = re.compile(r"^\s*\{\{#else\}\}\s*$")
+COND_ENDIF_RE = re.compile(r"^\s*\{\{/if\}\}\s*$")
+COND_SWITCH_RE = re.compile(
+    r"^\s*\{\{#switch\s+([A-Za-z_][A-Za-z0-9_.]*)\s*\}\}\s*$"
+)
+COND_CASE_RE = re.compile(
+    r"^\s*\{\{#case\s+(?:\"([^\"]*)\"|([A-Za-z0-9_.+-]*))\s*\}\}\s*$"
+)
+COND_ENDSWITCH_RE = re.compile(r"^\s*\{\{/switch\}\}\s*$")
+# Matches any conditional marker so callers can skip them quickly.
+_COND_MARKER_RE = re.compile(
+    r"^\s*\{\{(?:#if\b|#else\b|/if\b|#switch\b|#case\b|/switch\b)"
+)
+# Candidate-token scanner used for unresolved-token detection.
+# Excludes valid conditional markers so they don't surface as malformed.
+TOKEN_CANDIDATE_RE = re.compile(
+    r"\{\{(?!(?:#if|#else|/if|#switch|#case|/switch)\b).*?\}\}",
+    re.DOTALL,
+)
 MAX_PACKAGE_FILES = 10_000
 MAX_UNCOMPRESSED_BYTES = 200 * 1024 * 1024
 DEFAULT_MISSING = "Not specified in approved sources"
@@ -66,6 +88,7 @@ class FillReport:
     repeated_rows: dict[str, int] = field(default_factory=dict)
     modified_parts: set[str] = field(default_factory=set)
     field_signature_preserved: bool = True
+    conditional_fields: set[str] = field(default_factory=set)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -76,6 +99,7 @@ class FillReport:
             "repeated_rows": dict(sorted(self.repeated_rows.items())),
             "modified_parts": sorted(self.modified_parts),
             "field_signature_preserved": self.field_signature_preserved,
+            "conditional_fields": sorted(self.conditional_fields),
         }
 
 
@@ -723,6 +747,480 @@ def _expand_rows_in_subtree(
     return changed
 
 
+# ---------------------------------------------------------------------------
+# Conditional block evaluation
+# ---------------------------------------------------------------------------
+
+# Splits on && or || only outside of double-quoted strings.
+_LOGICAL_SPLIT_RE = re.compile(r'(\|\||&&)(?=(?:[^"]*"[^"]*")*[^"]*$)')
+
+
+def _split_logical(expr: str, op: str) -> list[str]:
+    """Split *expr* on *op* (``"&&"`` or ``"||"``) outside quoted strings."""
+    parts: list[str] = []
+    last = 0
+    for m in _LOGICAL_SPLIT_RE.finditer(expr):
+        if m.group(1) == op:
+            parts.append(expr[last:m.start()].strip())
+            last = m.end()
+    parts.append(expr[last:].strip())
+    return parts
+
+
+def _parse_atomic(expr: str, data: Any) -> bool:
+    """Evaluate a single atomic condition (no ``&&`` / ``||``) against *data*.
+
+    Supported forms::
+
+        path                     # truthy check
+        path == "string"
+        path == 42
+        path == true
+        path == false
+        path == null
+        path != <any of the above>
+    """
+    expr = expr.strip()
+
+    # Detect operator — check != before == to avoid matching the = in !=
+    for op in ("!=", "=="):
+        idx = expr.find(op)
+        if idx == -1:
+            continue
+        path_part = expr[:idx].strip()
+        rhs_raw = expr[idx + len(op):].strip()
+        value = _lookup(data, path_part)
+        if value is _MISSING:
+            value = None
+
+        # Parse the RHS literal
+        if rhs_raw.startswith('"') and rhs_raw.endswith('"'):
+            rhs: Any = rhs_raw[1:-1]
+        elif rhs_raw == "true":
+            rhs = True
+        elif rhs_raw == "false":
+            rhs = False
+        elif rhs_raw == "null":
+            rhs = None
+        else:
+            try:
+                rhs = int(rhs_raw)
+            except ValueError:
+                try:
+                    rhs = float(rhs_raw)
+                except ValueError:
+                    rhs = rhs_raw
+
+        # Coerce value to the RHS type for comparison when sensible
+        if isinstance(rhs, str) and not isinstance(value, str):
+            coerced = str(value) if value is not None else ""
+        else:
+            coerced = value
+
+        result = coerced == rhs
+        return result if op == "==" else not result
+
+    # Bare path — truthy check
+    value = _lookup(data, expr)
+    if value is _MISSING or value is None or value is False:
+        return False
+    if isinstance(value, str) and value == "":
+        return False
+    if isinstance(value, (int, float)) and value == 0:
+        return False
+    return True
+
+
+def _parse_condition(expr: str, data: Any) -> bool:
+    """Evaluate a condition expression against *data*.
+
+    Supports ``&&`` (AND) and ``||`` (OR) with standard precedence
+    (``&&`` binds tighter than ``||``).  Operators inside quoted strings are
+    not treated as logical operators.
+
+    Examples::
+
+        employee.type == "permanent"
+        employee.type == "permanent" && employee.status == "active"
+        employee.is_senior || employee.is_lead
+        employee.type == "permanent" && employee.bonus_eligible || employee.is_exec
+    """
+    # Split on || first (lowest precedence); each part is an AND-clause.
+    or_clauses = _split_logical(expr.strip(), "||")
+    for or_clause in or_clauses:
+        # All atoms in an AND-clause must be true.
+        and_atoms = _split_logical(or_clause, "&&")
+        if all(_parse_atomic(atom, data) for atom in and_atoms):
+            return True
+    return False
+
+
+def _classify_marker(text: str) -> tuple[str, str]:
+    """Return ``(kind, payload)`` for a conditional-marker paragraph text.
+
+    *kind* is one of ``"if"``, ``"else"``, ``"endif"``, ``"switch"``,
+    ``"case"``, ``"endswitch"``, or ``""`` (not a marker).  *payload* is the
+    expression or case value string, empty when not applicable.
+    """
+    if _COND_MARKER_RE.search(text) is None:
+        return "", ""
+    m = COND_IF_RE.match(text)
+    if m:
+        return "if", m.group(1)
+    if COND_ELSE_RE.match(text):
+        return "else", ""
+    if COND_ENDIF_RE.match(text):
+        return "endif", ""
+    m = COND_SWITCH_RE.match(text)
+    if m:
+        return "switch", m.group(1)
+    m = COND_CASE_RE.match(text)
+    if m:
+        # group(1) is the quoted string value, group(2) is unquoted
+        return "case", m.group(1) if m.group(1) is not None else (m.group(2) or "")
+    if COND_ENDSWITCH_RE.match(text):
+        return "endswitch", ""
+    return "", ""
+
+
+def _marker_kind_in_paragraph(paragraph: etree._Element) -> tuple[str, str]:
+    """Return ``(kind, payload)`` for *paragraph* if it is a conditional marker."""
+    return _classify_marker(_paragraph_text(paragraph))
+
+
+def _remove_elements(elements: list[etree._Element]) -> None:
+    for el in elements:
+        parent = el.getparent()
+        if parent is not None:
+            parent.remove(el)
+
+
+def _process_if_block(
+    sequence: list[etree._Element],
+    start: int,
+    data: Any,
+    report: FillReport,
+) -> int:
+    """Process an ``#if`` block starting at *start*.
+
+    Collects the if-branch and optional else-branch, evaluates the condition,
+    removes the losing branch and all marker paragraphs from *sequence* in
+    place.  Returns the index of the element immediately after ``{{/if}}``.
+    """
+    marker_para = sequence[start]
+    _, expr = _marker_kind_in_paragraph(marker_para)
+    condition = _parse_condition(expr, data)
+
+    # Extract the condition path for reporting
+    path_part = re.split(r"\s*(?:==|!=)\s*", expr, maxsplit=1)[0].strip()
+    report.conditional_fields.add(path_part)
+
+    if_branch: list[etree._Element] = []
+    else_branch: list[etree._Element] = []
+    else_markers: list[etree._Element] = []
+    active = if_branch
+    i = start + 1
+    depth = 1
+    while i < len(sequence):
+        el = sequence[i]
+        # Only paragraphs can carry markers
+        if el.tag == _w("p"):
+            kind, _ = _marker_kind_in_paragraph(el)
+        elif el.tag == _w("tbl"):
+            # Tables can't carry top-level markers; collect into active branch
+            active.append(el)
+            i += 1
+            continue
+        else:
+            kind = ""
+        if kind == "if" or kind == "switch":
+            depth += 1
+        if depth == 1:
+            if kind == "else":
+                else_markers.append(el)
+                active = else_branch
+                i += 1
+                continue
+            if kind == "endif":
+                # Remove the #if, #else, and /if marker paragraphs plus losing branch.
+                _remove_elements([marker_para] + else_markers + [el])
+                _remove_elements(else_branch if condition else if_branch)
+                return i + 1
+        if kind in ("if", "else", "endif", "switch", "case", "endswitch"):
+            if depth > 1 and kind in ("endif", "endswitch"):
+                depth -= 1
+        active.append(el)
+        i += 1
+
+    raise TemplateError("Conditional block {{#if}} has no matching {{/if}}.")
+
+
+def _process_switch_block(
+    sequence: list[etree._Element],
+    start: int,
+    data: Any,
+    report: FillReport,
+) -> int:
+    """Process a ``#switch`` block starting at *start*.
+
+    Evaluates the switch value, collects all ``#case`` branches, keeps only
+    the matching one (first match wins), and removes all others plus all
+    marker paragraphs.  Returns the index after ``{{/switch}}``.
+    """
+    marker_para = sequence[start]
+    _, switch_path = _marker_kind_in_paragraph(marker_para)
+    report.conditional_fields.add(switch_path)
+
+    raw_value = _lookup(data, switch_path)
+    switch_value = str(raw_value) if raw_value not in (_MISSING, None) else ""
+
+    # Collect branches: list of (case_value_str, [elements])
+    branches: list[tuple[str, list[etree._Element]]] = []
+    current_case: str | None = None
+    current_elements: list[etree._Element] = []
+    i = start + 1
+
+    while i < len(sequence):
+        el = sequence[i]
+        if el.tag == _w("p"):
+            kind, payload = _marker_kind_in_paragraph(el)
+        else:
+            kind, payload = "", ""
+
+        if kind == "case":
+            if current_case is not None:
+                branches.append((current_case, current_elements))
+            current_case = payload
+            current_elements = []
+            i += 1
+            continue
+        if kind == "endswitch":
+            if current_case is not None:
+                branches.append((current_case, current_elements))
+            # Remove the switch and endswitch markers
+            _remove_elements([marker_para, el])
+            # Remove all case-marker paragraphs and losing branches
+            matched = False
+            for case_val, case_elements in branches:
+                if not matched and case_val == switch_value:
+                    matched = True
+                else:
+                    _remove_elements(case_elements)
+            # Find and remove case-marker paragraphs (they live in sequence)
+            for j in range(start + 1, i):
+                cand = sequence[j]
+                if cand.tag == _w("p"):
+                    k2, _ = _marker_kind_in_paragraph(cand)
+                    if k2 == "case":
+                        _remove_elements([cand])
+            return i + 1
+        if current_case is not None:
+            current_elements.append(el)
+        i += 1
+
+    raise TemplateError("Conditional block {{#switch}} has no matching {{/switch}}.")
+
+
+def _evaluate_conditionals_in_sequence(
+    sequence: list[etree._Element],
+    data: Any,
+    report: FillReport,
+) -> None:
+    """Process all ``#if`` and ``#switch`` blocks in *sequence* in order.
+
+    *sequence* is a list of sibling elements (body children or table-row
+    children).  Conditional markers must be ``w:p`` elements.  Elements
+    removed from the XML tree are also dropped from *sequence* in place so
+    subsequent passes see the correct state.
+    """
+    i = 0
+    while i < len(sequence):
+        el = sequence[i]
+        if el.tag != _w("p"):
+            i += 1
+            continue
+        kind, _ = _marker_kind_in_paragraph(el)
+        if kind == "if":
+            # Capture parent before any removal detaches the marker paragraph.
+            parent = el.getparent()
+            _process_if_block(sequence, i, data, report)
+            if parent is not None:
+                existing = set(id(e) for e in parent)
+                sequence[:] = [e for e in sequence if id(e) in existing]
+            i = 0  # restart after modification
+        elif kind == "switch":
+            parent = el.getparent()
+            _process_switch_block(sequence, i, data, report)
+            if parent is not None:
+                existing = set(id(e) for e in parent)
+                sequence[:] = [e for e in sequence if id(e) in existing]
+            i = 0
+        else:
+            i += 1
+
+
+def _evaluate_conditionals(
+    root: etree._Element,
+    data: Any,
+    report: FillReport,
+) -> bool:
+    """Evaluate all conditional blocks in *root* and remove false branches.
+
+    Processes two levels:
+    1. Direct children of ``w:body`` (body-level blocks).
+    2. Direct ``w:tr`` children of each ``w:tbl`` (row-level blocks, where the
+       marker paragraph lives in the first cell of a row).
+
+    Returns ``True`` if any element was removed.
+    """
+    body = root.find(_w("body"))
+    if body is None:
+        # Headers/footers have a direct sequence of paragraphs, not a w:body.
+        sequence = list(root)
+        before = len(sequence)
+        _evaluate_conditionals_in_sequence(sequence, data, report)
+        return len(list(root)) != before
+
+    changed = False
+
+    # Body-level pass
+    sequence = list(body)
+    before_count = len(sequence)
+    _evaluate_conditionals_in_sequence(sequence, data, report)
+    if len(list(body)) != before_count:
+        changed = True
+
+    # Row-level pass: iterate every table in the document
+    for tbl in root.iter(_w("tbl")):
+        rows = list(tbl.findall(_w("tr")))
+        if not rows:
+            continue
+        before_rows = len(rows)
+        # Build a sequence of row elements; treat the first cell's first
+        # paragraph text as the potential marker for each row.
+        row_sequence = list(rows)
+        _evaluate_conditionals_in_row_sequence(row_sequence, data, report)
+        if len(tbl.findall(_w("tr"))) != before_rows:
+            changed = True
+
+    return changed
+
+
+def _evaluate_conditionals_in_row_sequence(
+    rows: list[etree._Element],
+    data: Any,
+    report: FillReport,
+) -> None:
+    """Process conditional markers that live in the first cell of table rows.
+
+    A row is treated as a marker row when its **entire** visible text (across
+    all cells) matches a conditional marker pattern.
+    """
+    i = 0
+    while i < len(rows):
+        row = rows[i]
+        row_text = _row_text(row)
+        kind, _ = _classify_marker(row_text)
+        if kind not in ("if", "switch"):
+            i += 1
+            continue
+
+        # Capture the parent table NOW, before any removal detaches the row.
+        tbl = row.getparent()
+
+        if kind == "if":
+            _, expr = _classify_marker(row_text)
+            condition = _parse_condition(expr, data)
+            path_part = re.split(r"\s*(?:==|!=)\s*", expr, maxsplit=1)[0].strip()
+            report.conditional_fields.add(path_part)
+
+            if_rows: list[etree._Element] = []
+            else_rows: list[etree._Element] = []
+            else_marker_rows: list[etree._Element] = []
+            active: list[etree._Element] = if_rows
+            j = i + 1
+            found_end = False
+            while j < len(rows):
+                r = rows[j]
+                rt = _row_text(r)
+                k2, _ = _classify_marker(rt)
+                if k2 == "else":
+                    else_marker_rows.append(r)
+                    active = else_rows
+                    j += 1
+                    continue
+                if k2 == "endif":
+                    _remove_elements([row] + else_marker_rows + [r])
+                    _remove_elements(else_rows if condition else if_rows)
+                    if tbl is not None:
+                        existing = set(id(e) for e in tbl)
+                        rows[:] = [e for e in rows if id(e) in existing]
+                    i = 0
+                    found_end = True
+                    break
+                active.append(r)
+                j += 1
+            if not found_end:
+                raise TemplateError(
+                    "Conditional row block {{#if}} has no matching {{/if}}."
+                )
+
+        elif kind == "switch":
+            _, switch_path = _classify_marker(row_text)
+            report.conditional_fields.add(switch_path)
+            raw_value = _lookup(data, switch_path)
+            switch_value = (
+                str(raw_value) if raw_value not in (_MISSING, None) else ""
+            )
+
+            branches: list[tuple[str, list[etree._Element]]] = []
+            current_case: str | None = None
+            current_rows: list[etree._Element] = []
+            j = i + 1
+            found_end = False
+            while j < len(rows):
+                r = rows[j]
+                rt = _row_text(r)
+                k2, payload = _classify_marker(rt)
+                if k2 == "case":
+                    if current_case is not None:
+                        branches.append((current_case, current_rows))
+                    current_case = payload
+                    current_rows = []
+                    j += 1
+                    continue
+                if k2 == "endswitch":
+                    if current_case is not None:
+                        branches.append((current_case, current_rows))
+                    # Remove switch/endswitch marker rows and losing branches
+                    _remove_elements([row, r])
+                    matched = False
+                    for case_val, case_rows in branches:
+                        if not matched and case_val == switch_value:
+                            matched = True
+                        else:
+                            _remove_elements(case_rows)
+                    # Remove all case-marker rows between i+1 and j
+                    for rr in rows[i + 1: j]:
+                        if _classify_marker(_row_text(rr))[0] == "case":
+                            _remove_elements([rr])
+                    if tbl is not None:
+                        existing = set(id(e) for e in tbl)
+                        rows[:] = [e for e in rows if id(e) in existing]
+                    i = 0
+                    found_end = True
+                    break
+                if current_case is not None:
+                    current_rows.append(r)
+                j += 1
+            if not found_end:
+                raise TemplateError(
+                    "Conditional row block {{#switch}} has no matching {{/switch}}."
+                )
+        else:
+            i += 1
+
+
 def _expand_repeating_rows(
     root: etree._Element,
     data: Mapping[str, Any],
@@ -794,12 +1292,21 @@ def _package_field_signature(package: Mapping[str, bytes]) -> dict[str, Any]:
 
 def _scan_part(
     root: etree._Element,
-) -> tuple[set[str], dict[str, set[str]], list[str]]:
+) -> tuple[set[str], dict[str, set[str]], list[str], set[str]]:
     scalar: set[str] = set()
     arrays: dict[str, set[str]] = {}
     malformed: list[str] = []
+    conditional_paths: set[str] = set()
     for paragraph in root.iter(_w("p")):
         text = _paragraph_text(paragraph)
+        # Skip conditional marker paragraphs — they are not token placeholders.
+        kind, payload = _classify_marker(text)
+        if kind in ("if", "switch"):
+            path_part = re.split(r"\s*(?:==|!=)\s*", payload, maxsplit=1)[0].strip()
+            conditional_paths.add(path_part)
+            continue
+        if kind in ("else", "endif", "case", "endswitch"):
+            continue
         valid_spans = {match.span() for match in TOKEN_RE.finditer(text)}
         for candidate in TOKEN_CANDIDATE_RE.finditer(text):
             if candidate.span() not in valid_spans:
@@ -815,7 +1322,7 @@ def _scan_part(
                 scalar.add(key)
             else:
                 _classify_array_token(key, "", arrays)
-    return scalar, arrays, malformed
+    return scalar, arrays, malformed, conditional_paths
 
 
 def inspect_template(path: str | os.PathLike[str]) -> dict[str, Any]:
@@ -823,12 +1330,14 @@ def inspect_template(path: str | os.PathLike[str]) -> dict[str, Any]:
     scalars: set[str] = set()
     arrays: dict[str, set[str]] = {}
     malformed: list[str] = []
+    conditional_paths: set[str] = set()
     by_part: dict[str, dict[str, Any]] = {}
     for part in _supported_parts(package):
         root = _parse_xml(package[part], part)
-        part_scalars, part_arrays, part_malformed = _scan_part(root)
+        part_scalars, part_arrays, part_malformed, part_cond = _scan_part(root)
         scalars.update(part_scalars)
         malformed.extend(part_malformed)
+        conditional_paths.update(part_cond)
         for array_path, fields in part_arrays.items():
             arrays.setdefault(array_path, set()).update(fields)
         by_part[part] = {
@@ -836,6 +1345,7 @@ def inspect_template(path: str | os.PathLike[str]) -> dict[str, Any]:
             "repeating_arrays": {
                 key: sorted(value) for key, value in sorted(part_arrays.items())
             },
+            "conditional_paths": sorted(part_cond),
         }
     if malformed:
         raise TemplateError(
@@ -847,6 +1357,7 @@ def inspect_template(path: str | os.PathLike[str]) -> dict[str, Any]:
         "repeating_arrays": {
             key: sorted(value) for key, value in sorted(arrays.items())
         },
+        "conditional_paths": sorted(conditional_paths),
         "parts": by_part,
         "word_fields": _package_field_signature(package),
     }
@@ -858,6 +1369,10 @@ def _unresolved_tokens(package: Mapping[str, bytes]) -> list[dict[str, str]]:
         root = _parse_xml(package[part], part)
         for paragraph in root.iter(_w("p")):
             text = _paragraph_text(paragraph)
+            # Conditional marker paragraphs are not template tokens.
+            kind, _ = _classify_marker(text)
+            if kind:
+                continue
             for match in TOKEN_CANDIDATE_RE.finditer(text):
                 unresolved.append({"part": part, "token": match.group(0)})
             without_candidates = TOKEN_CANDIDATE_RE.sub("", text)
@@ -905,7 +1420,8 @@ def fill_template(
 
     for part in _supported_parts(package):
         root = _parse_xml(package[part], part)
-        changed = _expand_repeating_rows(root, data, missing_value, report)
+        changed = _evaluate_conditionals(root, data, report)
+        changed = _expand_repeating_rows(root, data, missing_value, report) or changed
         changed = _replace_scalars(root, data, missing_value, report) or changed
         if changed:
             _convert_newlines(root)
