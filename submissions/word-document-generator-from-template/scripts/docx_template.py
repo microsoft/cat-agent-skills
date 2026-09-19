@@ -135,8 +135,9 @@ def _assert_transitional_namespace(root: etree._Element, part: str) -> None:
     if W_STRICT in ns_values:
         raise TemplateError(
             f"Strict OOXML is not supported ({part!r} declares "
-            f"{W_STRICT!r}). Convert the document to Transitional OOXML "
-            "('Word 97-2003 compatible') before using this engine."
+            f"{W_STRICT!r}). Open the document in Word, go to File → "
+            "Save As, and choose 'Word Document (.docx)' to save it as "
+            "Transitional OOXML before using this engine."
         )
 
 
@@ -193,7 +194,7 @@ def _read_package(path: str | os.PathLike[str]) -> tuple[
             _validate_zip_entries(infos)
             content = {info.filename: archive.read(info.filename) for info in infos}
             metadata = {info.filename: info for info in infos}
-    except (zipfile.BadZipFile, OSError) as exc:
+    except (zipfile.BadZipFile, OSError, RuntimeError) as exc:
         raise TemplateError(f"Cannot read DOCX package {source}: {exc}") from exc
     doc_root = _parse_xml(content["word/document.xml"], "word/document.xml")
     _assert_transitional_namespace(doc_root, "word/document.xml")
