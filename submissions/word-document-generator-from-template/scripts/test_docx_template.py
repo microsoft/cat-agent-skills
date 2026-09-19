@@ -866,6 +866,22 @@ class ConditionalTests(unittest.TestCase):
         self.assertIn("employee.status", manifest["conditional_paths"])
         self.assertIn("employee.salary", manifest["scalar_placeholders"])
 
+    def test_inspect_compound_condition_paths(self) -> None:
+        """inspect extracts every JSON path from && / || compound conditions."""
+        template = self.root / "inspect-compound.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.type == "permanent" && employee.status == "active"}}',
+            'Bonus eligible',
+            '{{/if}}',
+            '{{#if employee.is_senior || employee.is_lead}}',
+            'Leadership allowance',
+            '{{/if}}',
+        ])
+        manifest = inspect_template(template)
+        for path in ("employee.type", "employee.status", "employee.is_senior", "employee.is_lead"):
+            self.assertIn(path, manifest["conditional_paths"],
+                          f"{path!r} missing from conditional_paths")
+
     # ------------------------------------------------------------------
     # Switch / case
     # ------------------------------------------------------------------

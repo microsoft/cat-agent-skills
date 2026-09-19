@@ -857,6 +857,26 @@ def _parse_condition(expr: str, data: Any) -> bool:
     return False
 
 
+def _condition_paths(expr: str) -> set[str]:
+    """Return the set of JSON key paths referenced in a condition expression.
+
+    Works for simple, ``&&``, and ``||`` compound expressions::
+
+        "employee.type == \\"permanent\\""          → {"employee.type"}
+        "a.b && c.d == \\"x\\""                    → {"a.b", "c.d"}
+        "x || y == true && z != null"              → {"x", "y", "z"}
+    """
+    paths: set[str] = set()
+    for or_clause in _split_logical(expr.strip(), "||"):
+        for atom in _split_logical(or_clause, "&&"):
+            atom = atom.strip()
+            # Left side of == / != is the path; bare atom is also a path.
+            path = re.split(r"\s*(?:==|!=)\s*", atom, maxsplit=1)[0].strip()
+            if path:
+                paths.add(path)
+    return paths
+
+
 def _classify_marker(text: str) -> tuple[str, str]:
     """Return ``(kind, payload)`` for a conditional-marker paragraph text.
 
@@ -913,9 +933,8 @@ def _process_if_block(
     _, expr = _marker_kind_in_paragraph(marker_para)
     condition = _parse_condition(expr, data)
 
-    # Extract the condition path for reporting
-    path_part = re.split(r"\s*(?:==|!=)\s*", expr, maxsplit=1)[0].strip()
-    report.conditional_fields.add(path_part)
+    # Extract the condition path(s) for reporting — handles && / || compounds.
+    report.conditional_fields.update(_condition_paths(expr))
 
     if_branch: list[etree._Element] = []
     else_branch: list[etree._Element] = []
@@ -1133,8 +1152,7 @@ def _evaluate_conditionals_in_row_sequence(
         if kind == "if":
             _, expr = _classify_marker(row_text)
             condition = _parse_condition(expr, data)
-            path_part = re.split(r"\s*(?:==|!=)\s*", expr, maxsplit=1)[0].strip()
-            report.conditional_fields.add(path_part)
+            report.conditional_fields.update(_condition_paths(expr))
 
             if_rows: list[etree._Element] = []
             else_rows: list[etree._Element] = []
@@ -1304,8 +1322,7 @@ def _scan_part(
         # Skip conditional marker paragraphs — they are not token placeholders.
         kind, payload = _classify_marker(text)
         if kind in ("if", "switch"):
-            path_part = re.split(r"\s*(?:==|!=)\s*", payload, maxsplit=1)[0].strip()
-            conditional_paths.add(path_part)
+            conditional_paths.update(_condition_paths(payload))
             continue
         if kind in ("else", "endif", "case", "endswitch"):
             continue
