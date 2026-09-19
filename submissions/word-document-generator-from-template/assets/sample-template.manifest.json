@@ -24,6 +24,7 @@
       "name"
     ]
   },
+  "conditional_paths": [],
   "parts": {
     "word/document.xml": {
       "scalar_placeholders": [
@@ -49,20 +50,23 @@
           "ip",
           "name"
         ]
-      }
+      },
+      "conditional_paths": []
     },
     "word/footer1.xml": {
       "scalar_placeholders": [
         "document.status",
         "document.version"
       ],
-      "repeating_arrays": {}
+      "repeating_arrays": {},
+      "conditional_paths": []
     },
     "word/header1.xml": {
       "scalar_placeholders": [
         "document.title"
       ],
-      "repeating_arrays": {}
+      "repeating_arrays": {},
+      "conditional_paths": []
     }
   },
   "word_fields": {
