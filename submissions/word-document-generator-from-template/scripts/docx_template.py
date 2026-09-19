@@ -25,6 +25,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -1445,8 +1446,28 @@ def fill_template(
             "Word field instructions changed during filling; output was not written."
         )
 
-    _write_package(output, package, metadata)
-    validation = validate_docx(output, template_path=source)
+    # Write to a sibling temp file first so the requested output path is never
+    # created unless validation succeeds.  On any failure the temp file is
+    # removed and the output path is left untouched.
+    try:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        tmp_fd, tmp_name = tempfile.mkstemp(
+            suffix=".docx", dir=output.parent, prefix=".tmp-fill-"
+        )
+    except OSError as exc:
+        raise TemplateError(f"Cannot write DOCX package {output}: {exc}") from exc
+    tmp_path = Path(tmp_name)
+    try:
+        os.close(tmp_fd)
+        _write_package(tmp_path, package, metadata)
+        validation = validate_docx(tmp_path, template_path=source)
+        tmp_path.replace(output)
+    except Exception:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
     result = report.as_dict()
     result["validation"] = validation
     return result
