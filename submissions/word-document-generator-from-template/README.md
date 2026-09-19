@@ -8,7 +8,7 @@ report, paper, briefing, SOP, statement of work**, or similar.
 
 The template keeps control of structure, branding, styles, tables, headers, and
 footers. A deterministic OOXML engine handles split Word runs, repeating table
-rows, and validation while preserving live PAGE / NUMPAGES fields. The skill
+rows, conditional blocks, and validation while preserving live PAGE / NUMPAGES fields. The skill
 writes a **new** DOCX — it never overwrites the original.
 
 ## When to use it
@@ -47,6 +47,8 @@ text. The engine supports:
 
 - scalar paths: `{{document.title}}`, `{{sections.purpose}}`;
 - repeating rows: `{{findings[].finding}}`, `{{findings[].owner}}`;
+- conditional blocks: `{{#if employee.type == "permanent"}}` … `{{/if}}` and `{{#switch}}` / `{{#case}}`;
+- `&&` (AND) and `||` (OR) in conditions: `{{#if a.b == "x" && c.d}}`;
 - placeholders that Word splits across multiple formatting runs;
 - body, table, header, and footer text.
 
@@ -57,6 +59,8 @@ text. The engine supports:
 - Use a **one-row sample table** for anything that repeats (steps, findings, leave types, owners), with the array name followed by `[]`.
 - Name placeholders after the field: `{{document.title}}`, `{{sections.section_name}}`.
 - Keep body cells short: `{{sections.purpose}}` or `[Insert from approved sources]`.
+- Use `{{#if path == "value"}}` … `{{/if}}` (each marker in its own paragraph) to include sections only for certain employee types, statuses, or any other data-driven condition.
+- Use `{{#if a && b}}` / `{{#if a || b}}` for compound conditions; `{{#switch path}}` / `{{#case "value"}}` … `{{/switch}}` for multi-branch logic.
 
 **Don’t**
 
@@ -122,10 +126,10 @@ Scope, Leave types, Responsibilities; the repeating table columns become
 ## How it works
 
 1. Finds the Word template at runtime — from the upload, SharePoint, OneDrive, or the named connector.
-2. Runs deterministic inspection to discover exact placeholders, repeating arrays, and Word fields.
+2. Runs deterministic inspection to discover exact placeholders, repeating arrays, conditional paths, and Word fields.
 3. Pulls facts from approved knowledge, user-supplied files, and prior tool or connector results.
 4. Builds JSON that matches **this** template's fields.
-5. Fills a new DOCX with split-run and repeating-row support.
+5. Evaluates conditional blocks, fills a new DOCX with split-run and repeating-row support.
 6. Validates package integrity, unresolved placeholders, and live Word fields.
 7. Returns the new DOCX and a machine-generated summary.
 
@@ -198,6 +202,9 @@ what was missing, and which sources were used — including connector names.
 - Supported replacement content is plain text (including line breaks). Rich
   HTML/Markdown conversion and placeholders spanning multiple paragraphs are
   intentionally rejected or out of scope.
+- Conditional block markers (`{{#if}}`, `{{#else}}`, `{{/if}}`, `{{#switch}}`,
+  `{{#case}}`, `{{/switch}}`) must each occupy their own paragraph or table row
+  with no other text. Nesting one block inside another is not supported.
 - Filling fails loudly on malformed tokens, invalid JSON shapes, remaining
   placeholders, corrupt DOCX packages, or changed Word field instructions.
 - If no `.docx` template is available, generation stops with:
