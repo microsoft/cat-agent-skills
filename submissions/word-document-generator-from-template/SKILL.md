@@ -44,31 +44,37 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
    filename: keep only `[A-Za-z0-9_-]` in the stem, replace any other character
    runs with `_`, and reject `..` and path separators.  Use this stem throughout
    as `<stem>` — append `.docx` only when forming Word filenames and `.json` for
-   data files.  All working files go under `/app/created/` so Copilot Studio can
-   surface them as attachments:
+   data files.
+
+   Intermediate working files go under `/app/workspace/` to avoid exposing
+   source data as Copilot Studio attachments.  Only the final deliverable is
+   written to `/app/created/`:
 
    ```text
-   /app/created/<stem>-template.docx   ← local copy of the runtime template
-   /app/created/<stem>-data.json       ← serialised fill data
-   /app/created/<stem>.docx            ← completed document (the deliverable)
+   /app/workspace/<stem>-template.docx    ← local copy of the runtime template
+   /app/workspace/<stem>-manifest.json    ← inspection manifest
+   /app/workspace/<stem>-data.json        ← serialised fill data
+   /app/workspace/<stem>-fill-summary.json
+   /app/workspace/<stem>-validation.json
+   /app/created/<stem>.docx               ← completed document (the deliverable)
    ```
 
 2. Locate the runtime `.docx` template and **copy it to
-   `/app/created/<stem>-template.docx`** before any other step:
+   `/app/workspace/<stem>-template.docx`** before any other step:
    - **Uploaded file**: use the file API (for example, Python
-     `shutil.copy2(upload_path, "/app/created/<stem>-template.docx")`); do
+     `shutil.copy2(upload_path, "/app/workspace/<stem>-template.docx")`); do
      not interpolate the user-supplied filename into a shell command.
    - **SharePoint / OneDrive / connector**: retrieve the item directly to that path.
 
-   Pass only `/app/created/<stem>-template.docx` to the engine; never use the
+   Pass only `/app/workspace/<stem>-template.docx` to the engine; never use the
    upload path directly.  Stop with the message under **Template handling** if
    the template cannot be located or copied.
 
 3. Inspect the local copy before writing content:
 
    ```bash
-   python scripts/docx_template.py inspect /app/created/<stem>-template.docx \
-     --output /app/created/<stem>-manifest.json
+   python scripts/docx_template.py inspect /app/workspace/<stem>-template.docx \
+     --output /app/workspace/<stem>-manifest.json
    ```
 
    Read the manifest's exact scalar placeholders, repeating arrays, parts, and
@@ -90,7 +96,7 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
    ```python
    from pathlib import Path
    import json
-   Path("/app/created/<stem>-data.json").write_text(
+   Path("/app/workspace/<stem>-data.json").write_text(
        json.dumps(data, indent=2, ensure_ascii=False) + "\n",
        encoding="utf-8",
    )
@@ -100,10 +106,10 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
    ```bash
    python scripts/docx_template.py fill \
-     /app/created/<stem>-template.docx \
-     /app/created/<stem>-data.json \
+     /app/workspace/<stem>-template.docx \
+     /app/workspace/<stem>-data.json \
      /app/created/<stem>.docx \
-     --summary /app/created/<stem>-fill-summary.json
+     --summary /app/workspace/<stem>-fill-summary.json
    ```
 
    Never set the output path to the template path.
@@ -113,8 +119,8 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
    ```bash
    python scripts/docx_template.py validate \
      /app/created/<stem>.docx \
-     --template /app/created/<stem>-template.docx \
-     --output /app/created/<stem>-validation.json
+     --template /app/workspace/<stem>-template.docx \
+     --output /app/workspace/<stem>-validation.json
    ```
 
    Do not return a DOCX unless both commands succeed.
