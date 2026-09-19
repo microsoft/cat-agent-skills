@@ -1370,9 +1370,11 @@ def _unresolved_tokens(package: Mapping[str, bytes]) -> list[dict[str, str]]:
         root = _parse_xml(package[part], part)
         for paragraph in root.iter(_w("p")):
             text = _paragraph_text(paragraph)
-            # Conditional marker paragraphs are not template tokens.
-            kind, _ = _classify_marker(text)
-            if kind:
+            # In a filled document every conditional marker must have been
+            # removed by _evaluate_conditionals.  Any that remain are stray
+            # template syntax — report them as unresolved tokens.
+            if _COND_MARKER_RE.search(text):
+                unresolved.append({"part": part, "token": text.strip()[:120]})
                 continue
             for match in TOKEN_CANDIDATE_RE.finditer(text):
                 unresolved.append({"part": part, "token": match.group(0)})

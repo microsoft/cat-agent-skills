@@ -40,11 +40,12 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Instructions
 
-1. Derive a **safe basename** from the requested output filename: keep only
-   `[A-Za-z0-9_-]` in the stem, replace any other character runs with `_`,
-   reject `..` and path separators, and keep a `.docx` extension.  Use this
-   stem throughout as `<stem>`.  All working files go under `/app/created/` so
-   Copilot Studio can surface them as attachments:
+1. Derive a **safe stem** (filename without extension) from the requested output
+   filename: keep only `[A-Za-z0-9_-]` in the stem, replace any other character
+   runs with `_`, and reject `..` and path separators.  Use this stem throughout
+   as `<stem>` — append `.docx` only when forming Word filenames and `.json` for
+   data files.  All working files go under `/app/created/` so Copilot Studio can
+   surface them as attachments:
 
    ```text
    /app/created/<stem>-template.docx   ← local copy of the runtime template

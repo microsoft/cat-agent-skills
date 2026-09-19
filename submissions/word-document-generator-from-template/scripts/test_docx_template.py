@@ -1112,6 +1112,30 @@ class ConditionalTests(unittest.TestCase):
     # Mismatched markers raise TemplateError
     # ------------------------------------------------------------------
 
+    def test_stray_conditional_marker_fails_validation(self) -> None:
+        """A stray {{#else}} or {{/if}} left in the output must be detected."""
+        template = self.root / "stray-marker.docx"
+        _build_body_conditional_template(template, ["Normal paragraph"])
+        output = self.root / "stray-marker-out.docx"
+        fill_template(template, {}, output)
+
+        # Inject a stray conditional marker into the filled document.
+        WN = f"{{{W}}}"
+        parts = _read_zip(output)
+        root = etree.fromstring(parts["word/document.xml"])
+        first_p = root.find(f".//{WN}p")
+        assert first_p is not None
+        run = etree.SubElement(first_p, f"{WN}r")
+        t = etree.SubElement(run, f"{WN}t")
+        t.text = "{{#else}}"
+        parts["word/document.xml"] = etree.tostring(
+            root, xml_declaration=True, encoding="UTF-8"
+        )
+        damaged = self.root / "stray-marker-damaged.docx"
+        _write_zip(damaged, parts)
+        with self.assertRaisesRegex(TemplateError, "[Uu]nresolved"):
+            validate_docx(damaged, template_path=template)
+
     def test_unclosed_if_raises(self) -> None:
         template = self.root / "unclosed-if.docx"
         _build_body_conditional_template(template, [

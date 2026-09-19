@@ -212,7 +212,8 @@ visible text is the marker).  The block spans rows within the same table.
 ### Deliberate limits
 
 - A conditional marker paragraph must contain **only** the marker — no other text.
-- `{{#if}}` and `{{#switch}}` blocks may not be nested inside one another.
+- Nesting `{{#if}}` or `{{#switch}}` blocks inside one another is not supported
+  and produces undefined behaviour; the engine does not validate or detect it.
 - A block cannot straddle a table boundary (e.g., `{{#if}}` in the body and
   `{{/if}}` inside a table cell).
 - `{{#case}}` values are compared as strings; type-aware numeric comparison is
