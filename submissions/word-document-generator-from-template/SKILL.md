@@ -164,59 +164,47 @@ If the required template cannot be found or retrieved, stop document generation 
 
 ## Template contract
 
-Use `{{path.to.value}}` for scalar text and `{{items[].field}}` in one sample
-table row for repetition. Tokens may be split across Word runs; the engine
-matches their visible paragraph text. It fills the main document, tables,
-headers, and footers while preserving live Word fields.
+Before generating fill JSON, always run `inspect` and read the returned
+manifest. Every key in your JSON must match a path reported by the manifest —
+do not invent key names. Conditional branches (`{{#if}}` / `{{#switch}}`) and
+repeating arrays (`{{items[].field}}`) are also surfaced by `inspect`.
 
-Read [`references/placeholder-contract.md`](references/placeholder-contract.md)
-for the exact grammar, supported scope, limits, and troubleshooting.
+For the full grammar, supported scope, and limits see
+[`references/placeholder-contract.md`](references/placeholder-contract.md).
 
 ## Structured JSON
 
-Create JSON that reflects the **runtime template**. Use:
+Build the fill JSON exclusively from the inspection manifest:
 
-- `document` — title, type, owner, version, status, audience, and any other metadata fields on the cover or control table;
-- `sections` — one object per Heading 1 / Heading 2, keyed by a slug of that heading;
-- `items` (or a name taken from the table, e.g. `leave_types`, `findings`, `steps`) — arrays for repeating tables or content blocks;
-- `sources` — identifiers for knowledge, files, and connectors.
+- Use every `scalar_placeholders` path as a top-level or nested key.
+- Use every `repeating_arrays` key as a JSON array of objects, each containing the listed field names.
+- Use every `conditional_paths` key as a boolean or comparable scalar that drives the `{{#if}}` / `{{#switch}}` logic in the template.
+- Do **not** add keys that are absent from the manifest; the engine will ignore them and the discrepancy will confuse downstream reviewers.
 
-Example shape (field names change to match the template):
+Example — given this manifest excerpt:
 
 ```json
 {
-  "document": {
-    "title": "Quarterly Operations Report",
-    "type": "Report",
-    "owner": "Operations",
-    "version": "1.0",
-    "status": "Draft",
-    "audience": "Leadership team"
-  },
-  "sections": {
-    "executive_summary": "Generated section content",
-    "purpose": "Generated section content"
-  },
-  "findings": [
-    {
-      "finding": "Generated finding",
-      "impact": "Generated impact",
-      "owner": "Action owner"
-    }
-  ],
-  "sources": [
-    {
-      "source_id": "SRC-001",
-      "title": "Approved source",
-      "type": "knowledge | file | connector"
-    }
-  ]
+  "scalar_placeholders": ["document.title", "document.owner"],
+  "repeating_arrays": { "findings": ["finding", "impact"] },
+  "conditional_paths": ["employee.type"]
 }
 ```
 
-A Leave Policy template might use `leave_types`; a procedure might use `steps`;
-a report might use `findings` or connector rows. Always use the array names
-reported by template inspection.
+Produce:
+
+```json
+{
+  "document": { "title": "...", "owner": "..." },
+  "findings": [
+    { "finding": "...", "impact": "..." }
+  ],
+  "employee": { "type": "permanent" }
+}
+```
+
+Field names and nesting depth come entirely from the manifest, not from
+assumptions about the document structure.
 
 ## Requirements
 
