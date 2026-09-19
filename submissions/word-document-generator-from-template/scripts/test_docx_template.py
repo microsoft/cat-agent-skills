@@ -1152,6 +1152,38 @@ class ConditionalTests(unittest.TestCase):
         with self.assertRaisesRegex(TemplateError, "[Uu]nresolved"):
             validate_docx(damaged, template_path=template)
 
+    def test_hyphenated_switch_path(self) -> None:
+        """{{#switch}} and {{#if}} must accept hyphenated path segments."""
+        template = self.root / "hyphen-switch.docx"
+        _build_body_conditional_template(template, [
+            '{{#switch pay-type}}',
+            '{{#case "salary"}}',
+            'Salary rules',
+            '{{#case "hourly"}}',
+            'Hourly rules',
+            '{{/switch}}',
+        ])
+        output = self.root / "hyphen-switch-out.docx"
+        fill_template(template, {"pay-type": "hourly"}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertIn("Hourly rules", text)
+        self.assertNotIn("Salary rules", text)
+        self.assertNotIn("{{", text)
+
+    def test_nested_hyphenated_path(self) -> None:
+        """Dotted hyphenated paths like employee.pay-type are accepted."""
+        template = self.root / "hyphen-nested.docx"
+        _build_body_conditional_template(template, [
+            '{{#if employee.pay-type == "permanent"}}',
+            'Permanent section',
+            '{{/if}}',
+        ])
+        output = self.root / "hyphen-nested-out.docx"
+        fill_template(template, {"employee": {"pay-type": "permanent"}}, output)
+        text = _visible_text(_read_zip(output)["word/document.xml"])
+        self.assertIn("Permanent section", text)
+        self.assertNotIn("{{", text)
+
     def test_unclosed_if_raises(self) -> None:
         template = self.root / "unclosed-if.docx"
         _build_body_conditional_template(template, [

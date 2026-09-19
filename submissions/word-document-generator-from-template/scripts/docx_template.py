@@ -55,7 +55,7 @@ COND_IF_RE = re.compile(
 COND_ELSE_RE = re.compile(r"^\s*\{\{#else\}\}\s*$")
 COND_ENDIF_RE = re.compile(r"^\s*\{\{/if\}\}\s*$")
 COND_SWITCH_RE = re.compile(
-    r"^\s*\{\{#switch\s+([A-Za-z_][A-Za-z0-9_.]*)\s*\}\}\s*$"
+    r"^\s*\{\{#switch\s+([A-Za-z_][A-Za-z0-9_.-]*(?:\.[A-Za-z_][A-Za-z0-9_.-]*)*)\s*\}\}\s*$"
 )
 COND_CASE_RE = re.compile(
     r"^\s*\{\{#case\s+(?:\"([^\"]*)\"|([A-Za-z0-9_.+-]*))\s*\}\}\s*$"
