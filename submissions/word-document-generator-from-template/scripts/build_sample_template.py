@@ -26,6 +26,11 @@ def _split_token(paragraph, token: str, pieces: tuple[str, ...] | None = None):
             run.bold = True
 
 
+def _add_marker(document, text: str) -> None:
+    """Write a paragraph whose only content is a conditional marker."""
+    document.add_paragraph(text)
+
+
 def _field(paragraph, instruction: str) -> None:
     run = paragraph.add_run()
     begin = OxmlElement("w:fldChar")
@@ -161,6 +166,52 @@ def build_sample(output: Path) -> None:
         document.add_heading("Recommendations", level=1)
         recommendations = document.add_paragraph()
         _split_token(recommendations, "{{sections.recommendations}}")
+
+        document.add_heading("Distribution status", level=1)
+        _add_marker(document, '{{#if document.status == "Final"}}')
+        approved = document.add_paragraph()
+        approved.add_run("Approved for distribution. Document owner: ")
+        _split_token(approved, "{{document.owner}}")
+        _add_marker(document, "{{#else}}")
+        draft = document.add_paragraph()
+        draft.add_run("This report is currently in ")
+        _split_token(draft, "{{document.status}}")
+        draft.add_run(" status and has not yet been approved for distribution.")
+        _add_marker(document, "{{/if}}")
+
+        document.add_heading("Document routing", level=1)
+        _add_marker(document, "{{#switch document.type}}")
+        _add_marker(document, '{{#case "Report"}}')
+        document.add_paragraph(
+            "Route through the document management system for version control and sign-off."
+        )
+        _add_marker(document, '{{#case "Briefing"}}')
+        document.add_paragraph(
+            "Forward directly to the named recipients listed in the distribution section."
+        )
+        _add_marker(document, '{{#case "Summary"}}')
+        document.add_paragraph(
+            "Retain with the quarterly records pack for audit and governance review."
+        )
+        _add_marker(document, "{{/switch}}")
+
+        document.add_heading("Access controls", level=1)
+        _add_marker(
+            document,
+            '{{#if document.status == "Final" && document.audience == "Leadership team"}}',
+        )
+        document.add_paragraph(
+            "Cleared for direct distribution to the leadership team."
+        )
+        _add_marker(document, "{{/if}}")
+        _add_marker(
+            document,
+            '{{#if document.status == "Draft" || document.status == "Review"}}',
+        )
+        document.add_paragraph(
+            "This document is under active revision. Obtain written approval before distributing externally."
+        )
+        _add_marker(document, "{{/if}}")
 
         # A second section demonstrates that section properties and linked
         # header/footer relationships survive the fill.

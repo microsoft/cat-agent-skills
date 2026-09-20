@@ -24,7 +24,11 @@
       "name"
     ]
   },
-  "conditional_paths": [],
+  "conditional_paths": [
+    "document.audience",
+    "document.status",
+    "document.type"
+  ],
   "parts": {
     "word/document.xml": {
       "scalar_placeholders": [
@@ -51,7 +55,11 @@
           "name"
         ]
       },
-      "conditional_paths": []
+      "conditional_paths": [
+        "document.audience",
+        "document.status",
+        "document.type"
+      ]
     },
     "word/footer1.xml": {
       "scalar_placeholders": [

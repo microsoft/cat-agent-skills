@@ -148,6 +148,8 @@ class DocxTemplateTests(unittest.TestCase):
         self.assertIn("NUMPAGES", field_json)
         self.assertIn("word/header1.xml", manifest["parts"])
         self.assertIn("word/footer1.xml", manifest["parts"])
+        for path in ("document.status", "document.type", "document.audience"):
+            self.assertIn(path, manifest["conditional_paths"])
 
     def test_fill_preserves_fields_package_parts_and_original(self) -> None:
         original_hash = hashlib.sha256(self.template.read_bytes()).hexdigest()
