@@ -500,11 +500,7 @@ const allContributors = [...contributorMap.entries()]
             data-downloads={getDownloads(skill.id)}
             data-featured={skill.data.featured ? "1" : "0"}
             data-sample={skill.data.tags.includes("sample") ? "1" : "0"}
-            data-updated={(
-              skill.data.updatedAt ??
-              skill.data.createdAt ??
-              new Date(0)
-            ).getTime()}
+            data-created={skill.data.createdAt?.getTime()}
           >
             <SkillCard
               slug={skill.id}
@@ -536,6 +532,7 @@ const allContributors = [...contributorMap.entries()]
 
 <script>
   import { initials, coverGradient } from "../lib/skills";
+  import { compareNewest } from "../lib/gallery-sort";
 
   const BATCH = 12;
 
@@ -687,7 +684,7 @@ const allContributors = [...contributorMap.entries()]
         case "name":
           return byName(a, b);
         case "newest":
-          return num(b, "updated") - num(a, "updated") || byName(a, b);
+          return compareNewest(a, b);
         case "featured":
         default:
           return num(b, "featured") - num(a, "featured") || byName(a, b);
