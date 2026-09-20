@@ -1,0 +1,20 @@
+{
+  "name": "Action Items to To Do",
+  "description": "Watches your Teams chats, meeting transcripts, and Outlook mail for things people actually asked you to do, and files each one as a Microsoft To Do task with a due date, priority, and source link.",
+  "platforms": ["Scout"],
+  "tags": [
+    "productivity",
+    "automation",
+    "tasks",
+    "teams",
+    "email",
+    "meetings",
+    "microsoft-365",
+    "action-items"
+  ],
+  "author": "Matteo Pagani",
+  "authorUrl": "https://github.com/qmatteoq",
+  "version": "1.0.0",
+  "createdAt": "2026-08-19",
+  "updatedAt": "2026-08-19"
+}

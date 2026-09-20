@@ -1,0 +1,8 @@
+{
+  "name": "Agent Red Team",
+  "description": "Adversarial assurance review for agents you own: prompt injection, oversharing, leakage and tool misuse, mapped to fixes.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["copilot-studio", "security", "prompt-injection", "governance", "responsible-ai", "testing", "risk", "assessment"],
+  "version": "1.0.0",
+  "author": "Marco Zama"
+}

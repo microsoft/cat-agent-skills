@@ -7,7 +7,15 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildMeta, CATALOG_PASSTHROUGH } from "./import-submissions.ts";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  buildMeta,
+  CATALOG_PASSTHROUGH,
+  targetsCopilotStudio,
+  writeCopilotStudioSkill,
+} from "./import-submissions.ts";
 
 test("derived fields always win over same-named catalog keys", () => {
   const meta = buildMeta(
@@ -119,5 +127,47 @@ test("CATALOG_PASSTHROUGH never lists a canonical/derived field", () => {
       !(CATALOG_PASSTHROUGH as readonly string[]).includes(forbidden),
       `"${forbidden}" must never be in the passthrough allowlist`,
     );
+  }
+});
+
+test("Copilot Studio feed includes only skills declaring that platform", () => {
+  assert.equal(targetsCopilotStudio({ platforms: ["Copilot Studio"] }), true);
+  assert.equal(targetsCopilotStudio({ platforms: ["Cowork", "Copilot Studio"] }), true);
+  assert.equal(targetsCopilotStudio({ platforms: ["Cowork", "Scout"] }), false);
+  assert.equal(targetsCopilotStudio({ platforms: "Copilot Studio" }), false);
+});
+
+test("Copilot Studio export preserves canonical skill and nested resource paths", () => {
+  const output = mkdtempSync(join(tmpdir(), "copilot-studio-skills-"));
+  try {
+    writeCopilotStudioSkill(output, "sample-skill", "---\nname: sample-skill\n---\n", [
+      { path: "scripts/lib/helper.py", data: Buffer.from("print('ok')\n") },
+    ]);
+
+    assert.equal(
+      readFileSync(join(output, "sample-skill", "SKILL.md"), "utf8"),
+      "---\nname: sample-skill\n---\n",
+    );
+    assert.equal(
+      readFileSync(join(output, "sample-skill", "scripts", "lib", "helper.py"), "utf8"),
+      "print('ok')\n",
+    );
+  } finally {
+    rmSync(output, { recursive: true, force: true });
+  }
+});
+
+test("Copilot Studio export rejects resource path traversal", () => {
+  const output = mkdtempSync(join(tmpdir(), "copilot-studio-skills-"));
+  try {
+    assert.throws(
+      () =>
+        writeCopilotStudioSkill(output, "sample-skill", "# Skill\n", [
+          { path: "../outside.txt", data: Buffer.from("unsafe") },
+        ]),
+      /unsafe skill resource path/,
+    );
+  } finally {
+    rmSync(output, { recursive: true, force: true });
   }
 });

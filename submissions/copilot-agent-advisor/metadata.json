@@ -1,0 +1,12 @@
+{
+  "name": "Copilot Agent Advisor",
+  "description": "Tells you which Microsoft 365 / Copilot Studio agent option fits your scenario — use M365 Copilot as-is, build a standard (declarative) agent, or build a custom (custom engine) agent — and which Copilot Studio harness (GitHub Copilot, standard, or Copilot chat) to build on.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["copilot-studio", "agents", "decision-support", "architecture", "advisor"],
+  "author": "Sandra Boucenna",
+  "authorUrl": "https://github.com/SandraBcna",
+  "authorGithub": "SandraBcna",
+  "version": "1.0.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-17"
+}

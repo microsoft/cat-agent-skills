@@ -1,0 +1,11 @@
+{
+  "name": "Explainer Video",
+  "description": "Create narrated, captioned 1080p explainer videos with researched scripts, generated b-roll, and supplied screenshots.",
+  "platforms": ["Cowork"],
+  "tags": ["video", "education", "training", "communication"],
+  "author": "Damien Bird",
+  "authorUrl": "https://github.com/DamoBird365",
+  "version": "1.0.0",
+  "createdAt": "2026-08-20",
+  "updatedAt": "2026-08-20"
+}
