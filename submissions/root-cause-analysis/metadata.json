@@ -1,0 +1,11 @@
+{
+  "name": "Root Cause Analysis",
+  "description": "Diagnose the true cause of a problem — not just its symptoms — using structured techniques like 5 Whys, Fishbone diagrams, and contributing factor analysis.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["problem-solving", "analysis", "decision-making", "investigation", "debugging"],
+  "author": "Nayananshu Garai",
+  "authorUrl": "https://github.com/N-Garai",
+  "version": "1.0.0",
+  "createdAt": "2026-08-04",
+  "updatedAt": "2026-08-04"
+}
