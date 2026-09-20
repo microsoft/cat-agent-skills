@@ -1,0 +1,11 @@
+{
+  "name": "Tool Approval Designer",
+  "description": "Decide which of an agent's tools must pause for human approval, then produce the artifacts: a gating matrix, argument-aware approval wording, a fatigue estimate, Microsoft Agent Framework code, and a committed decision record. Targets Agent Framework (Python parsed; Go and C# documented); the Copilot Studio per-tool toggle is roadmap-sourced and not yet configurable.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["agent-framework", "human-in-the-loop", "tool-approval", "governance", "risk", "python"],
+  "author": "Marc Pascal Solling",
+  "authorUrl": "https://github.com/MarcPmedC",
+  "version": "1.0.0",
+  "createdAt": "2026-09-06",
+  "updatedAt": "2026-09-06"
+}
