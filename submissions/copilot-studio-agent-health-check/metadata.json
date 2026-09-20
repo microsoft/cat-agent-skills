@@ -1,0 +1,26 @@
+{
+  "name": "Copilot Studio Agent Health Check",
+  "description": "Statically lints an exported Copilot Studio agent for structural defects, across both the classic topic-based experience and the new agentic (skill-based) experience. Classic checks: trigger-phrase collisions, unreachable topics, missing fallback/escalation, slot-filling with no correction path, variable-lifecycle bugs. Agentic checks: skill-description collisions, missing or thin descriptions, empty instructions, unwired tool references. Cross-cutting checks: unsafe/unrecognised Power Fx, dead-end dialog branches, orchestration-aware trigger/description quality, OData parameter quoting, leaked-secret variable names, connected-agent handoff integrity. Deterministic, evidence-backed, one job — every finding carries a severity and a concrete fix. Reports defects in the artifact; it does not test security, model cost, or recommend a platform.",
+  "platforms": [
+    "Copilot Studio",
+    "Cowork",
+    "Scout"
+  ],
+  "tags": [
+    "copilot-studio",
+    "linter",
+    "static-analysis",
+    "diagnostics",
+    "quality",
+    "review",
+    "topics",
+    "agent",
+    "orchestration",
+    "power-platform"
+  ],
+  "author": "Anamika Kumari & Shilpa Gangaramani",
+  "version": "1.15.0",
+  "createdAt": "2026-08-17",
+  "updatedAt": "2026-08-19",
+  "coverColor": "#1f4e79"
+}
