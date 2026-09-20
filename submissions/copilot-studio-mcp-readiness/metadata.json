@@ -1,0 +1,12 @@
+{
+  "name": "Copilot Studio MCP Readiness",
+  "description": "Check an MCP server against the constraints Microsoft documents for Copilot Studio before you wire it up: transport, tool schema shapes that silently drop a tool, supported authentication, orchestration fit, and connector data policy. Returns a per-check verdict with the fix on the server side.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["mcp", "tools", "copilot-studio", "integration", "schema", "authentication", "governance"],
+  "author": "Elliot Margot",
+  "authorUrl": "https://e-margot.ch",
+  "authorGithub": "OwnOptic",
+  "version": "1.0.0",
+  "createdAt": "2026-09-03",
+  "updatedAt": "2026-09-03"
+}
