@@ -306,4 +306,5 @@ python scripts/docx_template.py validate output.docx \
 ```
 
 All failures return exit code `2` and print a specific error. The original
-template is never overwritten.
+template is never overwritten. When `--output` or `--summary` is set, JSON
+is written only to that file — not also to stdout.

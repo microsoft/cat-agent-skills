@@ -702,11 +702,28 @@ class DocxTemplateTests(unittest.TestCase):
                 command, capture_output=True, text=True, encoding="utf-8"
             )
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                result.stdout.strip(),
+                "",
+                "CLI must not echo JSON to stdout when writing a destination file",
+            )
         for path in (manifest, output, summary, validation):
             self.assertTrue(path.exists(), path)
         self.assertTrue(
             json.loads(validation.read_text(encoding="utf-8"))["valid_docx"]
         )
+
+    def test_cli_prints_json_only_without_destination(self) -> None:
+        script = HERE / "docx_template.py"
+        result = subprocess.run(
+            [sys.executable, str(script), "inspect", str(self.template)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertIn("scalar_placeholders", payload)
 
 
 # ---------------------------------------------------------------------------

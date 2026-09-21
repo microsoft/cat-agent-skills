@@ -1542,6 +1542,7 @@ def _write_json(data: Mapping[str, Any], destination: str | None) -> None:
             path = Path(destination)
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(text + "\n", encoding="utf-8")
+            return
         print(text)
     except OSError as exc:
         raise TemplateError(f"Cannot write JSON {destination}: {exc}") from exc
