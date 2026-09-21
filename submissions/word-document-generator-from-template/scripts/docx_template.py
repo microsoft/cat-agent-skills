@@ -120,9 +120,12 @@ def _safe_parser() -> etree.XMLParser:
 
 def _parse_xml(content: bytes, part_name: str) -> etree._Element:
     try:
-        return etree.fromstring(content, parser=_safe_parser())
+        root = etree.fromstring(content, parser=_safe_parser())
     except (etree.XMLSyntaxError, ValueError) as exc:
         raise TemplateError(f"Invalid XML in {part_name}: {exc}") from exc
+    if SUPPORTED_PART_RE.match(part_name):
+        _assert_transitional_namespace(root, part_name)
+    return root
 
 
 def _assert_transitional_namespace(root: etree._Element, part: str) -> None:
@@ -197,8 +200,7 @@ def _read_package(path: str | os.PathLike[str]) -> tuple[
             metadata = {info.filename: info for info in infos}
     except (zipfile.BadZipFile, OSError, RuntimeError) as exc:
         raise TemplateError(f"Cannot read DOCX package {source}: {exc}") from exc
-    doc_root = _parse_xml(content["word/document.xml"], "word/document.xml")
-    _assert_transitional_namespace(doc_root, "word/document.xml")
+    _parse_xml(content["word/document.xml"], "word/document.xml")
     return content, metadata
 
 

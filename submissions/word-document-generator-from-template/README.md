@@ -1,15 +1,38 @@
-# Word Document Generator from Template
+# Fill a Word Template
 
-Fill a Microsoft Word template supplied at runtime — **uploaded**, or retrieved
+Fill a Microsoft Word template you already have — **uploaded**, or retrieved
 from **SharePoint**, **OneDrive**, or another connector — using **user input**,
 approved agent **knowledge sources**, and **results from prior tool or connector
 calls**. Works for any document the template defines: **policy, procedure,
 report, paper, briefing, SOP, statement of work**, or similar.
 
-The template keeps control of structure, branding, styles, tables, headers, and
-footers. A deterministic OOXML engine handles split Word runs, repeating table
-rows, conditional blocks, and validation while preserving live PAGE / NUMPAGES fields. The skill
-writes a **new** DOCX — it never overwrites the original.
+This is a **deterministic fill**, not a blank-page author. You bring a prepared
+template with placeholders; a fill engine writes the values in and keeps your
+structure, branding, styles, tables, headers, and footers. It handles split
+Word runs, repeating table rows, conditional blocks, and validation while
+preserving live PAGE / NUMPAGES fields. The skill writes a **new** Word file —
+it never overwrites the original.
+
+**You do not need this skill** if you do not already have a pre-processed Word
+template — a `.docx` with this engine's `{{placeholder}}` tokens, matching
+[`assets/sample-template.docx`](assets/sample-template.docx). Open that sample
+in Word first. If your file does not look like it (blank page, finished prose,
+or no `{{...}}` tokens), skip this skill and use another document flow.
+
+## Where this fits
+
+Copilot Studio skills load in the **GitHub Copilot harness**. This skill does
+**not** use that harness as an open-ended document author. The Word template
+(placeholders, styles, branding) is the contract; the bundled engine inspects,
+fills, and validates it. The model's job is to gather approved facts and map
+them onto that contract.
+
+Most of the sandbox and reasoning-loop benefit is unused during artifact
+creation. Use this skill when you already have that pre-processed template
+and the value is **high-fidelity fill without building Power Automate +
+prompts**. If you do not have a placeholder template, **do not use this
+skill** — prefer a workflow, standard-harness path, or another document
+skill instead.
 
 ## When to use it
 
@@ -21,13 +44,24 @@ writes a **new** DOCX — it never overwrites the original.
 | Paper | Title, abstract, body headings, references |
 | Status pack | Narrative plus rows from Dataverse, SharePoint, or another connector |
 
-Ask the agent to create, draft, or compile the document from that template.
+Ask the agent to fill that template — not to invent a Word file from a blank page.
 
 ## Before you start
 
+**Look at the sample first.** Open
+[`assets/sample-template.docx`](assets/sample-template.docx) in Word. That
+file is the expected input style: Heading styles, branding, and
+`{{placeholders}}` in the body, tables, header, and footer. Your template
+must follow the same pattern. The full grammar is in
+[`references/placeholder-contract.md`](references/placeholder-contract.md).
+
+If you do not have a pre-processed template like that sample, **you do not
+need this skill** — and the agent should not invent one or write fill
+scripts for a blank document.
+
 | Input | Why it matters |
 | --- | --- |
-| Word template (`.docx`) — **required** | Controls layout, placeholders, and branding. May be **uploaded**, or retrieved from **SharePoint**, **OneDrive**, or another connector |
+| Placeholder Word template (`.docx`) — **required** | Controls layout, placeholders, and branding. Must contain inspectable `{{...}}` tokens. May be **uploaded**, or retrieved from **SharePoint**, **OneDrive**, or another connector |
 | Document type, title, and purpose | Sets what is being drafted |
 | Intended audience | Tones the language |
 | Requirements | Anything the template must cover |
@@ -38,6 +72,19 @@ Ask the agent to create, draft, or compile the document from that template.
 Approved sources include knowledge, uploaded files, **and** data returned by
 upstream tools or connectors. If a required fact is not in those sources, the
 agent writes `Not specified in approved sources` instead of inventing it.
+
+**Not a valid template** — compare your file with
+[`assets/sample-template.docx`](assets/sample-template.docx) before you start:
+
+- a blank or nearly empty Word file
+- a finished document with no `{{...}}` tokens
+- a file whose placeholders do not match
+  [`references/placeholder-contract.md`](references/placeholder-contract.md)
+
+If the agent is given one of those, it stops and asks for a real skill
+template. It does not invent fill scripts or rebuild the document from
+scratch. You do not need this skill until your template looks like the
+sample.
 
 ## Ideal Word template structure
 
@@ -195,7 +242,12 @@ what was missing, and which sources were used — including connector names.
 - Output is a **draft** until a human reviews and approves it.
 - Connector and tool results from earlier in the conversation are valid sources; the agent should not re-fetch them unless they are missing.
 - Unsupported statements are marked for review, not presented as fact.
-- The template is a prerequisite. Attach it, or point the agent at SharePoint, OneDrive, or another connector that can fetch the `.docx`.
+- **Do not use this skill** unless you already have a pre-processed
+  `.docx` like [`assets/sample-template.docx`](assets/sample-template.docx).
+  Open that sample and compare before you attach anything. A blank or
+  finished Word document is not enough; attach a real placeholder template,
+  or point the agent at SharePoint, OneDrive, or another connector that can
+  fetch that file.
 - The template is not treated as a knowledge source unless you say so.
 - Sections are not added or removed unless you explicitly ask.
 - The original template in SharePoint, OneDrive, or the upload is never overwritten.

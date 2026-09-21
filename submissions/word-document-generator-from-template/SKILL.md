@@ -1,12 +1,12 @@
 ---
 name: word-document-generator-from-template
-description: Generates a complete Word document from a Word template supplied at runtime (uploaded, or retrieved from SharePoint, OneDrive, or another connector) plus user input, approved knowledge sources, and prior tool or connector results. Use when a user asks to create, draft, or compile any document from a template — policy, procedure, report, paper, briefing, SOP, or similar.
+description: Fills a pre-authored Word template that already uses {{placeholder}} tokens (uploaded, or retrieved from SharePoint, OneDrive, or another connector) using a deterministic fill engine plus user input, approved knowledge sources, and prior tool or connector results. Use when a user asks to fill, complete, or compile a document from such a template. Do not use when the user supplies a blank or finished Word file without this engine's placeholders, or when they want the agent to invent layout or fill scripts.
 ---
-# Word Document Generator from Template
+# Fill a Word Template
 
 ## Purpose
 
-Generate a complete Microsoft Word document of **any type the template defines**
+Fill a complete Microsoft Word document of **any type the template defines**
 (policy, procedure, report, paper, briefing, SOP, statement of work, or similar) using:
 
 - a Word template supplied at runtime (uploaded by the user, or retrieved from SharePoint, OneDrive, or another connector);
@@ -20,11 +20,24 @@ tables, headers, footers, and branding. Adapt JSON keys to **that** template —
 do not assume a fixed outline. Use the bundled deterministic engine for DOCX
 inspection, filling, and validation; do not implement ad-hoc run replacement.
 
+## Positioning
+
+Copilot Studio skills run in the GitHub Copilot harness. This skill is still a
+**deterministic fill**: a pre-authored Word template plus the bundled
+inspect/fill/validate engine. The model's job is to gather approved facts and
+map them onto that template's contract — not to design layout, author the
+template, or write new OOXML or python-docx scripts.
+
+The harness sandbox and reasoning loop are not the main value during artifact
+creation. Do not treat loading this skill as a license to improvise document
+generation. If the supplied file is not a skill template, stop — see
+**Template handling**.
+
 ## Required inputs
 
 Before generating the document, identify:
 
-- the Word template to use, and where it comes from (upload, SharePoint, OneDrive, or another location);
+- the placeholder Word template to use (a `.docx` already authored with this engine's `{{placeholder}}` grammar), and where it comes from (upload, SharePoint, OneDrive, or another location);
 - the document type, title, and purpose;
 - the intended audience;
 - any user-provided requirements;
@@ -78,8 +91,13 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
    ```
 
    Read the manifest's exact scalar placeholders, repeating arrays, parts, and
-   live Word fields. If inspection rejects the template, report the error; do
-   not guess at its schema.
+   live Word fields. If inspection rejects the template (including Strict
+   OOXML), report the error; do not guess at its schema and do not write
+   replacement scripts.
+
+   If `scalar_placeholders`, `repeating_arrays`, and `conditional_paths` are
+   all empty, the file is not a skill template. Stop using the message under
+   **Template handling**.
 
 4. Retrieve relevant information from approved knowledge, user files, and prior
    tool/connector results already in the conversation. Prefer connector-returned
@@ -149,7 +167,14 @@ Do not invent facts, dates, owners, approvals, obligations, or organizational in
 
 ## Template handling
 
-A Word template (`.docx`) is a **prerequisite**. It is supplied at runtime from one of:
+A Word template (`.docx`) **already authored with this engine's
+`{{placeholder}}` grammar** is a **prerequisite**. A blank Word file, a
+finished prose document, or any `.docx` without inspectable placeholders is
+not a valid input. The expected input style is
+[`assets/sample-template.docx`](assets/sample-template.docx); the grammar is
+in [`references/placeholder-contract.md`](references/placeholder-contract.md).
+
+The template is supplied at runtime from one of:
 
 - a file **uploaded** with the request;
 - **SharePoint** (document library, folder, or site);
@@ -165,9 +190,20 @@ Resolve the template in this order:
 
 Never overwrite the original template in SharePoint, OneDrive, or local storage. Always save a **new** DOCX.
 
-If the required template cannot be found or retrieved, stop document generation and report:
+Stop document generation — and **do not** generate replacement scripts,
+`python-docx` writers, or ad-hoc run replacement — when any of the following
+is true:
+
+- the required template cannot be found or retrieved;
+- inspect, fill, or validate raises (including Strict OOXML);
+- inspect succeeds but `scalar_placeholders`, `repeating_arrays`, and
+  `conditional_paths` are all empty.
+
+Report one of:
 
 'The required Word template was not supplied or could not be accessed.'
+
+'The attached Word file is not a skill template. Supply a .docx already authored with {{placeholder}} tokens in this engine's grammar (see assets/sample-template.docx). Do not use a blank or finished document.'
 
 ## Template contract
 

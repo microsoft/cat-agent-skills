@@ -284,6 +284,8 @@ therefore still fail the unresolved check as expected.
 - Content controls and legacy MERGEFIELD values are preserved, not used as the
   template syntax.
 - Text embedded in unsupported package parts is not filled.
+- Strict OOXML is rejected for the body, headers, and footers (Transitional
+  wordprocessingml namespace only).
 
 Use Word styles, table formatting, and surrounding fixed text in the template
 to achieve the desired visual design.

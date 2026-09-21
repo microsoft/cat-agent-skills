@@ -19,6 +19,7 @@ from lxml import etree
 from build_sample_template import build_sample
 from docx_template import (
     TemplateError,
+    W_STRICT,
     fill_template,
     inspect_template,
     validate_docx,
@@ -115,6 +116,16 @@ def _write_zip(path: Path, parts: dict[str, bytes]) -> None:
 def _visible_text(xml: bytes) -> str:
     root = etree.fromstring(xml)
     return "".join(root.xpath(".//w:t/text()", namespaces=NS))
+
+
+def _with_strict_part(source: Path, dest: Path, part: str) -> None:
+    """Copy a DOCX, rewriting one part from Transitional to Strict OOXML."""
+    parts = _read_zip(source)
+    rewritten = parts[part].replace(W.encode("ascii"), W_STRICT.encode("ascii"))
+    if rewritten == parts[part]:
+        raise AssertionError(f"{part} did not contain the Transitional namespace")
+    parts[part] = rewritten
+    _write_zip(dest, parts)
 
 
 class DocxTemplateTests(unittest.TestCase):
@@ -258,6 +269,36 @@ class DocxTemplateTests(unittest.TestCase):
         bad.write_text("not a zip", encoding="utf-8")
         with self.assertRaisesRegex(TemplateError, "Cannot read DOCX"):
             inspect_template(bad)
+
+    def test_strict_document_xml_is_rejected(self) -> None:
+        strict = self.root / "strict-document.docx"
+        _with_strict_part(self.template, strict, "word/document.xml")
+        with self.assertRaisesRegex(TemplateError, r"Strict OOXML.*word/document\.xml"):
+            inspect_template(strict)
+        output = self.root / "strict-document-out.docx"
+        with self.assertRaisesRegex(TemplateError, r"Strict OOXML.*word/document\.xml"):
+            fill_template(strict, self.data, output)
+        self.assertFalse(output.exists())
+
+    def test_strict_header_xml_is_rejected(self) -> None:
+        strict = self.root / "strict-header.docx"
+        _with_strict_part(self.template, strict, "word/header1.xml")
+        with self.assertRaisesRegex(TemplateError, r"Strict OOXML.*word/header1\.xml"):
+            inspect_template(strict)
+        output = self.root / "strict-header-out.docx"
+        with self.assertRaisesRegex(TemplateError, r"Strict OOXML.*word/header1\.xml"):
+            fill_template(strict, self.data, output)
+        self.assertFalse(output.exists())
+
+    def test_strict_footer_xml_is_rejected(self) -> None:
+        strict = self.root / "strict-footer.docx"
+        _with_strict_part(self.template, strict, "word/footer1.xml")
+        with self.assertRaisesRegex(TemplateError, r"Strict OOXML.*word/footer1\.xml"):
+            inspect_template(strict)
+        output = self.root / "strict-footer-out.docx"
+        with self.assertRaisesRegex(TemplateError, r"Strict OOXML.*word/footer1\.xml"):
+            fill_template(strict, self.data, output)
+        self.assertFalse(output.exists())
 
     def test_write_to_non_writable_path_raises_template_error(self) -> None:
         """fill_template raises TemplateError (not raw OSError) for bad output path."""
