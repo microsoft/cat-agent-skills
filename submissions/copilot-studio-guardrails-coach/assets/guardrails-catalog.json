@@ -1,0 +1,112 @@
+{
+  "catalogVersion": "1.1.0",
+  "lastReviewed": "2026-08-15",
+  "source": "Microsoft Foundry Control Plane / Copilot Studio Guardrails configuration UI",
+  "note": "A guardrail is a collection of controls assigned to specific agents or models. Some controls are added by default and cannot be removed. This catalog is a LIVING document — see references/EVOLUTION.md; update catalogVersion + lastReviewed and append a changelog entry whenever the product UI changes.",
+  "interventionPoints": ["User input", "Output", "Tool call", "Tool response", "Outbound requests"],
+  "actions": ["Block", "Annotate", "On", "Deny", "Allow"],
+  "blockingLevels": ["Low blocking", "Medium blocking", "High blocking"],
+  "groups": [
+    {
+      "group": "Jailbreak",
+      "controls": [
+        {
+          "riskType": "Jailbreak",
+          "interventionPoint": ["User input"],
+          "action": "Block",
+          "default": true,
+          "removable": false,
+          "preview": false,
+          "testWith": ["prompt-injection-override", "jailbreak-framing"]
+        }
+      ]
+    },
+    {
+      "group": "Indirect prompt injections",
+      "controls": [
+        {
+          "riskType": "Indirect prompt injections",
+          "interventionPoint": ["User input", "Tool response"],
+          "toolResponsePreview": true,
+          "action": "Annotate",
+          "default": true,
+          "removable": true,
+          "preview": false,
+          "testWith": ["indirect-injection-xpia"]
+        },
+        {
+          "riskType": "Spotlighting",
+          "interventionPoint": ["User input"],
+          "action": "On",
+          "default": false,
+          "removable": true,
+          "preview": true,
+          "testWith": ["indirect-injection-xpia"]
+        }
+      ]
+    },
+    {
+      "group": "Content harms",
+      "controls": [
+        { "riskType": "Hate", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-hate"] },
+        { "riskType": "Sexual", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-sexual"] },
+        { "riskType": "Self-harm", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-self-harm"] },
+        { "riskType": "Violence", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-violence"] },
+        { "riskType": "Blocklists", "interventionPoint": ["User input", "Output"], "action": "Block", "default": false, "removable": true, "preview": false, "testWith": ["blocklist-term"] }
+      ]
+    },
+    {
+      "group": "Protected materials",
+      "controls": [
+        { "riskType": "Protected material for code", "interventionPoint": ["Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["protected-code"] },
+        { "riskType": "Protected material for text", "interventionPoint": ["Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["protected-text"] }
+      ]
+    },
+    {
+      "group": "Sensitive data leakage",
+      "controls": [
+        {
+          "riskType": "PII",
+          "interventionPoint": ["User input", "Tool call", "Tool response", "Output"],
+          "toolCallPreview": true,
+          "toolResponsePreview": true,
+          "action": "Block",
+          "default": false,
+          "removable": true,
+          "preview": true,
+          "testWith": ["pii-leak"]
+        }
+      ]
+    },
+    {
+      "group": "Task drift",
+      "controls": [
+        {
+          "riskType": "Task adherence",
+          "interventionPoint": ["Tool call"],
+          "action": "Block",
+          "default": false,
+          "removable": true,
+          "preview": true,
+          "testWith": ["task-drift"]
+        }
+      ]
+    },
+    {
+      "group": "Network",
+      "appliesTo": "Hosted agents only. Prompt-based agents and models are not affected.",
+      "controls": [
+        {
+          "riskType": "Egress rules",
+          "interventionPoint": ["Outbound requests"],
+          "action": "Deny",
+          "default": false,
+          "removable": true,
+          "preview": false,
+          "configHint": "Add allow rules; default posture denies outbound requests.",
+          "testWith": ["egress-exfiltration"]
+        }
+      ]
+    }
+  ]
+}
