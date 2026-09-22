@@ -1,0 +1,22 @@
+{
+  "name": "Customer Service & Order Support",
+  "description": "A grounded first response, and a clean escalation packet when it cannot resolve: classify intent against the taxonomy, assemble customer, order, loyalty and delivery context while detecting contradictions, retrieve the approved answer, and draft the resolution in channel and tone.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "retailer",
+    "customer-service",
+    "contact-centre",
+    "wismo",
+    "intent",
+    "escalation"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.1",
+  "createdAt": "2026-09-05",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

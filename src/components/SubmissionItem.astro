@@ -1,0 +1,59 @@
+---
+import type { CollectionEntry } from "astro:content";
+import SkillCard from "./SkillCard.astro";
+import { authorKey, normalizeLogin } from "../lib/badges";
+import { getRating } from "../lib/ratings";
+import { getDownloads } from "../lib/downloads";
+
+interface Props {
+  submission: CollectionEntry<"skills">;
+  variant?: "gallery" | "spotlight";
+}
+
+const { submission, variant = "gallery" } = Astro.props;
+const { id, data: d } = submission;
+const rating = getRating(id);
+const downloads = getDownloads(id);
+---
+
+<div
+  class="submission-item"
+  role={variant === "spotlight" ? "group" : undefined}
+  aria-roledescription={variant === "spotlight" ? "slide" : undefined}
+  aria-label={variant === "spotlight" ? d.name : undefined}
+  data-slug={id}
+  data-name={d.name.toLowerCase()}
+  data-desc={d.description.toLowerCase()}
+  data-tags={d.tags.join(",").toLowerCase()}
+  data-platforms={d.platforms.join(",")}
+  data-type={d.type}
+  data-category={d.category}
+  data-built-by-microsoft={d.builtByMicrosoft ? "1" : "0"}
+  data-author-name={d.author}
+  data-author-login={normalizeLogin(d.authorGithub)}
+  data-author-key={authorKey(d.authorGithub, d.author)}
+  data-rating={rating}
+  data-downloads={downloads}
+  data-featured={d.featured ? "1" : "0"}
+  data-sample={d.tags.includes("sample") ? "1" : "0"}
+  data-updated={(d.updatedAt ?? d.createdAt ?? new Date(0)).getTime()}
+>
+  <SkillCard
+    slug={id}
+    name={d.name}
+    description={d.description}
+    platforms={d.platforms}
+    type={d.type}
+    category={d.category}
+    builtByMicrosoft={d.builtByMicrosoft}
+    variant={variant}
+    tags={d.tags}
+    author={d.author}
+    coverColor={d.coverColor}
+    hasBundle={Boolean(d.bundle)}
+    isInstaller={d.type === "automation" && Boolean(d.bundle?.endsWith(".zip"))}
+    rating={rating}
+    downloads={downloads}
+    featured={d.featured}
+  />
+</div>

@@ -1,0 +1,12 @@
+{
+  "tool_wear": {"base_confidence": 0.88, "why_chain": [
+    "bore oversize on final op", "boring insert worn beyond limit", "insert life not tracked against cuts",
+    "no tool-life counter in the routing", "tool management relies on operator judgment"]},
+  "calibration_drift": {"base_confidence": 0.86, "why_chain": [
+    "dimensions drift toward limits across shifts", "in-process gauge reads low vs CMM", "gauge calibration interval exceeded",
+    "calibration recall list not enforced at the cell", "no automated recall gate at setup"]},
+  "operator_error": {"base_confidence": 0.55, "why_chain": [
+    "step skipped at final check", "work instruction ambiguous at step 7"]},
+  "material_variation": {"base_confidence": 0.8, "why_chain": [
+    "hardness varies lot to lot", "incoming cert values at spec edge", "no incoming hardness verification", "supplier process shift not flagged"]}
+}

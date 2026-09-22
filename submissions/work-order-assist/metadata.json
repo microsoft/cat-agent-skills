@@ -1,0 +1,22 @@
+{
+  "name": "Work Order Assistant",
+  "description": "Everything a technician or planner needs for a work order in one place: asset context, the relevant SOPs and OEM manuals, the most similar past jobs ranked, a parts-readiness check against the storeroom and supersession table, and clean drafted notes with the next best action.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "maintenance",
+    "work-order",
+    "cmms",
+    "sop",
+    "parts",
+    "storeroom"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-08-01",
+  "updatedAt": "2026-09-04",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}

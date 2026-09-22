@@ -1,0 +1,15 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.retail-execution-perfect-store.v1",
+  "title": "Retail Execution & Perfect Store contract v1",
+  "description": "Chains visit-prep -> standard-retrieve -> gap-score -> action-register -> visit-report. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "outlet", "visit"],
+  "properties": {
+    "contract_version": { "const": "rtl.retail-execution-perfect-store.v1" },
+    "outlet": { "type": "object" }, "visit": { "type": "object" },
+    "compliance": { "type": "object", "properties": {
+        "criteria": { "type": "array", "items": { "type": "object" } },
+        "compliance_pct": { "type": "number" },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "ranked_gaps": { "type": "array", "items": { "type": "object" } },
+    "suggested_order": { "type": "array", "items": { "type": "object" } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

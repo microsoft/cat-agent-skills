@@ -1,0 +1,39 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "2.0.0",
+    "id": "61731de5-e9bc-5dfa-bc8d-a60f16e346f2",
+    "developer": {
+        "name": "Microsoft Manufacturing Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Quality Inspection",
+        "full": "Quality Inspection Nonconformance"
+    },
+    "description": {
+        "short": "Manufacturing Wave 1 Cowork plugin: clear an inspection lot. Reads part specs,",
+        "full": "Manufacturing Wave 1 Cowork plugin: clear an inspection lot. Reads part specs, drawings, inspection plans, CoC and measurement exports; compares actual measurements against tolerances (deterministic tolerance_check, with CoC-vs-measurement cross-check); grades each defect by severity and disposition (deterministic defect_grade rules engine); drafts the nonconformance report with every call cited to the spec. Draft-first; document-grounded. Ends at NCR creation and hands off to Quality Incident & CAPA (Wave 2)."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/defect-grade"
+        },
+        {
+            "folder": "./skills/ncr-draft"
+        },
+        {
+            "folder": "./skills/spec-ingest"
+        },
+        {
+            "folder": "./skills/tolerance-check"
+        }
+    ]
+}

@@ -1,6 +1,7 @@
-# Contributing a skill
+# Contributing skills, plugins, and automations
 
-Thanks for helping grow the **CAT Agent Skills** gallery! A *skill* is a reusable
+Thanks for helping grow the **CAT Agent Skills** gallery! We accept **Agent
+Skills**, **Cowork plugins**, and **Scout automations**. A *skill* is a reusable
 instruction set for an AI agent — targeting one or more of **Cowork**,
 **Copilot Studio**, and **Scout** — published here with optional helper
 `scripts/`, `references/`, and `assets/`.
@@ -13,10 +14,19 @@ download bundle) for you.
 ## The submission shape
 
 Every submission is a `submissions/<slug>/` folder: a `metadata.json` sidecar, an
-optional `README.md`, and **exactly one** payload. This section covers the common
-payload — a **skill**, as an **unpacked** folder. Scout submissions can instead
-ship a single automation `.json` (covered just below). `.zip` payloads are **no
-longer accepted** — submit your skill unpacked.
+optional `README.md`, and **exactly one** of these payloads:
+
+| Format | Source to submit |
+| --- | --- |
+| Agent Skill | An unpacked `SKILL.md` with optional `scripts/`, `references/`, and `assets/`. |
+| [Cowork plugin](#cowork-plugins) | An unpacked Microsoft 365 app package: `manifest.json`, icons, and the referenced skill/connector resources. |
+| [Scout automation](#scout-automations) | A single importable automation `.json`. |
+
+**Cowork plugins are accepted.** New prepackaged `.zip` submissions are not:
+submit the package's unpacked source so it can be reviewed. CI creates its
+downloadable ZIP.
+
+For a single Agent Skill, the layout is:
 
 ```
 submissions/<slug>/
@@ -29,26 +39,36 @@ submissions/<slug>/
     └── assets/       # optional templates / data files
 ```
 
-Copy [`submissions/_template/`](submissions/_template) to get started. The
+For a single skill, copy [`submissions/_template/`](submissions/_template) to get started. The
 `<slug>` is the folder name (lowercase, hyphenated), e.g.
 `meeting-summarizer` → `/skills/meeting-summarizer`. See
 [`submissions/README.md`](submissions/README.md) for the full reference.
 
 > **A submission holds two kinds of files: agent-facing and human-facing.**
 > Everything **agent-facing** is bundled into the download **verbatim** — the
-> bundle *is* the skill the agent loads — so keep it to `SKILL.md`, `scripts/`,
-> `references/`, and `assets/`. The two **human-facing** files are **never
+> bundle *is* the payload the agent loads. For single skills, keep it to `SKILL.md`,
+> `scripts/`, `references/`, and `assets/`; plugins also retain their manifest,
+> icons, and declared package resources. The two **human-facing** files are **never
 > bundled**: the `metadata.json` sidecar and an optional
 > [`README.md`](#what-visitors-see). Don't leave other docs (CHANGELOG, personal
 > notes) next to your payload — they'd ship to the agent and waste its context;
 > put those in your pull request description instead.
 
-### Cowork plugins (no longer accepted)
+### Cowork plugins
 
-Cowork **plugin** packages — an M365 app `.zip` with a root `manifest.json`
-bundling one or more skills (plus optional MCP connectors) — are **no longer
-accepted** as new submissions, because the gallery no longer takes `.zip`
-payloads. Existing plugin submissions stay published.
+Cowork **plugins** are one submission containing one or more skills and/or MCP
+connectors. Set `platforms` to `["Cowork"]` in `metadata.json` and submit the
+Microsoft 365 app package **unpacked**: root
+`manifest.json`, `color.png`, `outline.png`, and the skill folders referenced in
+`agentSkills`. Include the usual metadata and optional README sidecars. CI
+validates the package and produces the downloadable ZIP; do not submit a ZIP
+or a root `SKILL.md` alongside the manifest.
+
+Claude-format `.claude-plugin/plugin.json` packages need conversion with
+[`atk import openplugin`](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development#import-an-existing-plugin)
+before submission. Check the converted skills and their companion resources,
+not just the manifest. See the [plugin reference](submissions/README.md#cowork-plugins)
+for the layout.
 
 ### Scout automations
 
@@ -82,7 +102,9 @@ the gallery ever sees it. People see two things you write for **them**:
   your gallery card.
 - Your optional **`README.md`** — drop one in the submission folder (any entry
   type) and it becomes the main content on the detail page, in your own voice.
-  Without it, the page shows the `SKILL.md` instructions instead.
+  Without it, the page shows the payload's default overview or instructions.
+  Plugin pages always include the declared skill/connector inventory and shared
+  installation guidance, independently of the README.
 
 ## `SKILL.md`
 
@@ -112,18 +134,30 @@ the download bundle):
 | `author`      | yes      | Person or team who wrote the skill.                 |
 
 Optional: `authorUrl`, `authorGithub`, `version`, `createdAt`, `updatedAt`,
-`coverColor`, `featured`. (`bundle` is set automatically when your skill ships
+`coverColor`, `featured`, `category`, `builtByMicrosoft`. (`bundle` is set automatically when your skill ships
 files beyond `SKILL.md`. `authorGithub` — the author's GitHub login — is
 normally derived from an `authorUrl` that points to a GitHub profile
 (`https://github.com/<login>`); the *skillbot* uses it to @-mention the author
 on the first comment of the skill's discussion. Set it explicitly only when your
 only link isn't a GitHub profile, e.g. LinkedIn.)
 
+`category` is one of `manufacturing`, `retail-cpg`, `productivity` (the default),
+or `agent-development`. Categories are deliberately broad and stable; use tags
+for specific topics. Category, search, platform, tag, type, and contributor
+filters apply to both homepage sections.
+
+`builtByMicrosoft` is a boolean, defaulting to `false`. Set it to `true` only
+for Microsoft-built submissions: they appear in the larger-card **Built by
+Microsoft** carousel rather than the **Community** grid. This does not change
+the submission's type, author attribution, download, or detail page. The flag
+is independent of `featured`; reviewers should confirm Microsoft provenance.
+Never put these catalog fields into an agent-facing `SKILL.md`.
+
 ## Validate locally
 
 ```bash
-npm install
-npm run check:submissions   # validate metadata only, writes nothing
+npm ci
+npm run check:submissions    # validate metadata and payload layout; writes nothing
 npm run import:submissions   # generate the skill page(s) + bundle(s)
 npm run dev                  # preview at http://localhost:4321/cat-agent-skills
 npm run build                # runs the same content validation as CI

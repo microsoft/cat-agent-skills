@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "b8e5b942-4644-515d-9adc-ab413daf1765",
+    "developer": {
+        "name": "Microsoft Retail & CPG Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Store Task Promotion Execution",
+        "full": "Store Task Promotion Execution"
+    },
+    "description": {
+        "short": "Retail Wave 1 Cowork plugin: turn the HQ campaign pack into a store-specific,",
+        "full": "Retail Wave 1 Cowork plugin: turn the HQ campaign pack into a store-specific, verifiable execution plan before launch day. Ingests the pack, price file, planogram and task list; maps requirements to the store's format and cluster; tests completeness and flags pricing and signage conflicts deterministically (readiness_check engine); ranks exceptions by revenue impact (exception_rank engine); drafts the readiness checklist, shift brief and exception list. It does not change POS prices, planograms, labour schedules or campaign funding."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/brief-draft"
+        },
+        {
+            "folder": "./skills/exception-raise"
+        },
+        {
+            "folder": "./skills/pack-ingest"
+        },
+        {
+            "folder": "./skills/readiness-check"
+        },
+        {
+            "folder": "./skills/store-map"
+        }
+    ]
+}

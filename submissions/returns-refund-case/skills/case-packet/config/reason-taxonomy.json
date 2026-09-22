@@ -1,0 +1,5 @@
+{ "defective": ["broken", "doesn't work", "not working", "faulty", "stopped"],
+  "wrong_item": ["wrong", "not what i ordered", "different item"],
+  "not_as_described": ["not as described", "looks different", "smaller than"],
+  "changed_mind": ["changed my mind", "don't need", "no longer", "gift", "didn't like"],
+  "fit": ["doesn't fit", "too small", "too big", "wrong size"] }

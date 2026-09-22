@@ -1,0 +1,16 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.order-intake-o2c.v1",
+  "title": "Order Intake & O2C Exception contract v1",
+  "description": "Chains order-ingest -> line-normalize -> order-validate -> exception-route -> response-draft. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "order_ref", "lines"],
+  "properties": {
+    "contract_version": { "const": "rtl.order-intake-o2c.v1" },
+    "order_ref": { "type": "string" }, "customer": { "type": "object" },
+    "lines": { "type": "array", "items": { "type": "object" } },
+    "validation": { "type": "object", "properties": {
+        "line_results": { "type": "array", "items": { "type": "object" } },
+        "order_status": { "enum": ["clean", "exceptions"] },
+        "credit_check": { "type": "object" },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "exceptions": { "type": "array", "items": { "type": "object" } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

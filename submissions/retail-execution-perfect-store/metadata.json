@@ -1,0 +1,22 @@
+{
+  "name": "Retail Execution & Perfect Store",
+  "description": "A prepared call and a complete, evidenced visit report: assemble the pre-call plan, score the perfect-store gap deterministically against the channel standard, rank gaps by revenue impact rather than count, and draft the visit report, action register and suggested order for the rep to confirm.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "cpg",
+    "field-sales",
+    "retail-execution",
+    "perfect-store",
+    "dsr",
+    "visit-report"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

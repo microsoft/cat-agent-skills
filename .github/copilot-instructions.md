@@ -2,7 +2,8 @@
 
 This repo is a gallery of reusable **Agent Skills**. Contributors add one
 submission under `submissions/<slug>/` (a `metadata.json` sidecar plus exactly
-one payload — an unpacked `SKILL.md` skill, a `.zip`, or a Scout `.json`); CI
+one payload — an unpacked `SKILL.md` skill, an unpacked M365 Cowork plugin, or a
+Scout `.json`; only grandfathered ZIPs remain accepted); CI
 generates the published page and download bundle. See
 [`CONTRIBUTING.md`](../CONTRIBUTING.md) and
 [`submissions/README.md`](../submissions/README.md) for the full rules.
@@ -27,8 +28,8 @@ comments over a nit.
   guidance with nowhere to live (see *Human-facing vs. agent-facing content*).
 - Submission-hygiene breaks: mixed-scope PR, hand-committed generated artifacts,
   wrong file layout, invalid or renamed **required** `metadata.json` fields,
-  `name`/slug mismatch, or a payload that isn't a `SKILL.md` / `.zip` / Scout
-  `.json`.
+  `name`/slug mismatch, or an unsupported or ambiguous payload (see
+  **Submission hygiene**).
 - Anything that **breaks CI**, or is a **security / privacy** problem (secrets,
   data exfiltration, harmful content).
 
@@ -181,17 +182,34 @@ needed by the agent, so it stays in `SKILL.md`.
   start / setup-prep prose (see **Human-facing vs. agent-facing content**
   above). Open straight into the agent instructions.
 - `references/`, `assets/`, and `scripts/` are **top-level siblings** inside the
-  submission (or the `.zip`), not nested under one another (e.g. not
-  `scripts/references/`).
+  single skill, not nested under one another (e.g. not `scripts/references/`).
+  In a multi-skill plugin, these live inside the corresponding
+  `skills/<skill-name>/` folder.
+- An unpacked Cowork plugin is one submission with a root M365 `manifest.json`,
+  app icons, and manifest-referenced skill folders and/or connectors. It must not
+  also contain a root `SKILL.md`, automation JSON, or ZIP payload. Each contained
+  skill's frontmatter name matches its own folder. CI generates the downloadable
+  package. Claude-format plugin manifests need conversion before submission.
+- Runtime/package resources and applicable license notices belong in plugin
+  packages; human setup/overview stays in the root README sidecar. Do not assume
+  package-root shared files are available as skill companion files at runtime.
 - Canonical instruction filename is uppercase `SKILL.md` (legacy lowercase
   `skill.md` still imports, but prefer `SKILL.md`).
 - `metadata.json` should carry the documented fields only
   (`name`, `description`, `platforms`, `tags`, `author`, and the optional
   `authorUrl`, `authorGithub`, `version`, `createdAt`, `updatedAt`, `coverColor`,
-  `featured`). Unknown keys are silently stripped by the schema — flag them as noise.
+  `featured`, `category`, `builtByMicrosoft`). Unknown keys are silently stripped
+  by the schema — flag them as noise.
+- `category` is one of `manufacturing`, `retail-cpg`, `productivity` (default),
+  or `agent-development`. Use tags for finer detail instead of inventing categories.
+- `builtByMicrosoft` is a boolean defaulting to `false`. It selects carousel
+  placement rather than the community grid, independently of submission type,
+  author fields, and `featured`. Confirm the claim from the submission's
+  provenance; do not infer it from an author's name or GitHub login.
 - `authorGithub` is normally derived from a `github.com/<login>` `authorUrl`; set
   it explicitly only to attribute an author whose link isn't a GitHub profile
   (e.g. LinkedIn), or leave it unset. It is never the PR/merger login. Never set
-  `bundle` by hand; CI populates it.
+  `bundle`, `type`, `pluginSkills`, or `pluginConnectors` by hand; CI derives them.
 - The `SKILL.md` frontmatter `name` must be a lowercase-hyphenated slug that
-  matches the submission folder name.
+  matches the submission folder name for a single skill, or the individual skill
+  folder name inside a plugin.

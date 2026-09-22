@@ -2,6 +2,7 @@
  * Shared helpers for the skills gallery: deterministic cover styling and
  * small utilities reused across pages, endpoints, and the client island.
  */
+import type { Category } from "./categories";
 
 /** The agent platforms a skill can target. */
 export const PLATFORMS = ["Cowork", "Copilot Studio", "Scout"] as const;
@@ -84,6 +85,10 @@ export type SkillSummary = {
   description: string;
   platforms: Platform[];
   type: SkillType;
+  category: Category;
+  builtByMicrosoft: boolean;
+  pluginSkills?: { folder: string; name: string; description: string }[];
+  pluginConnectors?: { id?: string; displayName?: string; description?: string }[];
   tags: string[];
   author?: string;
   authorGithub?: string | null;
