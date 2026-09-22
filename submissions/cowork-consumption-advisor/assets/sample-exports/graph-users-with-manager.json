@@ -1,0 +1,356 @@
+{
+ "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users",
+ "value": [
+  {
+   "displayName": "Vera Halvorsen",
+   "userPrincipalName": "vera.halvorsen@contoso.example",
+   "department": "Sales",
+   "jobTitle": "Specialist",
+   "usageLocation": "DE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Nora Lindgren",
+    "userPrincipalName": "nora.lindgren@contoso.example"
+   }
+  },
+  {
+   "displayName": "Ada Novak",
+   "userPrincipalName": "ada.novak@contoso.example",
+   "department": "Finance",
+   "jobTitle": "Specialist",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Tomas Reyes",
+    "userPrincipalName": "tomas.reyes@contoso.example"
+   }
+  },
+  {
+   "displayName": "Emil Sanz",
+   "userPrincipalName": "emil.sanz@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Analyst",
+   "usageLocation": "RS",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Maja Sato",
+   "userPrincipalName": "maja.sato@contoso.example",
+   "department": "Sales",
+   "jobTitle": "Consultant",
+   "usageLocation": "PT",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Nora Lindgren",
+    "userPrincipalName": "nora.lindgren@contoso.example"
+   }
+  },
+  {
+   "displayName": "Kaia Jensen",
+   "userPrincipalName": "kaia.jensen@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Senior Analyst",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Bram Fischer",
+   "userPrincipalName": "bram.fischer@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Specialist",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Dilan Klein",
+   "userPrincipalName": "dilan.klein@contoso.example",
+   "department": "Finance",
+   "jobTitle": "Senior Analyst",
+   "usageLocation": "DE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Tomas Reyes",
+    "userPrincipalName": "tomas.reyes@contoso.example"
+   }
+  },
+  {
+   "displayName": "Sven Weber",
+   "userPrincipalName": "sven.weber@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Specialist",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Zoe Mendes",
+   "userPrincipalName": "zoe.mendes@contoso.example",
+   "department": "Marketing",
+   "jobTitle": "Architect",
+   "usageLocation": "NL",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Karl Weiss",
+    "userPrincipalName": "karl.weiss@contoso.example"
+   }
+  },
+  {
+   "displayName": "Dana Hansen",
+   "userPrincipalName": "dana.hansen@contoso.example",
+   "department": "Sales",
+   "jobTitle": "Specialist",
+   "usageLocation": "NL",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Nora Lindgren",
+    "userPrincipalName": "nora.lindgren@contoso.example"
+   }
+  },
+  {
+   "displayName": "Gustav Silva",
+   "userPrincipalName": "gustav.silva@contoso.example",
+   "department": "Finance",
+   "jobTitle": "Analyst",
+   "usageLocation": "PT",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Tomas Reyes",
+    "userPrincipalName": "tomas.reyes@contoso.example"
+   }
+  },
+  {
+   "displayName": "Yusuf Kaur",
+   "userPrincipalName": "yusuf.kaur@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Architect",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Casper Marek",
+   "userPrincipalName": "casper.marek@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Consultant",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Hana Berg",
+   "userPrincipalName": "hana.berg@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Specialist",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Xenia Olsen",
+   "userPrincipalName": "xenia.olsen@contoso.example",
+   "department": "Operations",
+   "jobTitle": "Senior Analyst",
+   "usageLocation": "PT",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Amira Haddad",
+    "userPrincipalName": "amira.haddad@contoso.example"
+   }
+  },
+  {
+   "displayName": "Elif Kowalski",
+   "userPrincipalName": "elif.kowalski@contoso.example",
+   "department": "Sales",
+   "jobTitle": "Senior Analyst",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Nora Lindgren",
+    "userPrincipalName": "nora.lindgren@contoso.example"
+   }
+  },
+  {
+   "displayName": "Lars Moreau",
+   "userPrincipalName": "lars.moreau@contoso.example",
+   "department": "Sales",
+   "jobTitle": "Architect",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Nora Lindgren",
+    "userPrincipalName": "nora.lindgren@contoso.example"
+   }
+  },
+  {
+   "displayName": "Jonas Horvat",
+   "userPrincipalName": "jonas.horvat@contoso.example",
+   "department": "Marketing",
+   "jobTitle": "Manager",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Karl Weiss",
+    "userPrincipalName": "karl.weiss@contoso.example"
+   }
+  },
+  {
+   "displayName": "Uma Nagy",
+   "userPrincipalName": "uma.nagy@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Consultant",
+   "usageLocation": "RS",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Pavel Petrov",
+   "userPrincipalName": "pavel.petrov@contoso.example",
+   "department": "Finance",
+   "jobTitle": "Specialist",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Tomas Reyes",
+    "userPrincipalName": "tomas.reyes@contoso.example"
+   }
+  },
+  {
+   "displayName": "Rina Costa",
+   "userPrincipalName": "rina.costa@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Manager",
+   "usageLocation": "NL",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Anders Brandt",
+   "userPrincipalName": "anders.brandt@contoso.example",
+   "department": "Marketing",
+   "jobTitle": "Specialist",
+   "usageLocation": "DE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Karl Weiss",
+    "userPrincipalName": "karl.weiss@contoso.example"
+   }
+  },
+  {
+   "displayName": "Farah Popescu",
+   "userPrincipalName": "farah.popescu@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Manager",
+   "usageLocation": "RS",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Chen Rossi",
+   "userPrincipalName": "chen.rossi@contoso.example",
+   "department": "Operations",
+   "jobTitle": "Specialist",
+   "usageLocation": "NL",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Amira Haddad",
+    "userPrincipalName": "amira.haddad@contoso.example"
+   }
+  },
+  {
+   "displayName": "Tara Duarte",
+   "userPrincipalName": "tara.duarte@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Senior Analyst",
+   "usageLocation": "RS",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  },
+  {
+   "displayName": "Nils Bakker",
+   "userPrincipalName": "nils.bakker@contoso.example",
+   "department": "Finance",
+   "jobTitle": "Analyst",
+   "usageLocation": "NL",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Tomas Reyes",
+    "userPrincipalName": "tomas.reyes@contoso.example"
+   }
+  },
+  {
+   "displayName": "Olga Lindqvist",
+   "userPrincipalName": "olga.lindqvist@contoso.example",
+   "department": "Engineering",
+   "jobTitle": "Architect",
+   "usageLocation": "SE",
+   "officeLocation": "HQ",
+   "manager": {
+    "@odata.type": "#microsoft.graph.user",
+    "displayName": "Ines Ferreira",
+    "userPrincipalName": "ines.ferreira@contoso.example"
+   }
+  }
+ ]
+}
