@@ -32,6 +32,7 @@ Use this checklist when reviewing or creating an Agent Skill.
 - Does the skill avoid leaking private paths, names or client details?
 - Does it avoid unsupported claims?
 - Can someone outside the original organisation use it?
+- Do scripts, runtime dependencies, commands and paths work on every declared platform?
 
 ## Packaging
 
@@ -39,3 +40,5 @@ Use this checklist when reviewing or creating an Agent Skill.
 - `SKILL.md` frontmatter name matches the folder name.
 - `metadata.json` has name, description, platforms and tags.
 - Any bundled resources are necessary and reusable.
+- Have the target repository or authoring tool's current requirements been checked?
+- Have available deterministic schema, layout and packaging checks passed?

@@ -49,13 +49,18 @@ The `SKILL.md` should contain:
 
 ## Workflow
 
-1. Identify the workflow the user wants to package.
-2. Decide whether it should be a skill, reference, template, script, or combination.
-3. Write or improve the skill trigger description.
-4. Keep instructions concise and operational.
-5. Move long examples and detailed reference material out of `SKILL.md` where appropriate.
-6. Check for sensitive, organisation-specific, or non-reusable content.
-7. Produce a candidate folder structure and files.
+1. Identify whether the user wants to create, improve, review, package, or submit a skill, along with the target platforms and any target repository or authoring tool.
+2. Read the target's current authoring and submission requirements before proposing files or metadata.
+3. When reviewing existing files, run available deterministic schema, layout, and packaging checks first. Report failures before qualitative feedback and recommend **Revise** until they are resolved.
+4. Identify the repeatable workflow the user wants to package.
+5. Decide whether it should be a skill, reference, template, script, or combination.
+6. Write or improve the skill trigger description.
+7. Keep instructions concise and operational.
+8. Move long examples and detailed reference material out of `SKILL.md` where appropriate.
+9. Check for sensitive, organisation-specific, or non-reusable content.
+10. Verify that scripts, runtime dependencies, commands, and filesystem assumptions work on every declared platform.
+11. Produce a candidate folder structure and files.
+12. Run the available target validators again. Recommend **Submit** only when the known target requirements are met and all available checks pass; state anything that could not be verified.
 
 ## Review rubric
 
@@ -67,10 +72,11 @@ Score candidate skills from 0 to 5 on:
 4. **Portability** - Can others use it without private assumptions?
 5. **Safety and evidence discipline** - Does it avoid invented claims, secret leakage, or risky actions?
 6. **Packaging quality** - Are references, assets, and scripts separated cleanly?
+7. **Target compliance** - Does it satisfy the target's schema, layout, packaging, and platform requirements?
 
 ## Output format for review
 
-```markdown
+````markdown
 ## Skill review
 
 Overall recommendation: [Submit / Revise / Keep private]
@@ -89,7 +95,7 @@ Overall recommendation: [Submit / Revise / Keep private]
 ```text
 [folder tree]
 ```
-```
+````
 
 
 ## References
@@ -106,4 +112,6 @@ Before responding, check:
 - The trigger description is precise.
 - Organisation-specific material is removed or parameterised.
 - Long reference content is not overloaded into the main skill file.
+- The target's current requirements are satisfied and available deterministic checks pass.
+- Scripts, dependencies, commands, and paths work on every declared platform.
 - The result is practical for a maker to copy into a skills repository.
