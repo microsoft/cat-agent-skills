@@ -1,0 +1,11 @@
+{
+  "name": "Out-of-Office Assistant",
+  "description": "While you're out of office, auto-replies to 1:1 chats and @mentions (clearly marked AI-generated), flags urgent items to you, watches meetings for mentions of your name, and produces an end-of-day digest.",
+  "platforms": ["Cowork", "Scout"],
+  "tags": ["out-of-office", "teams", "automation", "email", "meetings", "productivity"],
+  "author": "Srinivas Varukala",
+  "authorUrl": "https://github.com/svarukala",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
