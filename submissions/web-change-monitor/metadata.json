@@ -1,0 +1,9 @@
+{
+  "name": "Web Change Monitor",
+  "description": "Watch a web page (or a specific table/section) for real content changes and alert only when something changed — great for release notes, changelogs/deprecations, service-health status flips, and runbook edits. Fingerprint-based, state-file-backed, noise-tolerant, and schedule-friendly.",
+  "platforms": ["Scout", "Cowork"],
+  "tags": ["automation", "monitoring", "browser", "alerts", "productivity"],
+  "author": "Alex Hudish",
+  "authorUrl": "https://github.com/hudish",
+  "version": "1.0.0"
+}
