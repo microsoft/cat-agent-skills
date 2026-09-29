@@ -1,0 +1,52 @@
+{
+  "schema": "fill-word-template/policy/v3",
+  "policy_id": "v3-default",
+  "description": "Safety policy shipped with the package: what is refused outright, what is reported for review, and the size bounds. Interpretation rules (placeholder patterns, parts in scope, locale) live in profile.default.json and may be overridden per job; this file may not.",
+  "constructs": {
+    "digital_signatures": "block",
+    "macros": "block",
+    "embedded_objects": "report",
+    "comments": "report",
+    "tracked_changes": "report",
+    "hidden_text": "allow",
+    "field_codes_present": "report",
+    "content_controls_present": "allow",
+    "sensitivity_label_present": "allow",
+    "custom_properties_present": "allow",
+    "unreadable_part": "block",
+    "unsupported_part_markup": "block",
+    "repeated_text": "report",
+    "external_relationships": {
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink": "allow",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/attachedTemplate": "report",
+      "*": "report"
+    }
+  },
+  "limits": {
+    "max_template_bytes": 10000000,
+    "max_output_bytes": 10000000,
+    "max_zip_entries": 2000,
+    "max_expansion_ratio": 100,
+    "max_part_bytes": 52428800,
+    "max_xml_depth": 256,
+    "max_candidates": 5000,
+    "max_paragraphs": 200000,
+    "max_paragraph_text_chars": 300,
+    "max_candidate_text_chars": 200,
+    "max_value_chars": 10000,
+    "max_repeat_items": 500,
+    "max_inserted_paragraphs": 200,
+    "max_deleted_fraction": 0.5,
+    "max_report_text_chars": 240,
+    "max_unused_paths_listed": 25
+  },
+  "delivery": {
+    "filename_allowed_chars": "A-Za-z0-9._-",
+    "filename_max_stem_chars": 60
+  },
+  "meaning_of_severities": {
+    "block": "The template is refused at inspection; nothing can be planned or applied.",
+    "report": "Recorded as a finding; the job result is needs_review at best.",
+    "allow": "Permitted and preserved without comment."
+  }
+}

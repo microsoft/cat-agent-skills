@@ -1,0 +1,32 @@
+{
+  "inspect": {
+    "blocked": true,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "Client: {{ client_name }}"
+      ],
+      "word/header1.xml": [
+        "Confidential"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p1#8-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      }
+    ],
+    "findings": [
+      "digital_signatures"
+    ]
+  },
+  "runs": []
+}

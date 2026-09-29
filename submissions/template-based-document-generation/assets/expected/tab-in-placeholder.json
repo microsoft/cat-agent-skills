@@ -1,0 +1,88 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "{{\tx }}"
+      ],
+      "word/header1.xml": [
+        "Confidential"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p1#0-7",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": false,
+        "decision_required": false,
+        "name_guess": "x"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "leave structural tab placeholder unfilled",
+      "plan": {
+        "decisions": [],
+        "fields": []
+      },
+      "values": {},
+      "expect": {
+        "result": "needs_review",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "{{\tx }}"
+          ],
+          "word/header1.xml": [
+            "Confidential"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ]
+        },
+        "review_codes": [
+          "unfillable",
+          "no_operations"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "refuse forced fill across tab",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#0-7",
+            "decision": "field",
+            "field": "x"
+          }
+        ],
+        "fields": [
+          {
+            "name": "x",
+            "type": "string",
+            "source": "x"
+          }
+        ]
+      },
+      "values": {
+        "x": "Acme"
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "span covers a tab or break"
+        ]
+      },
+      "rerun": false
+    }
+  ]
+}
