@@ -1,0 +1,12 @@
+{
+  "name": "Eye.Art Polyphemus",
+  "description": "Create and refine images through one conversational MCP router, including reference edits, website-matched visuals, editable SVG, and artist-guided workflows.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["images", "image-generation", "mcp", "design", "svg"],
+  "author": "Eye.Art",
+  "authorUrl": "https://eye.art",
+  "authorGithub": "jacobwell",
+  "version": "1.0.0",
+  "createdAt": "2026-09-30",
+  "updatedAt": "2026-09-30"
+}
