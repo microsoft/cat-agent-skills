@@ -19,39 +19,15 @@ https://mcp.docsbot.ai
 
 The hosted server advertises fixed, named Admin MCP tools. Call a known tool directly with its operation-specific `pathParams`, `query`, and/or `body` input. For example, call `list_teams` to resolve the team, `list_bots` with `pathParams.teamId` to resolve a bot, and `get_bot` with `pathParams.teamId` and `pathParams.botId` to inspect it. Read the advertised input schema before sending fields that are not already clear. Do not call a generic `execute` tool or send an `operationId`.
 
-`list_tool_categories`, `search_tools`, and `get_tool_schema` inspect metadata for tools already advertised to the client. Use them only when the relevant name or schema is unclear; they do not enable, execute, or discover hidden operations. Stable tool names remain callable across additive, backward-compatible hosted MCP updates. New or changed metadata may be held by OpenAI's automated scan while the last approved definition remains live; a newly added tool is unavailable until approved. Keep calls compatible with the currently advertised schema. Plugin skills, config, and listing changes require a new package ZIP.
+`list_tool_categories`, `search_tools`, and `get_tool_schema` inspect metadata for tools already advertised to the client. Use them only when the relevant name or schema is unclear; they do not enable, execute, or discover hidden operations. Stable tool names remain callable across additive, backward-compatible hosted MCP updates. New or changed metadata may be held by OpenAI's automated scan while the last approved definition remains live; a newly added tool is unavailable until approved. Keep calls compatible with the currently advertised schema.
 
 ## Download Approvals
 
 Generated question-log, lead, Q&A, and source downloads (`export_question_log`, `export_leads`, `export_qa_source`, and `get_source_download_url`) are additive, non-destructive operations that create temporary private transport files. Hosted policy classifies these tools as non-read-only; use the client's approval flow when requested. They leave application records and earlier downloads unchanged. Signing an existing source file with `get_source_file_download_url` remains read-only. Never bypass an approval prompt or infer authorization to perform another action from download approval.
 
-## Setup
+## Runtime prerequisites
 
-If the MCP server is not already configured, add it to the client as a Streamable HTTP MCP server:
-
-```json
-{
-  "mcpServers": {
-    "docsbot": {
-      "url": "https://mcp.docsbot.ai"
-    }
-  }
-}
-```
-
-For Codex, the direct MCP setup is:
-
-```bash
-codex mcp add docsbot --url https://mcp.docsbot.ai
-codex mcp login docsbot
-```
-
-For Codex plugin installation, use the marketplace package in this repository instead:
-
-```bash
-codex plugin marketplace add uglyrobot/docsbot-agent-skills
-codex plugin add docsbot-administration@docsbot
-```
+Use the already configured DocsBot MCP connector and complete client-managed browser OAuth when authentication is required. If named Admin tools are unavailable, explain that the connector needs setup before continuing. Never request passwords, OAuth tokens, or API keys in chat.
 
 ## Workflow
 
@@ -160,12 +136,11 @@ If a named tool is absent from the advertised catalog, do not attempt a generic 
 - Treat existing DocsBot dashboard RBAC as the source of truth. If an action is denied, report the denial rather than attempting to bypass it.
 - After an uncertain or timed-out write, read back the intended resource state before retrying. Repeated create or send calls can duplicate resources or effects; if the outcome cannot be verified, report the uncertainty instead of retrying blindly.
 - Do not expose OAuth tokens, API keys, internal headers, or private response data beyond what the user needs for the task.
-- Do not use Admin MCP for per-bot documentation retrieval or question-history semantic search; those are separate per-bot MCP servers.
+- Use advertised Admin MCP tools such as `search_bot_knowledge` and `search_question_logs` for authorized administrative diagnostics, bot verification, and response-quality analysis. For end-user documentation retrieval or question-history retrieval serving, use the separate per-bot Documentation or Question History MCP server. Do not use the Admin MCP as an end-user retrieval connector.
 
 Subscription and commerce mutations are outside this plugin. Do not use `update_bot` to enable Stripe payments, refunds, cancellations, or other commerce actions. Read account usage through an advertised read tool when available.
 
 ## References
 
 - [DocsBot MCP server guide](references/mcp-server.md)
-- [MCP client configuration examples](references/mcp-client-config.md)
 - [Bot-builder subworkflow](references/bot-builder/SKILL.md)
