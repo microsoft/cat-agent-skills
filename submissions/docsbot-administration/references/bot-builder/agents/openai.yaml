@@ -1,0 +1,11 @@
+interface:
+  display_name: "DocsBot Bot Builder"
+  short_description: "Create, tune, verify, and hand off DocsBot bots via Admin MCP"
+  default_prompt: "Use $docsbot-bot-builder-admin-mcp to create and tune a final-product-quality DocsBot bot for our website, including branding, sources, source tags, prompts, actions, safety, and handoff links."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "docsbot"
+      description: "DocsBot DocsBot Admin MCP named tools"
+      transport: "streamable_http"
+      url: "https://mcp.docsbot.ai"
