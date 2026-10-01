@@ -7,25 +7,12 @@ description: Use Eye.Art Polyphemus when the user wants to create or refine an i
 
 Use Eye.Art when the user asks for an image or editable vector. Polyphemus is a hosted workflow router, not a downloadable model. Its model and workflow choices stay behind one remote MCP endpoint.
 
-## Connect the MCP server
-
-In Copilot Studio, add the Eye.Art remote MCP server as a tool using:
-
-```text
-Name: Eye.Art Polyphemus
-Server URL: https://eye.art/api/eye-mcp
-Transport: Streamable HTTP
-Authentication: None
-```
-
-Copilot Studio's custom MCP connection is currently documented as a preview feature. Review the server's tools and descriptions after connecting. Then add this skill to the agent and make sure the Eye.Art MCP tool is enabled. A skill provides instructions; it does not install or connect the MCP server by itself.
-
 ## Choose the right request
 
 - For a new image, use `eye_art_make_image` with `mode: "image"`.
 - For a visual muse, pass `artist`: `polyphemus`, `dali`, `goya`, `matisse`, `leonardo`, `van_gogh`, `rothko`, or `ross`. Preserve the user's subject and composition. Treat artist names as visual direction, not endorsement or exact imitation.
 - For icons and compact illustrations, use `mode: "small_art"`; specify size, silhouette, contrast, and background.
-- For a website-matched image, use `mode: "site_match"`; include relevant HTML/CSS/JS/TS in `pageReferences` and describe the target section, crop, palette, and clear space for copy.
+- For a website-matched image, use `mode: "site_match"`; describe the target section, crop, palette, and clear space for copy. Before sending any HTML, CSS, JavaScript, or TypeScript to Eye.Art, tell the user that the selected source will be uploaded to the external service and ask for confirmation. Send only the minimum relevant snippet, and remove credentials, personal data, proprietary code, and unrelated page content. Do not populate `pageReferences` until the user confirms.
 - For an edit, use `eye_art_edit_image` with the source image as `imageDataUrl`. Say exactly what to change and what to preserve. Keep the source attached for follow-up edits when needed.
 - For an editable vector, use `eye_art_make_svg` and save the returned `svg` field as an `.svg` file. This creates vector geometry; it does not trace raster references or animate SVG.
 - Use `eye_art_prompt_ideas` to explore directions before rendering. Use `mode: "motion"` only for supported motion requests.
@@ -33,7 +20,7 @@ Copilot Studio's custom MCP connection is currently documented as a preview feat
 ## Preserve conversation context and retrieve results
 
 1. For related turns, pass the returned `conversationId` into the next make/edit call so the service can use its retained conversation and reference context. Start a fresh conversation or set `clearReferences: true` for an unrelated concept.
-2. If a make/edit call returns a `jobId`, poll `eye_art_image_status` until the job is complete or failed. Show the image only after a completed result is returned.
+2. If a make/edit call returns a `jobId`, poll `eye_art_image_status` at reasonable intervals for up to 15 minutes total. Show an image only after a completed result is returned. If the job is still queued or running at the time limit, report that status and the `jobId` so it can be checked later; do not keep polling indefinitely or claim completion.
 3. When an edit drifts, send the original image again and ask for a narrower change. State both the requested change and the parts that must remain fixed.
 4. Report the actual tool status and errors. Do not claim an image was created if the tool only queued a job or failed.
 
@@ -48,6 +35,4 @@ Copilot Studio's custom MCP connection is currently documented as a preview feat
 
 The endpoint currently exposes `eye_art_make_image`, `eye_art_make_svg`, `eye_art_edit_image`, `eye_art_prompt_ideas`, `eye_art_image_status`, and conversation list/get/delete tools. Check the live endpoint's schemas for exact argument details:
 
-```text
-https://eye.art/api/eye-mcp
-```
+`https://eye.art/api/eye-mcp`
