@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{TITLE}}</title>
+<style>
+  :root{
+    --blue:#196FB2;
+    --bright:#0097F4;
+    --teal:#008094;
+    --purple:#911CAE;
+    --orange:#AE5B34;
+    --ink:#202020;
+    --muted:#5C5C5C;
+    --name:#1A2340;
+    --role:#5A6478;
+    --card-border:#E7E2F7;
+    --rule:#DADADA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#F4F6FA;
+    font-family:"Segoe UI","Segoe UI Variable",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .page{
+    position:relative;width:1280px;min-height:720px;margin:24px auto;
+    display:flex;flex-direction:column;
+    background:#fff;padding:22px 68px 0 68px;
+    box-shadow:0 2px 24px rgba(26,35,64,.10);
+  }
+
+  /* ---------- header ---------- */
+  .hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
+  h1{margin:0;font-size:31pt;line-height:1.12;font-weight:600;letter-spacing:-.4px;
+     font-family:"Segoe Sans Display Semibold","Segoe UI Semibold","Segoe UI",sans-serif;}
+  .subtitle{font-size:11pt;font-weight:700;letter-spacing:.4px;color:var(--blue);
+     margin:12px 0 0 2px;}
+  .accentbar{display:flex;margin:14px 0 0 2px;}
+  .accentbar i{display:block;height:4px;}
+  .accentbar i:nth-child(1){width:120px;background:var(--blue);}
+  .accentbar i:nth-child(2){width:53px;background:var(--purple);}
+  .accentbar i:nth-child(3){width:31px;background:var(--orange);}
+
+  /* ---------- person ---------- */
+  .person{display:flex;align-items:center;gap:26px;margin:18px 0 4px 20px;min-height:114px;}
+  .avatar{width:108px;height:108px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+     border:2px dashed var(--blue);background:#fff;}
+  .avatar svg{display:block;width:100%;height:100%;}
+  .who .nm{font-size:26pt;font-weight:700;color:var(--name);line-height:1.1;
+     font-family:"Segoe Sans Display Semibold","Segoe UI Semibold","Segoe UI",sans-serif;}
+  .who .rl{font-size:13.5pt;color:var(--role);margin-top:8px;}
+  .chips{margin-left:auto;padding-left:24px;display:grid;
+     grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;}
+  .chip{border:1px solid var(--card-border);border-radius:999px;padding:6px 16px;
+     font-size:10pt;color:var(--muted);white-space:nowrap;background:#FCFBFE;text-align:center;}
+  .chip b{color:var(--blue);font-weight:700;}
+
+  /* ---------- card ---------- */
+  .card{border:1px solid var(--card-border);border-radius:14px;background:#fff;
+     box-shadow:0 3px 18px rgba(154,166,188,.15);
+     display:flex;padding:22px 26px 24px 26px;margin-top:8px;}
+  .card .left{flex:1 1 auto;padding-right:30px;min-width:0;}
+  .card .right{flex:0 0 320px;border-left:3px solid var(--bright);padding-left:26px;}
+  .lbl{font-size:11pt;font-weight:700;letter-spacing:.6px;color:var(--blue);margin-bottom:12px;}
+  .lbl.teal{color:var(--teal);}
+  .usecase{font-size:12pt;line-height:1.5;color:var(--ink);margin:0;}
+  .impact-hl{font-size:16pt;font-weight:700;color:var(--ink);line-height:1.2;}
+  .impact-note{font-size:11pt;color:var(--muted);margin-top:4px;}
+  .impact-metric{font-size:14pt;font-weight:700;margin-top:14px;line-height:1.2;}
+  .impact-metric.accent{color:var(--teal);}
+  .basis{font-size:8.5pt;color:var(--muted);margin-top:14px;line-height:1.35;font-style:italic;}
+
+  /* ---------- workflow ---------- */
+  .wf{margin-top:26px;}
+  .steps{position:relative;margin-top:14px;display:flex;}
+  .steps::before{content:"";position:absolute;top:18px;left:8%;right:8%;height:2px;background:var(--rule);}
+  .step{flex:1 1 0;position:relative;text-align:center;}
+  .dot{position:relative;width:38px;height:38px;border-radius:50%;background:#fff;
+     border:2px solid var(--blue);margin:0 auto;font-size:11pt;font-weight:700;
+     line-height:34px;color:var(--blue);}
+  .step .cap{margin-top:10px;font-size:11pt;line-height:1.3;color:var(--ink);padding:0 8px;}
+
+  /* ---------- footer ---------- */
+  .outputs{text-align:center;font-size:11pt;font-weight:700;padding:14px 0 16px;}
+  .outputs .k{color:var(--blue);letter-spacing:.6px;margin-right:10px;}
+  .outputs .sep{color:var(--blue);margin:0 10px;font-weight:400;}
+  .baseline{border-top:1px solid var(--rule);margin-top:auto;}
+
+  @media print{
+    @page{size:13.333in 7.5in;margin:0;}
+    html,body{background:#fff;}
+    .page{margin:0;box-shadow:none;width:13.333in;min-height:7.5in;padding:22px 68px 0;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hdr">
+    <h1>{{TITLE}}</h1>
+  </div>
+  <div class="accentbar"><i></i><i></i><i></i></div>
+  <div class="subtitle">Cowork use case</div>
+
+  <div class="person">
+    <div class="avatar" style="border-color:{{RING}}"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Generic profile placeholder"><rect width="200" height="200" fill="{{DISC}}"/><circle cx="100" cy="78" r="34" fill="{{FIGURE}}"/><path d="M100 122c-33 0-60 23-64 54h128c-4-31-31-54-64-54z" fill="{{FIGURE}}"/></svg></div>
+    <div class="who">
+      <div class="nm">{{NAME}}</div>
+      <div class="rl">{{ROLE}}</div>
+    </div>
+    <div class="chips">
+      <span class="chip"><b>{{CHIP_1_LABEL}}</b> {{CHIP_1_VALUE}}</span>
+      <span class="chip"><b>{{CHIP_2_LABEL}}</b> {{CHIP_2_VALUE}}</span>
+      <span class="chip"><b>{{CHIP_3_LABEL}}</b> {{CHIP_3_VALUE}}</span>
+      <span class="chip"><b>{{CHIP_4_LABEL}}</b> {{CHIP_4_VALUE}}</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="left">
+      <div class="lbl">THE USE CASE</div>
+      <p class="usecase">{{USE_CASE}}</p>
+    </div>
+    <div class="right">
+      <div class="lbl teal">IMPACT</div>
+      <div class="impact-hl">{{IMPACT_HEADLINE}}</div>
+      <div class="impact-note">{{IMPACT_NOTE}}</div>
+      <div class="impact-metric">{{METRIC_1}}</div>
+      <div class="impact-metric accent">{{METRIC_2}}</div>
+      <div class="basis">{{BASIS_LINE}}</div>
+    </div>
+  </div>
+
+  <div class="wf" style="margin-bottom:8px">
+    <div class="lbl">{{WORKFLOW_HEADING}}</div>
+    <div class="steps">
+      <div class="step"><div class="dot" style="border-color:{{DOT_1}};color:{{DOT_1}}">1</div><div class="cap">{{STEP_1}}</div></div>
+      <div class="step"><div class="dot" style="border-color:{{DOT_2}};color:{{DOT_2}}">2</div><div class="cap">{{STEP_2}}</div></div>
+      <div class="step"><div class="dot" style="border-color:{{DOT_3}};color:{{DOT_3}}">3</div><div class="cap">{{STEP_3}}</div></div>
+      <div class="step"><div class="dot" style="border-color:{{DOT_4}};color:{{DOT_4}}">4</div><div class="cap">{{STEP_4}}</div></div>
+      <div class="step"><div class="dot" style="border-color:{{DOT_5}};color:{{DOT_5}}">5</div><div class="cap">{{STEP_5}}</div></div>
+      <div class="step"><div class="dot" style="border-color:{{DOT_6}};color:{{DOT_6}}">6</div><div class="cap">{{STEP_6}}</div></div>
+    </div>
+  </div>
+
+  <div class="baseline"></div>
+  <div class="outputs"><span class="k">OUTPUTS</span>{{OUTPUT_1}}<span class="sep">&bull;</span>{{OUTPUT_2}}<span class="sep">&bull;</span>{{OUTPUT_3}}</div>
+
+</div>
+</body>
+</html>

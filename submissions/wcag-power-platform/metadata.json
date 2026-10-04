@@ -1,0 +1,11 @@
+{
+  "name": "WCAG 2.1 for Web Apps & Power Platform",
+  "description": "Makes everything the agent builds or reviews conform to WCAG 2.1 AA — HTML pages, SPAs, theming, PCF controls, model-driven and canvas apps, and Power Pages.",
+  "platforms": ["Cowork"],
+  "tags": ["accessibility", "wcag", "a11y", "power-platform", "power-apps", "pcf", "power-pages", "web"],
+  "author": "Mark Christie",
+  "authorGithub": "TheMarkChristie",
+  "version": "1.0.0",
+  "createdAt": "2026-07-23",
+  "updatedAt": "2026-07-23"
+}

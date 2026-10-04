@@ -1,0 +1,11 @@
+{
+  "name": "Route Map Visualizer",
+  "description": "Visualize routes and locations on a map. Accepts pre-ordered stops with coordinates from upstream connectors (Azure Maps, Bing Maps, Dataverse, CRM) plus optional road geometry, leg distances, and durations. Produces PNG, interactive HTML (Leaflet/OSM), GeoJSON, KML, deep links, and QR codes. Fully offline Python engine — road geometry rendered directly when provided, or OSRM used browser-side as a schematic fallback.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["maps", "routing", "visualization", "openstreetmap", "python", "leaflet", "geojson", "kml", "deep-links", "qr-codes", "logistics", "azure-maps", "bing-maps"],
+  "author": "Nazish Qasim",
+  "authorUrl": "https://github.com/nazishqassim",
+  "version": "1.0.0",
+  "createdAt": "2026-08-10",
+  "updatedAt": "2026-08-10"
+}

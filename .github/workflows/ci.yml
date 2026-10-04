@@ -18,12 +18,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -37,14 +37,14 @@ jobs:
         run: npm test
 
       # Same-repo PRs get a write token: extract submission zips into the site
-      # (writes src/content/skills/*.md + public/bundles/*.zip) and commit the
-      # result back to the PR branch. Hard-fails on missing/invalid metadata.
+      # and commit the result back to the PR branch. Hard-fails on
+      # missing/invalid metadata.
       # `authorGithub` is resolved purely from each submission's own metadata
       # (an explicit handle, or a github.com/<login> authorUrl) — never the
       # PR/merger login — so attribution is stable no matter who lands the skill.
       - name: Import skill submissions
         if: github.event.pull_request.head.repo.full_name == github.repository
-        run: npm run import:submissions
+        run: npm run import:submissions -- --copilot-studio-output "$RUNNER_TEMP/copilot-studio-skills"
 
       - name: Commit extracted skills
         if: github.event.pull_request.head.repo.full_name == github.repository

@@ -1,0 +1,8 @@
+{
+  "name": "Agent Performance Triage",
+  "description": "Turn a live agent's analytics and transcripts into a diagnosis and a prioritized improvement backlog.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["copilot-studio", "analytics", "optimization", "operations", "post-launch", "backlog", "assessment", "monitoring"],
+  "version": "1.0.0",
+  "author": "Marco Zama"
+}

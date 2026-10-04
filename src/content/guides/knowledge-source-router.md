@@ -1,47 +1,55 @@
 # Knowledge Source Router
 
-Point your Copilot Studio agent at the **right** knowledge source for each user —
-by region — so answers are locally accurate instead of one-size-fits-all.
+Keep country-specific answers grounded in the documents that actually apply.
+This skill uses a SharePoint library's `Country` metadata to choose the complete
+document set before searching its contents.
 
-## Why use this?
+## Why use it?
 
-Lots of information depends on where someone is: benefits, pricing, policies,
-legal and compliance rules, support hours, what products are even available. If
-your agent searches one big pile of knowledge, a user in Germany can easily get
-an answer meant for someone in the US.
+Policies, benefits, pricing, legal requirements, and product availability can
+differ by country. A normal content search may blend documents from several
+countries because the country is often stored in metadata rather than written
+in the document itself.
 
-The clever part is that in Copilot Studio you don't need custom code to fix this
-— you can guide the agent, in plain instructions, on **which of your configured
-knowledge sources** to search. This skill is exactly that guidance: before the
-agent searches its knowledge, it first decides *which* source fits the user's
-region (Americas, EMEA, APAC, or a Global fallback) and searches only there.
-Same question, right answer for the right place.
+The router reverses that order:
 
-## What you provide
+1. Discover the library's `Country` column and recorded values.
+2. Select every document assigned to the requested country.
+3. Search only those document URLs.
+4. Read the full scoped set and cite the sources used.
 
-The skill handles the routing. The one thing it needs from you is a way to know
-**where the user is**. That can be as simple or as rich as you like:
+It also reports unassigned files and relevant documents excluded by the
+country filter, making the answer's boundaries explicit.
 
-- **Just ask** — have the agent ask the user their country or region.
-- **Look it up** — call a tool that returns it, such as a "get profile" action
-  that reports the signed-in user's country, or any similar source of location.
+## An intentionally strict example
 
-Once the agent knows the user's location, this skill maps it to the correct
-knowledge source and searches that one.
+A capable agent may not need instructions this prescriptive to use metadata
+filtering and knowledge search correctly. This skill deliberately demonstrates
+a stricter flow so the sequence is explicit, repeatable, and easy to inspect.
 
-## The regions it routes to
-
-| Source | For users in... |
-| --- | --- |
-| Global | Anywhere — content that's the same everywhere (the fallback) |
-| Americas | US, Canada, Mexico, Central & South America |
-| EMEA | Europe, the Middle East, and Africa |
-| APAC | Asia, Australia, and the Pacific |
-
-Adapt these to match however your own knowledge is organized.
+Use it as both a working routing pattern and an example of how the two tools
+complement each other: `sharepoint_metadata_filter` determines which documents
+apply, and `knowledge_search_sharepoint` searches their contents through
+`scopeUrls`. Adapt the level of instruction to the agent and scenario rather
+than assuming every implementation needs every guardrail in this skill.
 
 ## Requirements
 
-Built for **Copilot Studio**, where an agent can be steered to specific knowledge
-sources through instructions. You supply the region-specific sources and a way to
-determine the user's location; the skill does the routing.
+Use this skill with a Copilot Studio agent that has:
+
+- A SharePoint document library with a populated `Country` metadata column.
+- A `sharepoint_metadata_filter` tool that can discover columns, group values,
+  filter rows, and return document URLs.
+- A `knowledge_search_sharepoint` tool that accepts `scopeUrls`.
+- File-type skills needed to open and preprocess the library's documents.
+
+Country values should be consistent and meaningful to users. The skill follows
+the values recorded in the library and does not infer assignments for blank
+files.
+
+## What changed in version 2
+
+Version 2 replaces fixed source buckets with metadata-first routing. It now
+derives the searchable document set from the library's `Country` column,
+prevents unscoped searches, covers every matching file, and reports metadata
+coverage and exclusions.

@@ -1,0 +1,11 @@
+{
+  "name": "Clipchamp Narrated Demo Video",
+  "description": "Produce a polished, narrated demo video of a live web app or Copilot Studio agent — real screen-flow footage under an AI (Ava neural) voiceover — either fully headless (ffmpeg + edge-tts) or assembled in the Clipchamp web UI as an editable project.",
+  "platforms": ["Scout"],
+  "tags": ["video", "demo", "narration", "playwright", "ffmpeg", "copilot-studio", "clipchamp", "tts"],
+  "author": "Phi-Lay Nguyen",
+  "authorUrl": "https://github.com/phnguy",
+  "version": "1.0.0",
+  "createdAt": "2026-08-21",
+  "updatedAt": "2026-08-21"
+}
