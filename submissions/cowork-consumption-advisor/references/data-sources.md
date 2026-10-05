@@ -44,9 +44,20 @@ in the report.
 
 - **Services** is the tenant total (Cowork, Cowork apps, Work IQ API). Prepaid = capacity packs;
   pay-as-you-go includes Copilot Credit pre-purchase plan (P3) credits.
-- **Users** shows each user's credits under their **current** spending policy. If a user moved
-  groups mid-period, earlier credits stay billed at policy level but drop out of the user row -
-  so the user total is usually a little lower than the service total.
+- **Users** must first be reconciled against the recognized **Copilot Cowork** service row,
+  not the all-services total. If those totals match, other named services (for example Work IQ API)
+  explain the remaining service credits; this is not an unexplained gap. Per-user rows reflect
+  current policy attribution, but do not infer a policy change or snapshot-time difference as
+  the cause of a residual without evidence. If no Cowork service row is recognized, mark
+  reconciliation unavailable rather than assuming every service has Cowork user rows.
+- **Reporting period** comes from the consumption snapshot date (`--as-of`, otherwise a
+  recognized consumption-export filename timestamp, otherwise today). Monthly credits use
+  that calendar billing month. Activity dates never establish a credit period. Pass `--as-of`
+  for historical samples with generic filenames.
+- **User credit timing** is uncertain when positive reported credits accompany last activity
+  before the reporting period. Do not classify those credits as earlier consumption or those
+  users as confirmed dormant consumers. Preserve service totals and forecasts while validating
+  user-level attribution. Department and manager views use user-attributed credits only.
 - **Groups** overlap: a user in three groups is counted in all three. Never add group rows together.
 - **Policies** attribute credits to the policy that was active at the time of use, so policy
   totals can exceed the current user total.
@@ -60,7 +71,9 @@ in the report.
 - Pay-as-you-go list rate: 0.01 per credit (`--rate`).
 - Prepaid effective rate: 0.008 per credit (a 25,000-credit pack at 200 per month, `--prepaid-rate`).
 - Pre-purchase plans (P3) are discounted by volume; pass the contracted rate if known.
-- Costs are estimates. The invoice on the Azure subscription named in the billing method is the
+- Label defaults as list-equivalent assumptions next to monetary figures, not contract/invoice
+  cost. The PAYG bucket may include discounted P3; these CSVs do not identify its coverage.
+  The invoice on the Azure subscription named in the billing method is the
   record of truth; MACC eligibility depends on that subscription's billing account.
 
 ## Related Microsoft Learn articles

@@ -119,10 +119,12 @@ python scripts/analyze_consumption.py --input <files or folder> --org working/or
 ```
 - Use `--tenant-name "<Company>"` for the normal executive report title. If `--anonymize` is also
   passed, the company name is suppressed in all outputs.
-- Pass `--as-of` with the export date whenever the file names do not carry one (the admin center
+- Pass `--as-of` with the consumption snapshot date whenever the file names do not carry one (the admin center
   default names do: `...9_14_2026 10_50_29 AM.csv`). Otherwise the script uses today's date.
 - Defaults: pay-as-you-go list rate 0.01 per credit, prepaid 0.008 (a 25,000-credit pack at 200).
-  If the user gives a contracted rate or currency, pass it - never guess a discount.
+  Label these as list-equivalent assumptions, not contract/invoice cost. PAYG-classified credits
+  may include discounted P3 consumption. If the user gives a contracted rate or currency, pass
+  it - never guess a discount or claim the exports identify P3 coverage.
 - The exports report **"Monthly credits used"** (current billing month), so the default projects
   the current month. Pass `--period ytd` **only** when the user confirms the export was taken with a
   year-to-date filter; it then uses calendar-year run-rates. Never infer YTD from activity dates.
@@ -139,6 +141,22 @@ python scripts/analyze_consumption.py --input <files or folder> --org working/or
 
 ### Step 4: Interpret with the model - but only from the JSON
 - Quote figures from `consumption-analysis.json`; do not recompute in prose.
+- Use `forecast.periodStart` / `forecast.periodEnd` for the headline credit period and
+  `meta.asOf` for the snapshot date. Never use `headline.firstActivity` / `lastActivity`
+  or any task, user, group or service activity date as the period of monthly credits.
+- Read `reconciliation`: compare user credits with the recognized Copilot Cowork service
+  total before comparing with all services. Name the other service rows that explain the
+  remainder (for example Work IQ API); do not call an explained remainder a data-quality gap.
+  Surface a material residual as unexplained, without inventing a cause such as different
+  export times. If no recognized Cowork row is available, report reconciliation as unavailable.
+- Surface `users.creditTimingUncertain`: positive credits with a last-activity date before
+  the reporting period mean user-level timing is uncertain. Do not claim those credits
+  were consumed earlier, label those users dormant, or reclaim access on that evidence.
+  Retain the reported service total and forecast; activity dates do not reallocate credits.
+- Use `headline.listEquivalentCost` and `listEquivalentBasis` for monetary outputs.
+  The legacy `estimatedCost` / `costBasis` keys remain compatibility aliases, not invoice costs.
+  State that department and manager roll-ups cover user-attributed credits only; named
+  services outside Cowork user reconciliation are excluded.
 - Lead with what an executive decides on: total credits and cost, forecast vs limits,
   **spend by department and by manager** (`org.departments`, `org.managers`), concentration
   (top users / groups), unlimited or near-limit policies, prepaid vs PAYG mix.
@@ -158,7 +176,7 @@ python scripts/analyze_consumption.py --input <files or folder> --org working/or
 
 ## Output
 Chat response, in this order, under ~250 words:
-1. **Headline** - credits used, prepaid share, estimated cost, active users, credits per task, forecast
+1. **Headline** - billing period, credits used, prepaid share, list-equivalent cost assumptions, active users, credits per task, forecast
 2. **By department / manager** - top 3 departments and managers with share, coverage %
 3. **Top recommendations** - up to 3, each with its evidence
 4. **Watch-outs** - data-quality notes
@@ -168,7 +186,8 @@ Chat response, in this order, under ~250 words:
 - Reporting only: never call any tool that changes spending policies, limits, billing methods or
   credit requests; recommend and let the admin act.
 - Never fabricate or extrapolate beyond the script's output; if a figure is missing, say why.
-- Costs are list-rate estimates. State that the Microsoft invoice on the Azure subscription named in
+- Costs use rate assumptions, not contract prices; PAYG-classified credits may include discounted P3.
+  State that the Microsoft invoice on the Azure subscription named in
   the billing method is the record of truth.
 - Respect privacy: `--anonymize` replaces user and manager names/UPNs with keyed pseudonyms
   (random per-run secret, consistent within one report, not reproducible from a directory) in all

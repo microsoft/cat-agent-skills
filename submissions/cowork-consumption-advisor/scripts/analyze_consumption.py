@@ -423,16 +423,40 @@ def analyze(data, args, as_of):
     # ---- totals -----------------------------------------------------------
     svc_total = sum(s["used"] for s in services)
     user_total = sum(u["used"] for u in users)
-    total = svc_total or user_total
+    total = svc_total if services else user_total
     prepaid = sum(s["prepaid"] for s in services)
     payg = sum(s["payg"] for s in services)
-    rate_basis = "default PAYG list rate" if args.rate == 0.01 else "configured PAYG rate"
-    prepaid_basis = "default prepaid rate" if args.prepaid_rate == 0.008 else "configured prepaid rate"
-    if services and users and abs(svc_total - user_total) > max(50, 0.02 * max(svc_total, 1)):
-        notes.append(
-            f"Users export totals {user_total:,} credits vs {svc_total:,} in the services export "
-            f"({pct(user_total, svc_total)}%). Exports are point-in-time snapshots taken at different moments, "
-            "and per-user rows only show usage under each user's CURRENT policy.")
+    rate_basis = "default PAYG list-equivalent assumption" if args.rate == 0.01 else "configured PAYG rate assumption"
+    prepaid_basis = "default capacity-pack equivalent assumption" if args.prepaid_rate == 0.008 else "configured prepaid rate assumption"
+    cowork_services = [s for s in services if norm_key(s["name"]) in {"copilotcowork", "cowork"}]
+    other_services = [s for s in services if norm_key(s["name"]) not in {"copilotcowork", "cowork"}]
+    cowork_total = sum(s["used"] for s in cowork_services) if cowork_services else None
+    other_total = sum(s["used"] for s in other_services)
+    residual = user_total - cowork_total if cowork_total is not None and users else None
+    tolerance = max(10, round((cowork_total or 0) * 0.001))
+    reconciliation = {
+        "serviceTotal": svc_total if services else None, "userTotal": user_total if users else None,
+        "coworkServiceTotal": cowork_total, "otherServiceTotal": other_total if services else None,
+        "otherServices": [{"name": s["name"], "used": s["used"]} for s in other_services],
+        "residual": residual, "tolerance": tolerance, "status": "unavailable",
+    }
+    if services and users:
+        if cowork_total is None:
+            notes.append("Service/user reconciliation unavailable: no recognized Copilot Cowork service row. "
+                         "Do not assume that all service credits have Cowork user attribution.")
+        elif abs(residual) <= tolerance:
+            reconciliation["status"] = "reconciled" if residual == 0 else "minor-variance"
+            notes.append(f"User credits ({user_total:,}) reconcile to Copilot Cowork service credits ({cowork_total:,}) "
+                         f"with a {abs(residual):,}-credit residual (tolerance {tolerance:,}).")
+            if other_total:
+                details = ", ".join(f"{s['name']} ({s['used']:,})" for s in other_services if s["used"])
+                notes.append(f"The remaining {other_total:,} service credits are accounted for by {details}. "
+                             "These named services are outside the Cowork user reconciliation; this is not an unexplained gap.")
+        else:
+            reconciliation["status"] = "unreconciled"
+            notes.append(f"Users export totals {user_total:,} credits vs {cowork_total:,} for Copilot Cowork. "
+                         f"The {abs(residual):,}-credit residual exceeds tolerance {tolerance:,} and is not explained "
+                         "by other named services. Validate export periods and attribution; the cause is not established.")
 
     split_valid = bool(services) and (prepaid + payg) > 0 and abs((prepaid + payg) - svc_total) <= max(5, 0.01 * svc_total)
     list_cost = total * args.rate
@@ -497,7 +521,16 @@ def analyze(data, args, as_of):
     near = [u for u in users if u["pctUsed"] is not None and args.near_limit * 100 <= u["pctUsed"] < 100]
     over = [u for u in users if u["pctUsed"] is not None and u["pctUsed"] >= 100]
     unlicensed = [u for u in users if not u["licensed"] and u["used"] > 0]
-    dormant = [u for u in consuming if u["lastActivity"] and (as_of - u["lastActivity"]).days > args.dormant_days]
+    for u in users:
+        u["activityStale"] = bool(u["lastActivity"] and (as_of - u["lastActivity"]).days > args.dormant_days)
+        u["creditTimingUncertain"] = bool(u["used"] > 0 and u["lastActivity"] and u["lastActivity"] < start)
+    timing_uncertain = [u for u in users if u["creditTimingUncertain"]]
+    dormant = [u for u in consuming if u["activityStale"] and not u["creditTimingUncertain"]]
+    if timing_uncertain:
+        notes.append(f"Credit timing uncertain: {len(timing_uncertain)} users have {sum(u['used'] for u in timing_uncertain):,} "
+                     f"reported credits but last activity before {start.isoformat()}. The exports do not establish when "
+                     "those user-attributed credits were generated. Keep the reported service total and forecast unchanged; "
+                     "do not classify these credits as historical consumption.")
     limit_tiers = defaultdict(lambda: {"users": 0, "used": 0})
     for u in users:
         t = limit_tiers[u["limit"]]
@@ -649,12 +682,14 @@ def analyze(data, args, as_of):
     if split_valid and services and prepaid and payg:
         rec("Medium", "Prepaid vs pay-as-you-go mix",
             f"{pct(prepaid, svc_total)}% of credits came from prepaid capacity, {pct(payg, svc_total)}% from pay-as-you-go "
-            f"({payg:,} credits ~ {args.currency} {payg*args.rate:,.2f} at {rate_basis}).",
+            f"({payg:,} credits = {args.currency} {payg*args.rate:,.2f} at {rate_basis}; not contract/invoice cost; "
+            "actual cost may be lower where P3 or contracted pricing applies).",
             "If the pay-as-you-go tail is steady month over month, size additional capacity packs or a Copilot Credit "
             "pre-purchase plan (P3) to cover the floor of usage - prepaid rates are discounted; keep PAYG for the peak.")
     elif split_valid and services and payg and not prepaid:
-        rec("Medium", "Everything is billed pay-as-you-go",
-            f"{payg:,} credits (~{args.currency} {payg*args.rate:,.2f}) at {rate_basis} with no prepaid capacity in use.",
+        rec("Medium", "All service credits are classified as pay-as-you-go",
+            f"{payg:,} credits ({args.currency} {payg*args.rate:,.2f} at {rate_basis}) with no prepaid capacity in use. "
+            "This bucket may include discounted P3; this is not contract/invoice cost.",
             "Once 2-3 months of steady usage exist, compare against capacity packs / P3 pre-purchase; steady usage is "
             "cheaper prepaid, and MACC-eligible when billed through the right Azure subscription.")
     if credits_per_task:
@@ -675,10 +710,17 @@ def analyze(data, args, as_of):
             ", ".join(f"{p['name']} ({p['appliesTo']}, limit {p['limit'] if p['limit'] is not None else 'none'})" for p in idle_pol),
             "Remove or pause policies with zero usage to keep the configuration auditable; a tenant-wide idle policy with a "
             "limit can still grant access you did not intend.")
+    if timing_uncertain:
+        rec("Medium", "Credit timing requires validation",
+            f"{len(timing_uncertain)} users have {sum(u['used'] for u in timing_uncertain):,} reported credits "
+            "but last activity before the reporting period. Their user-level credit timing is uncertain.",
+            "Validate the activity field and aligned export periods before drawing inactivity conclusions or reclaiming access. "
+            "Do not subtract these credits from the service total or forecast.")
     if dormant:
-        rec("Low", "Dormant consumers",
-            f"{len(dormant)} users have not used credits in over {args.dormant_days} days but consumed {sum(u['used'] for u in dormant):,} credits earlier.",
-            "Not a cost problem today, but a value problem: re-engage with enablement or reclaim their policy slot.")
+        rec("Low", "Stale activity dates",
+            f"{len(dormant)} consuming users have a last-activity date more than {args.dormant_days} days old, "
+            "within the reporting period. The activity date alone does not establish when their credits were consumed.",
+            "Confirm recent activity and export freshness before planning enablement or changing access.")
     if departments:
         known = [d for d in departments if d["name"] != unknown_dept]
         if known and known[0]["share"] >= 50:
@@ -732,12 +774,15 @@ def analyze(data, args, as_of):
             "paygRateBasis": rate_basis, "prepaidRateBasis": prepaid_basis,
             "inputs": {k: ("<redacted>" if args.anonymize else v) for k, v in data.get("_files", {}).items()},
             "anonymized": bool(args.anonymize), "nearLimitThreshold": round(args.near_limit * 100),
+            "dormantDays": args.dormant_days,
+            "costDisclaimer": "Rate assumptions, not contract/invoice cost. PAYG-classified credits may include discounted P3.",
             "generatedBy": "cowork-consumption-advisor/analyze_consumption.py",
         },
         "headline": {
             "totalCredits": total, "prepaidCredits": prepaid, "paygCredits": payg,
             "prepaidShare": pct(prepaid, svc_total) if split_valid else None,
             "listCost": round(list_cost, 2), "estimatedCost": round(est_cost, 2), "costBasis": cost_basis,
+            "listEquivalentCost": round(est_cost, 2), "listEquivalentBasis": cost_basis,
             "splitAvailable": split_valid,
             "activeUsers": len(consuming) if users else (services[0]["activeUsers"] if len(services) == 1 else sum(s["activeUsers"] for s in services)),
             "activeUsersBasis": ("distinct consuming users (Users export)" if users else
@@ -750,6 +795,7 @@ def analyze(data, args, as_of):
             "firstActivity": first_act, "lastActivity": last_act,
         },
         "forecast": forecast,
+        "reconciliation": reconciliation,
         "services": services,
         "policies": {"rows": policies, "total": pol_total, "activeTotal": active_pol_total,
                  "unlimitedCount": len(unlimited), "unlimitedShare": unlimited_share,
@@ -760,6 +806,8 @@ def analyze(data, args, as_of):
             "count": n_users, "total": user_total, "top10": top10, "top10Share": top10_share,
             "top20pctShare": top20pct_share, "top20pctCount": k20,
             "nearLimit": near, "overLimit": over, "unlicensed": unlicensed, "dormant": dormant,
+            "creditTimingUncertain": timing_uncertain,
+            "creditTimingUncertainCredits": sum(u["used"] for u in timing_uncertain),
             "limitTiers": tiers, "all": users_sorted,
         },
         "org": {"provided": bool(org), "enrichedUsers": enriched, "coverage": pct(enriched, n_users),
@@ -858,9 +906,9 @@ def render_html(res, anonymize=False):
     annual_credits = round(monthly_credits * 12) if f["mode"] == "monthly" and monthly_credits is not None else f.get("annualisedCredits")
     annual_cost = round(annual_credits * rate, 2) if annual_credits is not None else f.get("annualisedCost")
     kpis = [
-        ("Credits used", fmt(h["totalCredits"]), f"{h.get('firstActivity') or f.get('periodStart')} to {h.get('lastActivity') or f.get('periodEnd')}"),
+        ("Credits used", fmt(h["totalCredits"]), f"{'Billing period' if f['mode'] == 'monthly' else 'Reporting period'}: {f['periodStart']} to {f['periodEnd']} · snapshot {res['meta']['asOf']}"),
         ("Prepaid share", f"{fmt(h['prepaidShare'],0)}%" if h["prepaidShare"] is not None else "-", f"{fmt(h['prepaidCredits'])} prepaid; {fmt(h['paygCredits'])} pay-as-you-go" if h["prepaidShare"] is not None else "prepaid / PAYG split not provided"),
-        ("Est. cost", money(h["estimatedCost"], cur), (f"list {money(h['listCost'], cur)} @ {rate}/credit" if h["splitAvailable"] else f"{res['meta']['paygRateBasis']} @ {rate}/credit - no split")),
+        ("List-equivalent cost", money(h["listEquivalentCost"], cur), f"{res['meta']['paygRateBasis']}: {cur} {rate}/credit; " + (f"prepaid {cur} {res['meta']['prepaidRate']}/credit. " if h['splitAvailable'] else "no reliable split, applied to all credits. ") + "Not contract/invoice cost; PAYG may include discounted P3."),
         ("Active users", fmt(h["activeUsers"]), f"median {fmt(h['medianCreditsPerUser'])} credits/user" if res["users"]["count"] else h["activeUsersBasis"]),
         ("Credits / active user", fmt(h["creditsPerActiveUser"]), "mean across consuming users"),
         ("Credits / Cowork task", fmt(h["creditsPerTask"]), f"{fmt(h['matchedTaskUsers'])} matched users, {fmt(h['matchedTasks'])} tasks" if h["totalTasks"] else "Cowork usage export not provided"),
@@ -947,8 +995,10 @@ def render_html(res, anonymize=False):
             flags.append('<span class="pill bad">Over limit</span>')
         elif u in U["nearLimit"]:
             flags.append('<span class="pill warn">Near limit</span>')
-        if u in U["dormant"]:
-            flags.append('<span class="pill muted-b">Dormant</span>')
+        if u.get("creditTimingUncertain"):
+            flags.append('<span class="pill warn">Credit timing uncertain</span>')
+        elif u in U["dormant"]:
+            flags.append('<span class="pill muted-b">Stale activity date</span>')
         if u in U["unlicensed"]:
             flags.append('<span class="pill warn">Unlicensed</span>')
         return " ".join(flags)
@@ -958,7 +1008,8 @@ def render_html(res, anonymize=False):
         f"<td class='num' data-v='{u.get('creditsPerTask') or 0}'>{fmt(u.get('creditsPerTask'))}</td><td class='num' data-v='{u['sessions']}'>{fmt(u['sessions'])}</td><td>{u['lastActivity'] or '-'}</td><td>{user_flags(u)}</td></tr>" for u in U["all"])
     users_html = f"""<div class="grid4"><div class="card"><h4>Over 100% of limit ({len(U['overLimit'])})</h4><p>{names_for(U['overLimit'])}</p></div>
     <div class="card"><h4>Near limit &ge; {near_pct}% ({len(U['nearLimit'])})</h4><p>{names_for(U['nearLimit'])}</p></div>
-    <div class="card"><h4>Dormant &gt; 30 days ({len(U['dormant'])})</h4><p>{names_for(U['dormant'])}</p></div>
+    <div class="card"><h4>Credit timing uncertain ({len(U['creditTimingUncertain'])})</h4><p>{names_for(U['creditTimingUncertain'])}</p><p class="muted">Non-zero credits with last activity before the reporting period.</p></div>
+    <div class="card"><h4>Stale activity &gt; {res['meta']['dormantDays']} days ({len(U['dormant'])})</h4><p>{names_for(U['dormant'])}</p></div>
     <div class="card"><h4>Unlicensed consumers ({len(U['unlicensed'])})</h4><p>{names_for(U['unlicensed'])}</p></div></div>
     <input class="filter" placeholder="Filter users, departments, managers..." oninput="filterTable(this,'utab')" style="margin-top:12px">
     <div class="tw"><table id="utab"><thead><tr><th onclick="sortTable(this)">User</th><th onclick="sortTable(this)">Department</th><th onclick="sortTable(this)">Manager</th><th class="num" onclick="sortTable(this)">Credits</th><th class="num" onclick="sortTable(this)">Limit</th><th class="num" onclick="sortTable(this)">% of limit</th><th class="num" onclick="sortTable(this)">Share</th><th class="num" onclick="sortTable(this)">Cowork tasks</th><th class="num" onclick="sortTable(this)">Credits / task</th><th class="num" onclick="sortTable(this)">Sessions</th><th onclick="sortTable(this)">Last activity</th><th onclick="sortTable(this)">Flags</th></tr></thead><tbody>{urows}</tbody></table></div>
@@ -1009,13 +1060,13 @@ def render_html(res, anonymize=False):
         fc_html = (f"<p>Accumulated view from <b>{f['periodStart']}</b> to <b>{f['periodEnd']}</b> ({f['monthsElapsed']} months): "
                    f"<b>{fmt(f['dailyRunRate'])}/day</b>, <b>{fmt(f['monthlyRunRate'])}/month</b>, annualised <b>{fmt(f['annualisedCredits'])}</b> credits "
                    f"(~{money(f['annualisedCost'], cur)} at {html.escape(res['meta']['paygRateBasis'])}).</p>")
-    fc_html += "<p class='note'>Run-rates are straight-line on observed data and assume no policy changes. Use them for sizing capacity packs, not as an invoice.</p>"
+    fc_html += "<p class='note'>Forecast uses the service-level consumption snapshot when available, otherwise reported user credits. User last-activity dates do not determine the credit period or remove credits from the forecast. Run-rates are straight-line and assume no policy changes. Monetary projections use rate assumptions, not contract/invoice cost; PAYG-classified credits may include discounted P3.</p>"
     fc_html += f"<p class='note'>Credits-per-task uses the {fmt(h.get('matchedTaskUsers'))} users present in both the consumption and usage exports ({fmt(h.get('matchedTasks'))} of {fmt(h.get('totalTasks'))} tasks).</p>" if h.get("matchedTasks") else ""
 
     dq = "".join(f"<li>{html.escape(n)}</li>" for n in res["dataQuality"])
     inputs = "".join(f"<li>{html.escape(k)}: {html.escape(os.path.basename(v))}</li>" for k, v in res["meta"]["inputs"].items())
 
-    headline_note = (f"Run-rates are straight-line on observed data and assume no policy changes. Costs use {html.escape(res['meta']['paygRateBasis'])} of {cur} {rate}/pay-as-you-go credit and {html.escape(res['meta']['prepaidRateBasis'])} of {cur} {res['meta']['prepaidRate']}/prepaid credit. The Microsoft invoice on the Azure subscription named in the billing method is the record of truth.")
+    headline_note = (f"Run-rates are straight-line on observed data and assume no policy changes. Costs use {html.escape(res['meta']['paygRateBasis'])} of {cur} {rate}/pay-as-you-go credit and {html.escape(res['meta']['prepaidRateBasis'])} of {cur} {res['meta']['prepaidRate']}/prepaid credit. These are rate assumptions, not contract/invoice cost; PAYG-classified consumption may include discounted P3. The Microsoft invoice on the Azure subscription named in the billing method is the record of truth.")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{html.escape(res['meta']['title'])}</title><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>{CSS}</style></head><body>
 <header><h1>{html.escape(res['meta']['title'])}</h1><p>Copilot Credits consumption report &middot; data as of {res['meta']['asOf']} &middot; source: Microsoft 365 admin center exports &middot; reporting only</p></header>
@@ -1024,7 +1075,7 @@ def render_html(res, anonymize=False):
 <section id="headline"><h2>Headline</h2><div class="kpis">{kpi_html}</div><p class="muted" style="margin-top:10px">{headline_note}</p></section>
 <section id="services"><h2>Service breakdown</h2><div class="grid2"><div class="card"><h4>Prepaid vs pay-as-you-go</h4>{split_html}</div><div class="card"><h4>By service</h4>{svc_table_html}</div></div><div class="card" style="margin-top:12px"><h4>Forecast &amp; run-rate</h4>{fc_html}</div></section>
 <section id="policies"><h2>Spending-limit analysis</h2>{pol_html}</section>
-<section id="org"><h2>Departments &amp; managers</h2>{org_cards}</section>
+<section id="org"><h2>Departments &amp; managers</h2><p class="muted">Based on user-attributed credits only. Other named services outside Cowork user reconciliation are excluded; shares use the user total.</p>{org_cards}</section>
 <section id="groups"><h2>Groups</h2>{grp_html}</section>
 <section id="users"><h2>Users</h2>{users_html}</section>
 <section id="recs"><h2>Recommendations</h2>{rec_html}<p class="muted">This report only recommends. Policy, limit and billing-method changes are made in Microsoft 365 admin center &gt; Copilot &gt; Cost management.</p></section>
@@ -1038,7 +1089,8 @@ def render_md(res):
     h, f, cur = res["headline"], res["forecast"], res["meta"]["currency"]
     lines = [f"# {md_escape(res['meta']['title'])}", f"*As of {res['meta']['asOf']} - Microsoft 365 admin center exports*", "",
              "## Headline", f"- **Copilot Credits used:** {fmt(h['totalCredits'])}" + (f" ({fmt(h['prepaidShare'],1)}% prepaid)" if h['prepaidShare'] is not None else ""),
-             f"- **Estimated cost:** {money(h['estimatedCost'], cur)} (list {money(h['listCost'], cur)}; {md_escape(h['costBasis'])})",
+             f"- **Reporting period:** {f['periodStart']} to {f['periodEnd']} (snapshot {res['meta']['asOf']})",
+             f"- **List-equivalent cost:** {money(h['listEquivalentCost'], cur)} ({md_escape(h['listEquivalentBasis'])}); {md_escape(res['meta']['costDisclaimer'])}",
              f"- **Active users:** {fmt(h['activeUsers'])} - {fmt(h['creditsPerActiveUser'])} credits per active user, median {fmt(h['medianCreditsPerUser'])}"]
     if h["creditsPerTask"]:
         lines.append(f"- **Credits per task:** {fmt(h['creditsPerTask'])} over {fmt(h['matchedTasks'])} tasks of users in both exports ({fmt(h['totalTasks'])} Cowork tasks in total, {fmt(h['scheduledTaskShare'],1)}% scheduled)")
@@ -1053,13 +1105,14 @@ def render_md(res):
     O = res["org"]
     if O["provided"]:
         lines += ["", f"## Departments ({fmt(O['coverage'],0)}% of users matched)"]
+        lines.append("User-attributed credits only; shares use the user total. Other named services outside Cowork user reconciliation are excluded.")
         for d in O["departments"][:8]:
             lines.append(f"- {md_escape(d['name'])}: {fmt(d['used'])} credits ({d['share']}%), {d['users']} users, {fmt(d['avgPerUser'])} per user, {d['nearOrOver']} near/over limit")
         lines += ["", "## Managers"]
         for m in O["managers"][:8]:
             lines.append(f"- {md_escape(m['name'])}: {fmt(m['used'])} credits ({m['share']}%), {m['users']} users, {m['nearOrOver']} near/over limit")
     U = res["users"]
-    lines += ["", "## Users", f"- Top 10 users = {fmt(U['top10Share'],1)}% of credits; {len(U['overLimit'])} over limit, {len(U['nearLimit'])} near limit, {len(U['dormant'])} dormant"]
+    lines += ["", "## Users", f"- Top 10 users = {fmt(U['top10Share'],1)}% of user-attributed credits; {len(U['overLimit'])} over limit, {len(U['nearLimit'])} near limit, {len(U['dormant'])} with stale activity dates; {len(U['creditTimingUncertain'])} with uncertain credit timing"]
     lines += ["", "## Recommendations"]
     for r in res["recommendations"]:
         lines.append(f"- **[{md_escape(r['priority'])}] {md_escape(r['title'])}** - {md_escape(r['evidence'])} -> {md_escape(r['action'])}")
@@ -1077,10 +1130,10 @@ def main(argv=None):
     ap.add_argument("--out", required=True, help="output folder")
     ap.add_argument("--org", nargs="*", default=[], help="directory data: Graph user JSON files/folders and/or org CSV (UPN, Department, Manager...)")
     ap.add_argument("--rate", type=float, default=0.01, help="pay-as-you-go list price per credit (default 0.01)")
-    ap.add_argument("--prepaid-rate", type=float, default=0.008, help="effective prepaid price per credit (default 0.008 = 200/25,000 pack)")
+    ap.add_argument("--prepaid-rate", type=float, default=0.008, help="prepaid capacity-pack equivalent assumption per credit (default 0.008 = 200/25,000 pack)")
     ap.add_argument("--currency", default="USD", help="ISO 4217 code, e.g. USD, EUR, CHF")
     ap.add_argument("--period", choices=["auto", "monthly", "ytd"], default="auto")
-    ap.add_argument("--as-of", help="report date YYYY-MM-DD (default: latest date in the exports, else today)")
+    ap.add_argument("--as-of", help="snapshot date YYYY-MM-DD (default: consumption-export filename timestamp, else today; never last activity)")
     ap.add_argument("--near-limit", type=float, default=0.8)
     ap.add_argument("--dormant-days", type=int, default=30)
     ap.add_argument("--tenant-name", help="tenant/company name to show in non-anonymized report titles")
@@ -1149,7 +1202,7 @@ def main(argv=None):
     else:
         # snapshot date: explicit --as-of > unambiguous export-file timestamp > today. Never activity dates.
         cands = []
-        for fpath in files:
+        for fpath in (data["_files"][t] for t in ("services", "users", "groups") if t in data["_files"]):
             m = re.search(r"(\d{1,2})_(\d{1,2})_(\d{4})", os.path.basename(fpath)) or re.search(r"(\d{4})-(\d{2})-(\d{2})", os.path.basename(fpath))
             if m:
                 g = m.groups()
