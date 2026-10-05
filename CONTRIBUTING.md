@@ -135,12 +135,13 @@ On a pull request, [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 1. Imports your submission, **hard-failing** with an itemized message if any
    required metadata is missing or invalid.
-2. Generates `src/content/skills/<slug>.md` (and `public/bundles/<slug>.zip` when
-   your skill ships files beyond `SKILL.md`) and commits them back to your PR
+2. Generates `src/content/skills/<slug>.md` (and
+   `public/bundles/<slug>.zip` when needed), then commits them back to your PR
    branch (same-repo PRs).
 3. Builds the site.
 
-Merges to `main` deploy to GitHub Pages.
+Merges to `main` deploy to GitHub Pages and refresh the generated
+`copilot-studio-skills` branch with only Copilot Studio-compatible skills.
 
 By contributing you agree your skill is shared under the repository's
 [MIT license](LICENSE).

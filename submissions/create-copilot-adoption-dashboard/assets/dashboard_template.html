@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Copilot Adoption — Monitoring Dashboard (Single-period template)</title>
+<!--
+  ============================================================================
+  COPILOT ADOPTION DASHBOARD  ·  single-period template (v2)
+  ============================================================================
+  Purpose: a self-contained, single-file dashboard meant to be POPULATED BY A
+  COWORK SKILL. Data, company name and logo are NOT loaded through the browser
+  here; the skill injects them into the DASHBOARD_DATA object (see the
+  @DASHBOARD_DATA:BEGIN / :END markers in the script below) or by setting
+  window.__DASHBOARD_DATA__ before this file's script runs.
+
+  Shows one reporting period only (one export set of the four MAC reports).
+  No comparison view. Each KPI carries a definition (info button + hover)
+  taken from the framework scorecard.
+  ============================================================================
+-->
+<style>
+  :root{
+    /* brand palette (from the deck) — constant across themes */
+    --purple:#7C5CFF; --teal:#27C4D9; --amber:#F5A623; --green:#34C77B;
+    --coral:#F96167; --rose:#E8629C; --slate:#8A88A6;
+    --bg-dark:#17123A; --bg-dark2:#241A55;
+    /* neutrals (light theme) */
+    --bg:#EEF0F6; --surface:#FFFFFF; --card:#F5F6FA; --cardp:#F1EDFC;
+    --ink:#201B3D; --muted:#6C6A82; --line:#E4E2F0; --shadow:rgba(26,20,64,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0E0A2A; --surface:#1A1547; --card:#181441; --cardp:#221a55;
+      --ink:#ECEAFB; --muted:#A9A5C8; --line:#2C2760; --shadow:rgba(0,0,0,.45);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Calibri","Segoe UI",system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.4}
+  h1,h3,.hfont{font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 20px 48px}
+
+  /* ---------- app bar ---------- */
+  .appbar{position:sticky;top:0;z-index:40;background:var(--bg-dark);color:#fff;border-bottom:3px solid var(--purple)}
+  .appbar-inner{max-width:1200px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .logo{width:46px;height:46px;border-radius:11px;flex:0 0 auto;overflow:hidden;
+    background:linear-gradient(135deg,var(--purple),var(--teal));
+    display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.25)}
+  .logo img{width:100%;height:100%;object-fit:contain;background:#fff}
+  .logo svg{width:24px;height:24px}
+  .brand-txt{display:flex;flex-direction:column;min-width:0}
+  .company{font-family:"Trebuchet MS",sans-serif;font-weight:bold;font-size:17px;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+  .brand-sub{font-size:11px;color:var(--teal);letter-spacing:.14em;font-weight:bold;text-transform:uppercase}
+  .spacer{flex:1 1 auto}
+  .badge{background:var(--bg-dark2);border:1px solid var(--purple);border-radius:10px;padding:8px 14px;
+    font-size:12.5px;color:#D8D3F2;line-height:1.35}
+  .badge b{color:#fff}
+
+  /* ---------- title ---------- */
+  .titlerow{padding:22px 0 14px}
+  .eyebrow{color:var(--purple);font-weight:bold;letter-spacing:.22em;font-size:12px;text-transform:uppercase}
+  h1{font-size:27px;margin:2px 0 0;color:var(--ink)}
+
+  /* ---------- KPI tiles ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:4px 0 18px}
+  .tile{position:relative;background:var(--surface);border-radius:12px;padding:16px 18px;
+    box-shadow:0 3px 10px var(--shadow);border:1px solid var(--line);border-inline-start-width:5px}
+  .tile .num{font-family:"Trebuchet MS",sans-serif;font-weight:bold;font-size:32px;line-height:1}
+  .tile .lab{font-weight:bold;font-size:13px;margin-top:8px}
+  .tile .sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+  /* info button + tooltip (pure CSS, hover + keyboard focus) */
+  .info{position:absolute;top:12px;inset-inline-end:12px;width:22px;height:22px;border-radius:50%;
+    border:1px solid var(--line);background:var(--card);color:var(--muted);font-weight:bold;font-size:12px;
+    line-height:1;cursor:help;display:flex;align-items:center;justify-content:center;
+    font-family:Georgia,"Times New Roman",serif;padding:0}
+  .info:hover,.info:focus{background:var(--purple);color:#fff;border-color:var(--purple);outline:none}
+  .tooltip{display:none;position:absolute;top:38px;inset-inline-end:12px;width:244px;z-index:30;
+    background:var(--ink);color:#fff;border-radius:10px;padding:12px 14px;
+    box-shadow:0 12px 34px rgba(0,0,0,.4);font-size:12px;line-height:1.45;text-align:start}
+  .tooltip strong{display:block;font-size:13px;margin-bottom:4px;color:#fff}
+  .tooltip .tdef{display:block;color:#D8D3F2;margin-bottom:8px}
+  .tooltip .tmeta{display:block;color:#C9C3F5;font-size:11.5px}
+  .tooltip .tmeta b{color:var(--teal)}
+  .info:hover + .tooltip,.info:focus + .tooltip,.tooltip:hover{display:block}
+
+  /* ---------- panels ---------- */
+  .panels{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .panel{position:relative;background:var(--surface);border-radius:12px;padding:16px;
+    box-shadow:0 3px 10px var(--shadow);
+    border:1px solid var(--line);min-height:300px;display:flex;flex-direction:column}
+  .panel h3{font-size:14px;margin:0 0 4px;padding-inline-end:28px}
+  .panel .psub{font-size:11px;color:var(--muted);margin:0 0 10px}
+  .panel.dim{opacity:.62}
+  .pending{margin:auto;text-align:center;color:var(--rose);font-size:12px;font-style:italic;font-weight:bold;padding:16px}
+  .pending small{display:block;color:var(--muted);font-weight:normal;font-style:normal;margin-top:6px}
+
+  .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:4px}
+  .legend{width:100%;display:flex;flex-direction:column;gap:5px}
+  .legend .row{display:flex;align-items:center;gap:8px;font-size:12px}
+  .legend .row[title],.bar[title],.donut-wrap svg circle{cursor:help}
+  .legend .sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .legend .lname{flex:1 1 auto;color:var(--ink)}
+  .legend .lval{font-weight:bold;color:var(--muted)}
+
+  .bars{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+  .bar{display:grid;grid-template-columns:84px 1fr auto;align-items:center;gap:9px;font-size:12px}
+  .bar .bname{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track{position:relative;height:16px;background:var(--card);border-radius:6px;overflow:hidden}
+  .fill{position:absolute;inset-block:0;inset-inline-start:0;border-radius:6px}
+  .bval{font-weight:bold;color:var(--ink);min-width:34px;text-align:end}
+
+  .funnel{display:flex;flex-direction:column;align-items:center;gap:9px;margin-top:8px}
+  .fstage{border-radius:8px;color:#fff;display:flex;align-items:center;justify-content:space-between;
+    padding:0 14px;height:52px;box-shadow:0 2px 6px var(--shadow)}
+  .fstage .ft{font-weight:bold;font-size:12.5px}
+  .fstage .fn{font-family:"Trebuchet MS",sans-serif;font-weight:bold;font-size:16px}
+
+  /* ---------- recommended next steps ---------- */
+  .reco{position:relative;margin-top:16px;background:var(--surface);border-radius:12px;
+    padding:16px 18px 18px;box-shadow:0 3px 10px var(--shadow);border:1px solid var(--line)}
+  .reco h3{font-size:14px;margin:0 0 4px;padding-inline-end:28px}
+  .reco .psub{font-size:11px;color:var(--muted);margin:0 0 12px}
+  .allgood{display:flex;align-items:center;gap:12px;background:var(--cardp);border:1px solid var(--line);
+    border-inline-start:5px solid var(--green);border-radius:10px;padding:14px 16px}
+  .allgood .ic{font-family:"Trebuchet MS",sans-serif;font-size:22px;color:var(--green);font-weight:bold}
+  .allgood .at{font-weight:bold;font-size:13.5px;color:var(--ink)}
+  .allgood .as{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .rgroup{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0 0 9px;
+    padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .rgroup.spaced{margin-top:18px}
+  .rgroup .glabel{font-family:"Trebuchet MS",sans-serif;font-weight:bold;font-size:12px;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--ink)}
+  .rgroup .gnote{font-size:11px;color:var(--muted);font-style:italic}
+  .rgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+  .rgrid.spaced{margin-top:13px}
+  .rcard{background:var(--card);border:1px solid var(--line);border-inline-start-width:5px;
+    border-radius:10px;padding:12px 14px}
+  .rtag{display:inline-block;font-size:10px;font-weight:bold;letter-spacing:.11em;text-transform:uppercase;
+    padding:2px 7px;border-radius:5px;color:#fff}
+  .rtitle{font-weight:bold;font-size:13px;margin-top:7px;color:var(--ink)}
+  .rwhy{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+  .rcard ul{margin:9px 0 0;padding-inline-start:17px}
+  .rcard li{font-size:12px;margin-bottom:4px;line-height:1.4}
+
+  .foot{margin-top:20px;font-size:11.5px;color:var(--muted);font-style:italic}
+
+  @media (max-width:920px){.kpis{grid-template-columns:repeat(2,1fr)}.panels{grid-template-columns:repeat(2,1fr)}
+    .rgrid{grid-template-columns:1fr}}
+  @media (max-width:560px){.kpis,.panels,.rgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="brand">
+      <div class="logo" id="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l2.6 5.9L21 9l-4.8 4 1.5 6.6L12 16.7 6.3 19.6 7.8 13 3 9l6.4-1.1L12 2z" fill="#fff"/></svg>
+      </div>
+      <div class="brand-txt">
+        <span class="brand-sub">Microsoft 365 Copilot &middot; Adoption</span>
+        <span class="company hfont" id="companyName">Company name</span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="badge" id="reportBadge">Report date: &mdash;</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="titlerow">
+    <div class="eyebrow">Monitoring dashboard</div>
+    <h1>Copilot Adoption — at a glance</h1>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="panels" id="panels"></div>
+  <section class="reco" id="reco"></section>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Copilot Adoption — single-period dashboard (v2)
+   Charts are hand-rolled SVG/CSS; no external libraries or network.
+   ===================================================================== */
+
+/* @DASHBOARD_DATA:BEGIN ------------------------------------------------
+   The Cowork skill REPLACES this object with values computed from ONE
+   export set of the four MAC reports (or sets window.__DASHBOARD_DATA__
+   before this script runs). Field guide:
+
+     company        : string  — org / customer name shown in the header
+     logo           : string  — inline "data:image/..." URI, or "" for the default mark
+     reportDate     : string  — report refresh date, ISO "YYYY-MM-DD"
+     periodDays     : number  — MAC window: 7 | 28 | 30 | 90
+     sources        : which of the 4 reports were available (flexible rendering)
+                      { usage, agentsUser, agentsAgent, chat } : booleans
+     kpis.activation     : number  — % of assigned licenses active (active ÷ assigned)   [Copilot usage]
+     kpis.activationSub  : string  — small caption, e.g. "1,240 of 1,500"
+     kpis.habitual       : number  — % of licensed users active >= 5 days                [Copilot usage]
+     kpis.multiSurface   : number  — % of licensed users active in >= 3 apps             [Copilot usage]
+     kpis.agentAdoption  : number  — % of licensed users who used >= 1 agent             [Agents per-user]
+     kpis.conversion     : number  — count of Hot+Warm unlicensed Chat leads             [Copilot Chat]
+     segments[]     : { name, value, count } five rows (Champion..Never);
+                      value = % share, count = users (shown on hover)                    [Copilot usage]
+     surfaces[]     : { name, pct, users } top 10 apps by % of users active               [Copilot usage]
+     agentShare[]   : { name, pct, users } top 10 agents by active-user share             [Agents per-agent]
+     funnel[]       : { name, value } three stages (Unlicensed active, Warm+, Hot)        [Copilot Chat]
+   -------------------------------------------------------------------- */
+const DASHBOARD_DATA = {
+  company: "Company name",
+  logo: "",
+  reportDate: "2026-07-17",
+  periodDays: 30,
+  sources: { usage:true, agentsUser:true, agentsAgent:true, chat:true },
+  kpis: {
+    activation: 82.7, activationSub: "1,240 of 1,500",
+    habitual: 43, multiSurface: 46, agentAdoption: 29, conversion: 195
+  },
+  segments: [
+    { name:"Champion", value:14, count:210 }, { name:"Habitual", value:27, count:405 },
+    { name:"Casual", value:31, count:465 }, { name:"Dormant", value:18, count:270 },
+    { name:"Never", value:10, count:150 }
+  ],
+  surfaces: [
+    { name:"Teams", pct:68, users:1020 }, { name:"Outlook", pct:61, users:915 },
+    { name:"Word", pct:54, users:810 }, { name:"App", pct:47, users:705 },
+    { name:"PowerPoint", pct:45, users:675 }, { name:"Excel", pct:39, users:585 },
+    { name:"Edge", pct:33, users:495 }, { name:"OneNote", pct:22, users:330 },
+    { name:"Loop", pct:12, users:180 }
+  ],
+  agentShare: [
+    { name:"Researcher", pct:38, users:165 }, { name:"PowerPoint", pct:27, users:117 },
+    { name:"Analyst", pct:22, users:96 }, { name:"HR assistant", pct:16, users:70 },
+    { name:"Sales copilot", pct:12, users:52 }, { name:"IT helpdesk", pct:9, users:39 },
+    { name:"Finance bot", pct:6, users:26 }, { name:"Onboarding", pct:3, users:13 }
+  ],
+  funnel: [
+    { name:"Unlicensed active", value:320 }, { name:"Warm+", value:140 }, { name:"Hot", value:55 }
+  ]
+};
+/* @DASHBOARD_DATA:END -------------------------------------------------- */
+
+const DATA = (typeof window !== "undefined" && window.__DASHBOARD_DATA__) ? window.__DASHBOARD_DATA__ : DASHBOARD_DATA;
+
+const $ = (id) => document.getElementById(id);
+const fmtInt = (n) => Math.round(n).toLocaleString("en-US");
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+
+const SEG_COLORS = ["#7C5CFF","#27C4D9","#F5A623","#8A88A6","#F96167"];
+const PURPLE="#7C5CFF", TEAL="#27C4D9", AMBER="#F5A623", GREEN="#34C77B",
+      ROSE="#E8629C", BG_DARK="#17123A";
+
+/* KPI definitions — value/label + the definition text (from the framework scorecard) */
+const KPI_DEFS = [
+  { key:"activation", color:PURPLE, label:"License activation",
+    fmt:(v)=>Number(v).toFixed(1)+"%", sub:(d)=>d.kpis.activationSub,
+    def:"Share of assigned Copilot licenses that were active (submitted at least one prompt) in the reporting window.",
+    how:"Active licensed users ÷ licenses assigned.", target:"≥ 80%" },
+  { key:"habitual", color:TEAL, label:"Habitual-user rate",
+    fmt:(v)=>Number(v).toFixed(0)+"%", sub:()=>"active ≥ 5 days",
+    def:"Share of licensed users active on 5 or more days in the window — the habit-formed, sticky cohort.",
+    how:"Users with ≥ 5 active days ÷ licensed users.", target:"≥ 40%" },
+  { key:"agentAdoption", color:AMBER, label:"Agent adoption",
+    fmt:(v)=>Number(v).toFixed(0)+"%", sub:()=>"≥ 1 agent used",
+    def:"Share of licensed users who used at least one agent during the window.",
+    how:"Users with ≥ 1 agent ÷ licensed users.", target:"≥ 30%" },
+  { key:"conversion", color:GREEN, label:"Conversion-ready leads",
+    fmt:(v)=>fmtInt(v), sub:()=>"Hot + Warm",
+    def:"Unlicensed Copilot Chat users showing warm-or-hot intent (ranked by Chat prompts × active days × recency) — candidates for a paid seat.",
+    how:"Count of Hot + Warm leads among unlicensed Chat users.", target:"Grow the pipeline" }
+];
+
+/* ---------- chart builders ---------- */
+/* Hover text: "<name>: <share> · <n> users". The count is omitted when the
+   data set does not carry one, so older payloads still render. */
+function hoverText(name, share, count, noun){
+  if(count === null || count === undefined) return `${name}: ${share}`;
+  const n = Number(count);
+  return `${name}: ${share} · ${fmtInt(n)} ${noun}${n === 1 ? "" : "s"}`;
+}
+function donutSVG(items, colors){
+  const total = items.reduce((s,i)=>s+i.value,0) || 1;
+  const C = 2*Math.PI*54;
+  let acc = 0, arcs = "";
+  items.forEach((it,idx)=>{
+    const frac = it.value/total, dash = frac*C;
+    const tip = hoverText(it.name, it.value+"%", it.count, "user");
+    arcs += `<circle cx="70" cy="70" r="54" fill="none" stroke="${colors[idx%colors.length]}" stroke-width="20"
+      stroke-dasharray="${dash.toFixed(2)} ${(C-dash).toFixed(2)}" stroke-dashoffset="${(-acc*C).toFixed(2)}"
+      transform="rotate(-90 70 70)"><title>${esc(tip)}</title></circle>`;
+    acc += frac;
+  });
+  const legend = items.map((it,idx)=>{
+    const tip = hoverText(it.name, it.value+"%", it.count, "user");
+    return `<div class="row" title="${esc(tip)}"><span class="sw" style="background:${colors[idx%colors.length]}"></span>
+      <span class="lname">${esc(it.name)}</span><span class="lval">${it.value}%</span></div>`;
+  }).join("");
+  return `<div class="donut-wrap"><svg viewBox="0 0 140 140" width="140" height="140" role="img"
+      aria-label="Users by segment">${arcs}</svg><div class="legend">${legend}</div></div>`;
+}
+function barRows(items, valKey, color, unit, countKey, noun){
+  const max = Math.max.apply(null, items.map(i=>i[valKey])) || 1;
+  return `<div class="bars">` + items.map(it=>{
+    const w = (it[valKey]/max*100).toFixed(1);
+    const count = countKey ? it[countKey] : null;
+    const tip = hoverText(it.name, it[valKey]+unit, count, noun || "user");
+    return `<div class="bar" title="${esc(tip)}"><span class="bname">${esc(it.name)}</span>
+      <div class="track"><div class="fill" style="width:${w}%;background:${color}"></div></div>
+      <span class="bval">${it[valKey]}${unit}</span></div>`;
+  }).join("") + `</div>`;
+}
+function funnelHTML(stages, maxW){
+  const max = Math.max.apply(null, stages.map(s=>s.value)) || 1;
+  const cols = [BG_DARK, PURPLE, GREEN];
+  return `<div class="funnel">` + stages.map((s,idx)=>{
+    const w = 55 + (s.value/max)*(maxW-55);
+    return `<div class="fstage" style="width:${w.toFixed(0)}px;background:${cols[idx%cols.length]}">
+        <span class="ft">${esc(s.name)}</span><span class="fn">${fmtInt(s.value)}</span></div>`;
+  }).join("") + `</div>`;
+}
+
+/* ---------- KPI tile with definition tooltip ---------- */
+function kpiTile(def){
+  const v = DATA.kpis[def.key];
+  const tid = "tip_"+def.key;
+  return `<div class="tile" style="border-inline-start-color:${def.color}">
+    <button class="info" type="button" aria-label="Definition of ${esc(def.label)}" aria-describedby="${tid}">i</button>
+    <div class="tooltip" id="${tid}" role="tooltip">
+      <strong>${esc(def.label)}</strong>
+      <span class="tdef">${esc(def.def)}</span>
+      <span class="tmeta"><b>How:</b> ${esc(def.how)}</span>
+      <span class="tmeta"><b>Target:</b> ${esc(def.target)}</span>
+    </div>
+    <div class="num" style="color:${def.color}">${def.fmt(v)}</div>
+    <div class="lab">${esc(def.label)}</div>
+    <div class="sub">${esc(def.sub(DATA))}</div>
+  </div>`;
+}
+
+/* ---------- panel definitions (framework scorecard, same pattern as the KPI tiles) ---------- */
+const PANEL_DEFS = {
+  segments: {
+    title:"Users by segment", sub:"share of licensed users", source:"Copilot usage",
+    def:"Licensed users grouped by depth of use — each user falls in exactly one segment (first match wins).",
+    how:"Champion: ≥12 active days and (≥60 prompts or ≥4 apps) · Habitual: ≥5 active days · Casual: 1–4 active days · Dormant: last activity ≥28 days ago · Never: no activity.",
+    target:"Grow Champion + Habitual" },
+  surfaces: {
+    title:"Top surfaces", sub:"% of licensed users active per app", source:"Copilot usage",
+    def:"Share of licensed users with recent activity in each Copilot-enabled app — the top 10 surfaces.",
+    how:"Users active in the app ÷ licensed users. Low-share apps are your targeted-enablement list.",
+    target:"Multi-surface rate (≥3 apps) ≥ 50%" },
+  agents: {
+    title:"Agent usage share", sub:"active-user share per agent", source:"per-agent Agents",
+    def:"Reach of each agent across the people who use agents at all — the top 10 agents.",
+    how:"That agent's active users ÷ users with ≥1 agent. Users may use several agents, so shares need not total 100%.",
+    target:"Broaden beyond the top agents" },
+  funnel: {
+    title:"Conversion", sub:"unlicensed Chat → Hot leads", source:"Copilot Chat",
+    def:"Unlicensed Copilot Chat users ranked by intent — the pipeline for paid seats.",
+    how:"Hot: ≥30 prompts, ≥8 active days, active in the last 7 days · Warm: ≥10 prompts, ≥3 active days. Users already active in licensed Copilot are excluded.",
+    target:"Grow the pipeline" }
+};
+function panelHead(key){
+  const d = PANEL_DEFS[key], tid = "tip_panel_"+key;
+  return `<button class="info" type="button" aria-label="Definition of ${esc(d.title)}" aria-describedby="${tid}">i</button>
+    <div class="tooltip" id="${tid}" role="tooltip">
+      <strong>${esc(d.title)}</strong>
+      <span class="tdef">${esc(d.def)}</span>
+      <span class="tmeta"><b>How:</b> ${esc(d.how)}</span>
+      <span class="tmeta"><b>Target:</b> ${esc(d.target)}</span>
+    </div>
+    <h3>${esc(d.title)}</h3><p class="psub">${esc(d.sub)}</p>`;
+}
+function pendingPanel(key){
+  const d = PANEL_DEFS[key];
+  return `<div class="panel dim">${panelHead(key)}
+    <div class="pending">Awaiting the ${esc(d.source)} export
+    <small>Provide the ${esc(d.source)} report to populate this panel.</small></div></div>`;
+}
+
+/* ---------- panels ---------- */
+function panelSegments(){
+  const S = DATA.sources || {};
+  if(!S.usage) return pendingPanel("segments");
+  return `<div class="panel">${panelHead("segments")}${donutSVG(DATA.segments, SEG_COLORS)}</div>`;
+}
+function panelSurfaces(){
+  const S = DATA.sources || {};
+  if(!S.usage) return pendingPanel("surfaces");
+  return `<div class="panel">${panelHead("surfaces")}${barRows(DATA.surfaces,"pct",PURPLE,"%","users")}</div>`;
+}
+function panelAgents(){
+  const S = DATA.sources || {};
+  if(!S.agentsAgent) return pendingPanel("agents");
+  return `<div class="panel">${panelHead("agents")}${barRows(DATA.agentShare,"pct",ROSE,"%","users")}</div>`;
+}
+function panelFunnel(){
+  const S = DATA.sources || {};
+  if(!S.chat) return pendingPanel("funnel");
+  return `<div class="panel">${panelHead("funnel")}${funnelHTML(DATA.funnel,230)}</div>`;
+}
+
+/* ---------- recommended next steps ----------
+   Each card is one play from the framework's action matrix, rendered ONLY when
+   the measured value trips its scorecard threshold — so the list stays short
+   and every item is justified by a number shown on this dashboard.
+   Colours: coral = below the framework target, amber = where to aim training /
+   awareness effort, green = upside to capture. */
+const RECO_T = { activation:80, never:10, habitual:40,
+                 multiSurface:50, agentAdoption:30, darkSurface:25, agentTail:10 };
+
+function segOf(name){
+  const hit = (DATA.segments||[]).filter(s=>s.name===name)[0];
+  return hit || { name:name, value:0, count:null };
+}
+function segLabel(s){
+  return (s.count===null||s.count===undefined)
+    ? `${s.value}%` : `${s.value}% (${fmtInt(s.count)} users)`;
+}
+function listOf(arr){ return arr.map(x=>`${esc(x.name)} (${x.pct}%)`).join(", "); }
+
+function buildRecos(){
+  /* gaps    — a KPI is below its framework target (must-fix)
+     upside  — a KPI signals an opportunity to capture
+     ongoing — steady-state training / awareness focus. NOT threshold-driven:
+               these are always worth doing, so they are labelled separately
+               and shown even when every KPI passes. */
+  const S = DATA.sources||{}, K = DATA.kpis||{}, gaps = [], upside = [], ongoing = [];
+
+  if(S.usage){
+    const never = segOf("Never");
+    /* Play: low activation / many never-activated. These are two separate
+       scorecard rows, so the card states only the one(s) actually missed. */
+    const lowAct = Number(K.activation) < RECO_T.activation;
+    const manyNever = never.value >= RECO_T.never;
+    if(lowAct || manyNever){
+      const bits = [];
+      if(lowAct) bits.push(`activation is ${Number(K.activation).toFixed(1)}% against a ≥ ${RECO_T.activation}% target`);
+      if(manyNever) bits.push(`${segLabel(never)} of licensed users have never activated (target &lt; ${RECO_T.never}%)`);
+      gaps.push({ color:"var(--coral)", tag:"Activation",
+        title:"Activate the licenses that were never used",
+        why:bits.join(", and ").replace(/^./, c=>c.toUpperCase()) + "."
+            + (lowAct ? "" : " Activation itself is on target — this is the tail that never started."),
+        actions:["Run an onboarding campaign aimed at the never-activated cohort",
+                 "Send first-prompt nudges with one role-relevant use case each",
+                 "Reclaim and reassign licences that stay idle next period"] });
+    }
+    /* Play: low depth (few active days / prompts) */
+    if(Number(K.habitual) < RECO_T.habitual){
+      gaps.push({ color:"var(--coral)", tag:"Depth &amp; habit",
+        title:"Turn occasional use into a daily habit",
+        why:`Habitual-user rate is ${K.habitual}% against a ≥ ${RECO_T.habitual}% target — `
+            + `most licensed users have not yet built a routine.`,
+        actions:["Publish role-based use cases so people know what to ask for",
+                 "Stand up a champions programme in the teams with the deepest use",
+                 "Run lunch-and-learns on the two or three highest-value scenarios"] });
+    }
+    /* Play: narrow surface breadth */
+    if(K.multiSurface !== undefined && Number(K.multiSurface) < RECO_T.multiSurface){
+      gaps.push({ color:"var(--coral)", tag:"Breadth",
+        title:"Widen use beyond a single app",
+        why:`Only ${K.multiSurface}% of licensed users are active in 3 or more apps `
+            + `(target ≥ ${RECO_T.multiSurface}%). Single-surface users get far less value.`,
+        actions:["Run app-specific enablement — one dark surface at a time",
+                 "Pair each app with a concrete task people already do weekly",
+                 "Re-measure breadth next period before adding another app"] });
+    }
+  }
+
+  /* Play: low agent adoption */
+  if(S.agentsUser && Number(K.agentAdoption) < RECO_T.agentAdoption){
+    gaps.push({ color:"var(--coral)", tag:"Agents",
+      title:"Get agents into people's hands",
+      why:`Agent adoption is ${K.agentAdoption}% against a ≥ ${RECO_T.agentAdoption}% target — `
+          + `most licensed users have not used a single agent.`,
+      actions:["Publish role-relevant agents where people already work",
+               "Showcase the high-value agents in team meetings and internal comms",
+               "Target your Copilot power users first — they adopt agents fastest"] });
+  }
+
+  /* Play: strong Chat pipeline (upside, not a gap) */
+  if(S.chat){
+    const f = DATA.funnel||[], hot = (f.filter(x=>x.name==="Hot")[0]||{}).value || 0;
+    const pool = (f.filter(x=>x.name==="Unlicensed active")[0]||{}).value || 0;
+    if(Number(K.conversion) > 0){
+      upside.push({ color:"var(--green)", tag:"Conversion",
+        title:"Convert the Chat pipeline into seats",
+        why:`${fmtInt(K.conversion)} unlicensed Chat users are Hot or Warm`
+            + (hot ? ` (${fmtInt(hot)} Hot)` : "")
+            + `${pool ? `, out of ${fmtInt(pool)} active unlicensed users` : ""} — `
+            + `demand you are already serving without a paid seat.`,
+        actions:["Build the business case for license expansion on this pipeline",
+                 "Pilot-convert the Hot leads first and measure the uplift",
+                 "Re-rank the pipeline next period to show the trend"] });
+    }
+  }
+
+  /* Where to focus training vs awareness — surfaces */
+  if(S.usage){
+    const surf = (DATA.surfaces||[]).slice().sort((a,b)=>b.pct-a.pct);
+    const strong = surf.filter(s=>s.pct>0).slice(0,3);
+    const dark = surf.filter(s=>s.pct < RECO_T.darkSurface).slice().sort((a,b)=>a.pct-b.pct).slice(0,4);
+    if(strong.length){
+      ongoing.push({ color:"var(--amber)", tag:"Training focus",
+        title:"Deepen training where Copilot already landed",
+        why:`Strongest surfaces: ${listOf(strong)}. People are here already — `
+            + `depth, not awareness, is what pays off next.`,
+        actions:[`Run advanced, role-specific sessions on ${esc(strong[0].name)}`,
+                 "Capture what your heaviest users do and turn it into shareable prompts",
+                 "Use these surfaces to introduce the next app in the same workflow"] });
+    }
+    if(dark.length){
+      ongoing.push({ color:"var(--teal)", tag:"Awareness focus",
+        title:"Raise awareness on the quiet surfaces",
+        why:`Lowest adoption: ${listOf(dark)}. Licensed and available, but barely used — `
+            + `most people do not know Copilot is there.`,
+        actions:[`Run a targeted ${esc(dark[0].name)} workshop — one dark surface at a time`,
+                 "Lead with a task that app is already used for, not with the feature",
+                 "Check these are not blocked by policy or licensing before promoting them"] });
+    }
+  }
+
+  /* Where to focus training vs awareness — agents */
+  if(S.agentsAgent){
+    const ag = (DATA.agentShare||[]).slice().sort((a,b)=>b.pct-a.pct);
+    const top = ag.filter(a=>a.pct>0).slice(0,3);
+    const tail = ag.filter(a=>a.pct < RECO_T.agentTail).slice().sort((a,b)=>a.pct-b.pct).slice(0,4);
+    if(top.length){
+      const conc = top[0].pct;
+      ongoing.push({ color:"var(--amber)", tag:"Training focus",
+        title:"Promote and train on the agents that work",
+        why:`Most-used agents: ${listOf(top)}.`
+            + (conc >= 50 ? ` Usage is concentrated in ${esc(top[0].name)} — broaden it beyond one agent.` : ""),
+        actions:[`Make ${esc(top[0].name)} easy to discover org-wide`,
+                 "Run short how-to sessions on the top agents for the teams that fit them",
+                 "Publish what a good prompt looks like for each of them"] });
+    }
+    if(tail.length){
+      ongoing.push({ color:"var(--teal)", tag:"Awareness focus",
+        title:"Relaunch or retire the long tail",
+        why:`Rarely used: ${listOf(tail)}. Each is a retire-or-relaunch decision — `
+            + `low reach is usually discoverability, not quality.`,
+        actions:["Re-announce the ones that map to a real role, with an owner",
+                 "Retire the agents nobody needs so the catalogue stays credible",
+                 "Check the top agents' creator types to see where to invest next"] });
+    }
+  }
+
+  return { gaps: gaps, upside: upside, ongoing: ongoing };
+}
+
+function recoCard(c){
+  return `<div class="rcard" style="border-inline-start-color:${c.color}">
+    <span class="rtag" style="background:${c.color}">${c.tag}</span>
+    <div class="rtitle">${esc(c.title)}</div>
+    <div class="rwhy">${c.why}</div>
+    <ul>${c.actions.map(a=>`<li>${a}</li>`).join("")}</ul>
+  </div>`;
+}
+function renderReco(){
+  const r = buildRecos();
+  const head = `<button class="info" type="button" aria-label="How these recommendations are chosen"
+      aria-describedby="tip_reco">i</button>
+    <div class="tooltip" id="tip_reco" role="tooltip">
+      <strong>Recommended next steps</strong>
+      <span class="tdef">Enablement plays from the adoption framework. Two kinds: KPI-triggered plays, shown only when a measured value misses its target, and ongoing focus areas that always apply.</span>
+      <span class="tmeta"><b>How:</b> KPI-triggered cards name the number that tripped them (coral = below target, green = upside). Ongoing cards rank your surfaces and agents to point training and awareness effort — they are not threshold-driven.</span>
+      <span class="tmeta"><b>Target:</b> Clear the coral cards first, then work the ongoing list.</span>
+    </div>
+    <h3>Recommended next steps</h3>
+    <p class="psub">from the adoption framework &middot; only the plays that apply are shown</p>`;
+
+  /* Only claim a clean bill of health for what was actually measured — with
+     reports missing, the unmeasured pillars are unknown, not passing. */
+  const S = DATA.sources||{}, absent = [];
+  if(!S.usage) absent.push("Copilot usage");
+  if(!S.agentsUser) absent.push("Agents (per user)");
+  if(!S.agentsAgent) absent.push("Agents (per agent)");
+  if(!S.chat) absent.push("Copilot Chat");
+
+  let bodyHTML = "";
+  if(!r.gaps.length){
+    const sub = absent.length
+      ? `Every KPI measured here is at or above its framework target — but ${esc(absent.join(", "))} `
+        + `${absent.length>1?"were":"was"} not supplied, so those pillars are untested.`
+      : "Every KPI on this dashboard is at or above its framework target.";
+    bodyHTML += `<div class="allgood"><span class="ic">&#10003;</span><div>
+      <div class="at">You're doing great — keep it up!</div>
+      <div class="as">${sub}</div>
+    </div></div>`;
+  }
+
+  /* Group 1 — triggered by a KPI missing its target, or a KPI-flagged upside. */
+  const kpiCards = r.gaps.concat(r.upside);
+  if(kpiCards.length){
+    bodyHTML += `<div class="rgroup${bodyHTML ? " spaced" : ""}">
+        <span class="glabel">Triggered by your KPI values</span>
+        <span class="gnote">${r.gaps.length ? "below the framework target — address these first"
+                                            : "an opportunity your numbers point to"}</span>
+      </div>
+      <div class="rgrid">${kpiCards.map(recoCard).join("")}</div>`;
+  }
+
+  /* Group 2 — ongoing focus. Always shown: these are steady-state enablement
+     habits, not threshold breaches, so they stand even when every KPI passes. */
+  if(r.ongoing.length){
+    bodyHTML += `<div class="rgroup spaced">
+        <span class="glabel">Ongoing recommendations</span>
+        <span class="gnote">not triggered by KPI values — where to keep pointing training and awareness effort</span>
+      </div>
+      <div class="rgrid">${r.ongoing.map(recoCard).join("")}</div>`;
+  }
+
+  $("reco").innerHTML = head + bodyHTML;
+}
+
+/* ---------- header + boot ---------- */
+function prettyDate(iso){
+  if(!iso) return "—";
+  const d = new Date(iso+"T00:00:00");
+  return isNaN(d) ? String(iso) : d.toLocaleDateString("en-US",{day:"numeric",month:"short",year:"numeric"});
+}
+function render(){
+  $("companyName").textContent = DATA.company || "Company name";
+  if(DATA.logo){ $("logo").innerHTML = `<img src="${esc(DATA.logo)}" alt="Company logo">`; }
+  $("reportBadge").innerHTML =
+    `Report date: <b>${prettyDate(DATA.reportDate)}</b> &middot; <b>${DATA.periodDays}-day</b> window`;
+
+  $("kpis").innerHTML = KPI_DEFS.map(kpiTile).join("");
+  $("panels").innerHTML = panelSegments()+panelSurfaces()+panelAgents()+panelFunnel();
+  renderReco();
+
+  const missing = [];
+  const S = DATA.sources || {};
+  if(!S.usage) missing.push("Copilot usage");
+  if(!S.agentsUser) missing.push("Agents (per user)");
+  if(!S.agentsAgent) missing.push("Agents (per agent)");
+  if(!S.chat) missing.push("Copilot Chat");
+  $("foot").textContent =
+    `Single reporting period · ${prettyDate(DATA.reportDate)} · ${DATA.periodDays}-day window.`
+    + (missing.length ? `  Missing source(s): ${missing.join(", ")} — related panel(s) shown as pending.` : "")
+    + `  Data, company name and logo are supplied by the Cowork skill.`;
+}
+render();
+</script>
+</body>
+</html>

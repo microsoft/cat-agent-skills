@@ -1,0 +1,12 @@
+{
+  "name": "Breathing Room",
+  "description": "Shows where your own week has room to breathe and where it does not, from your calendar and what you send: meeting density, back-to-back runs, deep-work blocks, evenings and weekends, and the load already building three to ten days out. When a day or a coming week is overloaded it points to the most movable meetings, and it recognises time off rather than reading it as a quiet week. Reports on you only, never on anyone else.",
+  "platforms": ["Scout"],
+  "tags": ["calendar", "workload", "focus", "work-life-balance", "meetings", "deep-work", "self-service"],
+  "author": "Allan De Castro",
+  "authorUrl": "https://github.com/allandecastro",
+  "authorGithub": "allandecastro",
+  "version": "1.1.1",
+  "createdAt": "2026-07-28",
+  "updatedAt": "2026-08-20"
+}

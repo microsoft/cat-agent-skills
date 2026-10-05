@@ -1,0 +1,30 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.0",
+  "id": "00000000-0000-0000-0000-000000000000",
+  "developer": {
+    "name": "REPLACE_DEVELOPER_NAME",
+    "websiteUrl": "https://example.com",
+    "privacyUrl": "https://example.com/privacy",
+    "termsOfUseUrl": "https://example.com/terms"
+  },
+  "name": {
+    "short": "REPLACE_PLUGIN_NAME",
+    "full": "REPLACE_PLUGIN_FULL_NAME"
+  },
+  "description": {
+    "short": "REPLACE_SHORT_DESCRIPTION",
+    "full": "REPLACE_FULL_DESCRIPTION"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#2B579A",
+  "agentSkills": [
+    {
+      "folder": "./skills/replace-skill"
+    }
+  ]
+}
