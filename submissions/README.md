@@ -7,8 +7,8 @@ download bundle) for you.
 
 Every **new** submission is a **`submissions/<slug>/` folder** containing a
 `metadata.json` gallery sidecar plus **exactly one** payload — an **unpacked**
-canonical Agent Skill, an unpacked Cowork plugin, or a single Scout automation
-`.json` (see below):
+canonical Agent Skill (or an unpacked Cowork plugin, or, for Scout, a single
+automation `.json`; see below):
 
 ```
 submissions/<slug>/
@@ -23,8 +23,8 @@ submissions/<slug>/
     └── assets/       # optional templates / data files
 ```
 
-`.zip` payloads are **no longer accepted** — submit skills and Cowork plugins
-unpacked. Scout submissions can instead be a single automation `.json`.
+`.zip` payloads are **no longer accepted** — submit your skill or plugin unpacked.
+(Scout submissions can instead be a single automation `.json`; see below.)
 
 The `<slug>` is the folder name — use lowercase, hyphenated names, e.g.
 `submissions/meeting-summarizer/` -> `/skills/meeting-summarizer`. Start by
@@ -80,8 +80,7 @@ Markdown, and written for **people** — so it never ships in the download bundl
 and the agent never reads it. When present, it **becomes the main content** on
 the detail page (in your own words), while the exact `SKILL.md` stays available as
 the download. Leave it out and the page falls back to showing the skill's
-instructions. Plugins without a README show an automatically generated overview
-of their skills, connectors, and installation steps instead.
+instructions. It works the same way for a skill or a Scout automation.
 
 ## `metadata.json` — catalog details
 
@@ -145,42 +144,23 @@ leave it blank to opt out of the mention.
 
 ## Cowork plugins
 
-Submit a **Cowork plugin** as an **unpacked Microsoft 365 app package**, not a
-pre-built `.zip`:
+The gallery also accepts **Cowork plugins** — Microsoft 365 app
+packages (a `.zip` with a root `manifest.json`) that bundle one or more skills
+(plus optional MCP connectors) and run **only** in Copilot Cowork. Because the
+gallery no longer accepts `.zip` payloads, submit new plugins **unpacked** in
+`submissions/<slug>/`, alongside the usual `metadata.json` and optional
+`README.md` sidecars. The payload has a root `manifest.json`, its referenced
+icons, and the declared skill/connector files; each skill's `SKILL.md` lives in
+its declared folder.
 
-```text
-submissions/<slug>/
-├── metadata.json         # gallery sidecar (not bundled)
-├── README.md             # optional gallery overview (not bundled)
-├── manifest.json         # M365 app manifest
-├── color.png             # 192 x 192 PNG, referenced by the manifest
-├── outline.png           # 32 x 32 PNG, referenced by the manifest
-└── skills/
-    └── <skill-name>/
-        ├── SKILL.md
-        └── ...           # resources used by this skill
-```
+The importer validates the package, sets `platforms: ["Cowork"]` and
+`type: "plugin"`, and generates the downloadable `.zip`. The root gallery
+sidecars are excluded; nested plugin resources are preserved verbatim. The
+README becomes the detail-page overview, or, without one, the page lists the
+plugin's skills, connectors, and installation steps.
 
-The manifest must declare at least one skill or connector. Connector-only
-plugins do not need a `skills/` tree. The existing plugin validator checks
-manifest version (`1.28` or `devPreview`), app ID, name, description, icons,
-declared skill folders, skill frontmatter, and companion-file limits.
-
-Do **not** add a root `SKILL.md`; that identifies a standalone Agent Skill and
-takes precedence over plugin detection. All plugin skills belong in the folders
-declared by the manifest. The root `manifest.json` identifies the plugin before
-the importer considers Scout automation JSON.
-
-The importer sets `platforms: ["Cowork"]` and `type: "plugin"`, generates the
-detail page and a deterministic downloadable `.zip`, and excludes root
-`metadata.*` and `README.md` sidecars. Nested plugin resources are preserved
-verbatim. Your root README becomes the detail-page overview; without one, the
-page lists the plugin's skills, connectors, and installation steps.
-
-Use the usual gallery metadata fields above. The manifest's short name and
-description are used if the sidecar omits those fields. Plugins get a **Plugin**
-badge and can be selected using the gallery's plugin filter. New pre-packaged
-`.zip` submissions remain prohibited.
+Existing plugin submissions (e.g. [`legal-toolkit/`](./legal-toolkit)) stay
+published.
 
 ## Scout automations (advanced)
 

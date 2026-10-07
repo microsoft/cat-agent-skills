@@ -20,9 +20,8 @@
  *         ├── references/  optional docs
  *         └── assets/      optional templates / data files
  *
- * A Cowork plugin instead ships an unpacked M365 app package (root
- * `manifest.json`, icons, and any declared skills/connectors). A Scout
- * submission may instead ship a single automation `<name>.json`.
+ * (A Cowork submission may instead ship an unpacked plugin with a root
+ * `manifest.json`; a Scout submission may ship a single automation `<name>.json`.)
  *
  * `.zip` payloads are NO LONGER ACCEPTED for new submissions — a packed bundle
  * hides its `SKILL.md` and code from review. A handful of pre-existing zip
@@ -640,8 +639,9 @@ function buildPluginBody(opts: {
 }
 
 /**
- * Validate + generate a Cowork plugin submission: an unpacked M365 app package
- * (root `manifest.json` + icons + `skills/`) plus a `metadata.*` sidecar.
+ * Validate + generate a Cowork plugin submission: an M365 app package
+ * (unpacked or a grandfathered `.zip`, with root `manifest.json` + icons +
+ * `skills/`) plus a `metadata.*` sidecar.
  * The package ships verbatim as the download; the detail page is synthesized.
  */
 function processPlugin(sub: Submission): ImportProblem | null {
@@ -981,6 +981,7 @@ export function loadSubmission(dir: string): Submission {
   const topFiles = readdirSync(dir).filter((n) => statSync(join(dir, n)).isFile());
   const zips = topFiles.filter((n) => n.toLowerCase().endsWith(".zip"));
   const hasRootSkill = topFiles.some((n) => n.toLowerCase() === INSTRUCTIONS_NAME);
+  const hasRootManifest = topFiles.some((n) => n.toLowerCase() === "manifest.json");
 
   // Metadata sidecar (top-level, next to the payload — never inside the bundle).
   const metaFile = topFiles.find((n) => METADATA_NAMES.includes(n.toLowerCase()));
@@ -1048,39 +1049,37 @@ export function loadSubmission(dir: string): Submission {
   } else if (hasRootSkill) {
     // Unpacked: bundle the folder contents verbatim (minus the metadata sidecar).
     classifyPayload(sub, listFiles(dir));
+  } else if (hasRootManifest) {
+    sub.kind = "plugin";
+    // Only root gallery sidecars are stripped; nested files belong to the plugin.
+    sub.pluginFiles = listFiles(dir).filter(
+      (f) =>
+        !METADATA_NAMES.includes(f.path.toLowerCase()) &&
+        f.path.toLowerCase() !== README_NAME,
+    );
   } else {
-    const files = listFiles(dir);
-    if (isPluginPackage(files)) {
-      sub.kind = "plugin";
-      // Only root gallery sidecars are stripped; nested files belong to the plugin.
-      sub.pluginFiles = files.filter(
-        (f) =>
-          !METADATA_NAMES.includes(f.path.toLowerCase()) &&
-          f.path.toLowerCase() !== README_NAME,
+    // A Scout automation payload: a single top-level `.json` that is NOT the
+    // metadata sidecar (all root `.json` files are automations by Scout's
+    // GitHub-import convention). The sidecar carries the catalog metadata.
+    const automationJsons = topFiles.filter(
+      (n) =>
+        n.toLowerCase().endsWith(".json") && !METADATA_NAMES.includes(n.toLowerCase()),
+    );
+    if (automationJsons.length === 1) {
+      sub.kind = "automation";
+      sub.automationJsonName = automationJsons[0];
+      sub.automationJson = readFileSync(join(dir, automationJsons[0]), "utf8");
+    } else if (automationJsons.length > 1) {
+      problems.push(
+        `submission has ${automationJsons.length} automation .json files \u2014 ` +
+          "provide exactly one (plus the `metadata.*` sidecar)",
       );
     } else {
-      // A Scout automation is a single non-sidecar root JSON file, after
-      // ruling out the M365 plugin manifest.
-      const automationJsons = topFiles.filter(
-        (n) =>
-          n.toLowerCase().endsWith(".json") && !METADATA_NAMES.includes(n.toLowerCase()),
+      problems.push(
+        "submission has no payload \u2014 add a root `SKILL.md` (with optional " +
+          "`scripts/`, `references/`, `assets/`), an unpacked Cowork plugin " +
+          "(root `manifest.json`), or a single Scout automation `<name>.json`",
       );
-      if (automationJsons.length === 1) {
-        sub.kind = "automation";
-        sub.automationJsonName = automationJsons[0];
-        sub.automationJson = readFileSync(join(dir, automationJsons[0]), "utf8");
-      } else if (automationJsons.length > 1) {
-        problems.push(
-          `submission has ${automationJsons.length} automation .json files \u2014 ` +
-            "provide exactly one (plus the `metadata.*` sidecar)",
-        );
-      } else {
-        problems.push(
-          "submission has no payload \u2014 add a root `SKILL.md` (with optional " +
-            "`scripts/`, `references/`, `assets/`), an unpacked Cowork plugin " +
-            "(root `manifest.json`), or a single Scout automation `<name>.json`",
-        );
-      }
     }
   }
 
@@ -1100,8 +1099,9 @@ function main() {
   for (const name of readdirSync(SUBMISSIONS_DIR)) {
     if (name.startsWith(".") || name.startsWith("_")) continue; // _template, etc.
     const full = join(SUBMISSIONS_DIR, name);
-    // Each folder holds an unpacked skill, an unpacked Cowork plugin, or a
-    // single Scout automation JSON.
+    // Submissions are folders. Each holds an unpacked skill (root `SKILL.md` +
+    // optional dirs), an unpacked Cowork plugin, or, for Scout, a single
+    // automation `<name>.json`.
     if (statSync(full).isDirectory()) {
       submissions.push(loadSubmission(full));
     }
