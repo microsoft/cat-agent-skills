@@ -48,6 +48,8 @@ only question worth blocking on.
    record a verdict:
 
    - **BLOCKER** - the server will not work as it stands.
+     A setup that works but is not the recommended approach is not a BLOCKER.
+     Record it as WATCH.
    - **FIX** - it connects, but something breaks or degrades at runtime.
    - **WATCH** - correct today and dependent on product behavior that moves.
    - **PASS** - checked and fine.
@@ -71,6 +73,11 @@ only question worth blocking on.
   supported since August 2025. A server that only speaks SSE is a BLOCKER.
 - The endpoint must be HTTPS and reachable from Copilot Studio. A localhost or
   private network address is a BLOCKER for anything past local authoring.
+- A placeholder or example hostname is not a BLOCKER on its own. A custom
+  connector can answer the MCP requests itself, with no separate server, and
+  that works. It is not the recommended architecture for a real solution, so
+  record WATCH, say which case you found, and name the hosted endpoint you would
+  expect in production.
 - Custom connector route: the OpenAPI file is Swagger 2.0 and the POST operation
   carries `x-ms-agentic-protocol: mcp-streamable-1.0`. Missing means the
   connector is not treated as MCP.
