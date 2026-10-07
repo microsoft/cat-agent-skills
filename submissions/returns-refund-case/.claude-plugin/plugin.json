@@ -1,0 +1,17 @@
+{
+  "name": "returns-refund-case",
+  "version": "1.0.3",
+  "description": "Retail Wave 1 Cowork plugin: consistent, policy-cited return decisions with a complete case packet on first touch. Retrieves order, receipt, SKU attributes and return policy clauses; classifies the return reason against the taxonomy (reason_classify); validates eligibility deterministically with the policy clause cited (eligibility_check - the explicit Govern step); surfaces fraud signals from a deterministic rule set without adjudicating them (fraud_signal); drafts the recommendation and case packet. Draft-first: it never authorises a refund, releases funds, adjudicates fraud, disposes inventory or books a carrier.",
+  "author": {
+    "name": "Microsoft Retail & CPG Skills"
+  },
+  "keywords": [
+    "retail",
+    "returns",
+    "refund",
+    "reverse-commerce",
+    "eligibility",
+    "fraud-signals",
+    "case-packet"
+  ]
+}
