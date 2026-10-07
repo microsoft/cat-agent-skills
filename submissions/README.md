@@ -159,9 +159,6 @@ sidecars are excluded; nested plugin resources are preserved verbatim. The
 README becomes the detail-page overview, or, without one, the page lists the
 plugin's skills, connectors, and installation steps.
 
-Existing plugin submissions (e.g. [`legal-toolkit/`](./legal-toolkit)) stay
-published.
-
 ## Scout automations (advanced)
 
 The gallery also hosts **Scout automations** — a scheduled/triggered `.json`

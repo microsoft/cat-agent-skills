@@ -50,7 +50,7 @@ Cowork **plugin** packages — an M365 app `.zip` with a root `manifest.json`
 bundling one or more skills (plus optional MCP connectors) — are submitted
 **unpacked**, alongside the usual `metadata.json` and optional `README.md`.
 CI validates the package and generates the downloadable `.zip`. The gallery no
-longer takes `.zip` payloads. Existing plugin submissions stay published. See the
+longer takes `.zip` payloads. See the
 [Cowork plugins section](submissions/README.md#cowork-plugins) for details.
 
 ### Scout automations
