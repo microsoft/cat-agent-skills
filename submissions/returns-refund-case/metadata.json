@@ -1,0 +1,11 @@
+{
+  "name": "Returns & Refund Case",
+  "description": "Consistent, policy-cited return decisions with a complete case packet on first touch: classify the return reason, validate eligibility deterministically with the policy clause cited, surface fraud signals without adjudicating them, and draft the recommendation and case packet.",
+  "platforms": ["Cowork"],
+  "tags": ["retail", "returns", "refund", "reverse-commerce", "eligibility", "fraud-signals"],
+  "author": "Sravani Seethi",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.3",
+  "createdAt": "2026-09-29",
+  "updatedAt": "2026-09-29"
+}
