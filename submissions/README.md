@@ -7,7 +7,8 @@ download bundle) for you.
 
 Every **new** submission is a **`submissions/<slug>/` folder** containing a
 `metadata.json` gallery sidecar plus **exactly one** payload — an **unpacked**
-canonical Agent Skill (or, for Scout, a single automation `.json`; see below):
+canonical Agent Skill, an unpacked Cowork plugin, or a single Scout automation
+`.json` (see below):
 
 ```
 submissions/<slug>/
@@ -22,8 +23,8 @@ submissions/<slug>/
     └── assets/       # optional templates / data files
 ```
 
-`.zip` payloads are **no longer accepted** — submit your skill unpacked. (Scout
-submissions can instead be a single automation `.json`; see below.)
+`.zip` payloads are **no longer accepted** — submit skills and Cowork plugins
+unpacked. Scout submissions can instead be a single automation `.json`.
 
 The `<slug>` is the folder name — use lowercase, hyphenated names, e.g.
 `submissions/meeting-summarizer/` -> `/skills/meeting-summarizer`. Start by
@@ -39,7 +40,7 @@ stripped; they are sidecars and never land inside the bundle.
 > page (your own overview, setup steps, tips, and examples), with the exact
 > `SKILL.md` still offered as the download. Without one, the page falls back to
 > the skill's own instructions. It's optional and works for every entry type
-> (skill or automation). Everything *else* in the folder is
+> (skill, plugin, or automation). Everything *else* in the folder is
 > agent-facing and ships verbatim, so don't add stray docs like `CHANGELOG` or
 > `CONTRIBUTING` next to your payload — they'd just waste the agent's context. Put
 > those in your PR description.
@@ -79,7 +80,8 @@ Markdown, and written for **people** — so it never ships in the download bundl
 and the agent never reads it. When present, it **becomes the main content** on
 the detail page (in your own words), while the exact `SKILL.md` stays available as
 the download. Leave it out and the page falls back to showing the skill's
-instructions. It works the same way for a skill or a Scout automation.
+instructions. Plugins without a README show an automatically generated overview
+of their skills, connectors, and installation steps instead.
 
 ## `metadata.json` — catalog details
 
@@ -141,14 +143,44 @@ don't need to set it** — just make `authorUrl` your GitHub profile. Set it
 explicitly only when your only link isn't a GitHub profile (e.g. LinkedIn), or
 leave it blank to opt out of the mention.
 
-## Cowork plugins (no longer accepted)
+## Cowork plugins
 
-Earlier, the gallery also accepted **Cowork plugins** — Microsoft 365 app
-packages (a `.zip` with a root `manifest.json`) that bundle one or more skills
-(plus optional MCP connectors) and run **only** in Copilot Cowork. Because the
-gallery no longer accepts `.zip` payloads, **new plugin submissions are no longer
-accepted**. Existing plugin submissions (e.g. [`legal-toolkit/`](./legal-toolkit))
-stay published.
+Submit a **Cowork plugin** as an **unpacked Microsoft 365 app package**, not a
+pre-built `.zip`:
+
+```text
+submissions/<slug>/
+├── metadata.json         # gallery sidecar (not bundled)
+├── README.md             # optional gallery overview (not bundled)
+├── manifest.json         # M365 app manifest
+├── color.png             # 192 x 192 PNG, referenced by the manifest
+├── outline.png           # 32 x 32 PNG, referenced by the manifest
+└── skills/
+    └── <skill-name>/
+        ├── SKILL.md
+        └── ...           # resources used by this skill
+```
+
+The manifest must declare at least one skill or connector. Connector-only
+plugins do not need a `skills/` tree. The existing plugin validator checks
+manifest version (`1.28` or `devPreview`), app ID, name, description, icons,
+declared skill folders, skill frontmatter, and companion-file limits.
+
+Do **not** add a root `SKILL.md`; that identifies a standalone Agent Skill and
+takes precedence over plugin detection. All plugin skills belong in the folders
+declared by the manifest. The root `manifest.json` identifies the plugin before
+the importer considers Scout automation JSON.
+
+The importer sets `platforms: ["Cowork"]` and `type: "plugin"`, generates the
+detail page and a deterministic downloadable `.zip`, and excludes root
+`metadata.*` and `README.md` sidecars. Nested plugin resources are preserved
+verbatim. Your root README becomes the detail-page overview; without one, the
+page lists the plugin's skills, connectors, and installation steps.
+
+Use the usual gallery metadata fields above. The manifest's short name and
+description are used if the sidecar omits those fields. Plugins get a **Plugin**
+badge and can be selected using the gallery's plugin filter. New pre-packaged
+`.zip` submissions remain prohibited.
 
 ## Scout automations (advanced)
 
