@@ -1,0 +1,101 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "Client: {{ client_name }}",
+        "Amount: {{ amount }}"
+      ],
+      "word/header1.xml": [
+        "Confidential"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p1#8-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "c:word/document.xml#p1#0-25",
+        "kind": "control",
+        "pattern": "content_control",
+        "confidence": "low",
+        "eligible": true,
+        "decision_required": false,
+        "name_guess": "client_section"
+      },
+      {
+        "id": "f:word/document.xml#p2#8-20",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "amount"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "fill while preserving control or namespace structure",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#8-25",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p2#8-20",
+            "decision": "field",
+            "field": "amount"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "amount",
+            "type": "string",
+            "source": "amount"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Acme",
+        "amount": "42"
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Client: Acme",
+            "Amount: 42"
+          ],
+          "word/header1.xml": [
+            "Confidential"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": true
+    }
+  ]
+}

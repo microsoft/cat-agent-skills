@@ -1,0 +1,48 @@
+{
+  "schema": "fill-word-template/profile/v3",
+  "description": "Default interpretation profile: which text looks like a field, which looks like an author instruction, which parts are in scope, and locale defaults. A template family that uses other conventions ships its own profile file and passes it to inspect --profile; the profile is merged over this one and recorded in the manifest. Patterns are Python regular expressions applied to paragraph text; earlier patterns win where matches overlap, and instruction matches suppress overlapping field matches.",
+  "parts_in_scope": [
+    "word/document.xml",
+    "word/header*.xml",
+    "word/footer*.xml",
+    "word/footnotes.xml",
+    "word/endnotes.xml"
+  ],
+  "field_patterns": [
+    {"name": "double_brace",     "regex": "\\{\\{\\s*([^{}\\n]{1,200}?)\\s*\\}\\}",  "confidence": "high"},
+    {"name": "guillemet",        "regex": "«\\s*([^«»\\n]{1,200}?)\\s*»", "confidence": "high"},
+    {"name": "double_angle",     "regex": "<<\\s*([^<>\\n]{1,200}?)\\s*>>",          "confidence": "high"},
+    {"name": "dollar_brace",     "regex": "\\$\\{\\s*([^{}\\n]{1,200}?)\\s*\\}",      "confidence": "high"},
+    {"name": "percent_marker",   "regex": "%([A-Za-z_][A-Za-z0-9_ ]{0,60}[A-Za-z0-9_])%", "confidence": "medium"},
+    {"name": "square_bracket",   "regex": "\\[\\s*([^\\[\\]\\n]{1,200}?)\\s*\\]",     "confidence": "medium"},
+    {"name": "angle_bracket",    "regex": "<\\s*([^<>\\n]{1,200}?)\\s*>",            "confidence": "medium"},
+    {"name": "underscore_blank", "regex": "(_{3,})",                                  "confidence": "medium"},
+    {"name": "single_brace",     "regex": "\\{\\s*([^{}\\n]{1,200}?)\\s*\\}",          "confidence": "low"},
+    {"name": "dotted_blank",     "regex": "(\\.{6,})",                                "confidence": "low"}
+  ],
+  "instruction_patterns": [
+    {"name": "template_statement", "regex": "\\{%[^%\\n]{0,300}%\\}|\\{#[^#\\n]{0,300}#\\}", "confidence": "high"},
+    {"name": "bracketed_note",     "regex": "(?i)[\\[(]\\s*(?:guidance|note|notes|instruction|instructions|drafting note|drafter'?s note|n\\.?b\\.?|optional|delete|remove|insert|include|replace|select|choose|enter|specify|complete|add|tbd|tbc|to be confirmed|to be completed|if applicable|if not applicable|as applicable|where applicable|placeholder)\\b[^\\[\\]()\\n]{0,300}[\\])]", "confidence": "high"},
+    {"name": "conditional_include","regex": "(?i)\\b(?:include|use|complete|retain|keep)\\b[^.\\n]{0,40}\\bonly\\s+(?:if|where|when)\\b[^.\\n]{0,120}", "confidence": "medium"},
+    {"name": "delete_instruction", "regex": "(?i)\\b(?:delete|remove|omit|strike)\\b[^.\\n]{0,30}?\\b(?:sections?|clauses?|paragraphs?|tables?|rows?|columns?|text|sentences?|lines?|pages?|bracketed text|guidance|notes?|instructions?|headings?)\\b[^.\\n]{0,120}", "confidence": "medium"},
+    {"name": "scope_instruction",  "regex": "(?i)\\b(?:only\\s+(?:edit|complete|fill|amend|change|update|use)|do not\\s+(?:edit|change|amend|modify|alter|delete|remove))\\b[^.\\n]{0,120}", "confidence": "medium"},
+    {"name": "applicability",      "regex": "(?i)\\b(?:if|where|as|when)\\s+(?:not\\s+)?applicable\\b|\\bdelete\\s+(?:as|if|where)\\s+(?:appropriate|applicable|required)\\b|\\bas\\s+appropriate\\b", "confidence": "medium"},
+    {"name": "to_be_completed",    "regex": "(?i)\\b(?:to be (?:confirmed|completed|determined|inserted|drafted|agreed|provided)|tbd|tbc|tba)\\b", "confidence": "medium"},
+    {"name": "insert_prompt",      "regex": "(?i)\\b(?:insert|enter|type|specify|provide|state|fill in|add)\\s+(?:the\\s+|a\\s+|an\\s+|your\\s+)?[A-Za-z][A-Za-z ]{1,40}?\\s+here\\b", "confidence": "medium"}
+  ],
+  "instruction_formatting": {
+    "hidden_text": "medium",
+    "highlighted_text": "low"
+  },
+  "blank_cells": "low",
+  "repeated_text": {"min_occurrences": 3, "max_chars": 40},
+  "locale": {
+    "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    "months_short": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "true_text": "Yes",
+    "false_text": "No",
+    "decimal_separator": ".",
+    "thousands_separator": "",
+    "date_pattern": "YYYY-MM-DD"
+  }
+}

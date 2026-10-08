@@ -1,0 +1,9 @@
+{
+  "name": "Template-Based Document Generation",
+  "description": "Populate an existing Word template from supplied data while preserving branding, repeating table rows, and reporting missing values and changes for review.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["word", "docx", "templates", "documents", "automation", "python"],
+  "author": "sgshaji",
+  "authorUrl": "https://github.com/sgshaji",
+  "version": "3.7.1"
+}
