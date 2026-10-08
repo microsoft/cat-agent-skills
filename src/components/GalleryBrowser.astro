@@ -84,8 +84,8 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
 
   <section class="mx-auto max-w-8xl px-4 py-7 sm:px-6">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
-      <h2 class="text-lg font-semibold text-fg">
-        {microsoftOnly ? "Microsoft submissions" : "Built by the community"} <span id="result-count" class="text-muted">({gridItems.length})</span>
+      <h2 class="text-xl font-bold tracking-tight text-fg">
+        {microsoftOnly ? "Microsoft submissions" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
       </h2>
       <label class="flex items-center gap-2 text-sm text-muted">
         <span class="hidden sm:inline">{microsoftOnly ? "Sort submissions" : "Sort community"}</span>
