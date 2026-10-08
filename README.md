@@ -15,8 +15,8 @@ deployed as a static site to GitHub Pages.
   assets to maintain).
 - **Built by Microsoft carousel** with compact, individual asset cards above the
   shared filters and community gallery. Microsoft cards use team-managed category
-  icons, colored icon gradients, and subtle category tints; community cards retain
-  their generated initials. Compact Microsoft cards show the asset name,
+  icons with colored gradients on neutral cards; community cards retain their
+  generated initials. Compact Microsoft cards show the asset name,
   description, category, format, and platform without repeating the section label
   or adding tag/download footers.
   Every tile is one submission, regardless of whether it contains a skill,

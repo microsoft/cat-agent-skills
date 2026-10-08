@@ -277,11 +277,11 @@ const wrapperProps = isInteractive
     min-height: 10.5rem;
     padding: 0.875rem;
     border-radius: 0.75rem;
-    border-color: color-mix(in srgb, var(--category-color) 18%, var(--border));
-    background: color-mix(in srgb, var(--category-color) 5%, var(--surface));
+    border-color: var(--border);
+    background: var(--surface);
   }
   .submission-card[data-variant="spotlight"]:where(a:hover) {
-    border-color: color-mix(in srgb, var(--category-color) 55%, var(--border));
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--surface));
   }
   [data-variant="spotlight"] .spotlight-heading {
     min-height: 2.6rem;
