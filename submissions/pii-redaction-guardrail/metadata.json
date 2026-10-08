@@ -1,0 +1,11 @@
+{
+  "name": "PII Redaction Guardrail",
+  "description": "Scan customer emails, tickets, notes, and case studies for personal data (emails, phone numbers, SSNs, credit cards, IPs) before they're published or sent externally. General-purpose, not clinical/HIPAA text.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["privacy", "guardrail", "pii", "redaction", "scripts", "governance"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
