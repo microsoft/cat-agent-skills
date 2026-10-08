@@ -25,6 +25,11 @@ deployed as a static site to GitHub Pages.
   Productivity, and Agent development.
 - **Shared category pills** beneath the Microsoft carousel, alongside the other
   filters. Categories apply to Microsoft and community submissions alike.
+  The compact filter strip combines Platform and Format on wide screens; narrow
+  screens use horizontally scrolling pill rows rather than tall wrapped stacks.
+  Selected pills stay visible when opening a filtered URL or resizing. Fewer
+  popular tags appear inline on narrower screens; every tag remains available
+  through **More tags**.
 - **Shareable category filters** at `/?category=manufacturing`,
   `/?category=retail-cpg`, `/?category=productivity`, and
   `/?category=agent-development` (under the site's `/cat-agent-skills/` base path).

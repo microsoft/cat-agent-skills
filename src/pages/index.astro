@@ -116,9 +116,10 @@ const allContributors = [...contributorMap.entries()]
 
   <!-- Shared category, platform and format filters -->
   <section class="mt-5 border-y border-border bg-bg" aria-label="Shared submission filters">
-    <div class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 pt-4 sm:px-6">
-      <span id="category-filter-label" class="text-xs font-semibold uppercase tracking-wider text-subtle sm:w-18 sm:shrink-0">Category</span>
-      <div id="category-filters" class="flex flex-wrap items-center gap-2" role="group" aria-labelledby="category-filter-label">
+    <div class="filter-layout mx-auto max-w-8xl px-4 py-3 sm:px-6">
+    <div class="filter-group filter-categories">
+      <span id="category-filter-label" class="filter-label">Category</span>
+      <div id="category-filters" class="filter-pills" role="group" aria-labelledby="category-filter-label">
         <button type="button" data-category="" class="category-chip rounded-full border border-accent bg-accent-soft px-3.5 py-1.5 text-sm font-semibold text-accent-text transition" aria-pressed="true">All</button>
         {CATEGORIES.map((category) => (
           <button type="button" data-category={category} class="category-chip rounded-full border border-border bg-surface-2 px-3.5 py-1.5 text-sm font-semibold text-muted transition hover:border-accent/40 hover:text-fg" aria-pressed="false">
@@ -127,13 +128,11 @@ const allContributors = [...contributorMap.entries()]
         ))}
       </div>
     </div>
-    <div
-      class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6"
-    >
-      <span class="text-xs font-semibold uppercase tracking-wider text-subtle sm:w-18 sm:shrink-0"
+    <div class="filter-group filter-platforms">
+      <span id="platform-filter-label" class="filter-label"
         >Platform</span
       >
-      <div id="platform-filters" class="flex flex-wrap gap-2">
+      <div id="platform-filters" class="filter-pills" role="group" aria-labelledby="platform-filter-label">
         <button
           type="button"
           data-platform=""
@@ -164,13 +163,27 @@ const allContributors = [...contributorMap.entries()]
           ))
         }
       </div>
-      <div id="import-menu" class="relative ml-0 w-full sm:ml-auto sm:w-auto">
+    </div>
+    <div class="filter-group filter-formats">
+      <span id="format-filter-label" class="filter-label">Format</span>
+      <div id="type-filters" class="filter-pills" role="group" aria-labelledby="format-filter-label">
+        <button type="button" data-type="" class="type-chip rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition" aria-pressed="true">All</button>
+        {(["skill", "plugin", "automation"] as const).map((type) => (
+          <button type="button" data-type={type} class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg" aria-pressed="false">
+            {{ skill: "Skills", plugin: "Plugins", automation: "Automations" }[type]}
+          </button>
+        ))}
+      </div>
+    </div>
+      <div id="import-menu" class="filter-catalog relative">
         <button
           id="import-menu-trigger"
           type="button"
           aria-expanded="false"
           aria-haspopup="true"
-          class="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm font-semibold text-fg transition hover:border-accent/50 hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+          aria-label="Catalog URL"
+          title="Catalog URL"
+          class="flex h-8 items-center justify-center gap-2 rounded-lg border border-border bg-surface-2 px-2 text-sm font-semibold text-fg transition hover:border-accent/50 hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 sm:px-3"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -187,7 +200,7 @@ const allContributors = [...contributorMap.entries()]
             <path d="m8 11 4 4 4-4"></path>
             <path d="M5 21h14"></path>
           </svg>
-          Catalog URL
+          <span class="hidden sm:inline">Catalog URL</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -196,7 +209,7 @@ const allContributors = [...contributorMap.entries()]
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="h-3.5 w-3.5 text-subtle transition"
+            class="hidden h-3.5 w-3.5 text-subtle transition sm:block"
             id="import-menu-chevron"
             aria-hidden="true"
           >
@@ -248,22 +261,11 @@ const allContributors = [...contributorMap.entries()]
         aria-live="polite"
       ></span>
     </div>
-    <div class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 pb-4 sm:px-6">
-      <span id="format-filter-label" class="text-xs font-semibold uppercase tracking-wider text-subtle sm:w-18 sm:shrink-0">Format</span>
-      <div id="type-filters" class="flex flex-wrap gap-2" role="group" aria-labelledby="format-filter-label">
-        <button type="button" data-type="" class="type-chip rounded-full border border-accent bg-accent-soft px-3 py-1 text-sm font-medium text-accent-text transition" aria-pressed="true">All</button>
-        {(["skill", "plugin", "automation"] as const).map((type) => (
-          <button type="button" data-type={type} class="type-chip rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg" aria-pressed="false">
-            {{ skill: "Skills", plugin: "Plugins", automation: "Automations" }[type]}
-          </button>
-        ))}
-      </div>
-    </div>
   </section>
 
   <!-- Tag filters -->
   <section class="border-b border-border bg-bg">
-    <div class="mx-auto max-w-8xl px-4 py-4 sm:px-6">
+    <div class="mx-auto max-w-8xl px-4 py-2 sm:px-6">
       <div
         id="tag-row"
         class="relative flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0"
@@ -282,7 +284,7 @@ const allContributors = [...contributorMap.entries()]
               data-tag={tag}
               class:list={[
                 "shrink-0 rounded-full border border-border bg-surface-2 px-3 py-1 text-sm font-medium text-muted transition hover:border-accent/40 hover:text-fg",
-                i >= 3 && "hidden sm:inline-flex",
+                i >= 3 ? "hidden min-[90rem]:inline-flex" : i >= 1 ? "hidden md:inline-flex" : "",
               ]}
               aria-pressed="false"
             >
@@ -297,7 +299,7 @@ const allContributors = [...contributorMap.entries()]
           aria-hidden="true"
         ></div>
         {
-          allTags.length > popularTags.length && (
+          allTags.length > 1 && (
             <div class="relative shrink-0">
               <button
                 type="button"
@@ -507,6 +509,77 @@ const allContributors = [...contributorMap.entries()]
   </section>
 </Layout>
 
+<style>
+  .filter-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+  .filter-group {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.625rem;
+  }
+  .filter-categories,
+  .filter-platforms {
+    grid-column: 1 / -1;
+  }
+  .filter-label {
+    flex: 0 0 4rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .filter-pills {
+    display: flex;
+    min-width: 0;
+    gap: 0.375rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding: 0.25rem;
+    margin: -0.25rem;
+  }
+  .filter-pills > button {
+    flex-shrink: 0;
+    min-height: 2rem;
+    padding: 0.25rem 0.625rem;
+    white-space: nowrap;
+  }
+  .filter-pills > button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  @media (min-width: 80rem) {
+    .filter-layout {
+      grid-template-columns: max-content minmax(0, 1fr) auto;
+      column-gap: 2rem;
+    }
+    .filter-categories {
+      grid-column: 1 / 3;
+    }
+    .filter-platforms {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .filter-formats {
+      grid-column: 2 / -1;
+      grid-row: 2;
+    }
+    .filter-formats .filter-label {
+      flex-basis: auto;
+    }
+    .filter-catalog {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+</style>
+
 <script>
   import { initials, coverGradient } from "../lib/skills";
   import { isCategory, type Category } from "../lib/categories";
@@ -575,6 +648,7 @@ const allContributors = [...contributorMap.entries()]
   const typeChips = Array.from(
     document.querySelectorAll<HTMLButtonElement>(".type-chip")
   );
+  const filterRows = Array.from(document.querySelectorAll<HTMLElement>(".filter-pills"));
   const countEl = document.getElementById("result-count")!;
   const emptyEl = document.getElementById("empty-state")!;
   const filterChips = document.getElementById("filter-chips")!;
@@ -897,6 +971,20 @@ const allContributors = [...contributorMap.entries()]
     }, 120);
   });
 
+  function revealSelectedFilters() {
+    for (const row of filterRows) {
+      const selected = row.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+      if (!selected) continue;
+      const bounds = row.getBoundingClientRect();
+      const chip = selected.getBoundingClientRect();
+      // Reveal the selected pill horizontally without moving the page vertically.
+      const offset = chip.left < bounds.left + 4
+        ? chip.left - bounds.left - 4
+        : Math.max(0, chip.right - bounds.right + 4);
+      if (offset) row.scrollBy({ left: offset, behavior: "instant" });
+    }
+  }
+
   function paintChips(
     chips: HTMLButtonElement[],
     key: "tag" | "platform" | "type" | "category",
@@ -912,6 +1000,7 @@ const allContributors = [...contributorMap.entries()]
       c.classList.toggle("bg-surface-2", !on);
       c.classList.toggle("text-muted", !on);
     });
+    revealSelectedFilters();
   }
 
   // Tag filter: multi-select popular pills inline + searchable "More tags"
@@ -931,7 +1020,7 @@ const allContributors = [...contributorMap.entries()]
   const tagPillFor = (tag: string) =>
     tagInlineBtns.find((b) => b.dataset.tag === tag);
   // A selected tag only needs a removable chip when it has no visible inline
-  // pill (long-tail tags, or popular tags hidden on the mobile 3-tag row).
+  // pill (long-tail tags, or popular tags hidden at the current breakpoint).
   const tagHasVisiblePill = (tag: string) => {
     const p = tagPillFor(tag);
     return !!p && p.offsetParent !== null;
@@ -1193,6 +1282,8 @@ const allContributors = [...contributorMap.entries()]
   )?.type;
 
   initFromUrl();
+  new ResizeObserver(revealSelectedFilters).observe(document.querySelector(".filter-layout")!);
+  document.fonts.ready.then(revealSelectedFilters);
   // A fresh module run restores only on history navigation (Back/forward) or a
   // reload; a brand-new visit starts at the top.
   if (navType === "back_forward" || navType === "reload") restoreScroll();
