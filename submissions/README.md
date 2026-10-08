@@ -153,6 +153,22 @@ gallery no longer accepts `.zip` payloads, submit new plugins **unpacked** in
 icons, and the declared skill/connector files; each skill's `SKILL.md` lives in
 its declared folder.
 
+```
+submissions/<slug>/
+├── metadata.json          # catalog sidecar (name/description fall back to the
+│                          #  manifest's short name/description)
+├── README.md              # optional — detail-page overview (not bundled)
+├── manifest.json          # M365 app manifest (manifestVersion 1.28 or devPreview)
+│   ├── agentSkills[]      # { folder } — one entry per skill folder
+│   └── agentConnectors[]  # optional MCP connectors
+├── color.png              # 192×192 icon referenced by manifest.icons.color
+├── outline.png            # 32×32 icon referenced by manifest.icons.outline
+└── skills/                # not needed for a connector-only plugin
+    └── <skill-name>/      # folder declared in agentSkills[]
+        ├── SKILL.md       # frontmatter `name` matching the folder + `description`
+        └── …              # optional companion files (references/, scripts/, …)
+```
+
 The importer validates the package, sets `platforms: ["Cowork"]` and
 `type: "plugin"`, and generates the downloadable `.zip`. The root gallery
 sidecars are excluded; nested plugin resources are preserved verbatim. The
