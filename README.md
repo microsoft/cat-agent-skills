@@ -13,16 +13,24 @@ deployed as a static site to GitHub Pages.
 
 - **One infinite-scroll gallery** with compact, consistently sized cards and
   auto-generated monograms (no image assets to maintain).
-- **Platform filtering** with fixed Cowork, Copilot Studio, and Scout pills.
-  Select any combination; no selection shows every platform.
-- **Client-side search** and a **Filters dialog** for Format, Tags, and
-  Contributor. Platform selections apply immediately; dialog changes apply only
+- **Platform and format filtering** in one horizontal row: fixed Cowork,
+  Copilot Studio, and Scout pills, then a subtle separator, then Skills, Plugins,
+  and Automations. Selections match any value within a group (OR), and both
+  groups must match (AND): Cowork + Skills shows only Cowork skills. An empty
+  group is unrestricted; no fixed selections shows all submissions.
+- **Client-side search** and a **Filters dialog** for Tags and Contributor.
+  Fixed pills apply immediately; dialog changes apply only
   with **Show results**. Closing the dialog discards its draft. Applied extra
-  filters appear as removable pills before the platform pills in one scrolling row.
+  filters appear as removable pills before the fixed pills in the same scrolling
+  row. Clear extra filters clears only tags/contributors, keeping the fixed
+  platform/format selections and search.
 - **Shareable filters** using `?q=`, `?platform=`, `?type=`, `?tag=`, and `?author=`.
-  Platforms, tags, and contributors accept comma-separated selections (OR within
-  a facet, AND between facets). Existing single-platform links still work. Tag
-  case is preserved; search is case-insensitive.
+  Both `platform` and `type` accept single values or comma-separated selections;
+  format values remain lowercase (`skill`, `plugin`, `automation`). Search,
+  tags, and contributors AND-narrow the platform/format results; tags and
+  contributors each match any selected value (OR within that facet). Existing
+  single-platform and single-format links still work. Tag case is preserved;
+  search is case-insensitive.
 - **Sort** by Featured, Top rated, Most downloaded, Name, Newest, or Recently
   updated. Samples stay last; browser Back restores filters, revealed cards, and
   scroll position.
