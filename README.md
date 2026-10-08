@@ -24,12 +24,16 @@ deployed as a static site to GitHub Pages.
   a multi-skill plugin, or an automation.
 - **Stable categories** shared across both sections: Manufacturing, Retail & CPG,
   Productivity, and Agent development.
-- **Category shortcuts and Filters** beneath the hero/search, above both
-  collections. Categories and search apply immediately to Microsoft and community
-  submissions alike. The Filters dialog groups Platform, Format, Tags, and
-  Contributor with draft counts and an explicit **Show N results** action.
-  Closing without applying discards edits; **Clear extra filters** clears only
-  the draft refinements, while the page's **Clear all** resets discovery filters.
+- **One filter row** beneath the hero/search, above both collections. The
+  **Filters** button stays fixed with an active-refinement badge; category pills
+  scroll horizontally when needed instead of wrapping. Selected categories stay
+  visible after opening a filtered URL or resizing, without moving the page
+  vertically. Categories and search apply immediately across both publishers.
+- **Draft filter dialog** for Platform, Format, Tags, and Contributor, with
+  removable selections inside the dialog rather than another row on the page.
+  **Show N results** applies edits; closing discards them. **Clear extra filters**
+  clears only draft refinements, while the empty-state reset clears all
+  discovery filters and preserves sorting.
 - **Microsoft collection browsing** uses the same filtering and grid behavior,
   scoped to Microsoft submissions. **Back to gallery** retains the current
   filters, including changes made on that page. Browser Back restores the previous

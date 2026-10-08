@@ -36,6 +36,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   }));
   const authorNames = new Map([...data.values()].map((item) => [item.authorKey, item.authorName]));
   const search = get<HTMLInputElement>("#skill-search");
+  const categoryOptions = get<HTMLElement>("#category-filters");
   const categories = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-category]"));
   const sortSelect = get<HTMLSelectElement>("#sort-select");
   const count = get<HTMLElement>("#result-count");
@@ -46,8 +47,6 @@ export function initGalleryBrowser(root: HTMLElement) {
   const back = root.querySelector<HTMLAnchorElement>("[data-gallery-back]");
   const filtersTrigger = get<HTMLButtonElement>("#filters-trigger");
   const filterCount = get<HTMLElement>("#filters-count");
-  const appliedRow = get<HTMLElement>("#applied-filters-row");
-  const appliedChips = get<HTMLElement>("#applied-filters");
   const dialog = get<HTMLDialogElement>("#filters-dialog");
   const closeFilters = get<HTMLButtonElement>("[data-close-filters]");
   const dialogBody = get<HTMLElement>(".dialog-body");
@@ -164,14 +163,26 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function paintApplied() {
     categories.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.category === applied.category)));
-    const total = renderRefinements(appliedChips, applied, (field, value) => {
-      removeRefinement(applied, field, value);
-      commit();
-      filtersTrigger.focus({ preventScroll: true });
-    });
+    const total = Number(Boolean(applied.platform)) + Number(Boolean(applied.type)) + applied.tags.size + applied.authors.size;
     filterCount.hidden = total === 0;
     filterCount.textContent = String(total);
-    appliedRow.hidden = total === 0 && !applied.category && !applied.query;
+    filtersTrigger.setAttribute("aria-label", total ? `Filters, ${total} active ${total === 1 ? "filter" : "filters"}` : "Filters");
+    revealSelectedCategory();
+  }
+
+  function revealSelectedCategory() {
+    const selected = categories.find((button) => button.getAttribute("aria-pressed") === "true");
+    if (selected) revealCategory(selected);
+  }
+
+  function revealCategory(button: HTMLButtonElement) {
+    const bounds = categoryOptions.getBoundingClientRect();
+    const chip = button.getBoundingClientRect();
+    // Only move the category strip, never the page's vertical scroll position.
+    const offset = chip.left < bounds.left + 4
+      ? chip.left - bounds.left - 4
+      : Math.max(0, chip.right - bounds.right + 4);
+    if (offset) categoryOptions.scrollBy({ left: offset, behavior: "instant" });
   }
 
   function refilter() {
@@ -311,12 +322,17 @@ export function initGalleryBrowser(root: HTMLElement) {
     clearTimeout(searchTimer);
     searchTimer = window.setTimeout(() => { flushSearch(); commit(); }, 120);
   });
-  categories.forEach((button) => button.addEventListener("click", () => {
-    flushSearch();
-    const category = button.dataset.category ?? "";
-    applied.category = isCategory(category) ? category : "";
-    commit();
-  }));
+  categories.forEach((button) => {
+    button.addEventListener("focus", () => {
+      if (button.matches(":focus-visible")) revealCategory(button);
+    });
+    button.addEventListener("click", () => {
+      flushSearch();
+      const category = button.dataset.category ?? "";
+      applied.category = isCategory(category) ? category : "";
+      commit();
+    });
+  });
   root.querySelectorAll<HTMLButtonElement>("[data-clear-filters]").forEach((button) => button.addEventListener("click", () => {
     clearTimeout(searchTimer);
     applied = copyGalleryFilters(parseGalleryFilters(new URLSearchParams()));
@@ -337,7 +353,9 @@ export function initGalleryBrowser(root: HTMLElement) {
   }, { rootMargin: "400px" });
   observer.observe(sentinel);
   if (preview) new ResizeObserver(renderPreview).observe(preview);
+  new ResizeObserver(revealSelectedCategory).observe(categoryOptions);
   document.fonts.ready.then(renderPreview);
+  document.fonts.ready.then(revealSelectedCategory);
 
   function initFromUrl() {
     clearTimeout(searchTimer);

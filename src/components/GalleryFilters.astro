@@ -17,8 +17,8 @@ const scopeLabel = microsoftOnly
 ---
 
 <section class="border-b border-border bg-bg" aria-label="Filter submissions">
-  <div class="mx-auto max-w-8xl px-4 py-4 sm:px-6">
-    <div class="flex flex-wrap items-center gap-2.5">
+  <div class="mx-auto max-w-8xl px-4 py-3 sm:px-6">
+    <div class="filter-bar">
       <button id="filters-trigger" type="button" aria-haspopup="dialog" aria-controls="filters-dialog" aria-expanded="false" class="filters-trigger">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
           <path d="M4 6h7m4 0h5M4 12h2m4 0h10M4 18h10m4 0h2" stroke-linecap="round" />
@@ -26,17 +26,13 @@ const scopeLabel = microsoftOnly
         </svg>
         Filters <span id="filters-count" hidden class="filter-count"></span>
       </button>
-      <span class="mx-1 hidden h-6 w-px bg-border sm:block" aria-hidden="true"></span>
-      <div id="category-filters" class="flex flex-wrap gap-2" role="group" aria-label="Category">
+      <span class="h-6 w-px shrink-0 bg-border" aria-hidden="true"></span>
+      <div id="category-filters" class="category-options" role="group" aria-label="Category">
         <button type="button" data-category="" aria-pressed="true" class="category-choice">All</button>
         {CATEGORIES.map((category) => (
           <button type="button" data-category={category} aria-pressed="false" class="category-choice">{CATEGORY_LABELS[category]}</button>
         ))}
       </div>
-    </div>
-    <div id="applied-filters-row" hidden class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <div id="applied-filters" class="flex flex-wrap gap-2" aria-label="Applied extra filters"></div>
-      <button type="button" data-clear-filters class="text-sm font-medium text-muted underline underline-offset-4 hover:text-fg">Clear all</button>
     </div>
   </div>
 </section>
@@ -129,6 +125,18 @@ const scopeLabel = microsoftOnly
 </dialog>
 
 <style>
+  .filter-bar { display: flex; align-items: center; gap: 0.625rem; }
+  .category-options {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    gap: 0.5rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding: 4px;
+  }
+  .category-options::-webkit-scrollbar { display: none; }
   .filters-trigger, .category-choice, .radio-option, .check-option {
     display: inline-flex;
     align-items: center;
@@ -142,22 +150,28 @@ const scopeLabel = microsoftOnly
     line-height: 1.25rem;
   }
   .filters-trigger {
+    position: relative;
+    flex-shrink: 0;
     border-color: var(--fg);
     border-radius: 0.75rem;
     font-weight: 600;
   }
-  .category-choice { border-radius: 999px; color: var(--muted); }
+  .category-choice { flex-shrink: 0; border-radius: 999px; color: var(--muted); white-space: nowrap; }
   .category-choice[aria-pressed="true"] {
     border-color: var(--fg);
     background: var(--surface-2);
     color: var(--fg);
   }
   .filter-count {
+    position: absolute;
+    top: -0.375rem;
+    right: -0.375rem;
     display: grid;
     min-width: 1.25rem;
     height: 1.25rem;
     place-items: center;
     border-radius: 999px;
+    border: 2px solid var(--bg);
     background: var(--fg);
     color: var(--surface);
     padding: 0 0.25rem;
