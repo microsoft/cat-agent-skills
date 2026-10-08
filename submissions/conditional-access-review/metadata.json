@@ -1,0 +1,11 @@
+{
+  "name": "Conditional Access Review",
+  "description": "Review an exported set of Microsoft Entra Conditional Access policies for coverage gaps, missing break-glass exclusions, policy conflicts, and configuration hygiene. Recommendations only, never a live change.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["entra", "conditional-access", "identity", "security", "governance", "review"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-26",
+  "updatedAt": "2026-07-26"
+}
