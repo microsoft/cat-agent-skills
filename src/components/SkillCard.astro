@@ -2,7 +2,8 @@
 import { withBase } from "../lib/url";
 import { coverGradient, initials, PLATFORM_COLORS } from "../lib/skills";
 import type { Platform, SkillType } from "../lib/skills";
-import { CATEGORY_LABELS, type Category } from "../lib/categories";
+import { CATEGORY_COLORS, CATEGORY_LABELS, type Category } from "../lib/categories";
+import CategoryIcon from "./CategoryIcon.astro";
 
 interface Props {
   slug: string;
@@ -59,20 +60,47 @@ const wrapperProps = isInteractive
   : { "aria-disabled": "true", title: "Sample / demo skill — placeholder content, not accessible" };
 ---
 
-<Wrapper class:list={["submission-card", wrapperClass]} data-variant={variant} {...wrapperProps}>
+<Wrapper
+  class:list={["submission-card", wrapperClass]}
+  data-variant={variant}
+  style={builtByMicrosoft ? `--category-color:${CATEGORY_COLORS[category]}` : undefined}
+  {...wrapperProps}
+>
+  {variant === "spotlight" ? (
+    <>
+      <div class="spotlight-heading flex items-start gap-2.5">
+        <span class="category-icon grid h-8 w-8 shrink-0 place-items-center rounded-lg text-white" aria-hidden="true">
+          <CategoryIcon category={category} />
+        </span>
+        <h3 class="submission-title line-clamp-2 min-w-0 font-semibold text-fg" title={name}>{name}</h3>
+      </div>
+      <p class="submission-description mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{description}</p>
+      <div class="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-3 text-[11px] text-muted">
+        <span>{CATEGORY_LABELS[category]}</span>
+        <span class="flex flex-wrap items-center gap-x-1.5">
+          <span class="capitalize">{isSample ? "Sample" : type}</span>
+          {platforms.map((platform) => <><span aria-hidden="true">&middot;</span><span>{platform}</span></>)}
+        </span>
+      </div>
+    </>
+  ) : (
+    <>
   <div class="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px] font-medium text-muted">
     <span>{CATEGORY_LABELS[category]}</span>
     {builtByMicrosoft && <span class="text-accent-text">Built by Microsoft</span>}
   </div>
-  <!-- Header: monogram + name + platforms -->
+  <!-- Header: category icon or monogram + name + platforms -->
   <div class="flex items-start gap-3">
     <div class="relative shrink-0">
       <span
-        class="submission-monogram grid h-11 w-11 place-items-center rounded-lg text-sm font-bold text-white shadow-sm"
-        style={`background-image:${gradient}`}
+        class:list={[
+          "submission-monogram grid h-11 w-11 place-items-center rounded-lg text-sm font-bold",
+          builtByMicrosoft ? "category-icon text-white" : "text-white shadow-sm",
+        ]}
+        style={builtByMicrosoft ? undefined : `background-image:${gradient}`}
         aria-hidden="true"
       >
-        {mark}
+        {builtByMicrosoft ? <CategoryIcon category={category} /> : mark}
       </span>
       {
         featured && !builtByMicrosoft && (
@@ -233,6 +261,8 @@ const wrapperProps = isInteractive
       }
     </span>
   </div>
+    </>
+  )}
 </Wrapper>
 
 <style>
@@ -240,31 +270,28 @@ const wrapperProps = isInteractive
     outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
+  .category-icon {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--category-color) 70%, white), var(--category-color));
+  }
   .submission-card[data-variant="spotlight"] {
-    min-height: 21rem;
-    padding: 1.5rem;
-    border-radius: 1rem;
-    border-color: color-mix(in srgb, var(--border) 65%, var(--surface));
-    background: color-mix(in srgb, var(--accent-soft) 20%, var(--surface));
+    min-height: 10.5rem;
+    padding: 0.875rem;
+    border-radius: 0.75rem;
+    border-color: color-mix(in srgb, var(--category-color) 18%, var(--border));
+    background: color-mix(in srgb, var(--category-color) 5%, var(--surface));
   }
   .submission-card[data-variant="spotlight"]:where(a:hover) {
-    border-color: color-mix(in srgb, var(--accent) 40%, var(--surface));
+    border-color: color-mix(in srgb, var(--category-color) 55%, var(--border));
   }
-  [data-variant="spotlight"] .submission-monogram {
-    width: 3.5rem;
-    height: 3.5rem;
-    font-size: 1.125rem;
+  [data-variant="spotlight"] .spotlight-heading {
+    min-height: 2.6rem;
   }
   [data-variant="spotlight"] .submission-title {
     width: 100%;
-    font-size: 1.4rem;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-    -webkit-line-clamp: 3;
-  }
-  [data-variant="spotlight"] .submission-description {
-    font-size: 0.9375rem;
-    -webkit-line-clamp: 4;
+    font-size: 1rem;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    -webkit-line-clamp: 2;
   }
   @media (prefers-reduced-motion: reduce) {
     .submission-card {

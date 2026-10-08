@@ -13,22 +13,33 @@ deployed as a static site to GitHub Pages.
 
 - **Infinite-scroll gallery** with auto-generated branded covers (no image
   assets to maintain).
-- **Built by Microsoft carousel** with larger tiles above the community gallery.
+- **Built by Microsoft carousel** with compact, individual asset cards above the
+  shared filters and community gallery. Microsoft cards use team-managed category
+  icons, colored icon gradients, and subtle category tints; community cards retain
+  their generated initials. Compact Microsoft cards show the asset name,
+  description, category, format, and platform without repeating the section label
+  or adding tag/download footers.
   Every tile is one submission, regardless of whether it contains a skill,
   a multi-skill plugin, or an automation.
 - **Stable categories** shared across both sections: Manufacturing, Retail & CPG,
   Productivity, and Agent development.
-- **Shareable category pages** at `/categories/manufacturing/`,
-  `/categories/retail-cpg/`, `/categories/productivity/`, and
-  `/categories/agent-development/` (under the site's base path). These are not
-  linked from the homepage navigation. Each lists the complete category in
-  full-width grids, Microsoft first and community second, using the same
-  submission detail pages. Empty publisher sections are omitted; a completely
-  empty category says "Nothing to see here." These pages are public, not private.
+- **Shared category pills** beneath the Microsoft carousel, alongside the other
+  filters. Categories apply to Microsoft and community submissions alike.
+- **Shareable category filters** at `/?category=manufacturing`,
+  `/?category=retail-cpg`, `/?category=productivity`, and
+  `/?category=agent-development` (under the site's `/cat-agent-skills/` base path).
+  These open the same gallery with the category selected, not a separate
+  Microsoft-only page. Earlier `/categories/<category>/` URLs redirect to the
+  corresponding filtered gallery; the static GitHub Pages build emits HTML
+  redirects. No-match selections keep the compact community message and the
+  reserved Microsoft placeholder area rather than showing unrelated results.
 - **Platform filtering** across Cowork, Copilot Studio, and Scout.
 - **Client-side search** and **tag filtering** with shareable
   `?q=`/`?category=`/`?tag=`/`?platform=`/`?sort=` URLs. Search, category,
   platform, type, tag, and contributor filters affect both sections.
+  Category labels and Microsoft card icons are maintained centrally in
+  `src/lib/categories.ts`, including non-industry categories such as Productivity
+  and Agent development.
 - **Sort** by Featured, Top rated, Name, or Newest.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
 - **Skill ratings**: 👍 a skill with your GitHub account (via GitHub

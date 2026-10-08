@@ -144,10 +144,12 @@ only link isn't a GitHub profile, e.g. LinkedIn.)
 `category` is one of `manufacturing`, `retail-cpg`, `productivity` (the default),
 or `agent-development`. Categories are deliberately broad and stable; use tags
 for specific topics. Category, search, platform, tag, type, and contributor
-filters apply to both homepage sections.
+filters apply to both homepage sections. Category pills sit below the Microsoft
+carousel; `/?category=<category>` links to the same gallery with that filter
+selected. Category labels and icons are team-managed, not per-submission uploads.
 
 `builtByMicrosoft` is a boolean, defaulting to `false`. Set it to `true` only
-for Microsoft-built submissions: they appear in the larger-card **Built by
+for Microsoft-built submissions: they appear in the **Built by
 Microsoft** carousel rather than the **Community** grid. This does not change
 the submission's type, author attribution, download, or detail page. The flag
 is independent of `featured`; reviewers should confirm Microsoft provenance.

@@ -60,10 +60,3 @@ export function partitionSubmissions<T extends { data: { builtByMicrosoft?: bool
     community: items.filter((item) => item.data.builtByMicrosoft !== true),
   };
 }
-
-export function categorySubmissions<T extends { data: { category: Category; builtByMicrosoft?: boolean } }>(
-  items: readonly T[],
-  category: Category,
-) {
-  return partitionSubmissions(items.filter((item) => item.data.category === category));
-}

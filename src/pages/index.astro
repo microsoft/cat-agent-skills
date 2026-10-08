@@ -112,23 +112,21 @@ const allContributors = [...contributorMap.entries()]
     </div>
   </section>
 
-  <section class="border-b border-border bg-bg" aria-label="Filter all submissions by category">
-    <div class="mx-auto max-w-8xl px-4 pt-5 pb-4 sm:px-6">
-      <div id="category-filters" class="flex flex-wrap items-center gap-2">
-        <button type="button" data-category="" class="category-chip rounded-full border border-accent bg-accent-soft px-4 py-2 text-sm font-semibold text-accent-text transition" aria-pressed="true">All</button>
+  <SubmissionCarousel id="microsoft-carousel" title="Built by Microsoft" submissions={microsoft} />
+
+  <!-- Shared category, platform and format filters -->
+  <section class="mt-5 border-y border-border bg-bg" aria-label="Shared submission filters">
+    <div class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 pt-4 sm:px-6">
+      <span id="category-filter-label" class="text-xs font-semibold uppercase tracking-wider text-subtle sm:w-18 sm:shrink-0">Category</span>
+      <div id="category-filters" class="flex flex-wrap items-center gap-2" role="group" aria-labelledby="category-filter-label">
+        <button type="button" data-category="" class="category-chip rounded-full border border-accent bg-accent-soft px-3.5 py-1.5 text-sm font-semibold text-accent-text transition" aria-pressed="true">All</button>
         {CATEGORIES.map((category) => (
-          <button type="button" data-category={category} class="category-chip rounded-full border border-border bg-surface-2 px-4 py-2 text-sm font-semibold text-muted transition hover:border-accent/40 hover:text-fg" aria-pressed="false">
+          <button type="button" data-category={category} class="category-chip rounded-full border border-border bg-surface-2 px-3.5 py-1.5 text-sm font-semibold text-muted transition hover:border-accent/40 hover:text-fg" aria-pressed="false">
             {CATEGORY_LABELS[category]}
           </button>
         ))}
       </div>
     </div>
-  </section>
-
-  <SubmissionCarousel id="microsoft-carousel" title="Built by Microsoft" submissions={microsoft} />
-
-  <!-- Platform and format filters -->
-  <section class="mt-7 border-y border-border bg-bg" aria-label="Shared submission filters">
     <div
       class="mx-auto flex max-w-8xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6"
     >

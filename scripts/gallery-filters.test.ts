@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CATEGORIES, CATEGORY_LABELS, isCategory } from "../src/lib/categories.ts";
-import { categorySubmissions, countPlatforms, matchesFilters, partitionSubmissions, type FilterableSubmission, type GalleryFilters } from "../src/lib/gallery-filters.ts";
+import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICON_PATHS, CATEGORY_LABELS, isCategory } from "../src/lib/categories.ts";
+import { countPlatforms, matchesFilters, partitionSubmissions, type FilterableSubmission, type GalleryFilters } from "../src/lib/gallery-filters.ts";
 import { skillSchema } from "../src/lib/skill-schema.ts";
 
 const submission: FilterableSubmission = {
@@ -64,6 +64,17 @@ test("categories are a closed stable vocabulary with labels", () => {
   assert.equal(skillSchema.safeParse({ ...metadata, category: "quality" }).success, false);
 });
 
+test("every category has a distinct team-managed icon and color", () => {
+  assert.deepEqual(Object.keys(CATEGORY_ICON_PATHS), [...CATEGORIES]);
+  assert.deepEqual(Object.keys(CATEGORY_COLORS), [...CATEGORIES]);
+  assert.equal(new Set(Object.values(CATEGORY_ICON_PATHS)).size, CATEGORIES.length);
+  assert.equal(new Set(Object.values(CATEGORY_COLORS)).size, CATEGORIES.length);
+  for (const category of CATEGORIES) {
+    assert.match(CATEGORY_ICON_PATHS[category], /^[Mm]/);
+    assert.match(CATEGORY_COLORS[category], /^#[0-9a-f]{6}$/i);
+  }
+});
+
 test("omitted metadata preserves existing community submissions", () => {
   const parsed = skillSchema.parse(metadata);
   assert.equal(parsed.category, "productivity");
@@ -93,34 +104,37 @@ test("every submission type partitions by metadata alone, without duplication", 
   assert.ok(community.every((item) => !item.data.builtByMicrosoft));
 });
 
-test("category collections include every matching submission and keep publisher sections separate", () => {
+test("category filters include both publishers and every submission format", () => {
   const items = CATEGORIES.flatMap((category) =>
     ["skill", "plugin", "automation"].flatMap((type) =>
-      [true, false, undefined].map((builtByMicrosoft) => ({
-        data: { category, type, builtByMicrosoft },
+      [true, false].map((builtByMicrosoft) => ({
+        ...submission, category, type, builtByMicrosoft, data: { builtByMicrosoft },
       })),
     ),
   );
   for (const category of CATEGORIES) {
-    const { microsoft, community } = categorySubmissions(items, category);
+    const matched = items.filter((item) => matchesFilters(item, { ...filters, category }));
+    const { microsoft, community } = partitionSubmissions(matched);
     assert.equal(microsoft.length, 3);
-    assert.equal(community.length, 6);
+    assert.equal(community.length, 3);
     assert.deepEqual(
       new Set([...microsoft, ...community]),
-      new Set(items.filter((item) => item.data.category === category)),
+      new Set(items.filter((item) => item.category === category)),
     );
   }
 });
 
-test("category collections support a missing publisher and completely empty categories", () => {
-  const microsoft = { data: { category: "manufacturing" as const, builtByMicrosoft: true } };
-  const community = { data: { category: "productivity" as const } };
+test("category filtering supports no Microsoft, no community, or no matching submissions", () => {
+  const microsoft = { ...submission, data: { builtByMicrosoft: true } };
+  const community = { ...submission, category: "productivity" as const, builtByMicrosoft: false, data: { builtByMicrosoft: false } };
   const items = Object.freeze([microsoft, community]);
-  assert.deepEqual(categorySubmissions(items, "manufacturing"), { microsoft: [microsoft], community: [] });
-  assert.deepEqual(categorySubmissions(items, "productivity"), { microsoft: [], community: [community] });
-  assert.deepEqual(categorySubmissions(items, "retail-cpg"), { microsoft: [], community: [] });
+  const byCategory = (category: typeof CATEGORIES[number]) =>
+    partitionSubmissions(items.filter((item) => matchesFilters(item, { ...filters, category })));
+  assert.deepEqual(byCategory("manufacturing"), { microsoft: [microsoft], community: [] });
+  assert.deepEqual(byCategory("productivity"), { microsoft: [], community: [community] });
+  assert.deepEqual(byCategory("retail-cpg"), { microsoft: [], community: [] });
   for (const category of CATEGORIES) {
-    assert.deepEqual(categorySubmissions([], category), { microsoft: [], community: [] });
+    assert.equal(matchesFilters(submission, { ...filters, category, query: "no such submission" }), false);
   }
 });
 
