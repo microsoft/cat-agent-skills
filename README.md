@@ -25,12 +25,14 @@ deployed as a static site to GitHub Pages.
 - **Stable categories** shared across both sections: Manufacturing, Retail & CPG,
   Productivity, and Agent development.
 - **One filter row** beneath the hero/search, above both collections. The
-  **Filters** button stays fixed with an active-refinement badge; category pills
-  scroll horizontally when needed instead of wrapping. Selected categories stay
-  visible after opening a filtered URL or resizing, without moving the page
-  vertically. Categories and search apply immediately across both publishers.
+  **Filters** button stays fixed with an active-refinement badge. Applied
+  refinements appear as removable pills beside it, followed by the fixed category
+  pills, all in the same horizontally scrolling row. New selections appear only
+  after applying the dialog; removing a row pill updates results immediately.
+  Keyboard-focused pills stay visible without moving the page vertically.
+  Categories and search apply immediately across both publishers.
 - **Draft filter dialog** for Platform, Format, Tags, and Contributor, with
-  removable selections inside the dialog rather than another row on the page.
+  removable selections both inside the dialog and in the shared filter row.
   **Show N results** applies edits; closing discards them. **Clear extra filters**
   clears only draft refinements, while the empty-state reset clears all
   discovery filters and preserves sorting.

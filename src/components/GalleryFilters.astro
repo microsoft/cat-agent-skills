@@ -27,11 +27,14 @@ const scopeLabel = microsoftOnly
         Filters <span id="filters-count" hidden class="filter-count"></span>
       </button>
       <span class="h-6 w-px shrink-0 bg-border" aria-hidden="true"></span>
-      <div id="category-filters" class="category-options" role="group" aria-label="Category">
-        <button type="button" data-category="" aria-pressed="true" class="category-choice">All</button>
-        {CATEGORIES.map((category) => (
-          <button type="button" data-category={category} aria-pressed="false" class="category-choice">{CATEGORY_LABELS[category]}</button>
-        ))}
+      <div id="filter-options" class="filter-options">
+        <div id="applied-filters" hidden class="applied-filters" role="group" aria-label="Applied extra filters"></div>
+        <div id="category-filters" class="category-options" role="group" aria-label="Category">
+          <button type="button" data-category="" aria-pressed="true" class="category-choice">All</button>
+          {CATEGORIES.map((category) => (
+            <button type="button" data-category={category} aria-pressed="false" class="category-choice">{CATEGORY_LABELS[category]}</button>
+          ))}
+        </div>
       </div>
     </div>
   </div>
@@ -126,7 +129,7 @@ const scopeLabel = microsoftOnly
 
 <style>
   .filter-bar { display: flex; align-items: center; gap: 0.625rem; }
-  .category-options {
+  .filter-options {
     display: flex;
     flex: 1;
     min-width: 0;
@@ -136,7 +139,16 @@ const scopeLabel = microsoftOnly
     scrollbar-width: none;
     padding: 4px;
   }
-  .category-options::-webkit-scrollbar { display: none; }
+  .filter-options::-webkit-scrollbar { display: none; }
+  .category-options, .applied-filters { display: flex; flex-shrink: 0; align-items: center; gap: 0.5rem; }
+  .applied-filters :global(button) {
+    flex-shrink: 0;
+    min-height: 2.5rem;
+    max-width: min(16rem, calc(100vw - 10rem));
+    border-color: var(--fg);
+    padding-block: 0.5rem;
+    white-space: nowrap;
+  }
   .filters-trigger, .category-choice, .radio-option, .check-option {
     display: inline-flex;
     align-items: center;

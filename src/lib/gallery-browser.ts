@@ -36,7 +36,8 @@ export function initGalleryBrowser(root: HTMLElement) {
   }));
   const authorNames = new Map([...data.values()].map((item) => [item.authorKey, item.authorName]));
   const search = get<HTMLInputElement>("#skill-search");
-  const categoryOptions = get<HTMLElement>("#category-filters");
+  const filterOptions = get<HTMLElement>("#filter-options");
+  const appliedChips = get<HTMLElement>("#applied-filters");
   const categories = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-category]"));
   const sortSelect = get<HTMLSelectElement>("#sort-select");
   const count = get<HTMLElement>("#result-count");
@@ -146,8 +147,11 @@ export function initGalleryBrowser(root: HTMLElement) {
     for (const { field, value, label } of values) {
       const button = document.createElement("button");
       button.type = "button";
+      button.dataset.filterKey = `${field}:${value}`;
       button.className = "inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent";
-      button.setAttribute("aria-label", `Remove ${field === "authors" ? "contributor" : field} filter: ${label}`);
+      const fieldLabel = field === "authors" ? "contributor" : field === "type" ? "format" : field === "tags" ? "tag" : field;
+      button.setAttribute("aria-label", `Remove ${fieldLabel} filter: ${label}`);
+      button.title = label;
       const text = document.createElement("span");
       text.className = "truncate";
       text.textContent = label;
@@ -163,26 +167,39 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function paintApplied() {
     categories.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.category === applied.category)));
-    const total = Number(Boolean(applied.platform)) + Number(Boolean(applied.type)) + applied.tags.size + applied.authors.size;
+    const total = renderRefinements(appliedChips, applied, (field, value) => {
+      const buttons = Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button"));
+      const index = buttons.findIndex((button) => button.dataset.filterKey === `${field}:${value}`);
+      removeRefinement(applied, field, value);
+      flushSearch();
+      commit();
+      const remaining = appliedChips.querySelectorAll<HTMLButtonElement>("button");
+      const next = remaining[Math.min(index, remaining.length - 1)] ?? filtersTrigger;
+      next.focus({ preventScroll: true });
+      if (next !== filtersTrigger) revealFilter(next);
+    });
+    appliedChips.hidden = total === 0;
     filterCount.hidden = total === 0;
     filterCount.textContent = String(total);
     filtersTrigger.setAttribute("aria-label", total ? `Filters, ${total} active ${total === 1 ? "filter" : "filters"}` : "Filters");
-    revealSelectedCategory();
+    revealCurrentFilter();
   }
 
-  function revealSelectedCategory() {
+  function revealCurrentFilter() {
+    const firstApplied = appliedChips.querySelector<HTMLButtonElement>("button");
     const selected = categories.find((button) => button.getAttribute("aria-pressed") === "true");
-    if (selected) revealCategory(selected);
+    const button = firstApplied ?? selected;
+    if (button) revealFilter(button);
   }
 
-  function revealCategory(button: HTMLButtonElement) {
-    const bounds = categoryOptions.getBoundingClientRect();
+  function revealFilter(button: HTMLButtonElement) {
+    const bounds = filterOptions.getBoundingClientRect();
     const chip = button.getBoundingClientRect();
-    // Only move the category strip, never the page's vertical scroll position.
+    // Only move the filter strip, never the page's vertical scroll position.
     const offset = chip.left < bounds.left + 4
       ? chip.left - bounds.left - 4
       : Math.max(0, chip.right - bounds.right + 4);
-    if (offset) categoryOptions.scrollBy({ left: offset, behavior: "instant" });
+    if (offset) filterOptions.scrollBy({ left: offset, behavior: "instant" });
   }
 
   function refilter() {
@@ -293,8 +310,11 @@ export function initGalleryBrowser(root: HTMLElement) {
     filtersTrigger.focus({ preventScroll: true });
   });
   apply.addEventListener("click", () => {
+    const previous = new Set(Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button"), (button) => button.dataset.filterKey));
     applied = copyGalleryFilters(draft);
     commit();
+    const added = Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button")).find((button) => !previous.has(button.dataset.filterKey));
+    if (added) revealFilter(added);
     dialog.close();
   });
   get<HTMLButtonElement>("#clear-extra-filters").addEventListener("click", () => {
@@ -322,15 +342,17 @@ export function initGalleryBrowser(root: HTMLElement) {
     clearTimeout(searchTimer);
     searchTimer = window.setTimeout(() => { flushSearch(); commit(); }, 120);
   });
+  filterOptions.addEventListener("focusin", (event) => {
+    const button = event.target;
+    if (button instanceof HTMLButtonElement && button.matches(":focus-visible")) revealFilter(button);
+  });
   categories.forEach((button) => {
-    button.addEventListener("focus", () => {
-      if (button.matches(":focus-visible")) revealCategory(button);
-    });
     button.addEventListener("click", () => {
       flushSearch();
       const category = button.dataset.category ?? "";
       applied.category = isCategory(category) ? category : "";
       commit();
+      revealFilter(button);
     });
   });
   root.querySelectorAll<HTMLButtonElement>("[data-clear-filters]").forEach((button) => button.addEventListener("click", () => {
@@ -353,9 +375,9 @@ export function initGalleryBrowser(root: HTMLElement) {
   }, { rootMargin: "400px" });
   observer.observe(sentinel);
   if (preview) new ResizeObserver(renderPreview).observe(preview);
-  new ResizeObserver(revealSelectedCategory).observe(categoryOptions);
+  new ResizeObserver(revealCurrentFilter).observe(filterOptions);
   document.fonts.ready.then(renderPreview);
-  document.fonts.ready.then(revealSelectedCategory);
+  document.fonts.ready.then(revealCurrentFilter);
 
   function initFromUrl() {
     clearTimeout(searchTimer);
