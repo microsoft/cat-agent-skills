@@ -11,12 +11,21 @@ deployed as a static site to GitHub Pages.
 
 ## ✨ Features
 
-- **Infinite-scroll gallery** with auto-generated branded covers (no image
-  assets to maintain).
-- **Platform filtering** across Cowork, Copilot Studio, and Scout.
-- **Client-side search** and **tag filtering** with shareable
-  `?q=`/`?tag=`/`?platform=`/`?sort=` URLs.
-- **Sort** by Featured, Top rated, Name, or Newest.
+- **One infinite-scroll gallery** with compact, consistently sized cards and
+  auto-generated monograms (no image assets to maintain).
+- **Platform filtering** with fixed Cowork, Copilot Studio, and Scout pills.
+  Select any combination; no selection shows every platform.
+- **Client-side search** and a **Filters dialog** for Format, Tags, and
+  Contributor. Platform selections apply immediately; dialog changes apply only
+  with **Show results**. Closing the dialog discards its draft. Applied extra
+  filters appear as removable pills before the platform pills in one scrolling row.
+- **Shareable filters** using `?q=`, `?platform=`, `?type=`, `?tag=`, and `?author=`.
+  Platforms, tags, and contributors accept comma-separated selections (OR within
+  a facet, AND between facets). Existing single-platform links still work. Tag
+  case is preserved; search is case-insensitive.
+- **Sort** by Featured, Top rated, Most downloaded, Name, Newest, or Recently
+  updated. Samples stay last; browser Back restores filters, revealed cards, and
+  scroll position.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
 - **Skill ratings**: 👍 a skill with your GitHub account (via GitHub
   Discussions); the gallery bakes in the counts and offers a "Top rated" sort.
@@ -26,12 +35,15 @@ deployed as a static site to GitHub Pages.
 - **More than skills**: also hosts **Cowork plugins** (M365 `.zip` packages) and
   **Scout automations** (scheduled `.json` exports) and **Scout automation
   installers** (a `.zip` with an `INSTALL.md` + JSON config that sets the
-  automation up), each with its own badge, filter, and verbatim download.
+  automation up), each with its own format label, filter, and verbatim download.
 
 ## 🚀 Local development
 
+Use Node.js 22.12 or newer.
+
 ```bash
-npm install
+npm ci
+npm run import:submissions # generate the local catalog and bundles; do not commit them
 npm run dev      # start the dev server (http://localhost:4321/cat-agent-skills)
 npm run build    # production build into ./dist
 npm run preview  # preview the production build locally
@@ -39,6 +51,10 @@ npm run preview  # preview the production build locally
 
 > The site is configured with a `base` path of `/cat-agent-skills`
 > for GitHub Pages, so local URLs include that prefix.
+
+Run the focused gallery checks with
+`node --import tsx --test scripts/gallery-filters.test.ts scripts/gallery-sort.test.ts`.
+These checks and the site build do not execute submission runtimes.
 
 ## 🧩 Adding a skill
 
@@ -121,16 +137,16 @@ READMEs are excluded.
 
 ```
 src/
-  components/      SkillCard, SkillCover (the branded "screenshot")
+  components/      GalleryBrowser, GalleryFilters, SubmissionItem, SkillCard, SkillCover
   content/skills/  generated skill pages (produced from submissions/ — do not edit by hand)
   layouts/         base page layout
-  lib/             cover theming + small helpers
+  lib/             gallery controller, filtering, sorting, cover theming + small helpers
   data/            ratings.json (build-time 👍 snapshot; see docs/ratings.md)
   pages/
     index.astro          home gallery (search + filter + sort + infinite scroll)
     skills/[slug].astro  skill detail page (instructions, download, ratings)
     skills/[slug].md.ts  raw Markdown download endpoint
-    tags/[tag].astro     per-tag listing
+    tags/[tag].astro     legacy tag URLs redirect to the filtered home gallery
     skills.json.ts       metadata endpoint
 public/
   bundles/         downloadable .zip skill bundles

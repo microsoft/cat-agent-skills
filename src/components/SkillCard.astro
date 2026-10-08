@@ -1,6 +1,6 @@
 ---
 import { withBase } from "../lib/url";
-import { coverGradient, initials, PLATFORM_COLORS } from "../lib/skills";
+import { coverGradient, initials } from "../lib/skills";
 import type { Platform, SkillType } from "../lib/skills";
 
 interface Props {
@@ -10,205 +10,68 @@ interface Props {
   platforms?: Platform[];
   type?: SkillType;
   tags?: string[];
-  author?: string;
   coverColor?: string;
-  hasBundle?: boolean;
-  /** True when an automation ships as an installer `.zip` (vs an importable `.json`). */
-  isInstaller?: boolean;
-  rating?: number;
-  downloads?: number;
   featured?: boolean;
 }
 
 const {
-  slug,
-  name,
-  description,
-  platforms = [],
-  type = "skill",
-  tags = [],
-  author,
-  coverColor,
-  hasBundle = false,
-  isInstaller = false,
-  rating = 0,
-  downloads = 0,
-  featured = false,
+  slug, name, description, platforms = [], type = "skill",
+  tags = [], coverColor, featured = false,
 } = Astro.props;
-
-const gradient = coverGradient(slug, coverColor);
-const mark = initials(name);
 const isSample = tags.includes("sample");
-const isPlugin = type === "plugin";
-const isAutomation = type === "automation";
-const shownTags = tags.filter((t) => t !== "sample").slice(0, 3);
-const isInteractive = !isSample;
-const wrapperClass = isSample
-  ? "group flex h-full cursor-not-allowed select-none flex-col rounded-xl border border-border bg-surface p-4 opacity-55 saturate-50"
-  : "group flex h-full flex-col rounded-xl border border-border bg-surface p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md";
-const Wrapper = isInteractive ? "a" : "div";
-const wrapperProps = isInteractive
-  ? { href: withBase(`/skills/${slug}`) }
-  : { "aria-disabled": "true", title: "Sample / demo skill — placeholder content, not accessible" };
+const Wrapper = isSample ? "div" : "a";
+const wrapperProps = isSample
+  ? { "aria-disabled": "true", title: "Sample / demo skill — placeholder content, not accessible" }
+  : { href: withBase(`/skills/${slug}`) };
 ---
 
-<Wrapper class={wrapperClass} {...wrapperProps}>
-  <!-- Header: monogram + name + platforms -->
-  <div class="flex items-start gap-3">
+<Wrapper
+  class:list={[
+    "submission-card group flex flex-col rounded-xl border border-border bg-surface p-4",
+    isSample
+      ? "cursor-not-allowed select-none opacity-55 saturate-50"
+      : "transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-md",
+  ]}
+  {...wrapperProps}
+>
+  <div class="gallery-heading flex items-start gap-3">
     <div class="relative shrink-0">
       <span
-        class="grid h-11 w-11 place-items-center rounded-lg text-sm font-bold text-white shadow-sm"
-        style={`background-image:${gradient}`}
+        class="grid h-9 w-9 place-items-center rounded-lg text-xs font-bold text-white shadow-sm"
+        style={`background-image:${coverGradient(slug, coverColor)}`}
         aria-hidden="true"
-      >
-        {mark}
-      </span>
-      {
-        featured && (
-          <span
-            class="absolute -right-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-white text-amber-500 shadow ring-1 ring-black/5"
-            title="Hand-picked featured skill"
-            aria-hidden="true"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" class="h-2.5 w-2.5">
-              <path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.5z" />
-            </svg>
-          </span>
-        )
-      }
-    </div>
-    <div class="min-w-0 flex-1">
-      <div class="flex items-start gap-1.5">
-        <h3
-          class="line-clamp-2 min-w-0 font-semibold text-fg transition-colors group-hover:text-accent-text"
-          title={name}
+      >{initials(name)}</span>
+      {featured && (
+        <span
+          class="absolute -right-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-white text-amber-500 shadow ring-1 ring-black/5"
+          title="Hand-picked featured skill"
+          aria-hidden="true"
         >
-          {name}
-        </h3>
-        {
-          isPlugin && (
-            <span
-              class="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-text"
-              title="A Cowork plugin (M365 app package)"
-            >
-              Plugin
-            </span>
-          )
-        }
-        {
-          isAutomation && (
-            <span
-              class="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-text"
-              title="A Scout automation (scheduled .json)"
-            >
-              Automation
-            </span>
-          )
-        }
-        {
-          isSample && (
-            <span
-              class="shrink-0 rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400"
-              title="A sample / demo skill — placeholder content"
-            >
-              Sample
-            </span>
-          )
-        }
-      </div>
-      {
-        platforms.length > 0 && (
-          <div class="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            {platforms.map((platform) => (
-              <span class="flex items-center gap-1 text-xs text-muted">
-                <span
-                  class="h-1.5 w-1.5 rounded-full"
-                  style={`background:${PLATFORM_COLORS[platform]}`}
-                />
-                {platform}
-              </span>
-            ))}
-          </div>
-        )
-      }
+          <svg viewBox="0 0 24 24" fill="currentColor" class="h-2.5 w-2.5">
+            <path d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.9l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.5z" />
+          </svg>
+        </span>
+      )}
     </div>
+    <h3 class="submission-title line-clamp-2 min-w-0 font-semibold text-fg transition-colors group-hover:text-accent-text" title={name}>{name}</h3>
   </div>
-
-  <!-- Description — the tile's focus -->
-  <p class="mt-3 flex-1 text-sm leading-relaxed text-muted line-clamp-3">
-    {description}
-  </p>
-
-  <!-- Footer: tags + rating/download hints -->
-  <div
-    class="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3"
-  >
-    <div class="flex min-w-0 flex-wrap items-center gap-1.5">
-      {
-        shownTags.map((t) => (
-          <span class="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-muted">
-            {t}
-          </span>
-        ))
-      }
-      {
-        shownTags.length === 0 && (
-          <span class="truncate text-xs text-subtle">
-            {author ? `by ${author}` : isPlugin ? "Cowork plugin" : isAutomation ? "Scout automation" : "Community skill"}
-          </span>
-        )
-      }
-    </div>
-    <span class="flex shrink-0 items-center gap-2.5 text-xs text-subtle">
-      {
-        hasBundle && (
-          <span class="flex items-center gap-1" title={isInstaller ? "Includes a downloadable automation installer" : isAutomation ? "Includes a downloadable automation file" : "Includes a downloadable bundle"}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="h-3.5 w-3.5"
-            >
-              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
-            </svg>
-            {isAutomation && !isInstaller ? ".json" : ".zip"}
-          </span>
-        )
-      }
-      {
-        rating > 0 && (
-          <span
-            class="flex items-center gap-1"
-            title={`${rating} ${rating === 1 ? "rating" : "ratings"}`}
-          >
-            <span aria-hidden="true">👍</span>
-            {rating}
-          </span>
-        )
-      }
-      {
-        downloads > 0 && (
-          <span
-            class="flex items-center gap-1"
-            title={`${downloads.toLocaleString("en-US")} ${downloads === 1 ? "download" : "downloads"}`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="h-3.5 w-3.5"
-              aria-hidden="true"
-            >
-              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
-            </svg>
-            {downloads.toLocaleString("en-US")}
-          </span>
-        )
-      }
+  <p class="submission-description mt-3 line-clamp-2 text-sm text-muted">{description}</p>
+  <div class="submission-meta mt-auto flex items-end justify-between gap-2 pt-4 text-[11px] leading-4 text-muted">
+    {isSample && <span>Sample</span>}
+    <span class="submission-format-platform ml-auto flex flex-wrap items-center justify-end gap-x-1.5">
+      <span class="capitalize">{type}</span>
+      {platforms.map((platform) => <><span aria-hidden="true">&middot;</span><span class="whitespace-nowrap">{platform}</span></>)}
     </span>
   </div>
 </Wrapper>
+
+<style>
+  .submission-card { height: 12rem; }
+  .submission-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .gallery-heading { min-height: 2.6rem; }
+  .submission-title { font-size: 1rem; line-height: 1.3; overflow-wrap: anywhere; }
+  .submission-description { min-height: 2.625rem; line-height: 1.5; overflow-wrap: anywhere; }
+  @media (prefers-reduced-motion: reduce) {
+    .submission-card { transition: none; transform: none; }
+  }
+</style>
