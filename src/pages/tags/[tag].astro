@@ -68,10 +68,7 @@ const { tag, skills } = Astro.props;
             category={skill.data.category}
             builtByMicrosoft={skill.data.builtByMicrosoft}
             tags={skill.data.tags}
-            author={skill.data.author}
             coverColor={skill.data.coverColor}
-            hasBundle={Boolean(skill.data.bundle)}
-            isInstaller={skill.data.type === "automation" && Boolean(skill.data.bundle?.endsWith(".zip"))}
             featured={skill.data.featured}
           />
         ))

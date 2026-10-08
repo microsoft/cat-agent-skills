@@ -13,6 +13,11 @@ deployed as a static site to GitHub Pages.
 
 - **Infinite-scroll gallery** with auto-generated branded covers (no image
   assets to maintain).
+- **Simplified community cards** focus on the name, a two-line description, and
+  a compact format/platform row at the bottom right, using the same footer markup
+  as Microsoft cards. Tags, download badges, and counts stay on detail pages rather
+  than a variable-height card footer; cards have no internal divider. Filtering
+  and sorting still use the full metadata.
 - **Built by Microsoft preview** with one row of individual asset cards aligned
   to the community grid's columns and widths. **Show more** opens the full
   `/built-by-microsoft/` collection with the current filters. Microsoft cards use team-managed category

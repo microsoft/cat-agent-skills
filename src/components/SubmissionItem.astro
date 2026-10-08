@@ -47,12 +47,7 @@ const downloads = getDownloads(id);
     builtByMicrosoft={d.builtByMicrosoft}
     variant={variant}
     tags={d.tags}
-    author={d.author}
     coverColor={d.coverColor}
-    hasBundle={Boolean(d.bundle)}
-    isInstaller={d.type === "automation" && Boolean(d.bundle?.endsWith(".zip"))}
-    rating={rating}
-    downloads={downloads}
     featured={d.featured}
   />
 </div>
