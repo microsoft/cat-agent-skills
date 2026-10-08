@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+  "manifestVersion": "devPreview",
+  "version": "1.0.0",
+  "id": "b2e5c1a8-7d4f-4a6b-9c3e-1f8a2d5b7e91",
+  "packageName": "com.adrianat.mslearn.minimal",
+  "developer": {
+    "name": "Adriana Tamayo",
+    "websiteUrl": "https://learn.microsoft.com",
+    "privacyUrl": "https://learn.microsoft.com/legal/privacy",
+    "termsOfUseUrl": "https://learn.microsoft.com/legal/termsofuse"
+  },
+  "name": {
+    "short": "MS Learn Min",
+    "full": "Microsoft Learn MCP (minimal)"
+  },
+  "description": {
+    "short": "Microsoft Learn MCP server connector.",
+    "full": "Minimal connector to the official Microsoft Learn MCP server for Cowork testing."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0078D4",
+  "agentConnectors": [
+    {
+      "id": "mslearn-mcp",
+      "displayName": "Microsoft Learn",
+      "description": "Microsoft Learn MCP server.",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "https://learn.microsoft.com/api/mcp",
+          "authorization": { "type": "None" }
+        }
+      }
+    }
+  ]
+}

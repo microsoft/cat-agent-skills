@@ -1,0 +1,17 @@
+{
+  "name": "Microsoft Learn MCP (minimal)",
+  "description": "Minimal connector-only Cowork plugin that connects to the official Microsoft Learn MCP server. Test submission for pipeline validation.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "test",
+    "mcp",
+    "microsoft-learn"
+  ],
+  "author": "Adriana Tamayo",
+  "authorUrl": "https://github.com/adrianatruji",
+  "version": "1.0.0",
+  "createdAt": "2026-10-08",
+  "updatedAt": "2026-10-08"
+}
