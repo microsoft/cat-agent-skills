@@ -1,0 +1,207 @@
+---
+import { CATEGORIES, CATEGORY_LABELS } from "../lib/categories";
+import { PLATFORMS, PLATFORM_COLORS } from "../lib/skills";
+
+interface Props {
+  microsoftOnly: boolean;
+  platformCounts: Map<string, number>;
+  tags: [string, number][];
+  contributors: { key: string; name: string; login: string; count: number }[];
+  total: number;
+}
+
+const { microsoftOnly, platformCounts, tags, contributors, total } = Astro.props;
+const scopeLabel = microsoftOnly
+  ? "Filter the Microsoft collection."
+  : "Filters apply to Microsoft and community submissions.";
+---
+
+<section class="border-b border-border bg-bg" aria-label="Filter submissions">
+  <div class="mx-auto max-w-8xl px-4 py-4 sm:px-6">
+    <div class="flex flex-wrap items-center gap-2.5">
+      <button id="filters-trigger" type="button" aria-haspopup="dialog" aria-controls="filters-dialog" aria-expanded="false" class="filters-trigger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4" aria-hidden="true">
+          <path d="M4 6h7m4 0h5M4 12h2m4 0h10M4 18h10m4 0h2" stroke-linecap="round" />
+          <circle cx="13" cy="6" r="2" /><circle cx="8" cy="12" r="2" /><circle cx="16" cy="18" r="2" />
+        </svg>
+        Filters <span id="filters-count" hidden class="filter-count"></span>
+      </button>
+      <span class="mx-1 hidden h-6 w-px bg-border sm:block" aria-hidden="true"></span>
+      <div id="category-filters" class="flex flex-wrap gap-2" role="group" aria-label="Category">
+        <button type="button" data-category="" aria-pressed="true" class="category-choice">All</button>
+        {CATEGORIES.map((category) => (
+          <button type="button" data-category={category} aria-pressed="false" class="category-choice">{CATEGORY_LABELS[category]}</button>
+        ))}
+      </div>
+    </div>
+    <div id="applied-filters-row" hidden class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div id="applied-filters" class="flex flex-wrap gap-2" aria-label="Applied extra filters"></div>
+      <button type="button" data-clear-filters class="text-sm font-medium text-muted underline underline-offset-4 hover:text-fg">Clear all</button>
+    </div>
+  </div>
+</section>
+
+<dialog id="filters-dialog" aria-labelledby="filters-heading" aria-describedby="filters-scope" class="filters-dialog">
+  <div class="dialog-shell">
+    <header class="flex shrink-0 items-center justify-between border-b border-border px-5 py-4 sm:px-6">
+      <h2 id="filters-heading" class="text-lg font-semibold">Filters</h2>
+      <button type="button" data-close-filters class="dialog-close" aria-label="Close filters without applying" autofocus>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6" /></svg>
+      </button>
+    </header>
+    <div class="dialog-body px-5 sm:px-6">
+      <p id="filters-scope" class="pt-5 text-sm text-muted">{scopeLabel}</p>
+      <p id="filters-context" class="mt-1 text-sm text-muted"></p>
+      <div id="draft-selections" hidden class="mt-3 flex flex-wrap gap-2" aria-label="Selected extra filters"></div>
+
+      <fieldset class="filter-section">
+        <legend>Platform</legend>
+        <div class="flex flex-wrap gap-2">
+          <label class="option-label">
+            <input type="radio" name="filter-platform" value="" checked />
+            <span class="radio-option">All platforms</span>
+          </label>
+          {PLATFORMS.map((platform) => (
+            <label class="option-label">
+              <input type="radio" name="filter-platform" value={platform} />
+              <span class="radio-option">
+                <span class="h-2 w-2 rounded-full" style={`background:${PLATFORM_COLORS[platform]}`} aria-hidden="true"></span>
+                {platform}
+                <span data-platform-count={platform} class="text-xs text-muted tabular-nums" style={`min-width:${String(platformCounts.get(platform) ?? 0).length}ch`}>{platformCounts.get(platform) ?? 0}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="filter-section">
+        <legend>Format</legend>
+        <div class="format-options">
+          {[["", "All formats"], ["skill", "Skills"], ["plugin", "Plugins"], ["automation", "Automations"]].map(([value, label]) => (
+            <label class="option-label">
+              <input type="radio" name="filter-type" value={value} checked={value === ""} />
+              <span class="radio-option">{label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="filter-section">
+        <legend>Tags <span data-selection-count="tags" class="text-sm font-normal text-muted"></span></legend>
+        <label for="filter-tag-search" class="sr-only">Search tags</label>
+        <input id="filter-tag-search" type="search" placeholder="Search tags" autocomplete="off" class="picker-search" />
+        <div id="filter-tag-options" class="mt-3 flex max-h-48 flex-wrap gap-2 overflow-y-auto p-1">
+          {tags.map(([tag, count]) => (
+            <label class="option-label" data-tag-option={tag}>
+              <input type="checkbox" name="filter-tag" value={tag} />
+              <span class="check-option">{tag}<span class="text-xs text-muted">{count}</span></span>
+            </label>
+          ))}
+        </div>
+        <p id="tag-search-empty" hidden class="mt-3 text-sm text-muted">No tags match this search.</p>
+      </fieldset>
+
+      <fieldset class="filter-section">
+        <legend>Contributor <span data-selection-count="authors" class="text-sm font-normal text-muted"></span></legend>
+        <label for="filter-author-search" class="sr-only">Search contributors</label>
+        <input id="filter-author-search" type="search" placeholder="Search contributors" autocomplete="off" class="picker-search" />
+        <div id="filter-author-options" class="mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto p-1">
+          {contributors.map((contributor) => (
+            <label class="author-option" data-author-option={contributor.key} data-author-name={contributor.name} data-author-search={`${contributor.name} ${contributor.login}`.toLowerCase()}>
+              <input type="checkbox" name="filter-author" value={contributor.key} class="h-4 w-4 shrink-0 accent-accent" />
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-sm font-medium">{contributor.name}</span>
+                {contributor.login && <span class="block truncate text-xs text-muted">@{contributor.login}</span>}
+              </span>
+              <span class="text-xs text-muted">{contributor.count}</span>
+            </label>
+          ))}
+        </div>
+        <p id="author-search-empty" hidden class="mt-3 text-sm text-muted">No contributors match this search.</p>
+      </fieldset>
+    </div>
+    <footer class="flex shrink-0 items-center justify-between gap-4 border-t border-border bg-surface px-5 py-4 sm:px-6">
+      <button type="button" id="clear-extra-filters" class="text-sm font-medium underline underline-offset-4">Clear extra filters</button>
+      <button type="button" id="apply-filters" class="apply-filters">Show {total} {microsoftOnly ? "Microsoft results" : "results"}</button>
+      <span id="draft-filter-status" class="sr-only" role="status" aria-live="polite"></span>
+    </footer>
+  </div>
+</dialog>
+
+<style>
+  .filters-trigger, .category-choice, .radio-option, .check-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .filters-trigger {
+    border-color: var(--fg);
+    border-radius: 0.75rem;
+    font-weight: 600;
+  }
+  .category-choice { border-radius: 999px; color: var(--muted); }
+  .category-choice[aria-pressed="true"] {
+    border-color: var(--fg);
+    background: var(--surface-2);
+    color: var(--fg);
+  }
+  .filter-count {
+    display: grid;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--fg);
+    color: var(--surface);
+    padding: 0 0.25rem;
+    font-size: 0.6875rem;
+  }
+  .filters-dialog {
+    width: min(40rem, calc(100% - 2rem));
+    max-width: none;
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: 0 1.5rem 5rem #0003;
+  }
+  .filters-dialog::backdrop { background: #0006; }
+  .dialog-shell { display: flex; flex-direction: column; max-height: min(52rem, calc(100dvh - 3rem)); }
+  .dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .dialog-close { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; }
+  .dialog-close:hover { background: var(--surface-2); }
+  .filter-section { min-width: 0; margin-top: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+  .filter-section:last-child { border: 0; }
+  .filter-section legend { margin-bottom: 0.75rem; font-size: 1rem; font-weight: 600; }
+  .option-label { position: relative; cursor: pointer; }
+  .option-label input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .radio-option { border-radius: 0.625rem; }
+  .check-option { min-height: 2.25rem; border-radius: 999px; padding: 0.375rem 0.75rem; }
+  .option-label input:checked + span { border-color: var(--fg); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--fg); }
+  .option-label input:focus-visible + span, :is(button, input):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .format-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; }
+  .format-options .radio-option { width: 100%; padding-inline: 0.375rem; }
+  .picker-search { width: 100%; border: 1px solid var(--border); border-radius: 0.625rem; background: var(--bg); padding: 0.625rem 0.875rem; font-size: 0.875rem; }
+  .author-option { display: flex; align-items: center; gap: 0.75rem; border-radius: 0.625rem; padding: 0.625rem; cursor: pointer; }
+  .author-option:hover, .author-option:has(input:checked) { background: var(--surface-2); }
+  .apply-filters { border-radius: 0.75rem; background: var(--fg); color: var(--surface); padding: 0.75rem 1.125rem; font-size: 0.875rem; font-weight: 600; }
+  @media (max-width: 39.999rem) {
+    .filters-dialog { width: 100%; margin: auto 0 0; border-radius: 1.25rem 1.25rem 0 0; }
+    .dialog-shell { max-height: calc(100dvh - 1rem); }
+    .dialog-shell footer { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    .format-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>

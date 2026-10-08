@@ -8,9 +8,10 @@ import { getDownloads } from "../lib/downloads";
 interface Props {
   submission: CollectionEntry<"skills">;
   variant?: "gallery" | "spotlight";
+  hidden?: boolean;
 }
 
-const { submission, variant = "gallery" } = Astro.props;
+const { submission, variant = "gallery", hidden = false } = Astro.props;
 const { id, data: d } = submission;
 const rating = getRating(id);
 const downloads = getDownloads(id);
@@ -18,9 +19,7 @@ const downloads = getDownloads(id);
 
 <div
   class="submission-item"
-  role={variant === "spotlight" ? "group" : undefined}
-  aria-roledescription={variant === "spotlight" ? "slide" : undefined}
-  aria-label={variant === "spotlight" ? d.name : undefined}
+  hidden={hidden}
   data-slug={id}
   data-name={d.name.toLowerCase()}
   data-desc={d.description.toLowerCase()}

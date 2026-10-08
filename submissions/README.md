@@ -125,7 +125,7 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 | `coverColor`  | `metadata.json` |          | CSS color to override the auto-generated cover.              |
 | `featured`    | `metadata.json` |          | `true` to sort the skill to the top.                         |
 | `category`    | `metadata.json` |          | `manufacturing`, `retail-cpg`, `productivity` (default), or `agent-development`. |
-| `builtByMicrosoft` | `metadata.json` |     | Boolean, default `false`. `true` places the submission in the Microsoft carousel; false/omitted places it in the community grid. |
+| `builtByMicrosoft` | `metadata.json` |     | Boolean, default `false`. `true` places the submission in the Microsoft preview and full collection; false/omitted places it in the community grid. |
 | `bundle`      | —               |          | Set automatically when your skill ships files beyond `SKILL.md` — don't add it.|
 
 A missing or invalid **required** field fails the PR with a message listing

@@ -1,4 +1,4 @@
-import { CATEGORY_LABELS, type Category } from "./categories";
+import { CATEGORY_LABELS, isCategory, type Category } from "./categories";
 
 export interface FilterableSubmission {
   name: string;
@@ -20,6 +20,36 @@ export interface GalleryFilters {
   type: string;
   tags: ReadonlySet<string>;
   authors: ReadonlySet<string>;
+}
+
+export function copyGalleryFilters(filters: GalleryFilters) {
+  return { ...filters, tags: new Set(filters.tags), authors: new Set(filters.authors) };
+}
+
+export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
+  const category = params.get("category") ?? "";
+  const selections = (key: string) => new Set(
+    (params.get(key) ?? "").split(",").map((value) => value.trim()).filter(Boolean),
+  );
+  return {
+    query: (params.get("q") ?? "").toLowerCase(),
+    category: isCategory(category) ? category : "",
+    platform: params.get("platform") ?? "",
+    type: params.get("type") ?? "",
+    tags: selections("tag"),
+    authors: new Set([...selections("author")].map((value) => value.toLowerCase())),
+  };
+}
+
+export function galleryFilterParams(filters: GalleryFilters): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filters.query) params.set("q", filters.query);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.platform) params.set("platform", filters.platform);
+  if (filters.type) params.set("type", filters.type);
+  if (filters.tags.size) params.set("tag", [...filters.tags].join(","));
+  if (filters.authors.size) params.set("author", [...filters.authors].join(","));
+  return params;
 }
 
 export function matchesFilters(item: FilterableSubmission, filters: GalleryFilters): boolean {

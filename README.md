@@ -13,8 +13,9 @@ deployed as a static site to GitHub Pages.
 
 - **Infinite-scroll gallery** with auto-generated branded covers (no image
   assets to maintain).
-- **Built by Microsoft carousel** with compact, individual asset cards above the
-  shared filters and community gallery. Microsoft cards use team-managed category
+- **Built by Microsoft preview** with one row of individual asset cards aligned
+  to the community grid's columns and widths. **Show more** opens the full
+  `/built-by-microsoft/` collection with the current filters. Microsoft cards use team-managed category
   icons with colored gradients on neutral cards; community cards retain their
   generated initials. Compact Microsoft cards show the asset name,
   description, category, format, and platform without repeating the section label
@@ -23,21 +24,24 @@ deployed as a static site to GitHub Pages.
   a multi-skill plugin, or an automation.
 - **Stable categories** shared across both sections: Manufacturing, Retail & CPG,
   Productivity, and Agent development.
-- **Shared category pills** beneath the Microsoft carousel, alongside the other
-  filters. Categories apply to Microsoft and community submissions alike.
-  The compact filter strip combines Platform and Format on wide screens; narrow
-  screens use horizontally scrolling pill rows rather than tall wrapped stacks.
-  Selected pills stay visible when opening a filtered URL or resizing. Fewer
-  popular tags appear inline on narrower screens; every tag remains available
-  through **More tags**.
+- **Category shortcuts and Filters** beneath the hero/search, above both
+  collections. Categories and search apply immediately to Microsoft and community
+  submissions alike. The Filters dialog groups Platform, Format, Tags, and
+  Contributor with draft counts and an explicit **Show N results** action.
+  Closing without applying discards edits; **Clear extra filters** clears only
+  the draft refinements, while the page's **Clear all** resets discovery filters.
+- **Microsoft collection browsing** uses the same filtering and grid behavior,
+  scoped to Microsoft submissions. **Back to gallery** retains the current
+  filters, including changes made on that page. Browser Back restores the previous
+  route's filters, visible batch, and scroll position.
 - **Shareable category filters** at `/?category=manufacturing`,
   `/?category=retail-cpg`, `/?category=productivity`, and
   `/?category=agent-development` (under the site's `/cat-agent-skills/` base path).
   These open the same gallery with the category selected, not a separate
   Microsoft-only page. Earlier `/categories/<category>/` URLs redirect to the
   corresponding filtered gallery; the static GitHub Pages build emits HTML
-  redirects. No-match selections keep the compact community message and the
-  reserved Microsoft placeholder area rather than showing unrelated results.
+  redirects. Both publisher sections use compact no-match messages, not skeleton
+  grids or unrelated placeholder cards.
 - **Platform filtering** across Cowork, Copilot Studio, and Scout.
 - **Client-side search** and **tag filtering** with shareable
   `?q=`/`?category=`/`?tag=`/`?platform=`/`?sort=` URLs. Search, category,
@@ -95,8 +99,8 @@ submissions/<slug>/
 
 For multi-skill Cowork plugins, submit an unpacked Microsoft 365 app package
 instead; see the [plugin layout](submissions/README.md#cowork-plugins).
-`builtByMicrosoft: true` in catalog metadata selects the carousel; false or
-omitted keeps a submission in the community gallery. The field is independent
+`builtByMicrosoft: true` in catalog metadata selects the Microsoft preview and
+full collection; false or omitted keeps a submission in the community gallery. The field is independent
 of author attribution, submission type, and featured ordering.
 
 A skill carries **two** descriptions: the **agent** description in `SKILL.md`
@@ -160,13 +164,14 @@ READMEs are excluded.
 
 ```
 src/
-  components/      SkillCard, SkillCover (the branded "screenshot")
+  components/      GalleryBrowser, GalleryFilters, SkillCard, SkillCover
   content/skills/  generated skill pages (produced from submissions/ — do not edit by hand)
   layouts/         base page layout
   lib/             cover theming + small helpers
   data/            ratings.json (build-time 👍 snapshot; see docs/ratings.md)
   pages/
     index.astro          home gallery (search + filter + sort + infinite scroll)
+    built-by-microsoft.astro  Microsoft-only collection with shared filters
     skills/[slug].astro  skill detail page (instructions, download, ratings)
     skills/[slug].md.ts  raw Markdown download endpoint
     tags/[tag].astro     per-tag listing

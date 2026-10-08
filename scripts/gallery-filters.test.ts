@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICON_PATHS, CATEGORY_LABELS, isCategory } from "../src/lib/categories.ts";
-import { countPlatforms, matchesFilters, partitionSubmissions, type FilterableSubmission, type GalleryFilters } from "../src/lib/gallery-filters.ts";
+import { copyGalleryFilters, countPlatforms, galleryFilterParams, matchesFilters, parseGalleryFilters, partitionSubmissions, type FilterableSubmission, type GalleryFilters } from "../src/lib/gallery-filters.ts";
 import { skillSchema } from "../src/lib/skill-schema.ts";
 
 const submission: FilterableSubmission = {
@@ -273,4 +273,63 @@ test("empty results and cleared filters preserve the complete submission set", (
   assert.deepEqual(partitionSubmissions([]), { microsoft: [], community: [] });
   assert.equal(matchesFilters(submission, { ...filters, query: "no such submission" }), false);
   assert.ok(matchesFilters(submission, filters));
+});
+
+test("draft filter copies cannot mutate applied selections before commit", () => {
+  const applied = copyGalleryFilters({
+    ...filters, query: "quality", category: "manufacturing", platform: "Cowork",
+    tags: new Set(["quality"]), authors: new Set(["sravaniseethi"]),
+  });
+  const original = copyGalleryFilters(applied);
+  const draft = copyGalleryFilters(applied);
+  draft.platform = "Scout";
+  draft.type = "automation";
+  draft.tags.clear();
+  draft.authors.add("another-author");
+  assert.deepEqual(applied, original);
+  assert.notEqual(draft.tags, applied.tags);
+  assert.notEqual(draft.authors, applied.authors);
+  const committed = copyGalleryFilters(draft);
+  draft.tags.add("later-edit");
+  assert.equal(committed.tags.has("later-edit"), false);
+  assert.equal(committed.platform, "Scout");
+  assert.deepEqual(copyGalleryFilters(applied), original, "discarding and reopening starts from applied state");
+});
+
+test("filter query round trips preserve every facet on either collection route", () => {
+  const selected: GalleryFilters = {
+    query: "quality & safety", category: "manufacturing", platform: "Copilot Studio", type: "plugin",
+    tags: new Set(["quality", "inspection"]), authors: new Set(["sravaniseethi", "another-author"]),
+  };
+  const query = galleryFilterParams(selected).toString();
+  for (const path of ["/cat-agent-skills/", "/cat-agent-skills/built-by-microsoft/"]) {
+    const url = new URL(`${path}?${query}`, "https://example.com");
+    assert.deepEqual(parseGalleryFilters(url.searchParams), selected);
+    assert.equal(url.pathname, path);
+  }
+  assert.equal(galleryFilterParams(filters).toString(), "");
+});
+
+test("filter parsing preserves existing URL semantics and never selects a publisher by search", () => {
+  const parsed = parseGalleryFilters(new URLSearchParams("q=Microsoft&category=unknown&platform=Scout&type=skill&tag=quality,,inspection,quality&author=SomeAuthor,OTHER"));
+  assert.equal(parsed.query, "microsoft");
+  assert.equal(parsed.category, "");
+  assert.equal(parsed.platform, "Scout");
+  assert.equal(parsed.type, "skill");
+  assert.deepEqual(parsed.tags, new Set(["quality", "inspection"]));
+  assert.deepEqual(parsed.authors, new Set(["someauthor", "other"]));
+  assert.deepEqual(parseGalleryFilters(new URLSearchParams()), filters);
+});
+
+test("draft result and platform counts use the complete current publisher scope", () => {
+  const microsoft = platformSubmissions.filter((item) => item.builtByMicrosoft);
+  const draft = copyGalleryFilters(filters);
+  assert.equal(platformSubmissions.filter((item) => matchesFilters(item, draft)).length, 3);
+  assert.equal(microsoft.filter((item) => matchesFilters(item, draft)).length, 1);
+  draft.platform = "Copilot Studio";
+  assert.equal(microsoft.filter((item) => matchesFilters(item, draft)).length, 0);
+  assert.deepEqual(countPlatforms(microsoft, draft), new Map([["Cowork", 1]]));
+  draft.category = "productivity";
+  assert.deepEqual(countPlatforms(microsoft, draft), new Map());
+  assert.equal(platformSubmissions.filter((item) => matchesFilters(item, draft)).length, 1);
 });

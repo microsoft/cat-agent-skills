@@ -202,8 +202,8 @@ needed by the agent, so it stays in `SKILL.md`.
   by the schema — flag them as noise.
 - `category` is one of `manufacturing`, `retail-cpg`, `productivity` (default),
   or `agent-development`. Use tags for finer detail instead of inventing categories.
-- `builtByMicrosoft` is a boolean defaulting to `false`. It selects carousel
-  placement rather than the community grid, independently of submission type,
+- `builtByMicrosoft` is a boolean defaulting to `false`. It selects the Microsoft
+  preview and full collection rather than the community grid, independently of submission type,
   author fields, and `featured`. Confirm the claim from the submission's
   provenance; do not infer it from an author's name or GitHub login.
 - `authorGithub` is normally derived from a `github.com/<login>` `authorUrl`; set
