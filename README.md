@@ -19,7 +19,8 @@ deployed as a static site to GitHub Pages.
   than a variable-height card footer; cards have no internal divider. Filtering
   and sorting still use the full metadata.
 - **Built by Microsoft preview** with one row of individual asset cards aligned
-  to the community grid's columns and widths. **Show more** opens the full
+  to the community grid's columns and widths. A quiet **View all** link beside
+  the section heading and count, without an arrow, opens the full
   `/built-by-microsoft/` collection with the current filters. Microsoft cards use team-managed category
   icons with colored gradients on neutral cards; community cards retain their
   generated initials. Compact Microsoft cards show the asset name,

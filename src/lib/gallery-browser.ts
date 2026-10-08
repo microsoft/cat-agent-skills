@@ -128,7 +128,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     }
     if (showMore) {
       showMore.hidden = previewMatched.length <= columns;
-      showMore.setAttribute("aria-label", `Show all ${previewMatched.length} Microsoft submissions`);
+      showMore.setAttribute("aria-label", `View all ${previewMatched.length} Microsoft submissions`);
     }
   }
 
