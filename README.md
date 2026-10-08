@@ -39,7 +39,7 @@ deployed as a static site to GitHub Pages.
 
 ## 🚀 Local development
 
-Use Node.js 22.12 or newer.
+Use Node.js 22.19 or newer to satisfy the locked website dependencies.
 
 ```bash
 npm ci
