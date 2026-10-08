@@ -1,0 +1,11 @@
+{
+  "name": "Cowork & Work IQ Consumption Advisor",
+  "description": "Turn Microsoft 365 Cost Management exports into an interactive Cowork and Work IQ consumption report, with service breakdowns, spending-limit analysis, forecasts, and evidence-backed recommendations.",
+  "platforms": ["Cowork"],
+  "tags": ["cowork", "work-iq", "copilot-credits", "consumption", "cost-management", "finops", "dashboard", "analysis"],
+  "author": "Bojan Buhac",
+  "authorUrl": "https://github.com/bojanbuhac",
+  "version": "1.0.0",
+  "createdAt": "2026-09-14",
+  "coverColor": "#0f6cbd"
+}
