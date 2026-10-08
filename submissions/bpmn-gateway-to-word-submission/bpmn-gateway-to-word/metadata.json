@@ -1,0 +1,10 @@
+{
+  "name": "BPMN to Word Process Documentation",
+  "description": "Turn a BPMN diagram (.bpmn or a bpmn-js SVG export) into a numbered, step-by-step Word document that gets every decision, parallel pathway, loop and Link connector right, with explicit 'go to Step N' branches.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["bpmn", "process-improvement", "documentation", "word", "diagrams", "python", "scripts"],
+  "author": "Kritika Nigam",
+  "version": "1.0.0",
+  "createdAt": "2026-10-08",
+  "updatedAt": "2026-10-08"
+}

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://example.com/bpmn">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Customer Onboarding" processRef="Process_1" />
+    <bpmn:participant id="Participant_2" name="Applicant" />
+    <bpmn:messageFlow id="Flow_Msg" sourceRef="Participant_2" targetRef="Activity_Capture" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Intake" name="Onboarding Team">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_Capture</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Existing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_Verify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_Open</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Merge</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Fork</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_AML</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_LinkThrow</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_LinkCatch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_Record</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Compliance" name="Compliance Team">
+        <bpmn:flowNodeRef>Activity_KYC</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Pass</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_MoreInfo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_Credit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Join</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_Approve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Application received"><bpmn:outgoing>Flow_01</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Activity_Capture" name="Capture application"><bpmn:incoming>Flow_01</bpmn:incoming><bpmn:outgoing>Flow_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Existing" name="Existing account?"><bpmn:incoming>Flow_02</bpmn:incoming><bpmn:outgoing>Flow_03</bpmn:outgoing><bpmn:outgoing>Flow_04</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="Activity_Verify" name="Verify existing details"><bpmn:incoming>Flow_03</bpmn:incoming><bpmn:outgoing>Flow_05</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Activity_Open" name="Open new account"><bpmn:incoming>Flow_04</bpmn:incoming><bpmn:outgoing>Flow_06</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Merge"><bpmn:incoming>Flow_05</bpmn:incoming><bpmn:incoming>Flow_06</bpmn:incoming><bpmn:outgoing>Flow_07</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="Gateway_Fork"><bpmn:incoming>Flow_07</bpmn:incoming><bpmn:outgoing>Flow_08</bpmn:outgoing><bpmn:outgoing>Flow_09</bpmn:outgoing><bpmn:outgoing>Flow_10</bpmn:outgoing></bpmn:parallelGateway>
+    <bpmn:userTask id="Activity_KYC" name="KYC check"><bpmn:incoming>Flow_08</bpmn:incoming><bpmn:incoming>Flow_14</bpmn:incoming><bpmn:outgoing>Flow_11</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Pass" name="KYC passed?"><bpmn:incoming>Flow_11</bpmn:incoming><bpmn:outgoing>Flow_12</bpmn:outgoing><bpmn:outgoing>Flow_13</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="Activity_MoreInfo" name="Request more information"><bpmn:incoming>Flow_13</bpmn:incoming><bpmn:outgoing>Flow_14</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Activity_AML" name="AML screening"><bpmn:incoming>Flow_09</bpmn:incoming><bpmn:outgoing>Flow_15</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:intermediateThrowEvent id="Event_LinkThrow" name="Link A"><bpmn:incoming>Flow_15</bpmn:incoming><bpmn:linkEventDefinition id="LED_Event_LinkThrow" name="Link A" /></bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="Event_LinkCatch" name="Link A"><bpmn:outgoing>Flow_16</bpmn:outgoing><bpmn:linkEventDefinition id="LED_Event_LinkCatch" name="Link A" /></bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Activity_Record" name="Record screening result"><bpmn:incoming>Flow_16</bpmn:incoming><bpmn:outgoing>Flow_17</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_Credit" name="Credit check"><bpmn:incoming>Flow_10</bpmn:incoming><bpmn:outgoing>Flow_18</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:parallelGateway id="Gateway_Join"><bpmn:incoming>Flow_12</bpmn:incoming><bpmn:incoming>Flow_17</bpmn:incoming><bpmn:incoming>Flow_18</bpmn:incoming><bpmn:outgoing>Flow_19</bpmn:outgoing></bpmn:parallelGateway>
+    <bpmn:userTask id="Activity_Approve" name="Approve and notify"><bpmn:incoming>Flow_19</bpmn:incoming><bpmn:outgoing>Flow_20</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_1" name="Onboarding complete"><bpmn:incoming>Flow_20</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="StartEvent_1" targetRef="Activity_Capture" />
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Activity_Capture" targetRef="Gateway_Existing" />
+    <bpmn:sequenceFlow id="Flow_03" name="Yes" sourceRef="Gateway_Existing" targetRef="Activity_Verify" />
+    <bpmn:sequenceFlow id="Flow_04" name="No" sourceRef="Gateway_Existing" targetRef="Activity_Open" />
+    <bpmn:sequenceFlow id="Flow_05" sourceRef="Activity_Verify" targetRef="Gateway_Merge" />
+    <bpmn:sequenceFlow id="Flow_06" sourceRef="Activity_Open" targetRef="Gateway_Merge" />
+    <bpmn:sequenceFlow id="Flow_07" sourceRef="Gateway_Merge" targetRef="Gateway_Fork" />
+    <bpmn:sequenceFlow id="Flow_08" sourceRef="Gateway_Fork" targetRef="Activity_KYC" />
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Gateway_Fork" targetRef="Activity_AML" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Gateway_Fork" targetRef="Activity_Credit" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Activity_KYC" targetRef="Gateway_Pass" />
+    <bpmn:sequenceFlow id="Flow_12" name="Yes" sourceRef="Gateway_Pass" targetRef="Gateway_Join" />
+    <bpmn:sequenceFlow id="Flow_13" name="No" sourceRef="Gateway_Pass" targetRef="Activity_MoreInfo" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Activity_MoreInfo" targetRef="Activity_KYC" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Activity_AML" targetRef="Event_LinkThrow" />
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Event_LinkCatch" targetRef="Activity_Record" />
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Activity_Record" targetRef="Gateway_Join" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Activity_Credit" targetRef="Gateway_Join" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Gateway_Join" targetRef="Activity_Approve" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Activity_Approve" targetRef="EndEvent_1" />
+    <bpmn:textAnnotation id="TextAnnotation_1"><bpmn:text>Description: Screens the applicant against sanctions and PEP lists. Owner: Compliance Operations</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Association_1" sourceRef="Activity_AML" targetRef="TextAnnotation_1" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true"><dc:Bounds x="150" y="80" width="1700" height="520" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_2_di" bpmnElement="Participant_2" isHorizontal="true"><dc:Bounds x="150" y="650" width="1700" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Intake_di" bpmnElement="Lane_Intake" isHorizontal="true"><dc:Bounds x="180" y="80" width="1670" height="220" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Compliance_di" bpmnElement="Lane_Compliance" isHorizontal="true"><dc:Bounds x="180" y="300" width="1670" height="300" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1"><dc:Bounds x="212" y="172" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="192" y="212" width="76" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Capture_di" bpmnElement="Activity_Capture"><dc:Bounds x="300" y="150" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Existing_di" bpmnElement="Gateway_Existing" isMarkerVisible="true"><dc:Bounds x="450" y="165" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="430" y="219" width="90" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Verify_di" bpmnElement="Activity_Verify"><dc:Bounds x="560" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Open_di" bpmnElement="Activity_Open"><dc:Bounds x="560" y="220" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Merge_di" bpmnElement="Gateway_Merge" isMarkerVisible="true"><dc:Bounds x="720" y="165" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Fork_di" bpmnElement="Gateway_Fork" isMarkerVisible="true"><dc:Bounds x="830" y="165" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_KYC_di" bpmnElement="Activity_KYC"><dc:Bounds x="950" y="330" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Pass_di" bpmnElement="Gateway_Pass" isMarkerVisible="true"><dc:Bounds x="1100" y="345" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1080" y="399" width="90" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_MoreInfo_di" bpmnElement="Activity_MoreInfo"><dc:Bounds x="1075" y="450" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_AML_di" bpmnElement="Activity_AML"><dc:Bounds x="950" y="150" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_LinkThrow_di" bpmnElement="Event_LinkThrow"><dc:Bounds x="1100" y="172" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1080" y="212" width="76" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_LinkCatch_di" bpmnElement="Event_LinkCatch"><dc:Bounds x="1250" y="172" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1230" y="212" width="76" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Record_di" bpmnElement="Activity_Record"><dc:Bounds x="1330" y="150" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Credit_di" bpmnElement="Activity_Credit"><dc:Bounds x="950" y="500" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Join_di" bpmnElement="Gateway_Join" isMarkerVisible="true"><dc:Bounds x="1500" y="345" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Approve_di" bpmnElement="Activity_Approve"><dc:Bounds x="1600" y="330" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1"><dc:Bounds x="1750" y="352" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1730" y="392" width="76" height="27" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_1_di" bpmnElement="TextAnnotation_1"><dc:Bounds x="1000" y="90" width="220" height="40" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_01_di" bpmnElement="Flow_01"><di:waypoint x="248" y="190" /><di:waypoint x="300" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02_di" bpmnElement="Flow_02"><di:waypoint x="400" y="190" /><di:waypoint x="450" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03_di" bpmnElement="Flow_03"><di:waypoint x="475" y="165" /><di:waypoint x="475" y="140" /><di:waypoint x="560" y="140" /><bpmndi:BPMNLabel><dc:Bounds x="481" y="147" width="20" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04_di" bpmnElement="Flow_04"><di:waypoint x="475" y="215" /><di:waypoint x="475" y="260" /><di:waypoint x="560" y="260" /><bpmndi:BPMNLabel><dc:Bounds x="481" y="197" width="20" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05_di" bpmnElement="Flow_05"><di:waypoint x="660" y="140" /><di:waypoint x="745" y="140" /><di:waypoint x="745" y="165" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06_di" bpmnElement="Flow_06"><di:waypoint x="660" y="260" /><di:waypoint x="745" y="260" /><di:waypoint x="745" y="215" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07_di" bpmnElement="Flow_07"><di:waypoint x="770" y="190" /><di:waypoint x="830" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08_di" bpmnElement="Flow_08"><di:waypoint x="855" y="215" /><di:waypoint x="855" y="370" /><di:waypoint x="950" y="370" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09_di" bpmnElement="Flow_09"><di:waypoint x="880" y="190" /><di:waypoint x="950" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10"><di:waypoint x="855" y="215" /><di:waypoint x="855" y="540" /><di:waypoint x="950" y="540" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11"><di:waypoint x="1050" y="370" /><di:waypoint x="1100" y="370" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12"><di:waypoint x="1150" y="370" /><di:waypoint x="1500" y="370" /><bpmndi:BPMNLabel><dc:Bounds x="1156" y="352" width="20" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13"><di:waypoint x="1125" y="395" /><di:waypoint x="1125" y="450" /><bpmndi:BPMNLabel><dc:Bounds x="1131" y="377" width="20" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14"><di:waypoint x="1075" y="490" /><di:waypoint x="1000" y="490" /><di:waypoint x="1000" y="410" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15"><di:waypoint x="1050" y="190" /><di:waypoint x="1100" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16"><di:waypoint x="1286" y="190" /><di:waypoint x="1330" y="190" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17"><di:waypoint x="1430" y="190" /><di:waypoint x="1525" y="190" /><di:waypoint x="1525" y="345" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18"><di:waypoint x="1050" y="540" /><di:waypoint x="1525" y="540" /><di:waypoint x="1525" y="395" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19"><di:waypoint x="1550" y="370" /><di:waypoint x="1600" y="370" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20"><di:waypoint x="1700" y="370" /><di:waypoint x="1750" y="370" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_di" bpmnElement="Flow_Msg"><di:waypoint x="350" y="650" /><di:waypoint x="350" y="230" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1_di" bpmnElement="Association_1"><di:waypoint x="1000" y="150" /><di:waypoint x="1000" y="130" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
