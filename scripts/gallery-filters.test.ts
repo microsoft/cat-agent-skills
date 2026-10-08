@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICON_PATHS, CATEGORY_LABELS, isCategory } from "../src/lib/categories.ts";
 import { copyGalleryFilters, countPlatforms, galleryFilterParams, matchesFilters, parseGalleryFilters, partitionSubmissions, type FilterableSubmission, type GalleryFilters } from "../src/lib/gallery-filters.ts";
 import { skillSchema } from "../src/lib/skill-schema.ts";
+import { authorKey } from "../src/lib/badges.ts";
 
 const submission: FilterableSubmission = {
   name: "Quality Inspection",
@@ -345,6 +346,33 @@ test("filter query round trips preserve every facet on either collection route",
     assert.equal(url.pathname, path);
   }
   assert.equal(galleryFilterParams(filters).toString(), "");
+});
+
+test("tag deep links preserve metadata spelling and URL-encode special characters", () => {
+  for (const tag of ["BATNA", "ZOPA", "research & planning", "C++"]) {
+    const url = new URL(`/?tag=${encodeURIComponent(tag)}`, "https://example.com");
+    const selected = parseGalleryFilters(url.searchParams);
+    const item = { ...submission, tags: [tag] };
+    assert.deepEqual(selected.tags, new Set([tag]));
+    assert.ok(matchesFilters(item, selected));
+    assert.deepEqual(parseGalleryFilters(galleryFilterParams(selected)), selected);
+    assert.ok(matchesFilters(item, { ...filters, query: tag.toLowerCase() }));
+  }
+});
+
+test("contributor deep links match normalized GitHub and display-name fallback keys", () => {
+  for (const [login, name, expectedKey] of [
+    ["SravaniSeethi", "Industry Templates", "sravaniseethi"],
+    [undefined, "Marco Zama", "marco-zama"],
+  ]) {
+    const key = authorKey(login, name);
+    assert.equal(key, expectedKey);
+    const url = new URL(`/?author=${encodeURIComponent(key)}`, "https://example.com");
+    const selected = parseGalleryFilters(url.searchParams);
+    assert.deepEqual(selected.authors, new Set([key]));
+    assert.ok(matchesFilters({ ...submission, authorKey: key }, selected));
+    assert.equal(matchesFilters({ ...submission, authorKey: "someone-else" }, selected), false);
+  }
 });
 
 test("category URLs accept legacy single values and normalized comma-separated selections", () => {

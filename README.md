@@ -63,8 +63,11 @@ deployed as a static site to GitHub Pages.
   grids or unrelated placeholder cards.
 - **Platform filtering** across Cowork, Copilot Studio, and Scout.
 - **Client-side search** and **tag filtering** with shareable
-  `?q=`/`?category=`/`?tag=`/`?platform=`/`?sort=` URLs. Search, category,
+  `?q=`/`?category=`/`?tag=`/`?author=`/`?platform=`/`?type=`/`?sort=` URLs. Search, category,
   platform, type, tag, and contributor filters affect both sections.
+  Contributor links and detail-page tags open this same filtered gallery with
+  removable applied pills. Earlier `/tags/<tag>/` URLs redirect to `/?tag=<tag>`;
+  tag spelling is preserved, including uppercase tags such as `BATNA`.
   Category labels and Microsoft card icons are maintained centrally in
   `src/lib/categories.ts`, including non-industry categories such as Productivity
   and Agent development.
@@ -193,7 +196,7 @@ src/
     built-by-microsoft.astro  Microsoft-only collection with shared filters
     skills/[slug].astro  skill detail page (instructions, download, ratings)
     skills/[slug].md.ts  raw Markdown download endpoint
-    tags/[tag].astro     per-tag listing
+    tags/[tag].astro     legacy redirects to tag-filtered gallery
     skills.json.ts       metadata endpoint
 public/
   bundles/         downloadable .zip skill bundles
