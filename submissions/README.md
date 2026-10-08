@@ -7,7 +7,8 @@ download bundle) for you.
 
 Every **new** submission is a **`submissions/<slug>/` folder** containing a
 `metadata.json` gallery sidecar plus **exactly one** payload — an **unpacked**
-canonical Agent Skill (or, for Scout, a single automation `.json`; see below):
+canonical Agent Skill (or an unpacked Cowork plugin, or, for Scout, a single
+automation `.json`; see below):
 
 ```
 submissions/<slug>/
@@ -22,8 +23,8 @@ submissions/<slug>/
     └── assets/       # optional templates / data files
 ```
 
-`.zip` payloads are **no longer accepted** — submit your skill unpacked. (Scout
-submissions can instead be a single automation `.json`; see below.)
+`.zip` payloads are **no longer accepted** — submit your skill or plugin unpacked.
+(Scout submissions can instead be a single automation `.json`; see below.)
 
 The `<slug>` is the folder name — use lowercase, hyphenated names, e.g.
 `submissions/meeting-summarizer/` -> `/skills/meeting-summarizer`. Start by
@@ -39,7 +40,7 @@ stripped; they are sidecars and never land inside the bundle.
 > page (your own overview, setup steps, tips, and examples), with the exact
 > `SKILL.md` still offered as the download. Without one, the page falls back to
 > the skill's own instructions. It's optional and works for every entry type
-> (skill or automation). Everything *else* in the folder is
+> (skill, plugin, or automation). Everything *else* in the folder is
 > agent-facing and ships verbatim, so don't add stray docs like `CHANGELOG` or
 > `CONTRIBUTING` next to your payload — they'd just waste the agent's context. Put
 > those in your PR description.
@@ -141,14 +142,22 @@ don't need to set it** — just make `authorUrl` your GitHub profile. Set it
 explicitly only when your only link isn't a GitHub profile (e.g. LinkedIn), or
 leave it blank to opt out of the mention.
 
-## Cowork plugins (no longer accepted)
+## Cowork plugins
 
-Earlier, the gallery also accepted **Cowork plugins** — Microsoft 365 app
+The gallery also accepts **Cowork plugins** — Microsoft 365 app
 packages (a `.zip` with a root `manifest.json`) that bundle one or more skills
 (plus optional MCP connectors) and run **only** in Copilot Cowork. Because the
-gallery no longer accepts `.zip` payloads, **new plugin submissions are no longer
-accepted**. Existing plugin submissions (e.g. [`legal-toolkit/`](./legal-toolkit))
-stay published.
+gallery no longer accepts `.zip` payloads, submit new plugins **unpacked** in
+`submissions/<slug>/`, alongside the usual `metadata.json` and optional
+`README.md` sidecars. The payload has a root `manifest.json`, its referenced
+icons, and the declared skill/connector files; each skill's `SKILL.md` lives in
+its declared folder.
+
+The importer validates the package, sets `platforms: ["Cowork"]` and
+`type: "plugin"`, and generates the downloadable `.zip`. The root gallery
+sidecars are excluded; nested plugin resources are preserved verbatim. The
+README becomes the detail-page overview, or, without one, the page lists the
+plugin's skills, connectors, and installation steps.
 
 ## Scout automations (advanced)
 

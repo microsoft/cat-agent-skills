@@ -100,9 +100,10 @@ Write the agent instructions here as Markdown — this body becomes the
 
 > Besides single skills, you can submit a **Scout automation** (a `.json` export,
 > Scout-only). It drops into `submissions/<slug>/` the same way and is
-> auto-detected by its payload. (Cowork plugins and Scout automation installers
-> were `.zip` packages and are **no longer accepted** — `.zip` payloads have
-> been retired; existing ones stay published.) See
+> auto-detected by its payload. You can also submit an **unpacked Cowork plugin**
+> (a root `manifest.json` with its icons and skills/connectors).
+> (Scout automation installers were `.zip` packages and are **no longer
+> accepted** — `.zip` payloads have been retired; existing ones stay published.) See
 > [`submissions/README.md`](submissions/README.md) for the details.
 
 ## Add Copilot Studio skills from GitHub
