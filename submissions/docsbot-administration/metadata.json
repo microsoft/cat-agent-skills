@@ -1,0 +1,20 @@
+{
+  "name": "DocsBot Administration",
+  "description": "Manage DocsBot bots, knowledge sources, teams, and reporting through an OAuth-authenticated MCP connector.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "docsbot",
+    "knowledge-base",
+    "customer-support",
+    "mcp",
+    "oauth"
+  ],
+  "author": "DocsBot",
+  "authorUrl": "https://docsbot.ai",
+  "authorGithub": "uglyrobot",
+  "version": "0.6.3",
+  "createdAt": "2026-10-01",
+  "updatedAt": "2026-10-01"
+}
