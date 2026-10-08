@@ -29,7 +29,7 @@ const scopeLabel = microsoftOnly
       <span class="h-6 w-px shrink-0 bg-border" aria-hidden="true"></span>
       <div id="filter-options" class="filter-options">
         <div id="applied-filters" hidden class="applied-filters" role="group" aria-label="Applied extra filters"></div>
-        <div id="category-filters" class="category-options" role="group" aria-label="Category">
+        <div id="category-filters" class="category-options" role="group" aria-label="Categories (match any selected)">
           {CATEGORIES.map((category) => (
             <button type="button" data-category={category} aria-pressed="false" class="category-choice">{CATEGORY_LABELS[category]}</button>
           ))}

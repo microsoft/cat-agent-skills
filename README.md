@@ -30,8 +30,11 @@ deployed as a static site to GitHub Pages.
   pills, all in the same horizontally scrolling row. New selections appear only
   after applying the dialog; removing a row pill updates results immediately.
   Keyboard-focused pills stay visible without moving the page vertically.
-  Categories and search apply immediately across both publishers. Click the
-  selected category again to clear only that category; no **All** pill is needed.
+  Categories and search apply immediately across both publishers. Categories are
+  multi-select with **OR** matching: Manufacturing + Retail & CPG shows either
+  category, while other filter facets still narrow those results. Click a
+  selected category again to remove only that category; no **All** pill is needed.
+  No selected categories means all categories.
   Selected pills use the same neutral fill and text as other pills, with a
   slightly stronger border rather than a high-contrast treatment.
 - **Draft filter dialog** for Platform, Format, Tags, and Contributor, with
@@ -46,6 +49,8 @@ deployed as a static site to GitHub Pages.
 - **Shareable category filters** at `/?category=manufacturing`,
   `/?category=retail-cpg`, `/?category=productivity`, and
   `/?category=agent-development` (under the site's `/cat-agent-skills/` base path).
+  Combine categories with commas, for example
+  `/?category=manufacturing,retail-cpg`; existing single-category URLs still work.
   These open the same gallery with the category selected, not a separate
   Microsoft-only page. Earlier `/categories/<category>/` URLs redirect to the
   corresponding filtered gallery; the static GitHub Pages build emits HTML

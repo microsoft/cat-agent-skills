@@ -15,7 +15,7 @@ export interface FilterableSubmission {
 
 export interface GalleryFilters {
   query: string;
-  category: Category | "";
+  categories: ReadonlySet<Category>;
   platform: string;
   type: string;
   tags: ReadonlySet<string>;
@@ -23,17 +23,16 @@ export interface GalleryFilters {
 }
 
 export function copyGalleryFilters(filters: GalleryFilters) {
-  return { ...filters, tags: new Set(filters.tags), authors: new Set(filters.authors) };
+  return { ...filters, categories: new Set(filters.categories), tags: new Set(filters.tags), authors: new Set(filters.authors) };
 }
 
 export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
-  const category = params.get("category") ?? "";
   const selections = (key: string) => new Set(
     (params.get(key) ?? "").split(",").map((value) => value.trim()).filter(Boolean),
   );
   return {
     query: (params.get("q") ?? "").toLowerCase(),
-    category: isCategory(category) ? category : "",
+    categories: new Set([...selections("category")].filter(isCategory)),
     platform: params.get("platform") ?? "",
     type: params.get("type") ?? "",
     tags: selections("tag"),
@@ -44,7 +43,7 @@ export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
 export function galleryFilterParams(filters: GalleryFilters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.query) params.set("q", filters.query);
-  if (filters.category) params.set("category", filters.category);
+  if (filters.categories.size) params.set("category", [...filters.categories].join(","));
   if (filters.platform) params.set("platform", filters.platform);
   if (filters.type) params.set("type", filters.type);
   if (filters.tags.size) params.set("tag", [...filters.tags].join(","));
@@ -61,7 +60,7 @@ export function matchesFilters(item: FilterableSubmission, filters: GalleryFilte
   ].join(" ").toLowerCase();
   return (
     (!filters.query || text.includes(filters.query.trim().toLowerCase())) &&
-    (!filters.category || item.category === filters.category) &&
+    (!filters.categories.size || filters.categories.has(item.category)) &&
     (!filters.platform || item.platforms.includes(filters.platform)) &&
     (!filters.type || item.type === filters.type) &&
     (!filters.tags.size || item.tags.some((tag) => filters.tags.has(tag))) &&

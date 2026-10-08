@@ -17,7 +17,7 @@ const submission: FilterableSubmission = {
   authorKey: "sravaniseethi",
 };
 const filters: GalleryFilters = {
-  query: "", category: "", platform: "", type: "",
+  query: "", categories: new Set(), platform: "", type: "",
   tags: new Set(), authors: new Set(),
 };
 const metadata = {
@@ -113,7 +113,7 @@ test("category filters include both publishers and every submission format", () 
     ),
   );
   for (const category of CATEGORIES) {
-    const matched = items.filter((item) => matchesFilters(item, { ...filters, category }));
+    const matched = items.filter((item) => matchesFilters(item, { ...filters, categories: new Set([category]) }));
     const { microsoft, community } = partitionSubmissions(matched);
     assert.equal(microsoft.length, 3);
     assert.equal(community.length, 3);
@@ -124,17 +124,33 @@ test("category filters include both publishers and every submission format", () 
   }
 });
 
+test("every category combination matches the union without duplicating submissions", () => {
+  const items = CATEGORIES.flatMap((category) =>
+    ["skill", "plugin", "automation"].flatMap((type) =>
+      [true, false].map((builtByMicrosoft) => ({ ...submission, category, type, builtByMicrosoft })),
+    ),
+  );
+  for (let mask = 0; mask < 1 << CATEGORIES.length; mask++) {
+    const categories = new Set(CATEGORIES.filter((_, index) => mask & (1 << index)));
+    const matched = items.filter((item) => matchesFilters(item, { ...filters, categories }));
+    assert.equal(matched.length, (categories.size || CATEGORIES.length) * 6);
+    assert.equal(new Set(matched).size, matched.length);
+    assert.equal(matched.filter((item) => item.builtByMicrosoft).length, matched.length / 2);
+    for (const item of matched) assert.ok(!categories.size || categories.has(item.category));
+  }
+});
+
 test("category filtering supports no Microsoft, no community, or no matching submissions", () => {
   const microsoft = { ...submission, data: { builtByMicrosoft: true } };
   const community = { ...submission, category: "productivity" as const, builtByMicrosoft: false, data: { builtByMicrosoft: false } };
   const items = Object.freeze([microsoft, community]);
   const byCategory = (category: typeof CATEGORIES[number]) =>
-    partitionSubmissions(items.filter((item) => matchesFilters(item, { ...filters, category })));
+    partitionSubmissions(items.filter((item) => matchesFilters(item, { ...filters, categories: new Set([category]) })));
   assert.deepEqual(byCategory("manufacturing"), { microsoft: [microsoft], community: [] });
   assert.deepEqual(byCategory("productivity"), { microsoft: [], community: [community] });
   assert.deepEqual(byCategory("retail-cpg"), { microsoft: [], community: [] });
   for (const category of CATEGORIES) {
-    assert.equal(matchesFilters(submission, { ...filters, category, query: "no such submission" }), false);
+    assert.equal(matchesFilters(submission, { ...filters, categories: new Set([category]), query: "no such submission" }), false);
   }
 });
 
@@ -144,22 +160,22 @@ test("shared filters match both sections identically", () => {
   }));
   for (const section of Object.values(partitionSubmissions(items))) {
     assert.equal(section.filter((item) => matchesFilters(item, filters)).length, 1);
-    assert.equal(section.filter((item) => matchesFilters(item, { ...filters, category: "manufacturing" })).length, 1);
-    assert.equal(section.filter((item) => matchesFilters(item, { ...filters, category: "retail-cpg" })).length, 0);
+    assert.equal(section.filter((item) => matchesFilters(item, { ...filters, categories: new Set(["manufacturing"]) })).length, 1);
+    assert.equal(section.filter((item) => matchesFilters(item, { ...filters, categories: new Set(["retail-cpg"]) })).length, 0);
     assert.equal(section.filter((item) => matchesFilters(item, { ...filters, platform: "Scout" })).length, 0);
   }
 });
 
-test("filters AND facets and OR selections within tags and contributors", () => {
+test("filters AND facets and OR selections within categories, tags, and contributors", () => {
   const selected: GalleryFilters = {
-    ...filters, category: "manufacturing", platform: "Cowork", type: "plugin",
+    ...filters, categories: new Set(["retail-cpg", "manufacturing"]), platform: "Cowork", type: "plugin",
     tags: new Set(["not-present", "quality"]),
     authors: new Set(["not-present", "sravaniseethi"]),
     query: "NONCONFORMANCE",
   };
   assert.ok(matchesFilters(submission, selected));
   for (const changed of [
-    { category: "productivity" as const },
+    { categories: new Set(["productivity" as const]) },
     { type: "skill" },
     { platform: "Scout" },
     { tags: new Set(["absent"]) },
@@ -220,11 +236,28 @@ test("platform counts ignore only the active platform", () => {
   }
 });
 
+test("platform counts use the category union while other facets still narrow it", () => {
+  const selected: GalleryFilters = {
+    ...filters, categories: new Set(["manufacturing", "productivity"]), platform: "Scout",
+  };
+  assert.deepEqual(countPlatforms(platformSubmissions, selected), new Map([
+    ["Cowork", 2], ["Copilot Studio", 1], ["Scout", 1],
+  ]));
+  assert.equal(platformSubmissions.filter((item) => matchesFilters(item, selected)).length, 1);
+  assert.equal(platformSubmissions.filter((item) => matchesFilters(item, { ...selected, type: "skill" })).length, 0);
+  assert.deepEqual(countPlatforms(platformSubmissions, { ...selected, type: "skill" }), new Map([
+    ["Cowork", 1], ["Copilot Studio", 1],
+  ]));
+  assert.deepEqual(countPlatforms(platformSubmissions, { ...selected, tags: new Set(["quality"]) }), new Map([
+    ["Cowork", 1], ["Scout", 1],
+  ]));
+});
+
 test("platform counts honor each other filter facet", () => {
   const cases: Array<{ selected: Partial<GalleryFilters>; expected: Array<[string, number]> }> = [
     { selected: { query: "WRITING" }, expected: [["Cowork", 1], ["Copilot Studio", 1]] },
     { selected: { query: "Microsoft" }, expected: [["Cowork", 1]] },
-    { selected: { category: "manufacturing" }, expected: [["Cowork", 1], ["Scout", 1]] },
+    { selected: { categories: new Set(["manufacturing"]) }, expected: [["Cowork", 1], ["Scout", 1]] },
     { selected: { type: "plugin" }, expected: [["Cowork", 1]] },
     { selected: { tags: new Set(["absent", "quality"]) }, expected: [["Cowork", 1], ["Scout", 1]] },
     {
@@ -239,7 +272,7 @@ test("platform counts honor each other filter facet", () => {
 
 test("platform counts preserve combined facets even when the selected platform has no results", () => {
   const selected: GalleryFilters = {
-    query: "inspection", category: "manufacturing", platform: "Copilot Studio", type: "plugin",
+    query: "inspection", categories: new Set(["manufacturing"]), platform: "Copilot Studio", type: "plugin",
     tags: new Set(["absent", "quality"]), authors: new Set(["absent", "sravaniseethi"]),
   };
   assert.equal(platformSubmissions.filter((item) => matchesFilters(item, selected)).length, 0);
@@ -249,7 +282,7 @@ test("platform counts preserve combined facets even when the selected platform h
 test("platform counts handle empty collections and no matches", () => {
   assert.deepEqual(countPlatforms([], filters), new Map());
   assert.deepEqual(countPlatforms(platformSubmissions, { ...filters, query: "not present" }), new Map());
-  assert.deepEqual(countPlatforms(platformSubmissions, { ...filters, category: "retail-cpg" }), new Map());
+  assert.deepEqual(countPlatforms(platformSubmissions, { ...filters, categories: new Set(["retail-cpg"]) }), new Map());
 });
 
 test("platform counts do not mutate filter state or submissions", () => {
@@ -277,7 +310,7 @@ test("empty results and cleared filters preserve the complete submission set", (
 
 test("draft filter copies cannot mutate applied selections before commit", () => {
   const applied = copyGalleryFilters({
-    ...filters, query: "quality", category: "manufacturing", platform: "Cowork",
+    ...filters, query: "quality", categories: new Set(["manufacturing"]), platform: "Cowork",
     tags: new Set(["quality"]), authors: new Set(["sravaniseethi"]),
   });
   const original = copyGalleryFilters(applied);
@@ -285,20 +318,24 @@ test("draft filter copies cannot mutate applied selections before commit", () =>
   draft.platform = "Scout";
   draft.type = "automation";
   draft.tags.clear();
+  draft.categories.add("retail-cpg");
   draft.authors.add("another-author");
   assert.deepEqual(applied, original);
   assert.notEqual(draft.tags, applied.tags);
+  assert.notEqual(draft.categories, applied.categories);
   assert.notEqual(draft.authors, applied.authors);
   const committed = copyGalleryFilters(draft);
   draft.tags.add("later-edit");
+  draft.categories.clear();
   assert.equal(committed.tags.has("later-edit"), false);
+  assert.deepEqual(committed.categories, new Set(["manufacturing", "retail-cpg"]));
   assert.equal(committed.platform, "Scout");
   assert.deepEqual(copyGalleryFilters(applied), original, "discarding and reopening starts from applied state");
 });
 
 test("filter query round trips preserve every facet on either collection route", () => {
   const selected: GalleryFilters = {
-    query: "quality & safety", category: "manufacturing", platform: "Copilot Studio", type: "plugin",
+    query: "quality & safety", categories: new Set(["manufacturing", "retail-cpg"]), platform: "Copilot Studio", type: "plugin",
     tags: new Set(["quality", "inspection"]), authors: new Set(["sravaniseethi", "another-author"]),
   };
   const query = galleryFilterParams(selected).toString();
@@ -310,10 +347,24 @@ test("filter query round trips preserve every facet on either collection route",
   assert.equal(galleryFilterParams(filters).toString(), "");
 });
 
+test("category URLs accept legacy single values and normalized comma-separated selections", () => {
+  const legacy = parseGalleryFilters(new URLSearchParams("category=manufacturing"));
+  assert.deepEqual(legacy.categories, new Set(["manufacturing"]));
+  assert.equal(galleryFilterParams(legacy).toString(), "category=manufacturing");
+  const multiple = copyGalleryFilters(parseGalleryFilters(new URLSearchParams(
+    "category=manufacturing,unknown,,retail-cpg,manufacturing,%20productivity%20",
+  )));
+  assert.deepEqual(multiple.categories, new Set(["manufacturing", "retail-cpg", "productivity"]));
+  multiple.categories.delete("manufacturing");
+  assert.equal(galleryFilterParams(multiple).get("category"), "retail-cpg,productivity");
+  multiple.categories.clear();
+  assert.equal(galleryFilterParams(multiple).has("category"), false);
+});
+
 test("filter parsing preserves existing URL semantics and never selects a publisher by search", () => {
   const parsed = parseGalleryFilters(new URLSearchParams("q=Microsoft&category=unknown&platform=Scout&type=skill&tag=quality,,inspection,quality&author=SomeAuthor,OTHER"));
   assert.equal(parsed.query, "microsoft");
-  assert.equal(parsed.category, "");
+  assert.deepEqual(parsed.categories, new Set());
   assert.equal(parsed.platform, "Scout");
   assert.equal(parsed.type, "skill");
   assert.deepEqual(parsed.tags, new Set(["quality", "inspection"]));
@@ -329,7 +380,7 @@ test("draft result and platform counts use the complete current publisher scope"
   draft.platform = "Copilot Studio";
   assert.equal(microsoft.filter((item) => matchesFilters(item, draft)).length, 0);
   assert.deepEqual(countPlatforms(microsoft, draft), new Map([["Cowork", 1]]));
-  draft.category = "productivity";
+  draft.categories.add("productivity");
   assert.deepEqual(countPlatforms(microsoft, draft), new Map());
   assert.equal(platformSubmissions.filter((item) => matchesFilters(item, draft)).length, 1);
 });

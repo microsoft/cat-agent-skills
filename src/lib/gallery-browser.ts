@@ -166,7 +166,10 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
 
   function paintApplied() {
-    categories.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.category === applied.category)));
+    categories.forEach((button) => {
+      const category = button.dataset.category ?? "";
+      button.setAttribute("aria-pressed", String(isCategory(category) && applied.categories.has(category)));
+    });
     const total = renderRefinements(appliedChips, applied, (field, value) => {
       const buttons = Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button"));
       const index = buttons.findIndex((button) => button.dataset.filterKey === `${field}:${value}`);
@@ -266,7 +269,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     filterPicker(tagOptions, "", "tagOption", get("#tag-search-empty"));
     filterPicker(authorOptions, "", "authorSearch", get("#author-search-empty"));
     get<HTMLElement>("#filters-context").textContent = [
-      applied.category ? CATEGORY_LABELS[applied.category] : "All categories",
+      applied.categories.size ? [...applied.categories].map((category) => CATEGORY_LABELS[category]).join(" or ") : "All categories",
       applied.query ? `Search: ${search.value}` : "",
     ].filter(Boolean).join(" \u00b7 ");
     paintDraft();
@@ -350,7 +353,10 @@ export function initGalleryBrowser(root: HTMLElement) {
     button.addEventListener("click", () => {
       flushSearch();
       const category = button.dataset.category ?? "";
-      applied.category = isCategory(category) && applied.category !== category ? category : "";
+      if (isCategory(category)) {
+        if (applied.categories.has(category)) applied.categories.delete(category);
+        else applied.categories.add(category);
+      }
       commit();
       revealFilter(button);
     });
