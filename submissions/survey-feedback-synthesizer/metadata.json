@@ -1,0 +1,11 @@
+{
+  "name": "Survey Feedback Synthesizer",
+  "description": "Turns open-text survey, NPS, or event feedback into themes, sentiment, and a prioritized action list, grounded only in what respondents actually wrote, honest about sample size and outliers.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["feedback", "survey", "analysis", "sentiment", "productivity", "hr"],
+  "author": "Tim Karlsson",
+  "authorUrl": "https://github.com/Timziito",
+  "version": "1.0.0",
+  "createdAt": "2026-07-27",
+  "updatedAt": "2026-07-27"
+}
