@@ -30,7 +30,6 @@ const scopeLabel = microsoftOnly
       <div id="filter-options" class="filter-options">
         <div id="applied-filters" hidden class="applied-filters" role="group" aria-label="Applied extra filters"></div>
         <div id="category-filters" class="category-options" role="group" aria-label="Category">
-          <button type="button" data-category="" aria-pressed="true" class="category-choice">All</button>
           {CATEGORIES.map((category) => (
             <button type="button" data-category={category} aria-pressed="false" class="category-choice">{CATEGORY_LABELS[category]}</button>
           ))}
@@ -145,7 +144,6 @@ const scopeLabel = microsoftOnly
     flex-shrink: 0;
     min-height: 2.5rem;
     max-width: min(16rem, calc(100vw - 10rem));
-    border-color: var(--fg);
     padding-block: 0.5rem;
     white-space: nowrap;
   }
@@ -168,11 +166,10 @@ const scopeLabel = microsoftOnly
     border-radius: 0.75rem;
     font-weight: 600;
   }
-  .category-choice { flex-shrink: 0; border-radius: 999px; color: var(--muted); white-space: nowrap; }
-  .category-choice[aria-pressed="true"] {
-    border-color: var(--fg);
-    background: var(--surface-2);
-    color: var(--fg);
+  .category-choice { flex-shrink: 0; border-radius: 999px; color: var(--fg); white-space: nowrap; }
+  .applied-filters :global(button), .category-choice[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--fg) 45%, var(--border));
+    background: var(--surface);
   }
   .filter-count {
     position: absolute;

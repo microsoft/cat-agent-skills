@@ -350,7 +350,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     button.addEventListener("click", () => {
       flushSearch();
       const category = button.dataset.category ?? "";
-      applied.category = isCategory(category) ? category : "";
+      applied.category = isCategory(category) && applied.category !== category ? category : "";
       commit();
       revealFilter(button);
     });

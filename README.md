@@ -30,7 +30,10 @@ deployed as a static site to GitHub Pages.
   pills, all in the same horizontally scrolling row. New selections appear only
   after applying the dialog; removing a row pill updates results immediately.
   Keyboard-focused pills stay visible without moving the page vertically.
-  Categories and search apply immediately across both publishers.
+  Categories and search apply immediately across both publishers. Click the
+  selected category again to clear only that category; no **All** pill is needed.
+  Selected pills use the same neutral fill and text as other pills, with a
+  slightly stronger border rather than a high-contrast treatment.
 - **Draft filter dialog** for Platform, Format, Tags, and Contributor, with
   removable selections both inside the dialog and in the shared filter row.
   **Show N results** applies edits; closing discards them. **Clear extra filters**
