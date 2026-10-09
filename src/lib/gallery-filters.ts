@@ -20,7 +20,7 @@ export interface GalleryFilters {
   platform: Platform | "";
   types: ReadonlySet<string>;
   tags: ReadonlySet<string>;
-  author: string;
+  authors: ReadonlySet<string>;
 }
 
 export function copyGalleryFilters(filters: GalleryFilters) {
@@ -28,6 +28,7 @@ export function copyGalleryFilters(filters: GalleryFilters) {
     ...filters,
     types: new Set(filters.types),
     tags: new Set(filters.tags),
+    authors: new Set(filters.authors),
   };
 }
 
@@ -44,7 +45,7 @@ export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
     platform: platforms.length === PLATFORMS.length ? "" : platforms[0] ?? "",
     types: new Set([...selections("type")].map((value) => value.toLowerCase())),
     tags: selections("tag"),
-    author: [...selections("author")][0]?.toLowerCase() ?? "",
+    authors: new Set([...selections("author")].map((value) => value.toLowerCase())),
   };
 }
 
@@ -54,7 +55,7 @@ export function galleryFilterParams(filters: GalleryFilters): URLSearchParams {
   if (filters.platform) params.set("platform", filters.platform);
   if (filters.types.size) params.set("type", [...filters.types].join(","));
   if (filters.tags.size) params.set("tag", [...filters.tags].join(","));
-  if (filters.author) params.set("author", filters.author);
+  if (filters.authors.size) params.set("author", [...filters.authors].join(","));
   return params;
 }
 
@@ -68,19 +69,18 @@ export function matchesFilters(item: FilterableSubmission, filters: GalleryFilte
     (!filters.platform || item.platforms.includes(filters.platform)) &&
     (!filters.types.size || filters.types.has(item.type)) &&
     [...filters.tags].every((tag) => item.tags.includes(tag)) &&
-    (!filters.author || filters.author === item.authorKey)
+    [...filters.authors].every((author) => author === item.authorKey)
   );
 }
 
-/** Tag counts include selected tags so adding another tag can only narrow the results. */
+/** Tag and contributor counts include their selections, so adding a choice can only narrow results. */
 export function countFacet(
   items: Iterable<FilterableSubmission>,
   filters: GalleryFilters,
   facet: "types" | "tags" | "authors",
 ): Map<string, number> {
   const counts = new Map<string, number>();
-  const otherFilters = facet === "tags" ? filters
-    : facet === "authors" ? { ...filters, author: "" } : { ...filters, types: new Set<string>() };
+  const otherFilters = facet === "types" ? { ...filters, types: new Set<string>() } : filters;
   for (const item of items) {
     if (!matchesFilters(item, otherFilters)) continue;
     const values = facet === "types" ? [item.type] : facet === "authors" ? [item.authorKey] : item.tags;

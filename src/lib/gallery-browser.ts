@@ -109,15 +109,14 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
 
   function removeRefinement(filters: ReturnType<typeof copyGalleryFilters>, field: Refinement, value: string) {
-    if (field === "authors") filters.author = "";
-    else filters[field].delete(value);
+    filters[field].delete(value);
   }
 
   function renderRefinements(container: HTMLElement, filters: GalleryFilters, remove: (field: Refinement, value: string) => void) {
     const values: { field: Refinement; value: string; label: string }[] = [];
     filters.types.forEach((type) => values.push({ field: "types", value: type, label: FORMAT_LABELS[type] ?? type }));
     filters.tags.forEach((tag) => values.push({ field: "tags", value: tag, label: tag }));
-    if (filters.author) values.push({ field: "authors", value: filters.author, label: authorNames.get(filters.author) ?? filters.author });
+    filters.authors.forEach((author) => values.push({ field: "authors", value: author, label: authorNames.get(author) ?? author }));
     container.replaceChildren();
     for (const { field, value, label } of values) {
       const button = document.createElement("button");
@@ -211,7 +210,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   function paintDraft() {
     typeInputs.forEach((input) => { input.checked = draft.types.has(input.value); });
     tagInputs.forEach((input) => { input.checked = draft.tags.has(input.value); });
-    authorInputs.forEach((input) => { input.checked = draft.author === input.value; });
+    authorInputs.forEach((input) => { input.checked = draft.authors.has(input.value); });
     const typeCounts = countFacet(data.values(), draft, "types");
     const tagCounts = countFacet(data.values(), draft, "tags");
     const authorCounts = countFacet(data.values(), draft, "authors");
@@ -224,10 +223,9 @@ export function initGalleryBrowser(root: HTMLElement) {
     dialog.querySelectorAll<HTMLElement>("[data-author-count]").forEach((element) => {
       element.textContent = String(authorCounts.get(element.dataset.authorCount ?? "") ?? 0);
     });
-    for (const field of ["types", "tags"] as const) {
+    for (const field of ["types", "tags", "authors"] as const) {
       get<HTMLElement>(`[data-selection-count="${field}"]`).textContent = draft[field].size ? `(${draft[field].size} selected)` : "";
     }
-    get<HTMLElement>('[data-selection-count="authors"]').textContent = draft.author ? "(1 selected)" : "";
     const draftCount = [...data.values()].filter((item) => matchesFilters(item, draft)).length;
     apply.textContent = `Show ${draftCount} results`;
     get<HTMLElement>("#draft-filter-status").textContent = `${draftCount} submissions match these filters.`;
@@ -303,7 +301,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   get<HTMLButtonElement>("#clear-extra-filters").addEventListener("click", () => {
     draft.types.clear();
     draft.tags.clear();
-    draft.author = "";
+    draft.authors.clear();
     paintDraft();
   });
   dialog.addEventListener("change", (event) => {
@@ -312,7 +310,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     switch (input.name) {
       case "filter-type": input.checked ? draft.types.add(input.value) : draft.types.delete(input.value); break;
       case "filter-tag": input.checked ? draft.tags.add(input.value) : draft.tags.delete(input.value); break;
-      case "filter-author": if (input.checked) draft.author = input.value; break;
+      case "filter-author": input.checked ? draft.authors.add(input.value) : draft.authors.delete(input.value); break;
       default: return;
     }
     paintDraft();
@@ -375,8 +373,6 @@ export function initGalleryBrowser(root: HTMLElement) {
     const previous = params.toString();
     if (applied.platform) params.set("platform", applied.platform);
     else params.delete("platform");
-    if (applied.author) params.set("author", applied.author);
-    else params.delete("author");
     if (params.toString() !== previous) {
       const query = params.toString();
       history.replaceState(history.state, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);

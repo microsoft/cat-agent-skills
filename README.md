@@ -23,9 +23,13 @@ deployed as a static site to GitHub Pages.
   any selected format matches (OR), and must also match the chosen platform
   (AND). Cowork + Skills shows only Cowork skills. No selected formats is
   unrestricted; there is no All formats control.
-  Tags require **every selected tag**, so adding a tag cannot widen results;
-  option counts reflect adding that tag to the current intersection.
-  Contributor is single-select, with **All contributors** as its default/reset.
+  Tags and Contributor require **every selected value** (AND), so adding a
+  choice cannot widen results; option counts reflect adding that choice to the
+  current intersection. Empty selections are unrestricted, with no All
+  contributors control. Current submissions have one contributor each, so
+  selecting two distinct contributors intentionally returns no results; this
+  does not add multi-contributor metadata support. Selections remain removable
+  even at zero results.
   Platform pills apply immediately; dialog changes apply only
   with **Show results**. Closing the dialog discards its draft. Applied
   formats, tags, and contributors appear as removable pills before platforms in
@@ -41,11 +45,10 @@ deployed as a static site to GitHub Pages.
   The URL is normalized to that visible platform choice without changing other
   parameters. Format values remain lowercase (`skill`, `plugin`, `automation`). Search,
   tags, and contributors AND-narrow the platform/format results. Every selected
-  tag is required (AND); a selected contributor must match exactly. Legacy
-  comma-separated `author` values normalize to the first nonempty value,
-  trimmed and lowercased, without changing the other filters. Unknown
-  contributors remain explicit no-match restrictions with removable chips;
-  they never silently become All contributors. Existing
+  tag and contributor is required. The `author` key preserves all supplied
+  comma-separated values, trimmed, lowercased, and deduplicated; it is never
+  truncated to one contributor. Unknown contributors remain explicit no-match
+  restrictions with individual removable chips. Existing
   single-platform and single-format links still work. Tag case is preserved;
   search is case-insensitive.
 - **Sort** by Featured, Top rated, Most downloaded, Name, Newest, or Recently
