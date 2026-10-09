@@ -20,7 +20,7 @@ export interface GalleryFilters {
   platform: Platform | "";
   types: ReadonlySet<string>;
   tags: ReadonlySet<string>;
-  authors: ReadonlySet<string>;
+  author: string;
 }
 
 export function copyGalleryFilters(filters: GalleryFilters) {
@@ -28,7 +28,6 @@ export function copyGalleryFilters(filters: GalleryFilters) {
     ...filters,
     types: new Set(filters.types),
     tags: new Set(filters.tags),
-    authors: new Set(filters.authors),
   };
 }
 
@@ -45,7 +44,7 @@ export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
     platform: platforms.length === PLATFORMS.length ? "" : platforms[0] ?? "",
     types: new Set([...selections("type")].map((value) => value.toLowerCase())),
     tags: selections("tag"),
-    authors: new Set([...selections("author")].map((value) => value.toLowerCase())),
+    author: [...selections("author")][0]?.toLowerCase() ?? "",
   };
 }
 
@@ -55,7 +54,7 @@ export function galleryFilterParams(filters: GalleryFilters): URLSearchParams {
   if (filters.platform) params.set("platform", filters.platform);
   if (filters.types.size) params.set("type", [...filters.types].join(","));
   if (filters.tags.size) params.set("tag", [...filters.tags].join(","));
-  if (filters.authors.size) params.set("author", [...filters.authors].join(","));
+  if (filters.author) params.set("author", filters.author);
   return params;
 }
 
@@ -68,22 +67,23 @@ export function matchesFilters(item: FilterableSubmission, filters: GalleryFilte
     (!filters.query || text.includes(filters.query.trim().toLowerCase())) &&
     (!filters.platform || item.platforms.includes(filters.platform)) &&
     (!filters.types.size || filters.types.has(item.type)) &&
-    (!filters.tags.size || item.tags.some((tag) => filters.tags.has(tag))) &&
-    (!filters.authors.size || filters.authors.has(item.authorKey))
+    [...filters.tags].every((tag) => item.tags.includes(tag)) &&
+    (!filters.author || filters.author === item.authorKey)
   );
 }
 
-/** Count each option against the other facets, including platform and format selections. */
+/** Tag counts include selected tags so adding another tag can only narrow the results. */
 export function countFacet(
   items: Iterable<FilterableSubmission>,
   filters: GalleryFilters,
-  facet: "tags" | "authors",
+  facet: "types" | "tags" | "authors",
 ): Map<string, number> {
   const counts = new Map<string, number>();
-  const otherFilters = { ...filters, [facet]: new Set<string>() };
+  const otherFilters = facet === "tags" ? filters
+    : facet === "authors" ? { ...filters, author: "" } : { ...filters, types: new Set<string>() };
   for (const item of items) {
     if (!matchesFilters(item, otherFilters)) continue;
-    const values = facet === "authors" ? [item.authorKey] : item.tags;
+    const values = facet === "types" ? [item.type] : facet === "authors" ? [item.authorKey] : item.tags;
     for (const value of new Set(values)) {
       if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
     }

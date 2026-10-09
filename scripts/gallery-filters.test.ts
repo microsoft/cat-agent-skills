@@ -8,7 +8,7 @@ import { PLATFORMS } from "../src/lib/skills";
 import { authorKey } from "../src/lib/badges";
 
 const filters: GalleryFilters = {
-  query: "", platform: "", types: new Set(), tags: new Set(), authors: new Set(),
+  query: "", platform: "", types: new Set(), tags: new Set(), author: "",
 };
 const submission: FilterableSubmission = {
   name: "Negotiation coach",
@@ -32,7 +32,7 @@ const combinations = Array.from({ length: 7 }, (_, index) =>
   PLATFORMS.filter((_, bit) => (index + 1) & (1 << bit)),
 ).flatMap((platforms) => formats.map((type) => ({ ...submission, platforms, type })));
 
-test("fixed platforms and formats retain the existing vocabulary and order", () => {
+test("platform and format choices retain the existing vocabulary and order", () => {
   assert.deepEqual(PLATFORMS, ["Cowork", "Copilot Studio", "Scout"]);
   assert.deepEqual(Object.entries(FORMAT_LABELS), [
     ["skill", "Skills"], ["plugin", "Plugins"], ["automation", "Automations"],
@@ -80,15 +80,18 @@ test("search, tags and contributors AND-narrow all 32 platform/format combinatio
       const types = new Set(formats.filter((_, index) => mask & (1 << index)));
       for (const narrowing of [
         { query: "report" },
+        { tags: new Set(["reports"]) },
+        { tags: new Set(["reports", "business"]) },
         { tags: new Set(["missing", "reports"]) },
-        { authors: new Set(["bea", "missing"]) },
-        { query: "report", tags: new Set(["reports", "missing"]), authors: new Set(["bea", "cy"]) },
+        { author: "bea" },
+        { author: "missing" },
+        { query: "report", tags: new Set(["reports", "business"]), author: "bea" },
       ]) {
         const expected = items.filter((item) => (!platform || item.platforms.includes(platform)) &&
           (!types.size || types.has(item.type)) &&
           (!narrowing.query || item.name.toLowerCase().includes(narrowing.query)) &&
-          (!narrowing.tags || item.tags.includes("reports")) &&
-          (!narrowing.authors || narrowing.authors.has(item.authorKey)));
+          (!narrowing.tags || [...narrowing.tags].every((tag) => item.tags.includes(tag))) &&
+          (!narrowing.author || narrowing.author === item.authorKey));
         assert.deepEqual(items.filter((item) => matchesFilters(item, {
           ...filters, platform, types, ...narrowing,
         })), expected, `${platform || "All"} / subset ${mask}`);
@@ -97,20 +100,41 @@ test("search, tags and contributors AND-narrow all 32 platform/format combinatio
   }
 });
 
-test("tags and contributors retain internal OR but cannot widen fixed group matches", () => {
+test("tags require every selected value and the selected contributor must match exactly", () => {
   const selected: GalleryFilters = {
     query: "NEGOTIATION",
     platform: "Cowork", types: new Set(["skill"]),
-    tags: new Set(["missing", "BATNA"]),
-    authors: new Set(["missing", "ada-example"]),
+    tags: new Set(["BATNA", "ZOPA"]),
+    author: "ada-example",
   };
   assert.deepEqual(items.filter((item) => matchesFilters(item, selected)), [submission]);
   for (const changed of [
-    { platform: "Scout", types: new Set(["plugin"]) }, { tags: new Set(["reports"]) },
-    { authors: new Set(["bea"]) }, { query: "absent" },
+    { platform: "Scout", types: new Set(["plugin"]) }, { tags: new Set(["BATNA", "missing"]) },
+    { author: "bea" }, { query: "absent" },
   ] satisfies Partial<GalleryFilters>[]) {
     assert.equal(matchesFilters(submission, { ...selected, ...changed }), false);
   }
+});
+
+test("adding tags never widens matches and tag counts reflect the existing intersection", () => {
+  const tags = ["BATNA", "ZOPA", "business", "reports", "missing"];
+  for (let mask = 0; mask < 1 << tags.length; mask++) {
+    const selected = { ...filters, tags: new Set(tags.filter((_, bit) => mask & (1 << bit))) };
+    const before = items.filter((item) => matchesFilters(item, selected));
+    const counts = countFacet(items, selected, "tags");
+    for (const tag of tags) {
+      const narrowed = { ...selected, tags: new Set([...selected.tags, tag]) };
+      const after = items.filter((item) => matchesFilters(item, narrowed));
+      assert.deepEqual(after, before.filter((item) => item.tags.includes(tag)));
+      assert.equal(counts.get(tag) ?? 0, after.length);
+    }
+  }
+  assert.deepEqual(items.filter((item) => matchesFilters(item, {
+    ...filters, tags: new Set(["BATNA", "ZOPA"]),
+  })), [submission]);
+  assert.equal(items.filter((item) => matchesFilters(item, {
+    ...filters, tags: new Set(["BATNA", "reports"]),
+  })).length, 0);
 });
 
 test("single-platform and multi-format URLs round-trip with other filters", () => {
@@ -121,7 +145,7 @@ test("single-platform and multi-format URLs round-trip with other filters", () =
       assert.equal(parsed.platform, platform);
       assert.deepEqual([...parsed.types], type.split(","));
       assert.deepEqual([...parsed.tags], ["BATNA"]);
-      assert.deepEqual([...parsed.authors], ["ada-example"]);
+      assert.equal(parsed.author, "ada-example");
       assert.deepEqual(parseGalleryFilters(galleryFilterParams(parsed)), parsed);
     }
   }
@@ -152,7 +176,7 @@ test("legacy platform unions normalize to All or the first valid choice without 
     assert.deepEqual([...parsed.types], ["automation", "plugin", "skill"]);
     assert.equal(parsed.query, "report");
     assert.deepEqual([...parsed.tags], ["BATNA", "ZOPA"]);
-    assert.deepEqual([...parsed.authors], ["ada-example"]);
+    assert.equal(parsed.author, "ada-example");
     assert.deepEqual(parseGalleryFilters(galleryFilterParams(parsed)), parsed);
   }
 });
@@ -165,9 +189,48 @@ test("query parsing trims and deduplicates selections without changing tag case"
   assert.equal(parsed.platform, "Cowork");
   assert.deepEqual([...parsed.types], ["skill", "plugin"]);
   assert.deepEqual([...parsed.tags], ["BATNA", "ZOPA"]);
-  assert.deepEqual([...parsed.authors], ["ada-example"]);
+  assert.equal(parsed.author, "ada-example");
   assert.equal(parsed.query, "negotiation");
   assert.ok(matchesFilters(submission, parsed));
+});
+
+test("legacy contributor URLs use the first nonempty value, including unknown contributors", () => {
+  for (const [legacy, author] of [
+    ["", ""], [" , , ", ""], ["Ada-Example", "ada-example"],
+    [" , Bea,cy,BEA", "bea"], ["unknown,ada-example", "unknown"],
+    ["CY,bea", "cy"],
+  ]) {
+    const parsed = parseGalleryFilters(new URLSearchParams({
+      author: legacy, platform: "Scout", type: "skill,automation", tag: "BATNA,ZOPA", q: "REPORT",
+    }));
+    assert.equal(parsed.author, author);
+    assert.equal(parsed.platform, "Scout");
+    assert.deepEqual([...parsed.types], ["skill", "automation"]);
+    assert.deepEqual([...parsed.tags], ["BATNA", "ZOPA"]);
+    assert.equal(parsed.query, "report");
+    assert.equal(galleryFilterParams(parsed).get("author"), author || null);
+    assert.deepEqual(parseGalleryFilters(galleryFilterParams(parsed)), parsed);
+  }
+  assert.equal(items.filter((item) => matchesFilters(item, parseGalleryFilters(
+    new URLSearchParams("author=unknown,ada-example"),
+  ))).length, 0);
+});
+
+test("contributor replacement and All reset preserve formats, required tags and search", () => {
+  const selected = copyGalleryFilters({
+    ...filters, platform: "Scout", types: new Set(["skill", "automation"]),
+    tags: new Set(["reports"]), query: "report", author: "bea",
+  });
+  assert.deepEqual(items.filter((item) => matchesFilters(item, selected)), [items[1]]);
+  assert.deepEqual(countFacet(items, selected, "authors"), new Map([["bea", 1], ["cy", 1]]));
+  selected.author = "cy";
+  assert.deepEqual(items.filter((item) => matchesFilters(item, selected)), [items[3]]);
+  selected.author = "";
+  assert.deepEqual(items.filter((item) => matchesFilters(item, selected)), [items[1], items[3]]);
+  assert.equal(selected.platform, "Scout");
+  assert.deepEqual([...selected.types], ["skill", "automation"]);
+  assert.deepEqual([...selected.tags], ["reports"]);
+  assert.equal(selected.query, "report");
 });
 
 test("encoded tag and contributor gallery links round-trip under the Pages base", () => {
@@ -182,7 +245,7 @@ test("encoded tag and contributor gallery links round-trip under the Pages base"
     const key = authorKey(login, name);
     const href = `/cat-agent-skills/?author=${encodeURIComponent(key)}`;
     const parsed = parseGalleryFilters(new URL(href, "https://example.test").searchParams);
-    assert.deepEqual([...parsed.authors], [key]);
+    assert.equal(parsed.author, key);
     assert.ok(matchesFilters({ ...submission, authorKey: key }, parsed));
   }
 });
@@ -206,42 +269,71 @@ test("search recognizes every singular and plural format", () => {
 test("draft selections are independent from applied selections until copied back", () => {
   const applied = copyGalleryFilters({
     ...filters, query: "reports", platform: "Scout",
-    types: new Set(["skill"]), tags: new Set(["reports"]), authors: new Set(["cy"]),
+    types: new Set(["skill"]), tags: new Set(["reports"]), author: "cy",
   });
   const original = galleryFilterParams(applied).toString();
   const draft = copyGalleryFilters(applied);
   draft.tags.clear();
-  draft.authors.add("bea");
+  draft.author = "bea";
   draft.platform = "Cowork";
   draft.types.add("automation");
   assert.equal(galleryFilterParams(applied).toString(), original);
+  assert.equal(applied.author, "cy");
   const committed = copyGalleryFilters(draft);
   draft.tags.add("business");
   assert.equal(committed.tags.size, 0);
   assert.equal(committed.platform, "Cowork");
+  assert.equal(committed.author, "bea");
   assert.deepEqual([...committed.types], ["skill", "automation"]);
   draft.types.clear();
   assert.equal(committed.types.size, 2);
 });
 
-test("clearing extra draft filters retains platform, format selections and search", () => {
+test("clearing extra draft filters clears formats, tags and authors but retains platform and search", () => {
   const draft = copyGalleryFilters({
     ...filters, query: "report", platform: "Cowork",
-    types: new Set(["plugin"]), tags: new Set(["reports"]), authors: new Set(["bea"]),
+    types: new Set(["automation"]), tags: new Set(["reports"]), author: "bea",
   });
+  draft.types.clear();
   draft.tags.clear();
-  draft.authors.clear();
+  draft.author = "";
   assert.equal(draft.query, "report");
   assert.equal(draft.platform, "Cowork");
-  assert.deepEqual([...draft.types], ["plugin"]);
+  assert.equal(draft.types.size, 0);
   assert.deepEqual(items.filter((item) => matchesFilters(item, draft)), [items[2]]);
+});
+
+test("removing one applied format preserves remaining formats and all other filters", () => {
+  const applied = copyGalleryFilters({
+    ...filters, platform: "Scout", query: "report", types: new Set(formats),
+    tags: new Set(["reports"]), author: "bea",
+  });
+  applied.types.delete("skill");
+  assert.deepEqual([...applied.types], ["plugin", "automation"]);
+  assert.equal(applied.platform, "Scout");
+  assert.equal(applied.query, "report");
+  assert.deepEqual([...applied.tags], ["reports"]);
+  assert.equal(applied.author, "bea");
+  assert.deepEqual(items.filter((item) => matchesFilters(item, applied)), [items[1]]);
+  assert.deepEqual(parseGalleryFilters(galleryFilterParams(applied)), applied);
+});
+
+test("format counts omit only the format facet, respecting platform, search, tags and contributors", () => {
+  const selected: GalleryFilters = {
+    ...filters, platform: "Scout", types: new Set(["plugin"]), query: "report",
+    tags: new Set(["reports"]), author: "",
+  };
+  assert.deepEqual(countFacet(items, selected, "types"), new Map([["automation", 1], ["skill", 1]]));
+  assert.deepEqual(countFacet(items, { ...selected, author: "cy" }, "types"), new Map([["skill", 1]]));
+  assert.deepEqual(countFacet(items, { ...selected, tags: new Set(["business"]) }, "types"), new Map());
+  assert.deepEqual(countFacet(items, { ...selected, query: "missing" }, "types"), new Map());
 });
 
 test("facet counts respect platform/formats, query and other facets, counting each item once", () => {
   const selected: GalleryFilters = { ...filters, platform: "Cowork", types: new Set(["skill", "plugin"]), query: "report" };
   assert.deepEqual(countFacet(items, selected, "tags"), new Map([["reports", 1], ["business", 1]]));
   assert.deepEqual(countFacet(items, selected, "authors"), new Map([["bea", 1]]));
-  const refined = { ...selected, tags: new Set(["business"]), authors: new Set(["bea"]) };
+  const refined = { ...selected, tags: new Set(["business"]), author: "bea" };
   assert.deepEqual(countFacet(items, refined, "tags"), new Map([["reports", 1], ["business", 1]]));
   assert.deepEqual(countFacet(items, refined, "authors"), new Map([["bea", 1]]));
   assert.deepEqual(countFacet([{ ...submission, tags: ["BATNA", "BATNA"] }], filters, "tags"), new Map([["BATNA", 1]]));

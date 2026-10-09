@@ -21,18 +21,12 @@ const { tags, contributors, total } = Astro.props;
         </svg>
         Filters <span id="filters-count" hidden class="filter-count"></span>
       </button>
-      <div id="filter-options" class="filter-options" role="group" aria-label="Platform and format filters">
+      <div id="filter-options" class="filter-options" role="group" aria-label="Platform and applied filters">
         <div id="applied-filters" hidden class="applied-filters" role="group" aria-label="Applied extra filters"></div>
         <div class="fixed-options" role="radiogroup" aria-label="Platform">
           <button type="button" role="radio" data-platform="" aria-checked="true" tabindex="0" class="fixed-choice">All platforms</button>
           {PLATFORMS.map((platform) => (
             <button type="button" role="radio" data-platform={platform} aria-checked="false" tabindex="-1" class="fixed-choice">{platform}</button>
-          ))}
-        </div>
-        <span class="mx-1 h-5 w-px shrink-0 self-center bg-border" aria-hidden="true"></span>
-        <div class="fixed-options" role="group" aria-label="Formats (match any selected)">
-          {Object.entries(FORMAT_LABELS).map(([value, label]) => (
-            <button type="button" data-type={value} aria-pressed="false" class="fixed-choice">{label}</button>
           ))}
         </div>
       </div>
@@ -49,9 +43,21 @@ const { tags, contributors, total } = Astro.props;
       </button>
     </header>
     <div class="dialog-body px-5 sm:px-6">
-      <p id="filters-scope" class="pt-5 text-sm text-muted">Refine submissions matching the selected platform and formats. Tags and contributors match any selected option within each filter.</p>
+      <p id="filters-scope" class="pt-5 text-sm text-muted">Match any selected format, require every selected tag, and choose one contributor. Each filter narrows the selected platform.</p>
       <p id="filters-context" class="mt-1 text-sm text-muted"></p>
       <div id="draft-selections" hidden class="mt-3 flex flex-wrap gap-2" aria-label="Selected extra filters"></div>
+
+      <fieldset class="filter-section">
+        <legend>Format <span data-selection-count="types" class="text-sm font-normal text-muted"></span></legend>
+        <div class="flex flex-wrap gap-2 p-1">
+          {Object.entries(FORMAT_LABELS).map(([value, label]) => (
+            <label class="option-label">
+              <input type="checkbox" name="filter-type" value={value} />
+              <span class="check-option">{label}<span data-type-count={value} class="text-xs text-muted"></span></span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <fieldset class="filter-section">
         <legend>Tags <span data-selection-count="tags" class="text-sm font-normal text-muted"></span></legend>
@@ -73,9 +79,13 @@ const { tags, contributors, total } = Astro.props;
         <label for="filter-author-search" class="sr-only">Search contributors</label>
         <input id="filter-author-search" type="search" placeholder="Search contributors" autocomplete="off" class="picker-search" />
         <div id="filter-author-options" class="mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto p-1">
+          <label class="author-option">
+            <input type="radio" name="filter-author" value="" checked class="h-4 w-4 shrink-0 accent-accent" />
+            <span class="text-sm font-medium">All contributors</span>
+          </label>
           {contributors.map((contributor) => (
             <label class="author-option" data-author-option={contributor.key} data-author-name={contributor.name} data-author-search={`${contributor.name} ${contributor.login}`.toLowerCase()}>
-              <input type="checkbox" name="filter-author" value={contributor.key} class="h-4 w-4 shrink-0 accent-accent" />
+              <input type="radio" name="filter-author" value={contributor.key} class="h-4 w-4 shrink-0 accent-accent" />
               <span class="min-w-0 flex-1">
                 <span class="block truncate text-sm font-medium">{contributor.name}</span>
                 {contributor.login && <span class="block truncate text-xs text-muted">@{contributor.login}</span>}
@@ -136,7 +146,7 @@ const { tags, contributors, total } = Astro.props;
     font-weight: 600;
   }
   .fixed-choice { flex-shrink: 0; border-radius: 999px; color: var(--fg); white-space: nowrap; }
-  .applied-filters :global(button), .fixed-choice[aria-pressed="true"], .fixed-choice[aria-checked="true"] {
+  .applied-filters :global(button), .fixed-choice[aria-checked="true"] {
     border-color: color-mix(in srgb, var(--fg) 45%, var(--border));
     background: var(--surface);
   }

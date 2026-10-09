@@ -7,7 +7,7 @@ import {
 
 const SORTS = ["featured", "rating", "downloads", "name", "newest", "updated"] as const;
 type SortMode = (typeof SORTS)[number];
-type Refinement = "tags" | "authors";
+type Refinement = "types" | "tags" | "authors";
 const BATCH = 12;
 
 export function initGalleryBrowser(root: HTMLElement) {
@@ -32,8 +32,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   const search = get<HTMLInputElement>("#skill-search");
   const filterOptions = get<HTMLElement>("#filter-options");
   const appliedChips = get<HTMLElement>("#applied-filters");
-  const fixedPills = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-platform], button[data-type]"));
-  const platformPills = fixedPills.filter((button) => button.dataset.platform !== undefined);
+  const platformPills = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-platform]"));
   const sortSelect = get<HTMLSelectElement>("#sort-select");
   const count = get<HTMLElement>("#result-count");
   const empty = get<HTMLElement>("#empty-state");
@@ -46,6 +45,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   const dialogBody = get<HTMLElement>(".dialog-body");
   const draftChips = get<HTMLElement>("#draft-selections");
   const apply = get<HTMLButtonElement>("#apply-filters");
+  const typeInputs = Array.from(dialog.querySelectorAll<HTMLInputElement>('input[name="filter-type"]'));
   const tagInputs = Array.from(dialog.querySelectorAll<HTMLInputElement>('input[name="filter-tag"]'));
   const authorInputs = Array.from(dialog.querySelectorAll<HTMLInputElement>('input[name="filter-author"]'));
   const tagSearch = get<HTMLInputElement>("#filter-tag-search");
@@ -109,20 +109,22 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
 
   function removeRefinement(filters: ReturnType<typeof copyGalleryFilters>, field: Refinement, value: string) {
-    filters[field].delete(value);
+    if (field === "authors") filters.author = "";
+    else filters[field].delete(value);
   }
 
   function renderRefinements(container: HTMLElement, filters: GalleryFilters, remove: (field: Refinement, value: string) => void) {
     const values: { field: Refinement; value: string; label: string }[] = [];
+    filters.types.forEach((type) => values.push({ field: "types", value: type, label: FORMAT_LABELS[type] ?? type }));
     filters.tags.forEach((tag) => values.push({ field: "tags", value: tag, label: tag }));
-    filters.authors.forEach((author) => values.push({ field: "authors", value: author, label: authorNames.get(author) ?? author }));
+    if (filters.author) values.push({ field: "authors", value: filters.author, label: authorNames.get(filters.author) ?? filters.author });
     container.replaceChildren();
     for (const { field, value, label } of values) {
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.filterKey = `${field}:${value}`;
       button.className = "inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent";
-      const fieldLabel = field === "authors" ? "contributor" : "tag";
+      const fieldLabel = field === "types" ? "format" : field === "authors" ? "contributor" : "tag";
       button.setAttribute("aria-label", `Remove ${fieldLabel} filter: ${label}`);
       button.title = label;
       const text = document.createElement("span");
@@ -139,14 +141,10 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
 
   function paintApplied() {
-    fixedPills.forEach((button) => {
-      if (button.dataset.platform !== undefined) {
-        const selected = applied.platform === button.dataset.platform;
-        button.setAttribute("aria-checked", String(selected));
-        button.tabIndex = selected ? 0 : -1;
-      } else {
-        button.setAttribute("aria-pressed", String(applied.types.has(button.dataset.type!)));
-      }
+    platformPills.forEach((button) => {
+      const selected = applied.platform === button.dataset.platform;
+      button.setAttribute("aria-checked", String(selected));
+      button.tabIndex = selected ? 0 : -1;
     });
     const total = renderRefinements(appliedChips, applied, (field, value) => {
       const buttons = Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button"));
@@ -168,9 +166,7 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function revealCurrentFilter() {
     const firstApplied = appliedChips.querySelector<HTMLButtonElement>("button");
-    const selected = fixedPills.find((button) =>
-      button.getAttribute("aria-checked") === "true" || button.getAttribute("aria-pressed") === "true",
-    );
+    const selected = platformPills.find((button) => button.getAttribute("aria-checked") === "true");
     const button = firstApplied ?? selected;
     if (button) revealFilter(button);
   }
@@ -213,19 +209,25 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
 
   function paintDraft() {
+    typeInputs.forEach((input) => { input.checked = draft.types.has(input.value); });
     tagInputs.forEach((input) => { input.checked = draft.tags.has(input.value); });
-    authorInputs.forEach((input) => { input.checked = draft.authors.has(input.value); });
+    authorInputs.forEach((input) => { input.checked = draft.author === input.value; });
+    const typeCounts = countFacet(data.values(), draft, "types");
     const tagCounts = countFacet(data.values(), draft, "tags");
     const authorCounts = countFacet(data.values(), draft, "authors");
+    dialog.querySelectorAll<HTMLElement>("[data-type-count]").forEach((element) => {
+      element.textContent = String(typeCounts.get(element.dataset.typeCount ?? "") ?? 0);
+    });
     dialog.querySelectorAll<HTMLElement>("[data-tag-count]").forEach((element) => {
       element.textContent = String(tagCounts.get(element.dataset.tagCount ?? "") ?? 0);
     });
     dialog.querySelectorAll<HTMLElement>("[data-author-count]").forEach((element) => {
       element.textContent = String(authorCounts.get(element.dataset.authorCount ?? "") ?? 0);
     });
-    for (const field of ["tags", "authors"] as const) {
+    for (const field of ["types", "tags"] as const) {
       get<HTMLElement>(`[data-selection-count="${field}"]`).textContent = draft[field].size ? `(${draft[field].size} selected)` : "";
     }
+    get<HTMLElement>('[data-selection-count="authors"]').textContent = draft.author ? "(1 selected)" : "";
     const draftCount = [...data.values()].filter((item) => matchesFilters(item, draft)).length;
     apply.textContent = `Show ${draftCount} results`;
     get<HTMLElement>("#draft-filter-status").textContent = `${draftCount} submissions match these filters.`;
@@ -247,7 +249,6 @@ export function initGalleryBrowser(root: HTMLElement) {
     filterPicker(authorOptions, "", "authorSearch", get("#author-search-empty"));
     get<HTMLElement>("#filters-context").textContent = [
       applied.platform || "All platforms",
-      applied.types.size ? [...applied.types].map((type) => FORMAT_LABELS[type] ?? type).join(" or ") : "All formats",
       applied.query ? `Search: ${search.value}` : "",
     ].filter(Boolean).join(" \u00b7 ");
     paintDraft();
@@ -300,16 +301,18 @@ export function initGalleryBrowser(root: HTMLElement) {
     dialog.close();
   });
   get<HTMLButtonElement>("#clear-extra-filters").addEventListener("click", () => {
+    draft.types.clear();
     draft.tags.clear();
-    draft.authors.clear();
+    draft.author = "";
     paintDraft();
   });
   dialog.addEventListener("change", (event) => {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
     switch (input.name) {
+      case "filter-type": input.checked ? draft.types.add(input.value) : draft.types.delete(input.value); break;
       case "filter-tag": input.checked ? draft.tags.add(input.value) : draft.tags.delete(input.value); break;
-      case "filter-author": input.checked ? draft.authors.add(input.value) : draft.authors.delete(input.value); break;
+      case "filter-author": if (input.checked) draft.author = input.value; break;
       default: return;
     }
     paintDraft();
@@ -325,22 +328,14 @@ export function initGalleryBrowser(root: HTMLElement) {
     const button = event.target;
     if (button instanceof HTMLButtonElement && button.matches(":focus-visible")) revealFilter(button);
   });
-  fixedPills.forEach((button) => {
+  platformPills.forEach((button, index) => {
     button.addEventListener("click", () => {
       if (button.dataset.platform === applied.platform) return;
       flushSearch();
-      if (button.dataset.platform !== undefined) {
-        applied.platform = PLATFORMS.find((platform) => platform === button.dataset.platform) ?? "";
-      } else {
-        const value = button.dataset.type!;
-        if (applied.types.has(value)) applied.types.delete(value);
-        else applied.types.add(value);
-      }
+      applied.platform = PLATFORMS.find((platform) => platform === button.dataset.platform) ?? "";
       commit();
       revealFilter(button);
     });
-  });
-  platformPills.forEach((button, index) => {
     button.addEventListener("keydown", (event) => {
       const direction = ["ArrowRight", "ArrowDown"].includes(event.key) ? 1
         : ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 0;
@@ -380,6 +375,8 @@ export function initGalleryBrowser(root: HTMLElement) {
     const previous = params.toString();
     if (applied.platform) params.set("platform", applied.platform);
     else params.delete("platform");
+    if (applied.author) params.set("author", applied.author);
+    else params.delete("author");
     if (params.toString() !== previous) {
       const query = params.toString();
       history.replaceState(history.state, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);

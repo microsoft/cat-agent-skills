@@ -13,20 +13,25 @@ deployed as a static site to GitHub Pages.
 
 - **One infinite-scroll gallery** with compact, consistently sized cards and
   auto-generated monograms (no image assets to maintain).
-- **Platform and format filtering** in one horizontal row: exclusive
-  **All platforms** (default), Cowork, Copilot Studio, and Scout pills, then a
-  subtle separator, then multi-select Skills, Plugins, and Automations.
+- **Platform filtering** in one horizontal row: exclusive
+  **All platforms** (default), Cowork, Copilot Studio, and Scout pills.
   Choosing a platform replaces the selection; clicking the active option keeps
-  it selected. All platforms clears only the platform restriction. Formats
-  match any selected value (OR), and must also match the chosen platform (AND):
-  Cowork + Skills shows only Cowork skills. No selected formats is unrestricted.
+  it selected. All platforms clears only the platform restriction.
   Platform choices support arrow keys and Space, with one keyboard tab stop.
-- **Client-side search** and a **Filters dialog** for Tags and Contributor.
-  Fixed pills apply immediately; dialog changes apply only
-  with **Show results**. Closing the dialog discards its draft. Applied extra
-  filters appear as removable pills before the fixed pills in the same scrolling
-  row. Clear extra filters clears only tags/contributors, keeping the fixed
-  platform/format selections and search.
+- **Client-side search** and a **Filters dialog** for Format, Tags, and
+  Contributor. Format offers multi-select Skills, Plugins, and Automations:
+  any selected format matches (OR), and must also match the chosen platform
+  (AND). Cowork + Skills shows only Cowork skills. No selected formats is
+  unrestricted; there is no All formats control.
+  Tags require **every selected tag**, so adding a tag cannot widen results;
+  option counts reflect adding that tag to the current intersection.
+  Contributor is single-select, with **All contributors** as its default/reset.
+  Platform pills apply immediately; dialog changes apply only
+  with **Show results**. Closing the dialog discards its draft. Applied
+  formats, tags, and contributors appear as removable pills before platforms in
+  the same scrolling row, with each choice counted in the Filters badge.
+  Clear extra filters clears draft formats/tags/contributors, keeping the
+  platform selection, search, and sort.
 - **Shareable filters** using `?q=`, `?platform=`, `?type=`, `?tag=`, and `?author=`.
   `platform` is a single value (omitted for All platforms); `type` still accepts
   single values or comma-separated selections, including all three formats.
@@ -35,8 +40,12 @@ deployed as a static site to GitHub Pages.
   otherwise the first valid choice wins, or All platforms if none are valid.
   The URL is normalized to that visible platform choice without changing other
   parameters. Format values remain lowercase (`skill`, `plugin`, `automation`). Search,
-  tags, and contributors AND-narrow the platform/format results; tags and
-  contributors each match any selected value (OR within that facet). Existing
+  tags, and contributors AND-narrow the platform/format results. Every selected
+  tag is required (AND); a selected contributor must match exactly. Legacy
+  comma-separated `author` values normalize to the first nonempty value,
+  trimmed and lowercased, without changing the other filters. Unknown
+  contributors remain explicit no-match restrictions with removable chips;
+  they never silently become All contributors. Existing
   single-platform and single-format links still work. Tag case is preserved;
   search is case-insensitive.
 - **Sort** by Featured, Top rated, Most downloaded, Name, Newest, or Recently
