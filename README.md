@@ -52,8 +52,10 @@ deployed as a static site to GitHub Pages.
   single-platform and single-format links still work. Tag case is preserved;
   search is case-insensitive.
 - **Sort** by Featured, Top rated, Most downloaded, Name, Newest, or Recently
-  updated. Samples stay last; browser Back restores filters, revealed cards, and
-  scroll position.
+  updated. Samples stay last; browser Back/Forward restores filters, revealed
+  cards, and scroll position per history entry, including separate visits to
+  the same filter URL. Reload and returning from a detail page preserve the
+  current entry's position too.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
 - **Skill ratings**: 👍 a skill with your GitHub account (via GitHub
   Discussions); the gallery bakes in the counts and offers a "Top rated" sort.

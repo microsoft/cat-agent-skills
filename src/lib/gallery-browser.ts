@@ -1,4 +1,5 @@
 import { compareNewest, compareRecentlyUpdated } from "./gallery-sort";
+import { GalleryHistory } from "./gallery-history";
 import { PLATFORMS } from "./skills";
 import {
   copyGalleryFilters, countFacet, FORMAT_LABELS, galleryFilterParams, matchesFilters, parseGalleryFilters,
@@ -61,6 +62,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   let searchTimer = 0;
   let savedOverflow = "";
   let savedGutter = "";
+  const galleryHistory = new GalleryHistory(history, () => sessionStorage);
 
   function queryString() {
     const params = galleryFilterParams(applied);
@@ -75,6 +77,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     saveScroll();
     if (replace) history.replaceState(null, "", next);
     else history.pushState(null, "", next);
+    galleryHistory.activate();
   }
 
   const number = (element: HTMLElement, key: string) => Number(element.dataset[key] ?? "0") || 0;
@@ -180,13 +183,13 @@ export function initGalleryBrowser(root: HTMLElement) {
     if (offset) filterOptions.scrollBy({ left: offset, behavior: "instant" });
   }
 
-  function refilter() {
+  function refilter(fillViewport = true) {
     matched = sorted(items.filter((item) => matchesFilters(data.get(item)!, applied)));
     const matchingSet = new Set(matched);
     gallery.append(...matched, ...items.filter((item) => !matchingSet.has(item)));
     shown = BATCH;
     renderGrid();
-    fill();
+    if (fillViewport) fill();
     status.textContent = `${matched.length} submissions match.`;
     paintApplied();
   }
@@ -366,8 +369,9 @@ export function initGalleryBrowser(root: HTMLElement) {
   new ResizeObserver(() => { revealCurrentFilter(); fill(); }).observe(filterOptions);
   document.fonts.ready.then(revealCurrentFilter);
 
-  function initFromUrl() {
+  function initFromUrl(restorePosition = false) {
     clearTimeout(searchTimer);
+    galleryHistory.activate();
     const params = new URLSearchParams(location.search);
     applied = copyGalleryFilters(parseGalleryFilters(params));
     const previous = params.toString();
@@ -381,50 +385,33 @@ export function initGalleryBrowser(root: HTMLElement) {
     sortMode = SORTS.find((sort) => sort === params.get("sort")) ?? "featured";
     sortSelect.value = sortMode;
     search.value = applied.query;
-    refilter();
+    refilter(false);
+    if (restorePosition) restoreScroll();
+    fill();
   }
 
-  const scrollKey = () => `gallery-scroll:${location.pathname}${location.search}`;
   function saveScroll() {
-    const position = { shown, y: scrollY };
-    history.replaceState({ ...history.state, gallery: position }, "");
-    try {
-      sessionStorage.setItem(scrollKey(), JSON.stringify(position));
-    } catch (error) {
-      console.warn("Could not save gallery position.", error);
-    }
+    galleryHistory.save({ shown, y: scrollY });
   }
   function restoreScroll() {
-    try {
-      const value: unknown = history.state?.gallery ?? JSON.parse(sessionStorage.getItem(scrollKey()) ?? "null");
-      if (value === null) return;
-      if (typeof value !== "object" || !("shown" in value) || !("y" in value)
-        || typeof value.shown !== "number" || typeof value.y !== "number"
-        || !Number.isFinite(value.shown) || !Number.isFinite(value.y)) {
-        console.warn("Ignoring invalid saved gallery position.");
-        return;
-      }
-      shown = Math.min(Math.max(shown, value.shown), matched.length);
-      renderGrid();
-      window.scrollTo({ top: Math.max(0, value.y), behavior: "instant" });
-    } catch (error) {
-      console.warn("Could not restore gallery position.", error);
-    }
+    const position = galleryHistory.read();
+    if (!position) return;
+    shown = Math.min(Math.max(BATCH, position.shown), matched.length);
+    renderGrid();
+    window.scrollTo({ top: Math.max(0, position.y), behavior: "instant" });
   }
   history.scrollRestoration = "manual";
-  initFromUrl();
   const navigation = performance.getEntriesByType("navigation")[0];
-  if (navigation instanceof PerformanceNavigationTiming && ["back_forward", "reload"].includes(navigation.type)) restoreScroll();
+  initFromUrl(navigation instanceof PerformanceNavigationTiming && ["back_forward", "reload"].includes(navigation.type));
   window.addEventListener("popstate", () => {
+    galleryHistory.capture({ shown, y: scrollY });
     if (dialog.open) dialog.close();
-    initFromUrl();
-    restoreScroll();
+    initFromUrl(true);
   });
   window.addEventListener("pageshow", (event) => {
     if (!event.persisted) return;
     if (dialog.open) dialog.close();
-    initFromUrl();
-    restoreScroll();
+    initFromUrl(true);
   });
   window.addEventListener("pagehide", saveScroll);
   document.addEventListener("visibilitychange", () => {
