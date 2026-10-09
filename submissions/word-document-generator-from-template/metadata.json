@@ -1,0 +1,11 @@
+{
+  "name": "Fill a Word Template",
+  "description": "Fill a Word template you already have — one with placeholders, not a blank file — from approved knowledge and data. A deterministic fill engine keeps your layout, branding, tables, and page numbers, then returns a new Word document.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["word", "documents", "templates", "docx", "ooxml", "policy", "procedure", "reports", "sharepoint", "onedrive", "knowledge", "connectors"],
+  "author": "Nazish Qasim",
+  "authorUrl": "https://github.com/nazishqassim",
+  "version": "1.0.1",
+  "createdAt": "2026-08-14",
+  "updatedAt": "2026-09-21"
+}
