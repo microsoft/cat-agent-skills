@@ -2,7 +2,7 @@ import { compareNewest, compareRecentlyUpdated } from "./gallery-sort";
 import { GalleryHistory } from "./gallery-history";
 import { PLATFORMS } from "./skills";
 import {
-  copyGalleryFilters, countFacet, FORMAT_LABELS, galleryFilterParams, matchesFilters, parseGalleryFilters,
+  copyGalleryFilters, countFacet, FORMAT_LABELS, galleryFilterParams, matchesFilters, parseGalleryFilters, sameGalleryFilters,
   type FilterableSubmission, type GalleryFilters,
 } from "./gallery-filters";
 
@@ -75,9 +75,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     const next = `${location.pathname}${queryString()}`;
     if (next === `${location.pathname}${location.search}`) return;
     saveScroll();
-    if (replace) history.replaceState(null, "", next);
-    else history.pushState(null, "", next);
-    galleryHistory.activate();
+    galleryHistory.updateUrl(next, replace);
   }
 
   const number = (element: HTMLElement, key: string) => Number(element.dataset[key] ?? "0") || 0;
@@ -197,6 +195,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   function commit(replace = false) {
     syncUrl(replace);
     refilter();
+    saveScroll();
   }
 
   function flushSearch() {
@@ -294,9 +293,10 @@ export function initGalleryBrowser(root: HTMLElement) {
   });
   apply.addEventListener("click", () => {
     const previous = new Set(Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button"), (button) => button.dataset.filterKey));
-    const changed = galleryFilterParams(applied).toString() !== galleryFilterParams(draft).toString();
-    applied = copyGalleryFilters(draft);
-    if (changed) commit();
+    if (!sameGalleryFilters(applied, draft)) {
+      applied = copyGalleryFilters(draft);
+      commit();
+    }
     const added = Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button")).find((button) => !previous.has(button.dataset.filterKey));
     if (added) revealFilter(added);
     dialog.close();

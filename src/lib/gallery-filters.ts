@@ -32,6 +32,13 @@ export function copyGalleryFilters(filters: GalleryFilters) {
   };
 }
 
+export function sameGalleryFilters(a: GalleryFilters, b: GalleryFilters): boolean {
+  return a.query === b.query && a.platform === b.platform &&
+    (["types", "tags", "authors"] as const).every((field) =>
+      a[field].size === b[field].size && [...a[field]].every((value) => b[field].has(value)),
+    );
+}
+
 export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
   const selections = (key: string) => new Set(
     (params.get(key) ?? "").split(",").map((value) => value.trim()).filter(Boolean),

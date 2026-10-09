@@ -8,7 +8,7 @@ export class GalleryHistory {
   private positions = new Map<string, GalleryPosition>();
 
   constructor(
-    private history: Pick<History, "state" | "replaceState">,
+    private history: Pick<History, "state" | "replaceState" | "pushState">,
     private storage: () => Pick<Storage, "getItem" | "setItem">,
   ) {
     this.activate();
@@ -20,6 +20,12 @@ export class GalleryHistory {
     if (id !== this.entryId) {
       this.history.replaceState({ ...this.history.state, galleryEntryId: this.entryId }, "");
     }
+  }
+
+  updateUrl(url: string, replace: boolean) {
+    if (replace) this.history.replaceState(this.history.state, "", url);
+    else this.history.pushState(null, "", url);
+    this.activate();
   }
 
   // During popstate, history.state already belongs to the destination, but this ID is still the departure.

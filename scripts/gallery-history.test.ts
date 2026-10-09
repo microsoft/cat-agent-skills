@@ -9,8 +9,11 @@ class TestHistory {
   replaceState(state: Record<string, unknown> | null, _unused: string, url?: string) {
     this.entries[this.index] = { url: url ?? this.entries[this.index].url, state: structuredClone(state) };
   }
+  pushState(state: Record<string, unknown> | null, _unused: string, url?: string) {
+    this.entries.splice(++this.index, Infinity, { url: url ?? this.entries[this.index - 1].url, state: structuredClone(state) });
+  }
   push(url: string) {
-    this.entries.splice(++this.index, Infinity, { url, state: null });
+    this.pushState(null, "", url);
   }
   go(delta: number) { this.index += delta; }
 }
@@ -99,19 +102,71 @@ test("a departure save after native traversal cannot write outgoing data into de
   assert.deepEqual(positions.read(), { shown: 56, y: 1800 });
 });
 
-test("new and replaced filter entries do not inherit old positions; canonicalization preserves state", () => {
-  const { history, positions } = setup();
-  positions.save({ shown: 56, y: 1800 });
-  history.replaceState(null, "", "/?q=report");
-  positions.activate();
-  assert.equal(positions.read(), undefined);
-  positions.save({ shown: 12, y: 0 });
+test("search replacement preserves entry identity and foreign state while updating its position", () => {
+  const { history, positions, storage, stored } = setup();
+  history.replaceState({ ...history.state, marker: { preserve: true } }, "");
   const id = history.state?.galleryEntryId;
-  history.replaceState({ ...history.state, marker: "preserve" }, "", "/?q=report&platform=Cowork");
+  positions.save({ shown: 56, y: 1800 });
+  positions.updateUrl("/?q=report", true);
+  assert.equal(history.entries.length, 1);
+  assert.equal(history.entries[0].url, "/?q=report");
+  assert.equal(history.state?.galleryEntryId, id);
+  assert.deepEqual(history.state?.marker, { preserve: true });
+
+  // A committed replacement saves the refiltered position, not its pre-search snapshot.
+  positions.save({ shown: 12, y: 0 });
+  assert.deepEqual(positions.read(), { shown: 12, y: 0 });
+  assert.deepEqual(history.state?.gallery, { shown: 12, y: 0 });
+  assert.equal(stored.size, 1);
+  assert.deepEqual(new GalleryHistory(history, () => storage).read(), { shown: 12, y: 0 });
+});
+
+test("pushed filters get a fresh entry without inheriting the replaced entry's state", () => {
+  const { history, positions } = setup();
+  history.replaceState({ ...history.state, marker: "preserve" }, "");
+  positions.save({ shown: 24, y: 0 });
+  positions.updateUrl("/?q=skill", true);
+  const id = history.state?.galleryEntryId;
+  positions.updateUrl("/?q=skill&platform=Cowork", false);
+  assert.equal(history.entries.length, 2);
+  assert.notEqual(history.state?.galleryEntryId, id);
+  assert.equal(history.state?.marker, undefined);
+  assert.equal(positions.read(), undefined);
+  positions.save({ shown: 36, y: 500 });
+
+  history.go(-1);
   positions.activate();
   assert.equal(history.state?.galleryEntryId, id);
   assert.equal(history.state?.marker, "preserve");
-  assert.deepEqual(positions.read(), { shown: 12, y: 0 });
+  assert.equal(history.entries[history.index].url, "/?q=skill");
+  assert.deepEqual(positions.read(), { shown: 24, y: 0 });
+  history.go(1);
+  positions.activate();
+  assert.deepEqual(positions.read(), { shown: 36, y: 500 });
+});
+
+test("repeated search replacements keep the latest query and position through reload and traversal", () => {
+  const { history, positions, storage } = setup();
+  positions.save({ shown: 48, y: 900 });
+  positions.updateUrl("/?platform=Cowork", false);
+  const id = history.state?.galleryEntryId;
+  for (const query of ["s", "skill", "reports"]) {
+    positions.updateUrl(`/?platform=Cowork&q=${query}`, true);
+    positions.save({ shown: 12, y: 0 });
+    assert.equal(history.state?.galleryEntryId, id);
+    assert.equal(history.entries.length, 2);
+  }
+  positions.save({ shown: 24, y: 300 });
+  const reloaded = new GalleryHistory(history, () => storage);
+  assert.deepEqual(reloaded.read(), { shown: 24, y: 300 });
+  history.go(-1);
+  reloaded.activate();
+  assert.deepEqual(reloaded.read(), { shown: 48, y: 900 });
+  history.go(1);
+  reloaded.activate();
+  assert.equal(history.entries[history.index].url, "/?platform=Cowork&q=reports");
+  assert.equal(history.state?.galleryEntryId, id);
+  assert.deepEqual(reloaded.read(), { shown: 24, y: 300 });
 });
 
 test("legacy history position survives assigning an entry ID", () => {

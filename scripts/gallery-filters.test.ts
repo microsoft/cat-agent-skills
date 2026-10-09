@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  copyGalleryFilters, countFacet, FORMAT_LABELS, galleryFilterParams, matchesFilters, parseGalleryFilters,
+  copyGalleryFilters, countFacet, FORMAT_LABELS, galleryFilterParams, matchesFilters, parseGalleryFilters, sameGalleryFilters,
   type FilterableSubmission, type GalleryFilters,
 } from "../src/lib/gallery-filters";
 import { PLATFORMS } from "../src/lib/skills";
@@ -10,6 +10,46 @@ import { authorKey } from "../src/lib/badges";
 const filters: GalleryFilters = {
   query: "", platform: "", types: new Set(), tags: new Set(), authors: new Set(),
 };
+
+for (const field of ["types", "tags", "authors"] as const) {
+  for (const clear of [false, true]) {
+    test(`${field} ${clear ? "clear/reselect" : "off/on"} is a semantic no-op without changing selection order`, () => {
+      const applied = copyGalleryFilters(parseGalleryFilters(new URLSearchParams(
+        "q=skill&platform=Cowork&type=skill,automation&tag=BATNA,ZOPA&author=ada,bea",
+      )));
+      const before = galleryFilterParams(applied).toString();
+      const draft = copyGalleryFilters(applied);
+      const [first, second] = [...draft[field]];
+      if (clear) {
+        draft[field].clear();
+        draft[field].add(second);
+      } else {
+        draft[field].delete(first);
+      }
+      draft[field].add(first);
+      assert.notDeepEqual([...draft[field]], [...applied[field]]);
+      assert.equal(sameGalleryFilters(applied, draft), true);
+      assert.equal(sameGalleryFilters(draft, applied), true);
+      assert.equal(galleryFilterParams(applied).toString(), before);
+    });
+  }
+
+  test(`${field} additions, removals and equal-size replacements are genuine changes`, () => {
+    const applied = { ...filters, [field]: new Set(["first", "second"]) };
+    for (const values of [["first"], ["first", "second", "third"], ["first", "third"], []]) {
+      const draft = { ...applied, [field]: new Set(values) };
+      assert.equal(sameGalleryFilters(applied, draft), false);
+      assert.equal(sameGalleryFilters(draft, applied), false);
+    }
+  });
+}
+
+test("semantic filter equality compares query and platform and accepts independent empty drafts", () => {
+  assert.equal(sameGalleryFilters(filters, copyGalleryFilters(filters)), true);
+  assert.equal(sameGalleryFilters(filters, { ...filters, query: "skill" }), false);
+  assert.equal(sameGalleryFilters(filters, { ...filters, platform: "Cowork" }), false);
+});
+
 const submission: FilterableSubmission = {
   name: "Negotiation coach",
   description: "Prepare a negotiation strategy",

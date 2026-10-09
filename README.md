@@ -35,7 +35,9 @@ deployed as a static site to GitHub Pages.
   formats, tags, and contributors appear as removable pills before platforms in
   the same scrolling row, with each choice counted in the Filters badge.
   Clear extra filters clears draft formats/tags/contributors, keeping the
-  platform selection, search, and sort.
+  platform selection, search, and sort. Applying the same selections after
+  toggling them off/on or clearing/reselecting preserves their existing order,
+  URL, revealed cards, and scroll.
 - **Shareable filters** using `?q=`, `?platform=`, `?type=`, `?tag=`, and `?author=`.
   `platform` is a single value (omitted for All platforms); `type` still accepts
   single values or comma-separated selections, including all three formats.
@@ -55,7 +57,9 @@ deployed as a static site to GitHub Pages.
   updated. Samples stay last; browser Back/Forward restores filters, revealed
   cards, and scroll position per history entry, including separate visits to
   the same filter URL. Reload and returning from a detail page preserve the
-  current entry's position too.
+  current entry's position too. Debounced search replaces the current entry
+  without changing its identity or unrelated history state, and saves the
+  updated results' position rather than the pre-search position.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
 - **Skill ratings**: 👍 a skill with your GitHub account (via GitHub
   Discussions); the gallery bakes in the counts and offers a "Top rated" sort.
