@@ -20,7 +20,8 @@
  *         ├── references/  optional docs
  *         └── assets/      optional templates / data files
  *
- * (A Scout submission may instead ship a single automation `<name>.json`.)
+ * (A Cowork submission may instead ship an unpacked plugin with a root
+ * `manifest.json`; a Scout submission may ship a single automation `<name>.json`.)
  *
  * `.zip` payloads are NO LONGER ACCEPTED for new submissions — a packed bundle
  * hides its `SKILL.md` and code from review. A handful of pre-existing zip
@@ -638,8 +639,9 @@ function buildPluginBody(opts: {
 }
 
 /**
- * Validate + generate a Cowork plugin submission: a pre-built M365 app-package
- * `.zip` (root `manifest.json` + icons + `skills/`) plus a `metadata.*` sidecar.
+ * Validate + generate a Cowork plugin submission: an M365 app package
+ * (unpacked or a grandfathered `.zip`, with root `manifest.json` + icons +
+ * `skills/`) plus a `metadata.*` sidecar.
  * The package ships verbatim as the download; the detail page is synthesized.
  */
 function processPlugin(sub: Submission): ImportProblem | null {
@@ -966,10 +968,11 @@ function processAutomation(sub: Submission): ImportProblem | null {
 /**
  * Load a `submissions/<slug>/` folder: a `metadata.json` sidecar plus exactly
  * one skill payload — an unpacked canonical skill (root `SKILL.md` + optional
- * dirs) or, for Scout, a single automation `<name>.json`. `.zip` payloads are
- * no longer accepted (only the grandfathered LEGACY_ZIP_SLUGS still load).
+ * dirs), an unpacked Cowork plugin (root `manifest.json`), or, for Scout, a
+ * single automation `<name>.json`. `.zip` payloads are no longer accepted
+ * (only the grandfathered LEGACY_ZIP_SLUGS still load).
  */
-function loadSubmission(dir: string): Submission {
+export function loadSubmission(dir: string): Submission {
   const slug = basename(dir);
   const label = `submissions/${slug}/`;
   const sub: Submission = { slug, label, kind: "skill", bundleFiles: [] };
@@ -978,6 +981,7 @@ function loadSubmission(dir: string): Submission {
   const topFiles = readdirSync(dir).filter((n) => statSync(join(dir, n)).isFile());
   const zips = topFiles.filter((n) => n.toLowerCase().endsWith(".zip"));
   const hasRootSkill = topFiles.some((n) => n.toLowerCase() === INSTRUCTIONS_NAME);
+  const hasRootManifest = topFiles.some((n) => n.toLowerCase() === "manifest.json");
 
   // Metadata sidecar (top-level, next to the payload — never inside the bundle).
   const metaFile = topFiles.find((n) => METADATA_NAMES.includes(n.toLowerCase()));
@@ -1009,6 +1013,7 @@ function loadSubmission(dir: string): Submission {
       problems.push(
         "`.zip` payloads are no longer accepted \u2014 submit the skill UNPACKED " +
           "(a root `SKILL.md` plus optional `scripts/`, `references/`, `assets/`), " +
+          "an unpacked Cowork plugin (root `manifest.json`), " +
           "or, for Scout, a single automation `<name>.json`. Pre-packaged Cowork " +
           "plugin and Scout automation-installer `.zip`s are no longer accepted " +
           "either.",
@@ -1044,6 +1049,14 @@ function loadSubmission(dir: string): Submission {
   } else if (hasRootSkill) {
     // Unpacked: bundle the folder contents verbatim (minus the metadata sidecar).
     classifyPayload(sub, listFiles(dir));
+  } else if (hasRootManifest) {
+    sub.kind = "plugin";
+    // Only root gallery sidecars are stripped; nested files belong to the plugin.
+    sub.pluginFiles = listFiles(dir).filter(
+      (f) =>
+        !METADATA_NAMES.includes(f.path.toLowerCase()) &&
+        f.path.toLowerCase() !== README_NAME,
+    );
   } else {
     // A Scout automation payload: a single top-level `.json` that is NOT the
     // metadata sidecar (all root `.json` files are automations by Scout's
@@ -1064,8 +1077,8 @@ function loadSubmission(dir: string): Submission {
     } else {
       problems.push(
         "submission has no payload \u2014 add a root `SKILL.md` (with optional " +
-          "`scripts/`, `references/`, `assets/`), or a single Scout automation " +
-          "`<name>.json`",
+          "`scripts/`, `references/`, `assets/`), an unpacked Cowork plugin " +
+          "(root `manifest.json`), or a single Scout automation `<name>.json`",
       );
     }
   }
@@ -1087,7 +1100,8 @@ function main() {
     if (name.startsWith(".") || name.startsWith("_")) continue; // _template, etc.
     const full = join(SUBMISSIONS_DIR, name);
     // Submissions are folders. Each holds an unpacked skill (root `SKILL.md` +
-    // optional dirs) or, for Scout, a single automation `<name>.json`.
+    // optional dirs), an unpacked Cowork plugin, or, for Scout, a single
+    // automation `<name>.json`.
     if (statSync(full).isDirectory()) {
       submissions.push(loadSubmission(full));
     }
@@ -1121,7 +1135,8 @@ function main() {
       "\nEach submission is a `submissions/<slug>/` folder with a `metadata.*` " +
         "sidecar (catalog `description`, `platforms`, `tags`) plus exactly one " +
         "payload: an unpacked `SKILL.md` (frontmatter `name` + agent-facing " +
-        "`description`, then instructions), or a single Scout automation " +
+        "`description`, then instructions), an unpacked Cowork plugin " +
+        "(root `manifest.json`), or a single Scout automation " +
         "`<name>.json`. `.zip` payloads are no longer accepted. Fix the items " +
         "above and retry.",
     );

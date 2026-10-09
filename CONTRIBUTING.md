@@ -17,6 +17,7 @@ optional `README.md`, and **exactly one** payload. This section covers the commo
 payload — a **skill**, as an **unpacked** folder. Scout submissions can instead
 ship a single automation `.json` (covered just below). `.zip` payloads are **no
 longer accepted** — submit your skill unpacked.
+Cowork plugins are also submitted unpacked (see below).
 
 ```
 submissions/<slug>/
@@ -43,12 +44,14 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 > notes) next to your payload — they'd ship to the agent and waste its context;
 > put those in your pull request description instead.
 
-### Cowork plugins (no longer accepted)
+### Cowork plugins
 
 Cowork **plugin** packages — an M365 app `.zip` with a root `manifest.json`
-bundling one or more skills (plus optional MCP connectors) — are **no longer
-accepted** as new submissions, because the gallery no longer takes `.zip`
-payloads. Existing plugin submissions stay published.
+bundling one or more skills (plus optional MCP connectors) — are submitted
+**unpacked**, alongside the usual `metadata.json` and optional `README.md`.
+CI validates the package and generates the downloadable `.zip`. The gallery no
+longer takes `.zip` payloads. See the
+[Cowork plugins section](submissions/README.md#cowork-plugins) for details.
 
 ### Scout automations
 
