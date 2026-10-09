@@ -1,0 +1,43 @@
+---
+import type { CollectionEntry } from "astro:content";
+import SkillCard from "./SkillCard.astro";
+import { authorKey, normalizeLogin } from "../lib/badges";
+import { getRating } from "../lib/ratings";
+import { getDownloads } from "../lib/downloads";
+
+interface Props {
+  submission: CollectionEntry<"skills">;
+}
+
+const { submission: { id, data: d } } = Astro.props;
+---
+
+<div
+  class="submission-item"
+  data-slug={id}
+  data-name={d.name.toLowerCase()}
+  data-desc={d.description.toLowerCase()}
+  data-tags={d.tags.join(",")}
+  data-platforms={d.platforms.join(",")}
+  data-type={d.type}
+  data-author-name={d.author}
+  data-author-login={normalizeLogin(d.authorGithub)}
+  data-author-key={authorKey(d.authorGithub, d.author)}
+  data-rating={getRating(id)}
+  data-downloads={getDownloads(id)}
+  data-featured={d.featured ? "1" : "0"}
+  data-sample={d.tags.includes("sample") ? "1" : "0"}
+  data-created={d.createdAt?.getTime()}
+  data-updated={d.updatedAt?.getTime()}
+>
+  <SkillCard
+    slug={id}
+    name={d.name}
+    description={d.description}
+    platforms={d.platforms}
+    type={d.type}
+    tags={d.tags}
+    coverColor={d.coverColor}
+    featured={d.featured}
+  />
+</div>

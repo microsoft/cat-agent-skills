@@ -11,12 +11,55 @@ deployed as a static site to GitHub Pages.
 
 ## ✨ Features
 
-- **Infinite-scroll gallery** with auto-generated branded covers (no image
-  assets to maintain).
-- **Platform filtering** across Cowork, Copilot Studio, and Scout.
-- **Client-side search** and **tag filtering** with shareable
-  `?q=`/`?tag=`/`?platform=`/`?sort=` URLs.
-- **Sort** by Featured, Top rated, Name, or Newest.
+- **One infinite-scroll gallery** with compact, consistently sized cards and
+  auto-generated monograms (no image assets to maintain).
+- **Platform filtering** in one horizontal row: exclusive
+  **All platforms** (default), Cowork, Copilot Studio, and Scout pills.
+  Choosing a platform replaces the selection; clicking the active option keeps
+  it selected. All platforms clears only the platform restriction.
+  Platform choices support arrow keys and Space, with one keyboard tab stop.
+- **Client-side search** and a **Filters dialog** for Format, Tags, and
+  Contributor. Format offers multi-select Skills, Plugins, and Automations:
+  any selected format matches (OR), and must also match the chosen platform
+  (AND). Cowork + Skills shows only Cowork skills. No selected formats is
+  unrestricted; there is no All formats control.
+  Tags and Contributor require **every selected value** (AND), so adding a
+  choice cannot widen results; option counts reflect adding that choice to the
+  current intersection. Empty selections are unrestricted, with no All
+  contributors control. Current submissions have one contributor each, so
+  selecting two distinct contributors intentionally returns no results; this
+  does not add multi-contributor metadata support. Selections remain removable
+  even at zero results.
+  Platform pills apply immediately; dialog changes apply only
+  with **Show results**. Closing the dialog discards its draft. Applied
+  formats, tags, and contributors appear as removable pills before platforms in
+  the same scrolling row, with each choice counted in the Filters badge.
+  Clear extra filters clears draft formats/tags/contributors, keeping the
+  platform selection, search, and sort. Applying the same selections after
+  toggling them off/on or clearing/reselecting preserves their existing order,
+  URL, revealed cards, and scroll.
+- **Shareable filters** using `?q=`, `?platform=`, `?type=`, `?tag=`, and `?author=`.
+  `platform` is a single value (omitted for All platforms); `type` still accepts
+  single values or comma-separated selections, including all three formats.
+  Legacy comma-separated platforms are trimmed, deduplicated, and restricted
+  to valid platform names: all three valid choices mean All platforms;
+  otherwise the first valid choice wins, or All platforms if none are valid.
+  The URL is normalized to that visible platform choice without changing other
+  parameters. Format values remain lowercase (`skill`, `plugin`, `automation`). Search,
+  tags, and contributors AND-narrow the platform/format results. Every selected
+  tag and contributor is required. The `author` key preserves all supplied
+  comma-separated values, trimmed, lowercased, and deduplicated; it is never
+  truncated to one contributor. Unknown contributors remain explicit no-match
+  restrictions with individual removable chips. Existing
+  single-platform and single-format links still work. Tag case is preserved;
+  search is case-insensitive.
+- **Sort** by Featured, Top rated, Most downloaded, Name, Newest, or Recently
+  updated. Samples stay last; browser Back/Forward restores filters, revealed
+  cards, and scroll position per history entry, including separate visits to
+  the same filter URL. Reload and returning from a detail page preserve the
+  current entry's position too. Debounced search replaces the current entry
+  without changing its identity or unrelated history state, and saves the
+  updated results' position rather than the pre-search position.
 - **Skill detail pages** rendering the instructions, metadata, and downloads.
 - **Skill ratings**: 👍 a skill with your GitHub account (via GitHub
   Discussions); the gallery bakes in the counts and offers a "Top rated" sort.
@@ -26,12 +69,15 @@ deployed as a static site to GitHub Pages.
 - **More than skills**: also hosts **Cowork plugins** (M365 `.zip` packages) and
   **Scout automations** (scheduled `.json` exports) and **Scout automation
   installers** (a `.zip` with an `INSTALL.md` + JSON config that sets the
-  automation up), each with its own badge, filter, and verbatim download.
+  automation up), each with its own format label, filter, and verbatim download.
 
 ## 🚀 Local development
 
+Use Node.js 22.19 or newer to satisfy the locked website dependencies.
+
 ```bash
-npm install
+npm ci
+npm run import:submissions # generate the local catalog and bundles; do not commit them
 npm run dev      # start the dev server (http://localhost:4321/cat-agent-skills)
 npm run build    # production build into ./dist
 npm run preview  # preview the production build locally
@@ -39,6 +85,10 @@ npm run preview  # preview the production build locally
 
 > The site is configured with a `base` path of `/cat-agent-skills`
 > for GitHub Pages, so local URLs include that prefix.
+
+Run the focused gallery checks with
+`node --import tsx --test scripts/gallery-filters.test.ts scripts/gallery-sort.test.ts`.
+These checks and the site build do not execute submission runtimes.
 
 ## 🧩 Adding a skill
 
@@ -122,16 +172,16 @@ READMEs are excluded.
 
 ```
 src/
-  components/      SkillCard, SkillCover (the branded "screenshot")
+  components/      GalleryBrowser, GalleryFilters, SubmissionItem, SkillCard, SkillCover
   content/skills/  generated skill pages (produced from submissions/ — do not edit by hand)
   layouts/         base page layout
-  lib/             cover theming + small helpers
+  lib/             gallery controller, filtering, sorting, cover theming + small helpers
   data/            ratings.json (build-time 👍 snapshot; see docs/ratings.md)
   pages/
     index.astro          home gallery (search + filter + sort + infinite scroll)
     skills/[slug].astro  skill detail page (instructions, download, ratings)
     skills/[slug].md.ts  raw Markdown download endpoint
-    tags/[tag].astro     per-tag listing
+    tags/[tag].astro     legacy tag URLs redirect to the filtered home gallery
     skills.json.ts       metadata endpoint
 public/
   bundles/         downloadable .zip skill bundles
