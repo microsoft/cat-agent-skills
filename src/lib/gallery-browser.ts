@@ -1,4 +1,5 @@
 import { compareNewest, compareRecentlyUpdated } from "./gallery-sort";
+import { PLATFORMS } from "./skills";
 import {
   copyGalleryFilters, countFacet, FORMAT_LABELS, galleryFilterParams, matchesFilters, parseGalleryFilters,
   type FilterableSubmission, type GalleryFilters,
@@ -32,6 +33,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   const filterOptions = get<HTMLElement>("#filter-options");
   const appliedChips = get<HTMLElement>("#applied-filters");
   const fixedPills = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-platform], button[data-type]"));
+  const platformPills = fixedPills.filter((button) => button.dataset.platform !== undefined);
   const sortSelect = get<HTMLSelectElement>("#sort-select");
   const count = get<HTMLElement>("#result-count");
   const empty = get<HTMLElement>("#empty-state");
@@ -138,10 +140,13 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function paintApplied() {
     fixedPills.forEach((button) => {
-      const selected = button.dataset.platform !== undefined
-        ? applied.platforms.has(button.dataset.platform)
-        : applied.types.has(button.dataset.type!);
-      button.setAttribute("aria-pressed", String(selected));
+      if (button.dataset.platform !== undefined) {
+        const selected = applied.platform === button.dataset.platform;
+        button.setAttribute("aria-checked", String(selected));
+        button.tabIndex = selected ? 0 : -1;
+      } else {
+        button.setAttribute("aria-pressed", String(applied.types.has(button.dataset.type!)));
+      }
     });
     const total = renderRefinements(appliedChips, applied, (field, value) => {
       const buttons = Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button"));
@@ -163,7 +168,9 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function revealCurrentFilter() {
     const firstApplied = appliedChips.querySelector<HTMLButtonElement>("button");
-    const selected = fixedPills.find((button) => button.getAttribute("aria-pressed") === "true");
+    const selected = fixedPills.find((button) =>
+      button.getAttribute("aria-checked") === "true" || button.getAttribute("aria-pressed") === "true",
+    );
     const button = firstApplied ?? selected;
     if (button) revealFilter(button);
   }
@@ -239,7 +246,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     filterPicker(tagOptions, "", "tagOption", get("#tag-search-empty"));
     filterPicker(authorOptions, "", "authorSearch", get("#author-search-empty"));
     get<HTMLElement>("#filters-context").textContent = [
-      applied.platforms.size ? [...applied.platforms].join(" or ") : "All platforms",
+      applied.platform || "All platforms",
       applied.types.size ? [...applied.types].map((type) => FORMAT_LABELS[type] ?? type).join(" or ") : "All formats",
       applied.query ? `Search: ${search.value}` : "",
     ].filter(Boolean).join(" \u00b7 ");
@@ -320,13 +327,28 @@ export function initGalleryBrowser(root: HTMLElement) {
   });
   fixedPills.forEach((button) => {
     button.addEventListener("click", () => {
+      if (button.dataset.platform === applied.platform) return;
       flushSearch();
-      const selected = button.dataset.platform !== undefined ? applied.platforms : applied.types;
-      const value = button.dataset.platform ?? button.dataset.type!;
-      if (selected.has(value)) selected.delete(value);
-      else selected.add(value);
+      if (button.dataset.platform !== undefined) {
+        applied.platform = PLATFORMS.find((platform) => platform === button.dataset.platform) ?? "";
+      } else {
+        const value = button.dataset.type!;
+        if (applied.types.has(value)) applied.types.delete(value);
+        else applied.types.add(value);
+      }
       commit();
       revealFilter(button);
+    });
+  });
+  platformPills.forEach((button, index) => {
+    button.addEventListener("keydown", (event) => {
+      const direction = ["ArrowRight", "ArrowDown"].includes(event.key) ? 1
+        : ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 0;
+      if (!direction) return;
+      event.preventDefault();
+      const next = platformPills[(index + direction + platformPills.length) % platformPills.length];
+      next.focus({ preventScroll: true });
+      next.click();
     });
   });
   get<HTMLButtonElement>("[data-clear-filters]").addEventListener("click", () => {
@@ -355,6 +377,13 @@ export function initGalleryBrowser(root: HTMLElement) {
     clearTimeout(searchTimer);
     const params = new URLSearchParams(location.search);
     applied = copyGalleryFilters(parseGalleryFilters(params));
+    const previous = params.toString();
+    if (applied.platform) params.set("platform", applied.platform);
+    else params.delete("platform");
+    if (params.toString() !== previous) {
+      const query = params.toString();
+      history.replaceState(history.state, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
+    }
     draft = copyGalleryFilters(applied);
     sortMode = SORTS.find((sort) => sort === params.get("sort")) ?? "featured";
     sortSelect.value = sortMode;

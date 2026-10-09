@@ -13,11 +13,14 @@ deployed as a static site to GitHub Pages.
 
 - **One infinite-scroll gallery** with compact, consistently sized cards and
   auto-generated monograms (no image assets to maintain).
-- **Platform and format filtering** in one horizontal row: fixed Cowork,
-  Copilot Studio, and Scout pills, then a subtle separator, then Skills, Plugins,
-  and Automations. Selections match any value within a group (OR), and both
-  groups must match (AND): Cowork + Skills shows only Cowork skills. An empty
-  group is unrestricted; no fixed selections shows all submissions.
+- **Platform and format filtering** in one horizontal row: exclusive
+  **All platforms** (default), Cowork, Copilot Studio, and Scout pills, then a
+  subtle separator, then multi-select Skills, Plugins, and Automations.
+  Choosing a platform replaces the selection; clicking the active option keeps
+  it selected. All platforms clears only the platform restriction. Formats
+  match any selected value (OR), and must also match the chosen platform (AND):
+  Cowork + Skills shows only Cowork skills. No selected formats is unrestricted.
+  Platform choices support arrow keys and Space, with one keyboard tab stop.
 - **Client-side search** and a **Filters dialog** for Tags and Contributor.
   Fixed pills apply immediately; dialog changes apply only
   with **Show results**. Closing the dialog discards its draft. Applied extra
@@ -25,8 +28,13 @@ deployed as a static site to GitHub Pages.
   row. Clear extra filters clears only tags/contributors, keeping the fixed
   platform/format selections and search.
 - **Shareable filters** using `?q=`, `?platform=`, `?type=`, `?tag=`, and `?author=`.
-  Both `platform` and `type` accept single values or comma-separated selections;
-  format values remain lowercase (`skill`, `plugin`, `automation`). Search,
+  `platform` is a single value (omitted for All platforms); `type` still accepts
+  single values or comma-separated selections, including all three formats.
+  Legacy comma-separated platforms are trimmed, deduplicated, and restricted
+  to valid platform names: all three valid choices mean All platforms;
+  otherwise the first valid choice wins, or All platforms if none are valid.
+  The URL is normalized to that visible platform choice without changing other
+  parameters. Format values remain lowercase (`skill`, `plugin`, `automation`). Search,
   tags, and contributors AND-narrow the platform/format results; tags and
   contributors each match any selected value (OR within that facet). Existing
   single-platform and single-format links still work. Tag case is preserved;
