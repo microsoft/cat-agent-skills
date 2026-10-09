@@ -39,8 +39,9 @@ export const skillSchema = z.object({
     })
     .trim()
     .min(1, "author must not be empty"),
-  // Optional URL to the author's website / profile, shown as a link on the
-  // skill page when an `author` is also present.
+  // Optional author website/profile URL retained as metadata. The importer
+  // derives authorGithub from a github.com/<login> URL unless explicitly set.
+  // Gallery bylines link to the contributor-filtered gallery, not this URL.
   authorUrl: z.string().url().optional(),
   // The skill author's GitHub login, stored WITHOUT a leading `@`. Resolved by
   // the importer purely from the submission — an explicit `authorGithub`, else
