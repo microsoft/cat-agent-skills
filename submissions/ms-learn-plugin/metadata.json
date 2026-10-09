@@ -1,0 +1,11 @@
+{
+  "name": "My MS Learn Plugin",
+  "description": "Ask Cowork anything about Microsoft products, services, or APIs and get answers grounded in official Microsoft Learn documentation.",
+  "platforms": ["Cowork"],
+  "tags": ["microsoft-learn", "documentation", "mcp", "research"],
+  "author": "Adriana Tamayo",
+  "authorUrl": "https://github.com/adrianatruji",
+  "version": "1.0.0",
+  "createdAt": "2026-10-09",
+  "updatedAt": "2026-10-09"
+}

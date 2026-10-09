@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+  "manifestVersion": "devPreview",
+  "version": "1.0.0",
+  "id": "b2e5c1a8-7d4f-4a6b-9c3e-1f8a2d5b7e91",
+  "packageName": "com.adrianat.mslearn.minimal",
+  "developer": {
+    "name": "Adriana Tamayo",
+    "websiteUrl": "https://learn.microsoft.com",
+    "privacyUrl": "https://learn.microsoft.com/legal/privacy",
+    "termsOfUseUrl": "https://learn.microsoft.com/legal/termsofuse"
+  },
+  "name": {
+    "short": "My MS Learn Plugin",
+    "full": "My MS Learn Plugin"
+  },
+  "description": {
+    "short": "Answers Microsoft questions from official Microsoft Learn docs.",
+    "full": "Grounds Cowork in official Microsoft documentation. Whenever you ask about Microsoft (MS / MSFT) products, services, APIs, docs, or guidance, Cowork looks it up on Microsoft Learn through the official Microsoft Learn MCP server and answers with up-to-date, cited content."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0078D4",
+  "agentConnectors": [
+    {
+      "id": "mslearn-mcp",
+      "displayName": "Microsoft Learn",
+      "description": "Use whenever the user asks about Microsoft, MS, or MSFT documentation, products, services, APIs, how-tos, or official guidance. Searches and fetches official Microsoft Learn content to ground the answer.",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "https://learn.microsoft.com/api/mcp",
+          "authorization": { "type": "None" }
+        }
+      }
+    }
+  ]
+}
