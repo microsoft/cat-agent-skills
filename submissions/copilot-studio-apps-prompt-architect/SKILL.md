@@ -7,10 +7,6 @@ description: Use this skill when the user wants to build an app with the Copilot
 
 Turn a business idea into a single, build-ready prompt for the **Apps (Preview)** experience in Microsoft Copilot Studio, where the agent generates a data model, logic, and UI from natural language.
 
-## Why this matters
-
-The first prompt decides how close the first draft is to what the user needs. The agent may ask clarifying questions and propose an approach before generating the preview. A complete prompt means fewer questions, fewer rebuilds, and fewer Copilot Credits spent (building, previewing and testing apps can consume credits).
-
 ## Workflow
 
 ### 1. Intake (ask only what is missing, max 5 questions in one batch)
@@ -55,7 +51,6 @@ Return, in this order:
 1. **The prompt** in a code block, ready to paste.
 2. **Likely follow-up questions** the agent may ask, with suggested answers.
 3. **v2 backlog** — 3–5 features left out on purpose, each as a one-line follow-up prompt for later iteration.
-4. **Before you start** — a 3-line checklist: New experience toggle on, **App (Preview)** tile visible (admins can turn app creation off), app will be created in your personal environment.
 
 ## Example
 
