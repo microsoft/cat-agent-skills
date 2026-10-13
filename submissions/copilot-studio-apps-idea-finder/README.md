@@ -27,7 +27,7 @@ Paste the prompt into **Apps (Preview) → New app** and select **Submit**.
 
 - **List-shaped data wins.** Ideas whose data already sits in SharePoint, Dataverse or Excel score higher on data readiness and connect fastest.
 - **Sensitive data is flagged.** Ideas touching regulated data are marked "pilot with admin approval".
-- **Pair it with Prompt Architect.** If you want to refine the winning prompt further, use the *Copilot Studio Apps: Prompt Architect* skill.
+- **Refine before you build.** Add missing fields, roles or statuses to the winning prompt before pasting it, so the first draft needs fewer changes.
 
 Based on the Microsoft Learn documentation for [apps in Copilot Studio (preview)](https://learn.microsoft.com/en-us/microsoft-copilot-studio/apps-experience/apps-overview).
 
