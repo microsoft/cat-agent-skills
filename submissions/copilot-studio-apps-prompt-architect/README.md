@@ -23,7 +23,6 @@ The skill:
 2. **Writes the prompt** in a fixed order the app builder understands well.
 3. **Predicts follow-up questions** Copilot Studio may ask, with suggested answers.
 4. **Gives you a v2 backlog**: features left out on purpose, each as a one-line follow-up prompt.
-5. **Adds a "before you start" checklist** so you don't hit a missing tile or environment surprise.
 
 ### Example output
 
