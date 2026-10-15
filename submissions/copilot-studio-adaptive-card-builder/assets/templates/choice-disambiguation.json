@@ -1,0 +1,54 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Choose whether your request is about access, equipment, or a service issue.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Which request do you mean?",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Choose the option that best matches your goal.",
+      "wrap": true
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "selectedOption",
+      "label": "Request type",
+      "isRequired": true,
+      "errorMessage": "Choose one request type.",
+      "style": "expanded",
+      "choices": [
+        {
+          "title": "Access to a system or resource",
+          "value": "access"
+        },
+        {
+          "title": "Equipment or device support",
+          "value": "equipment"
+        },
+        {
+          "title": "An issue with an existing service",
+          "value": "service_issue"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Use this request type",
+      "data": {
+        "cardId": "request_disambiguation_v1",
+        "actionId": "select_request_type",
+        "actionSubmitId": "request_disambiguation_v1_select_request_type",
+        "intent": "request.disambiguate",
+        "riskLevel": "none"
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Describe the issue, choose an urgency, and ask for a specialist handoff.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Request specialist help",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Share only the information a specialist needs to continue. Do not include passwords or sensitive personal data.",
+      "wrap": true
+    },
+    {
+      "type": "Input.Text",
+      "id": "handoffSummary",
+      "label": "Issue summary",
+      "isRequired": true,
+      "errorMessage": "Describe what the specialist should help with.",
+      "isMultiline": true,
+      "maxLength": 500
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "urgency",
+      "label": "Urgency",
+      "isRequired": true,
+      "errorMessage": "Choose an urgency.",
+      "style": "expanded",
+      "choices": [
+        {
+          "title": "Normal: Work can continue",
+          "value": "normal"
+        },
+        {
+          "title": "High: Work is blocked",
+          "value": "high"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Request specialist help",
+      "data": {
+        "cardId": "specialist_handoff_v1",
+        "actionId": "request_handoff",
+        "actionSubmitId": "specialist_handoff_v1_request_handoff",
+        "intent": "handoff.request",
+        "riskLevel": "consequential"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Keep chatting",
+      "associatedInputs": "none",
+      "data": {
+        "cardId": "specialist_handoff_v1",
+        "actionId": "continue_chat",
+        "actionSubmitId": "specialist_handoff_v1_continue_chat",
+        "intent": "conversation.continue",
+        "riskLevel": "none",
+        "isEscapeAction": true
+      }
+    }
+  ]
+}

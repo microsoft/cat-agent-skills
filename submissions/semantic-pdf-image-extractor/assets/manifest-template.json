@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "semantic-pdf-image-manifest/1.0",
+  "generatedAt": null,
+  "request": {
+    "mode": "meaningful",
+    "includeTypes": [],
+    "excludeTypes": ["logo", "icon"],
+    "includeDecorative": false,
+    "preserveContext": true,
+    "pageRanges": []
+  },
+  "documents": [
+    {
+      "id": "replace-document-id",
+      "sourceFile": "source.pdf",
+      "sha256": null,
+      "title": null,
+      "languages": [],
+      "pageCount": 1,
+      "pages": [
+        {
+          "pageNumber": 1,
+          "image": "pages/replace-document-id/page-0001.png",
+          "width": null,
+          "height": null,
+          "status": "review-required",
+          "reviewReasons": ["Replace this template page with rendered source evidence."]
+        }
+      ]
+    }
+  ],
+  "assets": [],
+  "duplicateGroups": [],
+  "exclusions": {
+    "totalCandidates": 0,
+    "byReason": {}
+  },
+  "review": {
+    "required": true,
+    "assetIds": [],
+    "occurrenceIds": [],
+    "notes": ["Manifest template has not yet been populated."]
+  },
+  "limitations": []
+}

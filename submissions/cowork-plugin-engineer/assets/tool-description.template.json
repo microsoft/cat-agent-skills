@@ -1,0 +1,18 @@
+{
+  "tools": [
+    {
+      "name": "replace_tool_name",
+      "description": "Replace with the description returned by MCP tools/list.",
+      "annotations": {
+        "title": "Replace Tool Title",
+        "readOnlyHint": true,
+        "destructiveHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    }
+  ]
+}

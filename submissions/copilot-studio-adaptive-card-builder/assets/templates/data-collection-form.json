@@ -1,0 +1,76 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Provide a request title, category, requested date, and details.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Create a request",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Provide the minimum information needed to route your request.",
+      "wrap": true
+    },
+    {
+      "type": "Input.Text",
+      "id": "requestTitle",
+      "label": "Request title",
+      "isRequired": true,
+      "errorMessage": "Enter a short request title.",
+      "maxLength": 120
+    },
+    {
+      "type": "Input.ChoiceSet",
+      "id": "requestCategory",
+      "label": "Category",
+      "isRequired": true,
+      "errorMessage": "Choose a request category.",
+      "style": "compact",
+      "choices": [
+        {
+          "title": "Access",
+          "value": "access"
+        },
+        {
+          "title": "Equipment",
+          "value": "equipment"
+        },
+        {
+          "title": "Service issue",
+          "value": "service_issue"
+        }
+      ]
+    },
+    {
+      "type": "Input.Date",
+      "id": "requestedDate",
+      "label": "Requested completion date",
+      "isRequired": true,
+      "errorMessage": "Choose a requested completion date."
+    },
+    {
+      "type": "Input.Text",
+      "id": "requestDetails",
+      "label": "Details (optional)",
+      "isMultiline": true,
+      "maxLength": 500
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Send request",
+      "data": {
+        "cardId": "request_intake_v1",
+        "actionId": "send_request",
+        "actionSubmitId": "request_intake_v1_send_request",
+        "intent": "request.submit",
+        "riskLevel": "consequential"
+      }
+    }
+  ]
+}
