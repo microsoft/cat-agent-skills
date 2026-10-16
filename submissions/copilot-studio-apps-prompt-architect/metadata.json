@@ -1,0 +1,12 @@
+{
+  "name": "Copilot Studio Apps: Prompt Architect",
+  "description": "Turn a vague business idea into a build-ready prompt for the new Apps (Preview) experience in Copilot Studio: users, records, statuses, views, AI features, notifications and data, plus a v2 backlog.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["copilot-studio", "apps", "power-platform", "prompting", "requirements", "maker"],
+  "author": "Renato Romão",
+  "authorUrl": "https://www.linkedin.com/in/renatoromao/",
+  "authorGithub": "renatoromao",
+  "version": "1.0.0",
+  "createdAt": "2026-10-13",
+  "updatedAt": "2026-10-13"
+}
