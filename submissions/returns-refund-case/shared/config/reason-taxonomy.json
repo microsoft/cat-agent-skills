@@ -1,0 +1,5 @@
+{ "defective": ["broken", "doesn't work", "does not work", "not working", "faulty", "stopped working", "stopped"],
+  "wrong_item": ["wrong item", "wrong product", "not what i ordered", "different item", "sent the wrong"],
+  "not_as_described": ["not as described", "looks different", "smaller than", "bigger than", "different from the photos", "different colour", "different color"],
+  "changed_mind": ["changed my mind", "changed his mind", "changed her mind", "changed their mind", "don't need", "doesn't need", "does not need", "no longer", "gift", "didn't like", "did not like"],
+  "fit": ["doesn't fit", "does not fit", "too small", "too big", "too large", "wrong size"] }

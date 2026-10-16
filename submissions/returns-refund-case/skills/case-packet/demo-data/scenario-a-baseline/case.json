@@ -1,0 +1,6 @@
+{ "contract_version": "rtl.returns-refund-case.v1", "case_id": "RET-2026-08811",
+  "return_request": {"category": "fashion", "value": 79.0, "has_receipt": true, "opened": false,
+    "requested_on": "2026-08-06", "reason_text": "Doesn't fit - too small, tags still on", "unit_serial": null},
+  "order": {"order_id": "ORD-551200", "order_date": "2026-07-25", "sold_serial": null},
+  "customer_history": {"receiptless_returns_90d": 0},
+  "escalations": [] }
