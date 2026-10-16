@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Guardrails Coach",
+  "description": "Harden and manually red-team a Copilot Studio or Scout agent with no code - walk the full Foundry Control Plane guardrail checklist, run an interactive adversarial test with benign canaries in the Test pane, and generate a fixed HTML/PDF security report with a per-control results table and a deploy / do-not-deploy verdict. Self-evolving guardrail catalog.",
+  "platforms": ["Copilot Studio", "Scout"],
+  "tags": ["red-teaming", "safety", "guardrails", "responsible-ai", "security", "no-code", "prompt-injection"],
+  "author": "Swarup Mishra",
+  "authorUrl": "https://github.com/1999Swarup",
+  "version": "1.1.0",
+  "createdAt": "2026-08-15",
+  "updatedAt": "2026-08-15"
+}
