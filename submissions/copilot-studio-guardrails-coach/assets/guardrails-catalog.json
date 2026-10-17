@@ -1,0 +1,87 @@
+{
+  "catalogVersion": "1.1.0",
+  "lastReviewed": "2026-08-15",
+  "source": "Copilot Studio maker controls and evaluation follow-up workflow",
+  "note": "This catalog tracks product-UI hardening checks that a Copilot Studio maker can act on. It intentionally excludes Foundry-only/model-only guardrails and hosted-agent egress rules unless Copilot Studio exposes equivalent controls. See references/EVOLUTION.md; update catalogVersion + lastReviewed and append a changelog entry whenever the product UI changes.",
+  "interventionPoints": ["User input", "Output", "Tool call", "Tool response"],
+  "actions": ["Block", "Annotate", "On", "Deny", "Allow"],
+  "blockingLevels": ["Low blocking", "Medium blocking", "High blocking"],
+  "groups": [
+    {
+      "group": "Jailbreak",
+      "controls": [
+        {
+          "riskType": "Jailbreak",
+          "interventionPoint": ["User input"],
+          "action": "Block",
+          "default": true,
+          "removable": false,
+          "preview": false,
+          "testWith": ["prompt-injection-override", "jailbreak-framing"]
+        }
+      ]
+    },
+    {
+      "group": "Indirect prompt injections",
+      "controls": [
+        {
+          "riskType": "Indirect prompt injections",
+          "interventionPoint": ["User input", "Tool response"],
+          "toolResponsePreview": true,
+          "action": "Annotate",
+          "default": true,
+          "removable": true,
+          "preview": false,
+          "testWith": ["indirect-injection-xpia"]
+        }
+      ]
+    },
+    {
+      "group": "Content harms",
+      "controls": [
+        { "riskType": "Hate", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-hate"] },
+        { "riskType": "Sexual", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-sexual"] },
+        { "riskType": "Self-harm", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-self-harm"] },
+        { "riskType": "Violence", "blockingLevel": "Medium blocking", "interventionPoint": ["User input", "Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["content-violence"] },
+        { "riskType": "Blocklists", "interventionPoint": ["User input", "Output"], "action": "Block", "default": false, "removable": true, "preview": false, "testWith": ["blocklist-term"] }
+      ]
+    },
+    {
+      "group": "Protected materials",
+      "controls": [
+        { "riskType": "Protected material for code", "interventionPoint": ["Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["protected-code"] },
+        { "riskType": "Protected material for text", "interventionPoint": ["Output"], "action": "Block", "default": true, "removable": true, "preview": false, "testWith": ["protected-text"] }
+      ]
+    },
+    {
+      "group": "Sensitive data leakage",
+      "controls": [
+        {
+          "riskType": "PII",
+          "interventionPoint": ["User input", "Tool call", "Tool response", "Output"],
+          "toolCallPreview": true,
+          "toolResponsePreview": true,
+          "action": "Block",
+          "default": false,
+          "removable": true,
+          "preview": true,
+          "testWith": ["pii-leak"]
+        }
+      ]
+    },
+    {
+      "group": "Task drift",
+      "controls": [
+        {
+          "riskType": "Task adherence",
+          "interventionPoint": ["Tool call"],
+          "action": "Block",
+          "default": false,
+          "removable": true,
+          "preview": true,
+          "testWith": ["task-drift"]
+        }
+      ]
+    }
+  ]
+}

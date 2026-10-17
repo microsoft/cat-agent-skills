@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Guardrails Coach",
+  "description": "Harden and manually red-team a Copilot Studio or Scout agent with no code - map built-in evaluation or manual Test-pane results to concrete maker fixes, run benign canary probes, and generate a fixed report with a per-control results table and a deploy / do-not-deploy verdict.",
+  "platforms": ["Copilot Studio", "Scout"],
+  "tags": ["red-teaming", "safety", "guardrails", "responsible-ai", "security", "no-code", "prompt-injection"],
+  "author": "Swarup Mishra",
+  "authorUrl": "https://github.com/1999Swarup",
+  "version": "1.1.0",
+  "createdAt": "2026-08-15",
+  "updatedAt": "2026-08-15"
+}
