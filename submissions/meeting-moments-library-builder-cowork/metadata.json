@@ -1,0 +1,22 @@
+{
+  "name": "Meeting Moments Library Builder for Cowork",
+  "description": "Discover authorized Microsoft 365 meeting transcripts and turn them into a reviewed, searchable library of verified timestamped moments, delivered as portable HTML, CSV, and JSON files.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "meetings",
+    "transcripts",
+    "knowledge",
+    "library",
+    "deep-links",
+    "productivity"
+  ],
+  "author": "Sandra Boucenna",
+  "authorUrl": "https://github.com/SandraBcna",
+  "authorGithub": "SandraBcna",
+  "version": "1.2.0",
+  "createdAt": "2026-09-28",
+  "updatedAt": "2026-09-28",
+  "featured": false
+}
