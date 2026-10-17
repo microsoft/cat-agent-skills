@@ -1,0 +1,542 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "STATEMENT OF WORK",
+        "Prepared for [Client Name] on <insert date>",
+        "[Guidance: delete this paragraph before sending]",
+        "Section 3 - Optional services (include only if applicable)",
+        "Optional services are provided at the rates in Schedule B.",
+        "Service",
+        "Rate",
+        "Advisory",
+        "[rate]",
+        "End of optional services.",
+        "Customer contact: ____________________",
+        "Total: {{ total_amount }}",
+        "Item",
+        "Qty",
+        "<item name>",
+        "",
+        "Signatory: Click here to enter text.",
+        "Internal note: remove before issue",
+        "Remarks: {{ remarks }}"
+      ],
+      "word/header1.xml": [
+        "Confidential - [Client Name]"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ],
+      "word/footnotes.xml": [
+        "",
+        "",
+        "See [Reference] for details."
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p1#13-26",
+        "kind": "field",
+        "pattern": "square_bracket",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/document.xml#p1#30-43",
+        "kind": "field",
+        "pattern": "angle_bracket",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "insert_date"
+      },
+      {
+        "id": "i:word/document.xml#p2#0-48",
+        "kind": "instruction",
+        "pattern": "bracketed_note",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": null
+      },
+      {
+        "id": "i:word/document.xml#p3#30-58",
+        "kind": "instruction",
+        "pattern": "bracketed_note",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": null
+      },
+      {
+        "id": "f:word/document.xml#p8#0-6",
+        "kind": "field",
+        "pattern": "square_bracket",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "rate"
+      },
+      {
+        "id": "f:word/document.xml#p10#18-38",
+        "kind": "field",
+        "pattern": "underscore_blank",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": null
+      },
+      {
+        "id": "f:word/document.xml#p11#7-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "total_amount"
+      },
+      {
+        "id": "f:word/document.xml#p14#0-11",
+        "kind": "field",
+        "pattern": "angle_bracket",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "item_name"
+      },
+      {
+        "id": "b:word/document.xml#p15#0-0",
+        "kind": "blank",
+        "pattern": "empty_cell",
+        "confidence": "low",
+        "eligible": true,
+        "decision_required": false,
+        "name_guess": null
+      },
+      {
+        "id": "c:word/document.xml#p16#11-36",
+        "kind": "control",
+        "pattern": "content_control",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "signatory"
+      },
+      {
+        "id": "i:word/document.xml#p17#0-34",
+        "kind": "instruction",
+        "pattern": "hidden_text",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": null
+      },
+      {
+        "id": "f:word/document.xml#p18#9-22",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "remarks"
+      },
+      {
+        "id": "f:word/header1.xml#p0#15-28",
+        "kind": "field",
+        "pattern": "square_bracket",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/footnotes.xml#p2#4-15",
+        "kind": "field",
+        "pattern": "square_bracket",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "reference"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "remove guidance and optional section; repeat rows and fill control",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#13-26",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p1#30-43",
+            "decision": "field",
+            "field": "insert_date"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p10#18-38",
+            "decision": "field",
+            "field": "contact"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p11#7-25",
+            "decision": "field",
+            "field": "total_amount"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p14#0-11",
+            "decision": "field",
+            "field": "item_name"
+          },
+          {
+            "candidate_id": "b:word/document.xml#p15#0-0",
+            "decision": "field",
+            "field": "quantity"
+          },
+          {
+            "candidate_id": "c:word/document.xml#p16#11-36",
+            "decision": "field",
+            "field": "signatory"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p18#9-22",
+            "decision": "field",
+            "field": "remarks"
+          },
+          {
+            "candidate_id": "f:word/header1.xml#p0#15-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/footnotes.xml#p2#4-15",
+            "decision": "field",
+            "field": "reference"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "insert_date",
+            "type": "date",
+            "source": "insert_date"
+          },
+          {
+            "name": "contact",
+            "type": "string",
+            "source": "contact"
+          },
+          {
+            "name": "total_amount",
+            "type": "decimal",
+            "source": "total_amount"
+          },
+          {
+            "name": "signatory",
+            "type": "string",
+            "source": "signatory"
+          },
+          {
+            "name": "remarks",
+            "type": "string",
+            "source": "remarks"
+          },
+          {
+            "name": "reference",
+            "type": "string",
+            "source": "reference"
+          },
+          {
+            "name": "item_name",
+            "type": "string",
+            "source": "name",
+            "repeat": "items"
+          },
+          {
+            "name": "quantity",
+            "type": "integer",
+            "source": "qty",
+            "repeat": "items"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p2"
+          },
+          {
+            "op": "delete_range",
+            "from_paragraph": "word/document.xml#p3",
+            "to_paragraph": "word/document.xml#p9"
+          },
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p17"
+          },
+          {
+            "op": "repeat_row",
+            "id": "items",
+            "paragraph": "word/document.xml#p14",
+            "source": "items"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Acme",
+        "insert_date": "2026-09-30",
+        "contact": "Pat",
+        "total_amount": "24.5",
+        "signatory": "Ada",
+        "remarks": "Approved",
+        "reference": "Schedule A",
+        "items": [
+          {
+            "name": "Design",
+            "qty": 2
+          },
+          {
+            "name": "Review",
+            "qty": 1
+          }
+        ]
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "STATEMENT OF WORK",
+            "Prepared for Acme on 2026-09-30",
+            "Customer contact: Pat",
+            "Total: 24.50",
+            "Item",
+            "Qty",
+            "Design",
+            "2",
+            "Review",
+            "1",
+            "Signatory: Ada",
+            "Remarks: Approved"
+          ],
+          "word/header1.xml": [
+            "Confidential - Acme"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ],
+          "word/footnotes.xml": [
+            "",
+            "",
+            "See Schedule A for details."
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": true
+    },
+    {
+      "name": "insert list as paragraphs at anchor",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#13-26",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p1#30-43",
+            "decision": "field",
+            "field": "insert_date"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p10#18-38",
+            "decision": "field",
+            "field": "contact"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p11#7-25",
+            "decision": "field",
+            "field": "total_amount"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p14#0-11",
+            "decision": "field",
+            "field": "item_name"
+          },
+          {
+            "candidate_id": "b:word/document.xml#p15#0-0",
+            "decision": "field",
+            "field": "quantity"
+          },
+          {
+            "candidate_id": "c:word/document.xml#p16#11-36",
+            "decision": "field",
+            "field": "signatory"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p18#9-22",
+            "decision": "field",
+            "field": "remarks"
+          },
+          {
+            "candidate_id": "f:word/header1.xml#p0#15-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/footnotes.xml#p2#4-15",
+            "decision": "field",
+            "field": "reference"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "insert_date",
+            "type": "date",
+            "source": "insert_date"
+          },
+          {
+            "name": "contact",
+            "type": "string",
+            "source": "contact"
+          },
+          {
+            "name": "total_amount",
+            "type": "decimal",
+            "source": "total_amount"
+          },
+          {
+            "name": "signatory",
+            "type": "string",
+            "source": "signatory"
+          },
+          {
+            "name": "remarks",
+            "type": "string",
+            "source": "remarks"
+          },
+          {
+            "name": "reference",
+            "type": "string",
+            "source": "reference"
+          },
+          {
+            "name": "item_name",
+            "type": "string",
+            "source": "name",
+            "repeat": "items"
+          },
+          {
+            "name": "quantity",
+            "type": "integer",
+            "source": "qty",
+            "repeat": "items"
+          },
+          {
+            "name": "extra",
+            "type": "string",
+            "source": "extra"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p2"
+          },
+          {
+            "op": "delete_range",
+            "from_paragraph": "word/document.xml#p3",
+            "to_paragraph": "word/document.xml#p9"
+          },
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p17"
+          },
+          {
+            "op": "repeat_row",
+            "id": "items",
+            "paragraph": "word/document.xml#p14",
+            "source": "items"
+          },
+          {
+            "op": "insert_paragraph_after",
+            "paragraph": "word/document.xml#p18",
+            "field": "extra"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Acme",
+        "insert_date": "2026-09-30",
+        "contact": "Pat",
+        "total_amount": "24.5",
+        "signatory": "Ada",
+        "remarks": "Approved",
+        "reference": "Schedule A",
+        "items": [
+          {
+            "name": "Design",
+            "qty": 2
+          },
+          {
+            "name": "Review",
+            "qty": 1
+          }
+        ],
+        "extra": [
+          "Next step one",
+          "Next step two"
+        ]
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "STATEMENT OF WORK",
+            "Prepared for Acme on 2026-09-30",
+            "Customer contact: Pat",
+            "Total: 24.50",
+            "Item",
+            "Qty",
+            "Design",
+            "2",
+            "Review",
+            "1",
+            "Signatory: Ada",
+            "Remarks: Approved",
+            "Next step one",
+            "Next step two"
+          ],
+          "word/header1.xml": [
+            "Confidential - Acme"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ],
+          "word/footnotes.xml": [
+            "",
+            "",
+            "See Schedule A for details."
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": false
+    }
+  ]
+}
