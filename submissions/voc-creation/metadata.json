@@ -1,0 +1,10 @@
+{
+  "name": "VoC Creation",
+  "description": "Draft and create CLS CRM Voice of Customer product feedback records with mandatory preview, customer linking, and safe CRM guardrails.",
+  "platforms": ["Scout"],
+  "tags": ["crm", "voice-of-customer", "customer-feedback", "dataverse", "scout"],
+  "author": "Kanika Ramji",
+  "version": "1.0.0",
+  "createdAt": "2026-07-28",
+  "updatedAt": "2026-07-28"
+}
