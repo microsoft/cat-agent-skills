@@ -17,6 +17,14 @@ This skill stops the model answering until it has checked.
 
 ## Before you start
 
+> ⚠️ **External, non-Microsoft service.** The optional KQL Search MCP (`kqlsearch.com`)
+> is a community-hosted service that isn't built, managed or endorsed by Microsoft.
+> This skill doesn't connect to it automatically; you configure the connector
+> yourself, and your organisation's policies may block it. Searches sent to it leave
+> the Microsoft environment and are handled under that service's own terms, so you use
+> it at your own risk. Check it's acceptable before using it with sensitive or
+> incident-related data.
+
 One thing is required: some way for the agent to read a web page, whether that is a
 built-in fetch or browse tool or an MCP server. The skill is built around reading
 Microsoft Learn, and where a host offers no lookup at all it says verification is not
@@ -26,13 +34,13 @@ connections make it considerably better:
 | Connection | What it adds |
 |---|---|
 | **Microsoft Learn MCP** | Grounded documentation lookups instead of raw page fetches. |
-| **KQL Search MCP** (`kqlsearch.com`) | The community query corpus, searchable by table, keyword or technique. This is what makes the prior-art step work. |
+| **KQL Search MCP** (`kqlsearch.com`) — *external, community-run; see the warning above* | The community query corpus, searchable by table, keyword or technique. This is what makes the prior-art step work. |
 
-Both are outside your tenant, and the prior-art step is the one that sends text to a
-third party. The skill searches on table names and technique keywords only — account
-names, hostnames, IP addresses, internal domains, ticket references and anything you
-pasted from your own data stay out of the search string. Worth knowing before you point
-this at a live incident.
+Neither runs inside your tenant, and the prior-art step is the one that sends text out.
+What the skill does about that: it searches on table names and technique keywords only
+— account names, hostnames, IP addresses, internal domains, ticket references and
+anything you pasted from your own data stay out of the search string. Worth knowing
+before you point this at a live incident.
 
 Without the Learn MCP, schema verification still works through ordinary page fetches.
 Without a search capability the prior-art step is skipped altogether, and the answer

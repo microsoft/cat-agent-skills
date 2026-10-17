@@ -112,7 +112,8 @@ published column reference at all.
 
 4. **Retrieve prior art, if you can.** Where a search is available, adapt proven
    patterns rather than composing from nothing. KQL Search (`kqlsearch.com`,
-   available as an MCP server) indexes KQL published across GitHub; the
+   available as an MCP server, community-run and not a Microsoft service) indexes
+   KQL published across GitHub; the
    Azure-Sentinel repository is the other source, reachable by web search or a
    direct fetch. Re-verify the columns those queries use — published queries go
    stale too.
