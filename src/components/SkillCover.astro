@@ -9,9 +9,6 @@ interface Props {
   pluginSkillCount?: number;
   tags?: string[];
   coverColor?: string;
-  hasBundle?: boolean;
-  /** True when an automation ships as an installer `.zip` (vs an importable `.json`). */
-  isInstaller?: boolean;
   /** "card" for grid thumbnails, "hero" for the detail header. */
   variant?: "card" | "hero";
   class?: string;
@@ -25,8 +22,6 @@ const {
   pluginSkillCount,
   tags = [],
   coverColor,
-  hasBundle = false,
-  isInstaller = false,
   variant = "card",
   class: className = "",
 } = Astro.props;
@@ -66,110 +61,42 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
     class="relative flex h-full flex-col justify-between p-4"
     class:list={[isHero && "p-6 sm:p-8"]}
   >
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex flex-wrap items-center gap-1.5">
-        {
-          isSample && (
-            <span
-              class="flex items-center gap-1 rounded-md bg-amber-400 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-900 shadow-sm"
-              title="A sample / demo skill — placeholder content, not a real submission"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="h-3 w-3"
-              >
-                <path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3L18 8v.02l-6 3.33-6-3.33V8l6-3.7zM5 9.7l6 3.33v6.64l-6-3.33V9.7zm14 0v6.64l-6 3.33v-6.64l6-3.33z" />
-              </svg>
-              Sample
-            </span>
-          )
-        }
-        {
-          type === "plugin" && (
-            <span
-              class="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent-fg backdrop-blur-sm"
-              title="A Cowork plugin (M365 app package)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="h-3 w-3"
-              >
-                <path d="M10 3v4a1 1 0 0 1-1 1H5m14 0h-4a1 1 0 0 1-1-1V3m0 18v-4a1 1 0 0 1 1-1h4M5 16h4a1 1 0 0 1 1 1v4M4 8h16v8H4z" />
-              </svg>
-              Plugin{pluginSkillCount !== undefined && ` · ${pluginSkillCount} ${pluginSkillCount === 1 ? "skill" : "skills"}`}
-            </span>
-          )
-        }
-        {
-          type === "automation" && (
-            <span
-              class="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent-fg backdrop-blur-sm"
-              title="A Scout automation (scheduled .json)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="h-3 w-3"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7v5l3 2" />
-              </svg>
-              Automation
-            </span>
-          )
-        }
-        {
-          shownPlatforms.map((platform) => (
-            <span
-              class="flex items-center gap-1.5 rounded-md bg-black/30 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm"
-            >
-              <span
-                class="h-1.5 w-1.5 rounded-full"
-                style={`background:${PLATFORM_COLORS[platform]}`}
-              />
-              {platform}
-            </span>
-          ))
-        }
-        {
-          extraPlatforms > 0 && (
-            <span class="rounded-md bg-black/30 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
-              +{extraPlatforms}
-            </span>
-          )
-        }
-      </div>
+    <div class="flex flex-wrap items-center gap-1.5">
       {
-        hasBundle && (
+        isSample && (
           <span
-            class="flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-sm"
-            title={
-              isInstaller
-                ? "Includes a downloadable automation installer"
-                : type === "automation"
-                ? "Includes a downloadable automation file"
-                : "Includes a downloadable script bundle"
-            }
+            class="flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-semibold text-neutral-900 shadow-sm"
+            title="A sample / demo skill — placeholder content, not a real submission"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="h-3 w-3"
-            >
-              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
-            </svg>
-            {type === "automation" && !isInstaller ? ".json" : ".zip"}
+            Sample
           </span>
+        )
+      }
+      {
+        type === "plugin" && (
+          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm" title="A Cowork plugin (M365 app package)">
+            Plugin{pluginSkillCount !== undefined && ` · ${pluginSkillCount} ${pluginSkillCount === 1 ? "skill" : "skills"}`}
+          </span>
+        )
+      }
+      {
+        type === "automation" && (
+          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm" title="A Scout automation (scheduled .json)">
+            Automation
+          </span>
+        )
+      }
+      {
+        shownPlatforms.map((platform) => (
+          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm">
+            <span class="h-2 w-2 rounded-full ring-1 ring-white/80" style={`background:${PLATFORM_COLORS[platform]}`} />
+            {platform}
+          </span>
+        ))
+      }
+      {
+        extraPlatforms > 0 && (
+          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm">+{extraPlatforms}</span>
         )
       }
     </div>

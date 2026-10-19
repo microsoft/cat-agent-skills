@@ -4,6 +4,8 @@ import { coverGradient, initials } from "../lib/skills";
 import type { Platform, SkillType } from "../lib/skills";
 import { CATEGORY_COLORS, CATEGORY_LABELS, type Category } from "../lib/categories";
 import CategoryIcon from "./CategoryIcon.astro";
+import MicrosoftBadge from "./MicrosoftBadge.astro";
+import PlatformChip from "./PlatformChip.astro";
 
 interface Props {
   slug: string;
@@ -52,6 +54,12 @@ const wrapperProps = isInteractive
   style={builtByMicrosoft ? `--category-color:${CATEGORY_COLORS[category]}` : undefined}
   {...wrapperProps}
 >
+  {builtByMicrosoft && (
+    <div class="microsoft-row mb-2.5 flex min-h-6 items-center justify-between gap-2">
+      <span class="truncate text-xs font-medium text-muted">{CATEGORY_LABELS[category]}</span>
+      <MicrosoftBadge />
+    </div>
+  )}
   {variant === "spotlight" ? (
     <>
       <div class="spotlight-heading flex items-start gap-2.5">
@@ -102,14 +110,12 @@ const wrapperProps = isInteractive
     </>
   )}
   <div class:list={[
-    "submission-meta mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[11px] leading-4 text-muted",
+    "submission-meta mt-auto flex items-center justify-between gap-2 text-[11px] leading-4 text-muted",
     variant === "spotlight" ? "pt-3" : "gallery-meta pt-4",
   ]}>
-    {variant === "spotlight" && <span>{CATEGORY_LABELS[category]}</span>}
-    {variant === "gallery" && builtByMicrosoft && <span>Built by Microsoft</span>}
-    <span class="submission-format-platform ml-auto flex flex-wrap items-center justify-end gap-x-1.5">
-      <span class="capitalize">{isSample ? "Sample" : type}</span>
-      {platforms.map((platform) => <><span aria-hidden="true">&middot;</span><span class="whitespace-nowrap">{platform}</span></>)}
+    <span class="shrink-0 capitalize">{isSample ? "Sample" : type}</span>
+    <span class="submission-platforms flex min-w-0 flex-wrap items-center justify-end gap-1">
+      {platforms.map((platform) => <PlatformChip platform={platform} />)}
     </span>
   </div>
 </Wrapper>

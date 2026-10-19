@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import SkillCover from "../../components/SkillCover.astro";
+import MicrosoftBadge from "../../components/MicrosoftBadge.astro";
 import PluginDetails from "../../components/PluginDetails.astro";
 import { getCollection, render } from "astro:content";
 import { readFileSync } from "node:fs";
@@ -123,10 +124,8 @@ const authorProfileUrl =
         platforms={d.platforms}
         tags={d.tags}
         coverColor={d.coverColor}
-        hasBundle={Boolean(d.bundle)}
         type={d.type}
         pluginSkillCount={d.pluginSkills?.length}
-        isInstaller={isInstaller}
         variant="hero"
       />
     </div>
@@ -151,7 +150,9 @@ const authorProfileUrl =
       )
     }
 
-    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_18rem]">
+    {d.builtByMicrosoft && <MicrosoftBadge size="md" class="mt-5" />}
+
+    <div class:list={["grid gap-8 lg:grid-cols-[1fr_18rem]", d.builtByMicrosoft ? "mt-5" : "mt-8"]}>
       <!-- Main content -->
       <div class="order-last min-w-0 lg:order-none">
         <p class="text-lg text-muted">{d.description}</p>

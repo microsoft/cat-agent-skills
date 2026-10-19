@@ -1,12 +1,13 @@
 import { CATEGORY_LABELS, isCategory } from "./categories";
+import { PLATFORMS } from "./skills";
 import {
-  copyGalleryFilters, countPlatforms, galleryFilterParams, matchesFilters, parseGalleryFilters,
+  copyGalleryFilters, galleryFilterParams, matchesFilters, parseGalleryFilters,
   type FilterableSubmission, type GalleryFilters,
 } from "./gallery-filters";
 
 const SORTS = ["featured", "rating", "downloads", "name", "newest"] as const;
 type SortMode = (typeof SORTS)[number];
-type Refinement = "platform" | "type" | "tags" | "authors";
+type Refinement = "type" | "tags" | "authors";
 const FORMAT_LABELS: Record<string, string> = { skill: "Skills", plugin: "Plugins", automation: "Automations" };
 const BATCH = 12;
 
@@ -39,6 +40,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   const filterOptions = get<HTMLElement>("#filter-options");
   const appliedChips = get<HTMLElement>("#applied-filters");
   const categories = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-category]"));
+  const platformButtons = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-platform]"));
   const sortSelect = get<HTMLSelectElement>("#sort-select");
   const count = get<HTMLElement>("#result-count");
   const empty = get<HTMLElement>("#empty-state");
@@ -53,7 +55,6 @@ export function initGalleryBrowser(root: HTMLElement) {
   const dialogBody = get<HTMLElement>(".dialog-body");
   const draftChips = get<HTMLElement>("#draft-selections");
   const apply = get<HTMLButtonElement>("#apply-filters");
-  const platformInputs = Array.from(dialog.querySelectorAll<HTMLInputElement>('input[name="filter-platform"]'));
   const typeInputs = Array.from(dialog.querySelectorAll<HTMLInputElement>('input[name="filter-type"]'));
   const tagInputs = Array.from(dialog.querySelectorAll<HTMLInputElement>('input[name="filter-tag"]'));
   const authorInputs = Array.from(dialog.querySelectorAll<HTMLInputElement>('input[name="filter-author"]'));
@@ -128,7 +129,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     }
     if (showMore) {
       showMore.hidden = previewMatched.length <= columns;
-      showMore.setAttribute("aria-label", `View all ${previewMatched.length} Microsoft submissions`);
+      showMore.setAttribute("aria-label", `View all ${previewMatched.length} Microsoft skills & plugins`);
     }
   }
 
@@ -139,7 +140,6 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function renderRefinements(container: HTMLElement, filters: GalleryFilters, remove: (field: Refinement, value: string) => void) {
     const values: { field: Refinement; value: string; label: string }[] = [];
-    if (filters.platform) values.push({ field: "platform", value: filters.platform, label: filters.platform });
     if (filters.type) values.push({ field: "type", value: filters.type, label: FORMAT_LABELS[filters.type] ?? filters.type });
     filters.tags.forEach((tag) => values.push({ field: "tags", value: tag, label: tag }));
     filters.authors.forEach((author) => values.push({ field: "authors", value: author, label: authorNames.get(author) ?? author }));
@@ -166,6 +166,11 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
 
   function paintApplied() {
+    platformButtons.forEach((button) => {
+      const selected = (button.dataset.platform ?? "") === applied.platform;
+      button.setAttribute("aria-checked", String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    });
     categories.forEach((button) => {
       const category = button.dataset.category ?? "";
       button.setAttribute("aria-pressed", String(isCategory(category) && applied.categories.has(category)));
@@ -215,8 +220,8 @@ export function initGalleryBrowser(root: HTMLElement) {
     renderPreview();
     fill();
     status.textContent = microsoftOnly
-      ? `${matched.length} Microsoft submissions match.`
-      : `${previewMatched.length} Microsoft and ${matched.length} community submissions match.`;
+      ? `${matched.length} Microsoft skills & plugins match.`
+      : `${previewMatched.length} Microsoft and ${matched.length} community skills & plugins match.`;
     paintApplied();
     updateLinks();
   }
@@ -238,20 +243,15 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
 
   function paintDraft() {
-    platformInputs.forEach((input) => { input.checked = input.value === draft.platform; });
     typeInputs.forEach((input) => { input.checked = input.value === draft.type; });
     tagInputs.forEach((input) => { input.checked = draft.tags.has(input.value); });
     authorInputs.forEach((input) => { input.checked = draft.authors.has(input.value); });
-    const platformCounts = countPlatforms(data.values(), draft);
-    dialog.querySelectorAll<HTMLElement>("[data-platform-count]").forEach((element) => {
-      element.textContent = String(platformCounts.get(element.dataset.platformCount ?? "") ?? 0);
-    });
     for (const field of ["tags", "authors"] as const) {
       get<HTMLElement>(`[data-selection-count="${field}"]`).textContent = draft[field].size ? `(${draft[field].size} selected)` : "";
     }
     const draftCount = [...data.values()].filter((item) => matchesFilters(item, draft)).length;
-    apply.textContent = `Show ${draftCount} ${microsoftOnly ? "Microsoft results" : "results"}`;
-    get<HTMLElement>("#draft-filter-status").textContent = `${draftCount} ${microsoftOnly ? "Microsoft" : "total"} submissions match these filters.`;
+    apply.textContent = `Show ${draftCount} results`;
+    get<HTMLElement>("#draft-filter-status").textContent = `${draftCount} ${microsoftOnly ? "Microsoft skills & plugins" : "skills & plugins"} match these filters.`;
     const selections = renderRefinements(draftChips, draft, (field, value) => {
       removeRefinement(draft, field, value);
       paintDraft();
@@ -269,6 +269,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     filterPicker(tagOptions, "", "tagOption", get("#tag-search-empty"));
     filterPicker(authorOptions, "", "authorSearch", get("#author-search-empty"));
     get<HTMLElement>("#filters-context").textContent = [
+      applied.platform || "All products",
       applied.categories.size ? [...applied.categories].map((category) => CATEGORY_LABELS[category]).join(" or ") : "All categories",
       applied.query ? `Search: ${search.value}` : "",
     ].filter(Boolean).join(" \u00b7 ");
@@ -321,7 +322,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     dialog.close();
   });
   get<HTMLButtonElement>("#clear-extra-filters").addEventListener("click", () => {
-    draft.platform = draft.type = "";
+    draft.type = "";
     draft.tags.clear();
     draft.authors.clear();
     paintDraft();
@@ -330,7 +331,6 @@ export function initGalleryBrowser(root: HTMLElement) {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
     switch (input.name) {
-      case "filter-platform": draft.platform = input.value; break;
       case "filter-type": draft.type = input.value; break;
       case "filter-tag": input.checked ? draft.tags.add(input.value) : draft.tags.delete(input.value); break;
       case "filter-author": input.checked ? draft.authors.add(input.value) : draft.authors.delete(input.value); break;
@@ -348,6 +348,24 @@ export function initGalleryBrowser(root: HTMLElement) {
   filterOptions.addEventListener("focusin", (event) => {
     const button = event.target;
     if (button instanceof HTMLButtonElement && button.matches(":focus-visible")) revealFilter(button);
+  });
+  platformButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      const platform = PLATFORMS.find((value) => value === button.dataset.platform) ?? "";
+      if (platform === applied.platform) return;
+      flushSearch();
+      applied.platform = platform;
+      commit();
+      revealFilter(button);
+    });
+    button.addEventListener("keydown", (event) => {
+      const step = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+      if (!step) return;
+      event.preventDefault();
+      const next = platformButtons[(index + step + platformButtons.length) % platformButtons.length]!;
+      next.focus({ preventScroll: true });
+      next.click();
+    });
   });
   categories.forEach((button) => {
     button.addEventListener("click", () => {
