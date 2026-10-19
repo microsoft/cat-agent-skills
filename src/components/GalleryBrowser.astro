@@ -1,0 +1,91 @@
+---
+import { getCollection } from "astro:content";
+import GalleryFilters from "./GalleryFilters.astro";
+import SubmissionItem from "./SubmissionItem.astro";
+import { authorKey, normalizeLogin } from "../lib/badges";
+
+const skills = (await getCollection("skills")).sort((a, b) => {
+  const sampleDiff = Number(a.data.tags.includes("sample")) - Number(b.data.tags.includes("sample"));
+  return sampleDiff || Number(b.data.featured) - Number(a.data.featured) || a.data.name.localeCompare(b.data.name);
+});
+const tagCounts = new Map<string, number>();
+const contributorMap = new Map<string, { key: string; name: string; login: string; count: number }>();
+for (const { data } of skills) {
+  for (const tag of new Set(data.tags)) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  const key = authorKey(data.authorGithub, data.author);
+  if (!key) continue;
+  const existing = contributorMap.get(key);
+  if (existing) existing.count++;
+  else contributorMap.set(key, { key, name: data.author, login: normalizeLogin(data.authorGithub) ?? "", count: 1 });
+}
+const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+---
+
+<div data-gallery-browser>
+  <section class="border-b border-border bg-surface/40">
+    <div class="mx-auto max-w-8xl px-4 py-6 sm:px-6 sm:py-7">
+      <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] lg:items-center">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-fg sm:text-3xl">The gallery of skills and plugins for your AI agents</h1>
+          <p class="mt-2 max-w-2xl text-muted">
+            Find <span class="text-fg">skills, plugins, and automations contributed by the community</span>.
+            Download a submission and add it to <span class="text-fg">Cowork</span>,{" "}
+            <span class="text-fg">Copilot Studio</span>, or <span class="text-fg">Scout</span>.
+          </p>
+        </div>
+        <div class="relative">
+          <label for="skill-search" class="sr-only">Search all submissions</label>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
+          </svg>
+          <input id="skill-search" type="search" placeholder="Search by name, contributor, or topic" autocomplete="off" class="w-full rounded-xl border border-border bg-surface py-2.5 pl-11 pr-4 text-fg placeholder:text-subtle outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/25" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <GalleryFilters tags={tags} contributors={contributors} total={skills.length} />
+  <p id="filter-status" class="sr-only" role="status" aria-live="polite"></p>
+
+  <section class="mx-auto max-w-8xl px-4 py-7 sm:px-6">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <h2 class="text-xl font-bold tracking-tight text-fg">
+        Submissions <span id="result-count" class="text-base font-normal text-muted">({skills.length})</span>
+      </h2>
+      <label class="flex items-center gap-2 text-sm text-muted">
+        <span class="hidden sm:inline">Sort by</span>
+        <select id="sort-select" aria-label="Sort submissions" class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none">
+          <option value="featured">Featured</option>
+          <option value="rating">Top rated</option>
+          <option value="downloads">Most downloaded</option>
+          <option value="name">Name (A-Z)</option>
+          <option value="newest">Newest</option>
+          <option value="updated">Recently updated</option>
+        </select>
+      </label>
+    </div>
+    <div id="gallery" class="submission-grid">
+      {skills.map((submission) => <SubmissionItem submission={submission} />)}
+    </div>
+    <p id="empty-state" hidden={skills.length > 0} class="text-sm text-muted">
+      No submissions match these filters.{" "}
+      <button type="button" data-clear-filters class="font-semibold text-accent-text underline underline-offset-4">Clear filters</button>
+      {" "}to browse all submissions.
+    </p>
+    <div id="scroll-sentinel" class="h-10"></div>
+  </section>
+</div>
+
+<style>
+  .submission-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  @media (min-width: 40rem) {
+    .submission-grid { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+  }
+</style>
+
+<script>
+  import { initGalleryBrowser } from "../lib/gallery-browser";
+  document.querySelectorAll<HTMLElement>("[data-gallery-browser]").forEach(initGalleryBrowser);
+</script>
