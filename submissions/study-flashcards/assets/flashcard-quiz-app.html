@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Deck</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card-bg: #ffffff; --ink: #1f2430; --muted: #6b7280;
+    --accent: #4f46e5; --accent-soft: #eef2ff; --good: #16a34a; --bad: #dc2626;
+    --warn: #d97706; --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--ink);
+  }
+  header {
+    padding: 20px 24px; background: var(--card-bg); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  header h1 { font-size: 20px; margin: 0; }
+  .tabs { display: flex; gap: 8px; }
+  .tab-btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+    cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted);
+  }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .dashboard {
+    display: flex; gap: 16px; padding: 16px 24px; flex-wrap: wrap;
+  }
+  .stat {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 18px; min-width: 120px; text-align: center;
+  }
+  .stat .num { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  main { max-width: 760px; margin: 0 auto; padding: 8px 24px 60px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Flashcards */
+  .card-scene { perspective: 1200px; margin: 24px 0; }
+  .card {
+    position: relative; height: 260px; border-radius: 16px; cursor: pointer;
+    transform-style: preserve-3d; transition: transform 0.45s ease;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .card:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+  .card-face {
+    position: absolute; inset: 0; backface-visibility: hidden; border-radius: 16px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    padding: 28px; font-size: 19px; line-height: 1.5; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .card-face.back { transform: rotateY(180deg); background: var(--accent-soft); }
+  .card-topic {
+    position: absolute; top: 12px; left: 16px; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--muted); font-weight: 700;
+  }
+  .card-hint { position: absolute; bottom: 10px; right: 14px; font-size: 11px; color: var(--muted); }
+  .controls { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+  .controls button {
+    padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+  }
+  .rate-row { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+  .rate-btn { color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+  .rate-again { background: var(--bad); }
+  .rate-good { background: var(--accent); }
+  .rate-easy { background: var(--good); }
+  .progress-line { text-align: center; color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state button { margin-top: 14px; }
+
+  /* Quiz */
+  .quiz-q { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+  .quiz-q h3 { margin: 0 0 12px; font-size: 15px; }
+  .opt-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+  .opt-row:hover { background: var(--accent-soft); }
+  .opt-row input { cursor: pointer; }
+  .short-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
+  .quiz-submit { display: block; margin: 20px auto; padding: 12px 28px; }
+  .result-banner {
+    text-align: center; padding: 16px; border-radius: 10px; margin-bottom: 18px; font-weight: 700; font-size: 17px;
+  }
+  .result-banner.pass { background: #dcfce7; color: var(--good); }
+  .result-banner.fail { background: #fee2e2; color: var(--bad); }
+  .review-item { border-left: 4px solid var(--border); padding: 8px 14px; margin-bottom: 10px; }
+  .review-item.correct { border-color: var(--good); }
+  .review-item.incorrect { border-color: var(--bad); }
+  .source-tag { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .review-item.pending { border-color: var(--accent); }
+  .self-check { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .self-check button { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .self-check button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="deckTitle">Study Deck</h1>
+  <div class="tabs">
+    <button class="tab-btn active" data-panel="flashPanel">Flashcards</button>
+    <button class="tab-btn" data-panel="quizPanel">Quiz</button>
+  </div>
+</header>
+
+<div class="dashboard">
+  <div class="stat"><div class="num" id="statMastered">0</div><div class="label">Mastered</div></div>
+  <div class="stat"><div class="num" id="statDue">0</div><div class="label">Due today</div></div>
+  <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Total cards</div></div>
+  <div class="stat"><div class="num" id="statQuizScore">—</div><div class="label">Last quiz score</div></div>
+</div>
+
+<main>
+  <section id="flashPanel" class="panel active">
+    <div id="flashArea"></div>
+  </section>
+
+  <section id="quizPanel" class="panel">
+    <div id="quizArea"></div>
+  </section>
+</main>
+
+<script>
+/* ======================================================================
+   STUDY DATA — an agent replaces everything inside STUDY_DATA with the
+   flashcards and quiz it generated from the user's source material.
+   Keep this exact shape: { title, flashcards[], quiz[] }.
+   - flashcards[].id must be a short unique string (used as the spaced-
+     repetition storage key) — keep IDs stable across regenerations of
+     the same deck if you want progress to carry over.
+   - quiz[].type is one of "mc" (multiple choice), "tf" (true/false),
+     or "short" (short answer, self-checked by the learner after submit).
+   - "source" fields are optional but recommended — shown in the quiz
+     review and used to ground every card/question back to the notes.
+   - Build this block with JSON.stringify and replace every "<" with
+     "\u003c" so source text can never close this <script> tag.
+   ====================================================================== */
+const STUDY_DATA = {
+  "title": "Sample Deck — French Revolution",
+  "flashcards": [
+    { "id": "c1", "front": "What year did the French Revolution begin?", "back": "1789", "topic": "Timeline", "source": "Notes p.1" },
+    { "id": "c2", "front": "What event on July 14, 1789 became a symbol of the uprising?", "back": "The storming of the Bastille", "topic": "Key Events", "source": "Notes p.1" },
+    { "id": "c3", "front": "What document (Aug 1789) established liberty, equality, and popular sovereignty?", "back": "The Declaration of the Rights of Man and of the Citizen", "topic": "Key Documents", "source": "Notes p.2" },
+    { "id": "c4", "front": "When was Louis XVI executed?", "back": "January 1793", "topic": "Timeline", "source": "Notes p.2" },
+    { "id": "c5", "front": "Who led the Committee of Public Safety during the Reign of Terror?", "back": "Robespierre", "topic": "Key Figures", "source": "Notes p.3" }
+  ],
+  "quiz": [
+    { "id": "q1", "type": "mc", "question": "What sparked the initial financial crisis behind the Revolution?", "options": ["War debt and an inefficient tax system", "A foreign invasion", "A currency reform", "A royal marriage dispute"], "answer": 0, "source": "Notes p.1" },
+    { "id": "q2", "type": "tf", "question": "The Third Estate broke away to form the National Assembly in 1789.", "answer": true, "source": "Notes p.1" },
+    { "id": "q3", "type": "short", "question": "What ended the Reign of Terror in July 1794?", "answer": "Robespierre's execution", "source": "Notes p.3" }
+  ]
+};
+/* ==================== END STUDY DATA — do not edit below ==================== */
+
+const STORAGE_KEY = "study_progress_" + STUDY_DATA.title.replace(/\s+/g, "_").toLowerCase();
+const INTERVALS_DAYS = [0, 1, 3, 7, 14]; // box 0..4 -> days until next review
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function createSafeStorage() {
+  const memory = new Map();
+  try {
+    const storage = window.localStorage;
+    const probe = STORAGE_KEY + "_storage_probe";
+    storage.setItem(probe, "1");
+    storage.removeItem(probe);
+    return storage;
+  } catch (e) {
+    return {
+      getItem(key) { return memory.has(key) ? memory.get(key) : null; },
+      setItem(key, value) { memory.set(key, String(value)); },
+      removeItem(key) { memory.delete(key); }
+    };
+  }
+}
+
+const progressStorage = createSafeStorage();
+
+function loadProgress() {
+  try { return JSON.parse(progressStorage.getItem(STORAGE_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function saveProgress(p) { progressStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+let progress = loadProgress();
+let quizScoreKey = STORAGE_KEY + "_quiz_score";
+
+function ensureCardState(id) {
+  if (!progress[id]) progress[id] = { box: 0, nextReview: 0, lastReviewed: null };
+  return progress[id];
+}
+
+function isDue(card) {
+  const st = ensureCardState(card.id);
+  return st.nextReview <= Date.now();
+}
+
+function rateCard(card, rating) {
+  const st = ensureCardState(card.id);
+  if (rating === "again") st.box = 0;
+  else if (rating === "good") st.box = Math.min(4, st.box + 1);
+  else if (rating === "easy") st.box = Math.min(4, st.box + 2);
+  st.lastReviewed = Date.now();
+  st.nextReview = Date.now() + INTERVALS_DAYS[st.box] * DAY_MS;
+  saveProgress(progress);
+}
+
+document.getElementById("deckTitle").textContent = STUDY_DATA.title;
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.panel).classList.add("active");
+  });
+});
+
+/* ---------------- Dashboard ---------------- */
+function refreshDashboard() {
+  const total = STUDY_DATA.flashcards.length;
+  const mastered = STUDY_DATA.flashcards.filter(c => ensureCardState(c.id).box >= 4).length;
+  const due = STUDY_DATA.flashcards.filter(isDue).length;
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statMastered").textContent = mastered;
+  document.getElementById("statDue").textContent = due;
+  const lastScore = progressStorage.getItem(quizScoreKey);
+  document.getElementById("statQuizScore").textContent = lastScore ? lastScore : "—";
+}
+
+/* ---------------- Flashcards ---------------- */
+let deckQueue = [];
+let queueIndex = 0;
+let showingAll = false;
+
+function buildQueue() {
+  showingAll = false;
+  deckQueue = STUDY_DATA.flashcards.filter(isDue);
+  queueIndex = 0;
+}
+
+function renderFlash() {
+  refreshDashboard();
+  const area = document.getElementById("flashArea");
+  if (deckQueue.length === 0) {
+    area.innerHTML = `<div class="empty-state">
+      <p>🎉 All caught up — no cards due right now.</p>
+      <button id="reviewAllBtn">Review all cards anyway</button>
+    </div>`;
+    document.getElementById("reviewAllBtn").addEventListener("click", () => {
+      showingAll = true;
+      deckQueue = STUDY_DATA.flashcards.slice();
+      queueIndex = 0;
+      renderFlash();
+    });
+    return;
+  }
+  if (queueIndex >= deckQueue.length) {
+    area.innerHTML = `<div class="empty-state">
+      <p>✅ Session complete — reviewed ${deckQueue.length} card(s).</p>
+      <button id="restartBtn">Study again</button>
+    </div>`;
+    document.getElementById("restartBtn").addEventListener("click", () => { buildQueue(); renderFlash(); });
+    return;
+  }
+  const card = deckQueue[queueIndex];
+  area.innerHTML = `
+    <div class="progress-line">Card ${queueIndex + 1} of ${deckQueue.length}${showingAll ? " (review mode)" : ""}</div>
+    <div class="card-scene">
+      <div class="card" id="flipCard" role="button" tabindex="0" aria-pressed="false">
+        <div class="card-face front"><span class="card-topic">${escapeHtml(card.topic || "")}</span>${escapeHtml(card.front)}<span class="card-hint">Click or press Enter to flip</span></div>
+        <div class="card-face back" aria-hidden="true"><span class="card-topic">${escapeHtml(card.topic || "")}</span>${escapeHtml(card.back)}</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="shuffleBtn">Shuffle remaining</button>
+      <button id="skipBtn">Skip</button>
+    </div>
+    <div class="rate-row" id="rateRow" style="display:none;">
+      <button class="rate-btn rate-again" data-r="again">Again</button>
+      <button class="rate-btn rate-good" data-r="good">Good</button>
+      <button class="rate-btn rate-easy" data-r="easy">Easy</button>
+    </div>
+    ${card.source ? `<div class="source-tag" style="text-align:center;margin-top:10px;">Source: ${escapeHtml(card.source)}</div>` : ""}
+  `;
+  const flipEl = document.getElementById("flipCard");
+  const flip = () => {
+    const flipped = flipEl.classList.toggle("flipped");
+    flipEl.setAttribute("aria-pressed", String(flipped));
+    flipEl.querySelector(".front").setAttribute("aria-hidden", String(flipped));
+    flipEl.querySelector(".back").setAttribute("aria-hidden", String(!flipped));
+    document.getElementById("rateRow").style.display = flipped ? "flex" : "none";
+  };
+  flipEl.addEventListener("click", flip);
+  flipEl.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); }
+  });
+  document.getElementById("shuffleBtn").addEventListener("click", () => {
+    const rest = deckQueue.slice(queueIndex + 1);
+    for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+    deckQueue = deckQueue.slice(0, queueIndex + 1).concat(rest);
+    renderFlash();
+  });
+  document.getElementById("skipBtn").addEventListener("click", () => { queueIndex++; renderFlash(); });
+  document.querySelectorAll("[data-r]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (!showingAll) rateCard(card, btn.dataset.r);
+      queueIndex++;
+      renderFlash();
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ---------------- Quiz ---------------- */
+function renderQuiz() {
+  const area = document.getElementById("quizArea");
+  let html = "";
+  STUDY_DATA.quiz.forEach((q, idx) => {
+    const field = "q" + idx;
+    html += `<div class="quiz-q"><h3 id="${field}_label">${idx + 1}. ${escapeHtml(q.question)}</h3>`;
+    if (q.type === "mc") {
+      q.options.forEach((opt, oi) => {
+        html += `<label class="opt-row"><input type="radio" name="${field}" value="${oi}"> ${escapeHtml(opt)}</label>`;
+      });
+    } else if (q.type === "tf") {
+      html += `<label class="opt-row"><input type="radio" name="${field}" value="true"> True</label>
+               <label class="opt-row"><input type="radio" name="${field}" value="false"> False</label>`;
+    } else {
+      html += `<input type="text" class="short-input" name="${field}" aria-labelledby="${field}_label" placeholder="Type your answer, then check it against the key after submitting">`;
+    }
+    html += `</div>`;
+  });
+  html += `<button class="quiz-submit tab-btn active" id="submitQuiz">Submit quiz</button>`;
+  area.innerHTML = html;
+  document.getElementById("submitQuiz").addEventListener("click", gradeQuiz);
+}
+
+function gradeQuiz() {
+  const results = STUDY_DATA.quiz.map((q, idx) => {
+    const field = "q" + idx;
+    let userAnswer, isCorrect;
+    if (q.type === "mc") {
+      const sel = document.querySelector(`input[name="${field}"]:checked`);
+      userAnswer = sel ? q.options[Number(sel.value)] : "(no answer)";
+      isCorrect = !!sel && Number(sel.value) === q.answer;
+    } else if (q.type === "tf") {
+      const sel = document.querySelector(`input[name="${field}"]:checked`);
+      userAnswer = sel ? (sel.value === "true" ? "True" : "False") : "(no answer)";
+      isCorrect = !!sel && (sel.value === "true") === q.answer;
+    } else {
+      const inp = document.querySelector(`input[name="${field}"]`);
+      userAnswer = inp && inp.value.trim() ? inp.value.trim() : "(no answer)";
+      // Short answers are self-checked: null until the learner marks it.
+      isCorrect = userAnswer === "(no answer)" ? false : null;
+    }
+    return { q, userAnswer, isCorrect };
+  });
+
+  const area = document.getElementById("quizArea");
+  let html = `<div class="result-banner" id="scoreBanner" role="status" aria-live="polite"></div>`;
+  results.forEach((r, idx) => {
+    const correctAnswerText = r.q.type === "mc" ? r.q.options[r.q.answer] : (r.q.type === "tf" ? (r.q.answer ? "True" : "False") : r.q.answer);
+    const needsCheck = r.isCorrect === null;
+    html += `<div class="review-item ${needsCheck ? "pending" : (r.isCorrect ? "correct" : "incorrect")}" id="review${idx}">
+      <strong>${idx + 1}. ${escapeHtml(r.q.question)}</strong><br>
+      Your answer: ${escapeHtml(String(r.userAnswer))}<br>
+      ${r.isCorrect === true ? "" : `${needsCheck ? "Expected answer" : "Correct answer"}: ${escapeHtml(String(correctAnswerText))}<br>`}
+      ${needsCheck ? `<div class="self-check" role="group" aria-label="Mark question ${idx + 1}">
+        <button type="button" data-idx="${idx}" data-mark="right" aria-pressed="false">I got it right</button>
+        <button type="button" data-idx="${idx}" data-mark="wrong" aria-pressed="false">I missed it</button>
+      </div>` : ""}
+      ${r.q.source ? `<span class="source-tag">Source: ${escapeHtml(r.q.source)}</span>` : ""}
+    </div>`;
+  });
+  html += `<button class="quiz-submit tab-btn active" id="retakeQuiz">Retake quiz</button>`;
+  area.innerHTML = html;
+
+  const updateScore = () => {
+    const total = results.length;
+    const correct = results.filter(r => r.isCorrect === true).length;
+    const pending = results.filter(r => r.isCorrect === null).length;
+    const scoreStr = `${correct}/${total}`;
+    const banner = document.getElementById("scoreBanner");
+    banner.className = "result-banner " + (pending ? "" : (correct === total ? "pass" : "fail"));
+    banner.textContent = pending
+      ? `Score so far: ${scoreStr} (${pending} short answer${pending > 1 ? "s" : ""} left to self-check)`
+      : `Score: ${scoreStr}`;
+    if (!pending) progressStorage.setItem(quizScoreKey, scoreStr);
+    refreshDashboard();
+  };
+
+  area.querySelectorAll(".self-check button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.idx);
+      const right = btn.dataset.mark === "right";
+      results[idx].isCorrect = right;
+      const item = document.getElementById("review" + idx);
+      item.classList.remove("pending", "correct", "incorrect");
+      item.classList.add(right ? "correct" : "incorrect");
+      item.querySelectorAll(".self-check button").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+      updateScore();
+    });
+  });
+  document.getElementById("retakeQuiz").addEventListener("click", renderQuiz);
+  updateScore();
+}
+/* ---------------- Init ---------------- */
+buildQueue();
+renderFlash();
+renderQuiz();
+refreshDashboard();
+</script>
+</body>
+</html>
