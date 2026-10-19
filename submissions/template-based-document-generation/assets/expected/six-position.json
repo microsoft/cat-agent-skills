@@ -1,0 +1,994 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "Dear {{ first }} {{ last }},",
+        "Reference: {{ client_name }} (copy 1)",
+        "Amount:\t{{ amount }}",
+        "Issued on\n{{ issued }}",
+        "Code: {{ code_a }}{{ code_b }}",
+        "See {{ client_name }}",
+        "Use {braces} carefully; the value {{ remarks }} follows.",
+        "Active: {{ active }}",
+        "Count",
+        "{{ count }}",
+        "Signed for {{ client_name }}"
+      ],
+      "word/header1.xml": [
+        "{{ client_name }} - Confidential"
+      ],
+      "word/footer1.xml": [
+        "Ref {{ code_a }}"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p1#5-16",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "first"
+      },
+      {
+        "id": "f:word/document.xml#p1#17-27",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "last"
+      },
+      {
+        "id": "f:word/document.xml#p2#11-28",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/document.xml#p3#8-20",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "amount"
+      },
+      {
+        "id": "f:word/document.xml#p4#10-22",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "issued"
+      },
+      {
+        "id": "f:word/document.xml#p5#6-18",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "code_a"
+      },
+      {
+        "id": "f:word/document.xml#p5#18-30",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "code_b"
+      },
+      {
+        "id": "f:word/document.xml#p6#4-21",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/document.xml#p7#34-47",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "remarks"
+      },
+      {
+        "id": "f:word/document.xml#p7#4-12",
+        "kind": "field",
+        "pattern": "single_brace",
+        "confidence": "low",
+        "eligible": true,
+        "decision_required": false,
+        "name_guess": "braces"
+      },
+      {
+        "id": "f:word/document.xml#p8#8-20",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "active"
+      },
+      {
+        "id": "f:word/document.xml#p10#0-11",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "count"
+      },
+      {
+        "id": "f:word/document.xml#p11#11-28",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/header1.xml#p0#0-17",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/footer1.xml#p0#4-16",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "code_a"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "fill split runs, escaping, types and repeated fields",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#5-16",
+            "decision": "field",
+            "field": "first"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p1#17-27",
+            "decision": "field",
+            "field": "last"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p2#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p3#8-20",
+            "decision": "field",
+            "field": "amount"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p4#10-22",
+            "decision": "field",
+            "field": "issued"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#6-18",
+            "decision": "field",
+            "field": "code_a"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#18-30",
+            "decision": "field",
+            "field": "code_b"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p6#4-21",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p7#34-47",
+            "decision": "field",
+            "field": "remarks"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p8#8-20",
+            "decision": "field",
+            "field": "active"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p10#0-11",
+            "decision": "field",
+            "field": "count"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p11#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/header1.xml#p0#0-17",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/footer1.xml#p0#4-16",
+            "decision": "field",
+            "field": "code_a"
+          }
+        ],
+        "fields": [
+          {
+            "name": "first",
+            "type": "string",
+            "source": "first"
+          },
+          {
+            "name": "last",
+            "type": "string",
+            "source": "last"
+          },
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "amount",
+            "type": "decimal",
+            "source": "amount"
+          },
+          {
+            "name": "issued",
+            "type": "date",
+            "source": "issued"
+          },
+          {
+            "name": "code_a",
+            "type": "string",
+            "source": "code_a"
+          },
+          {
+            "name": "code_b",
+            "type": "string",
+            "source": "code_b"
+          },
+          {
+            "name": "remarks",
+            "type": "string",
+            "source": "remarks"
+          },
+          {
+            "name": "active",
+            "type": "boolean",
+            "source": "active"
+          },
+          {
+            "name": "count",
+            "type": "integer",
+            "source": "count"
+          }
+        ]
+      },
+      "values": {
+        "first": "Ada",
+        "last": "Lovelace",
+        "client_name": "A & B <Labs>",
+        "amount": "1234.5",
+        "issued": "2026-09-30",
+        "code_a": "AB",
+        "code_b": "42",
+        "remarks": "Line one\nLine two\tend",
+        "active": true,
+        "count": 3
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Dear Ada Lovelace,",
+            "Reference: A & B <Labs> (copy 1)",
+            "Amount:\t1234.50",
+            "Issued on\n2026-09-30",
+            "Code: AB42",
+            "See A & B <Labs>",
+            "Use {braces} carefully; the value Line one\nLine two\tend follows.",
+            "Active: Yes",
+            "Count",
+            "3",
+            "Signed for A & B <Labs>"
+          ],
+          "word/header1.xml": [
+            "A & B <Labs> - Confidential"
+          ],
+          "word/footer1.xml": [
+            "Ref AB"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": true
+    },
+    {
+      "name": "missing required field",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#5-16",
+            "decision": "field",
+            "field": "first"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p1#17-27",
+            "decision": "field",
+            "field": "last"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p2#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p3#8-20",
+            "decision": "field",
+            "field": "amount"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p4#10-22",
+            "decision": "field",
+            "field": "issued"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#6-18",
+            "decision": "field",
+            "field": "code_a"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#18-30",
+            "decision": "field",
+            "field": "code_b"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p6#4-21",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p7#34-47",
+            "decision": "field",
+            "field": "remarks"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p8#8-20",
+            "decision": "field",
+            "field": "active"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p10#0-11",
+            "decision": "field",
+            "field": "count"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p11#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/header1.xml#p0#0-17",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/footer1.xml#p0#4-16",
+            "decision": "field",
+            "field": "code_a"
+          }
+        ],
+        "fields": [
+          {
+            "name": "first",
+            "type": "string",
+            "source": "first"
+          },
+          {
+            "name": "last",
+            "type": "string",
+            "source": "last"
+          },
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "amount",
+            "type": "decimal",
+            "source": "amount"
+          },
+          {
+            "name": "issued",
+            "type": "date",
+            "source": "issued"
+          },
+          {
+            "name": "code_a",
+            "type": "string",
+            "source": "code_a"
+          },
+          {
+            "name": "code_b",
+            "type": "string",
+            "source": "code_b"
+          },
+          {
+            "name": "remarks",
+            "type": "string",
+            "source": "remarks"
+          },
+          {
+            "name": "active",
+            "type": "boolean",
+            "source": "active"
+          },
+          {
+            "name": "count",
+            "type": "integer",
+            "source": "count"
+          }
+        ]
+      },
+      "values": {
+        "last": "Lovelace",
+        "client_name": "A & B <Labs>",
+        "amount": "1234.5",
+        "issued": "2026-09-30",
+        "code_a": "AB",
+        "code_b": "42",
+        "remarks": "Line one\nLine two\tend",
+        "active": true,
+        "count": 3
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "first"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "sentinel absence",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#5-16",
+            "decision": "field",
+            "field": "first"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p1#17-27",
+            "decision": "field",
+            "field": "last"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p2#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p3#8-20",
+            "decision": "field",
+            "field": "amount"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p4#10-22",
+            "decision": "field",
+            "field": "issued"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#6-18",
+            "decision": "field",
+            "field": "code_a"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#18-30",
+            "decision": "field",
+            "field": "code_b"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p6#4-21",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p7#34-47",
+            "decision": "field",
+            "field": "remarks"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p8#8-20",
+            "decision": "field",
+            "field": "active"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p10#0-11",
+            "decision": "field",
+            "field": "count"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p11#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/header1.xml#p0#0-17",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/footer1.xml#p0#4-16",
+            "decision": "field",
+            "field": "code_a"
+          }
+        ],
+        "fields": [
+          {
+            "name": "first",
+            "type": "string",
+            "source": "first",
+            "absence_policy": "sentinel",
+            "absence_text": "Pending"
+          },
+          {
+            "name": "last",
+            "type": "string",
+            "source": "last"
+          },
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "amount",
+            "type": "decimal",
+            "source": "amount"
+          },
+          {
+            "name": "issued",
+            "type": "date",
+            "source": "issued"
+          },
+          {
+            "name": "code_a",
+            "type": "string",
+            "source": "code_a"
+          },
+          {
+            "name": "code_b",
+            "type": "string",
+            "source": "code_b"
+          },
+          {
+            "name": "remarks",
+            "type": "string",
+            "source": "remarks"
+          },
+          {
+            "name": "active",
+            "type": "boolean",
+            "source": "active"
+          },
+          {
+            "name": "count",
+            "type": "integer",
+            "source": "count"
+          }
+        ]
+      },
+      "values": {
+        "last": "Lovelace",
+        "client_name": "A & B <Labs>",
+        "amount": "1234.5",
+        "issued": "2026-09-30",
+        "code_a": "AB",
+        "code_b": "42",
+        "remarks": "Line one\nLine two\tend",
+        "active": true,
+        "count": 3
+      },
+      "expect": {
+        "result": "needs_review",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Dear Pending Lovelace,",
+            "Reference: A & B <Labs> (copy 1)",
+            "Amount:\t1234.50",
+            "Issued on\n2026-09-30",
+            "Code: AB42",
+            "See A & B <Labs>",
+            "Use {braces} carefully; the value Line one\nLine two\tend follows.",
+            "Active: Yes",
+            "Count",
+            "3",
+            "Signed for A & B <Labs>"
+          ],
+          "word/header1.xml": [
+            "A & B <Labs> - Confidential"
+          ],
+          "word/footer1.xml": [
+            "Ref AB"
+          ]
+        },
+        "review_codes": [
+          "sentinel_used"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "empty absence",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#5-16",
+            "decision": "field",
+            "field": "first"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p1#17-27",
+            "decision": "field",
+            "field": "last"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p2#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p3#8-20",
+            "decision": "field",
+            "field": "amount"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p4#10-22",
+            "decision": "field",
+            "field": "issued"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#6-18",
+            "decision": "field",
+            "field": "code_a"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#18-30",
+            "decision": "field",
+            "field": "code_b"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p6#4-21",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p7#34-47",
+            "decision": "field",
+            "field": "remarks"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p8#8-20",
+            "decision": "field",
+            "field": "active"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p10#0-11",
+            "decision": "field",
+            "field": "count"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p11#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/header1.xml#p0#0-17",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/footer1.xml#p0#4-16",
+            "decision": "field",
+            "field": "code_a"
+          }
+        ],
+        "fields": [
+          {
+            "name": "first",
+            "type": "string",
+            "source": "first",
+            "absence_policy": "empty"
+          },
+          {
+            "name": "last",
+            "type": "string",
+            "source": "last"
+          },
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "amount",
+            "type": "decimal",
+            "source": "amount"
+          },
+          {
+            "name": "issued",
+            "type": "date",
+            "source": "issued"
+          },
+          {
+            "name": "code_a",
+            "type": "string",
+            "source": "code_a"
+          },
+          {
+            "name": "code_b",
+            "type": "string",
+            "source": "code_b"
+          },
+          {
+            "name": "remarks",
+            "type": "string",
+            "source": "remarks"
+          },
+          {
+            "name": "active",
+            "type": "boolean",
+            "source": "active"
+          },
+          {
+            "name": "count",
+            "type": "integer",
+            "source": "count"
+          }
+        ]
+      },
+      "values": {
+        "last": "Lovelace",
+        "client_name": "A & B <Labs>",
+        "amount": "1234.5",
+        "issued": "2026-09-30",
+        "code_a": "AB",
+        "code_b": "42",
+        "remarks": "Line one\nLine two\tend",
+        "active": true,
+        "count": 3
+      },
+      "expect": {
+        "result": "needs_review",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Dear  Lovelace,",
+            "Reference: A & B <Labs> (copy 1)",
+            "Amount:\t1234.50",
+            "Issued on\n2026-09-30",
+            "Code: AB42",
+            "See A & B <Labs>",
+            "Use {braces} carefully; the value Line one\nLine two\tend follows.",
+            "Active: Yes",
+            "Count",
+            "3",
+            "Signed for A & B <Labs>"
+          ],
+          "word/header1.xml": [
+            "A & B <Labs> - Confidential"
+          ],
+          "word/footer1.xml": [
+            "Ref AB"
+          ]
+        },
+        "review_codes": [
+          "empty_used"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "literal and unused data are disclosed",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#5-16",
+            "decision": "field",
+            "field": "first"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p1#17-27",
+            "decision": "field",
+            "field": "last"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p2#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p3#8-20",
+            "decision": "field",
+            "field": "amount"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p4#10-22",
+            "decision": "field",
+            "field": "issued"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#6-18",
+            "decision": "field",
+            "field": "code_a"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#18-30",
+            "decision": "field",
+            "field": "code_b"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p6#4-21",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p7#34-47",
+            "decision": "field",
+            "field": "remarks"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p8#8-20",
+            "decision": "field",
+            "field": "active"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p10#0-11",
+            "decision": "field",
+            "field": "count"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p11#11-28",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/header1.xml#p0#0-17",
+            "decision": "field",
+            "field": "client_name"
+          },
+          {
+            "candidate_id": "f:word/footer1.xml#p0#4-16",
+            "decision": "field",
+            "field": "code_a"
+          }
+        ],
+        "fields": [
+          {
+            "name": "first",
+            "type": "string",
+            "literal": "Ada"
+          },
+          {
+            "name": "last",
+            "type": "string",
+            "source": "last"
+          },
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          },
+          {
+            "name": "amount",
+            "type": "decimal",
+            "source": "amount"
+          },
+          {
+            "name": "issued",
+            "type": "date",
+            "source": "issued"
+          },
+          {
+            "name": "code_a",
+            "type": "string",
+            "source": "code_a"
+          },
+          {
+            "name": "code_b",
+            "type": "string",
+            "source": "code_b"
+          },
+          {
+            "name": "remarks",
+            "type": "string",
+            "source": "remarks"
+          },
+          {
+            "name": "active",
+            "type": "boolean",
+            "source": "active"
+          },
+          {
+            "name": "count",
+            "type": "integer",
+            "source": "count"
+          }
+        ]
+      },
+      "values": {
+        "first": "Ada",
+        "last": "Lovelace",
+        "client_name": "A & B <Labs>",
+        "amount": "1234.5",
+        "issued": "2026-09-30",
+        "code_a": "AB",
+        "code_b": "42",
+        "remarks": "Line one\nLine two\tend",
+        "active": true,
+        "count": 3
+      },
+      "expect": {
+        "result": "needs_review",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Dear Ada Lovelace,",
+            "Reference: A & B <Labs> (copy 1)",
+            "Amount:\t1234.50",
+            "Issued on\n2026-09-30",
+            "Code: AB42",
+            "See A & B <Labs>",
+            "Use {braces} carefully; the value Line one\nLine two\tend follows.",
+            "Active: Yes",
+            "Count",
+            "3",
+            "Signed for A & B <Labs>"
+          ],
+          "word/header1.xml": [
+            "A & B <Labs> - Confidential"
+          ],
+          "word/footer1.xml": [
+            "Ref AB"
+          ]
+        },
+        "review_codes": [
+          "literal_value",
+          "unused_input"
+        ]
+      },
+      "rerun": false
+    }
+  ]
+}
