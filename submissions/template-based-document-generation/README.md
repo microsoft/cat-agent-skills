@@ -16,7 +16,8 @@ Depending on the template and supplied data, the skill can:
 
 - Replace placeholders and fill supported Word content controls.
 - Format dates, amounts, counts, and yes/no values consistently.
-- Repeat a table row for each item in a list, such as services or deliverables.
+- Repeat a table row for each item in a list, such as services or deliverables,
+  showing a grouping column such as Phase only on the first row of each group.
 - Remove drafting guidance and optional sections when they do not apply.
 - Add paragraphs at a defined location for longer answers or summaries.
 - Update fields in the document body, headers, footers, and footnotes.
@@ -108,9 +109,13 @@ python scripts/build_fixtures.py --check
 python scripts/run_job.py selftest --workdir <workdir>
 ```
 
+On Windows `doctor` fails when the work directory is too deep for a job to be
+written, and says how much room is left; move it rather than retrying.
+
 The bundled tests use synthetic documents to check filling, formatting, document
-preservation, unsafe deletions, and failure handling. The fixtures contain no
-customer data.
+preservation, unsafe deletions, and failure handling. They also run the example
+plan in `references/examples/`, so the example cannot drift from the scripts.
+The fixtures contain no customer data.
 
 See [SKILL.md](SKILL.md) for the agent workflow,
 [the contract](references/contract.md) for the plan and data formats, and

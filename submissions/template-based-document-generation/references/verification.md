@@ -33,7 +33,7 @@
 | `pkg.no_new_parts` | A part was added |
 | `pkg.in_scope_parts_parse` | A modified part does not parse or has invalid namespace references |
 | `pkg.no_new_relationships` | The multiset of `r:id`/`r:embed`/`r:link` references differs from what the planned deletions and repeats imply |
-| `pkg.reference_integrity` | The output adds a document-wide structural problem the template did not have: an unpaired bookmark or comment range, a duplicate bookmark id or name, a duplicate drawing object id, a table with no rows, or a table cell with no paragraph. Checked against the template's own problems, so an already-odd template does not fail for being odd |
+| `pkg.reference_integrity` | The output adds a document-wide structural problem the template did not have: an unpaired bookmark or comment range, a duplicate bookmark id or name, a duplicate drawing object id, a table with no rows, or a table cell, body, header, footer, footnote, endnote, text box or block-level content control with no paragraph (wrappers such as `w:customXml` do not count; only a surviving paragraph does). Checked against the template's own problems, so an already-odd template does not fail for being odd |
 | `pkg.namespace_preserved` | A namespace declaration was removed, added, altered or moved; new elements carry declarations |
 | `ops.structure_matches_plan` | A difference outside the planned operations, a missing deletion, a wrong copy count, a wrong insertion |
 | `ops.paragraph_texts_expected` | A paragraph or owning-run text is not the computed expectation, or `xml:space` is missing |

@@ -24,7 +24,14 @@ import ooxml_common as oc  # noqa: E402
 
 SIGNATURE_REL = "http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/origin"
 CT_SIGNATURE_ORIGIN = "application/vnd.openxmlformats-package.digital-signature-origin"
-CT_VBA = "application/vnd.ms-office.vbaProject"
+# Content types are MIME types and compare case-insensitively; the sets hold lower-case forms.
+CT_MACRO = {
+    "application/vnd.ms-office.vbaproject",                       # the VBA project itself
+    "application/vnd.ms-word.vbadata+xml",                        # VBA data bound to the document
+    "application/vnd.ms-word.document.macroenabled.main+xml",     # a .docm main part
+    "application/vnd.ms-word.template.macroenabledtemplate.main+xml",
+}
+VBA_REL = "http://schemas.microsoft.com/office/2006/relationships/vbaproject"
 COMMENT_PARTS = ("word/comments.xml", "word/commentsExtended.xml", "word/commentsIds.xml", "word/commentsExtensible.xml")
 REVISION_TAGS = {oc.w(x) for x in ("ins", "del", "moveFrom", "moveTo", "rPrChange", "pPrChange", "tblPrChange", "trPrChange", "tcPrChange", "sectPrChange", "numberingChange")}
 EMBED_TAGS = {oc.w("object"), oc.w("control"), "{urn:schemas-microsoft-com:office:office}OLEObject"}
@@ -107,14 +114,20 @@ def sanitize_name(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]", "_", base)[:120]
 
 
+def _norm_ct(ct: str) -> str:
+    return ct.split(";", 1)[0].strip().lower()
+
+
 def _content_types(pkg: oc.Package, limits: dict[str, Any]) -> tuple[dict[str, str], dict[str, str]]:
+    """(defaults by lower-case extension, overrides by lower-case part name without the leading '/'),
+    both mapping to a normalised lower-case content type. OPC part names compare case-insensitively."""
     root = oc.parse_xml(pkg.parts["[Content_Types].xml"], limits, "[Content_Types].xml")
     defaults, overrides = {}, {}
     for el in root:
         if el.tag == f"{{{oc.CT_NS}}}Default":
-            defaults[el.get("Extension", "").lower()] = el.get("ContentType", "")
+            defaults[el.get("Extension", "").lower()] = _norm_ct(el.get("ContentType", ""))
         elif el.tag == f"{{{oc.CT_NS}}}Override":
-            overrides[el.get("PartName", "")] = el.get("ContentType", "")
+            overrides[el.get("PartName", "").lstrip("/").lower()] = _norm_ct(el.get("ContentType", ""))
     return defaults, overrides
 
 
@@ -128,6 +141,8 @@ def _scan_relationships(pkg: oc.Package, limits: dict[str, Any], findings: Findi
             target = rel.get("Target", "")
             if rel_type == SIGNATURE_REL:
                 findings.add("digital_signatures", target.lstrip("/") or name, f"relationship in {name}")
+            if rel_type.lower() == VBA_REL:
+                findings.add("macros", target.lstrip("/") or name, f"VBA project relationship in {name}")
             if rel.get("TargetMode", "").lower() == "external":
                 findings.external_relationship(rel_type, name, target)
 
@@ -135,11 +150,12 @@ def _scan_relationships(pkg: oc.Package, limits: dict[str, Any], findings: Findi
 def _scan_package(pkg: oc.Package, limits: dict[str, Any], findings: Findings, notes: list[str]) -> None:
     defaults, overrides = _content_types(pkg, limits)
     for name in pkg.names():
-        if name.startswith("_xmlsignatures/"):
+        lower = name.lower()
+        if lower.startswith("_xmlsignatures/"):
             findings.add("digital_signatures", name, "signature part present")
         if name.startswith("word/embeddings/"):
             findings.add("embedded_objects", name, "embedded object part")
-        if name == "word/vbaProject.bin":
+        if lower.rsplit("/", 1)[-1] == "vbaproject.bin":
             findings.add("macros", name, "VBA project part")
         if name in COMMENT_PARTS:
             findings.add("comments", name, "comments part present")
@@ -147,14 +163,24 @@ def _scan_package(pkg: oc.Package, limits: dict[str, Any], findings: Findings, n
             notes.append("sensitivity label metadata present; preserved byte-for-byte")
         if name == "docProps/custom.xml":
             notes.append("custom document properties present; preserved byte-for-byte")
+        # The content type a part actually has: its override, else the default for its extension.
+        # Checking only one of the two maps lets a macro part through by declaring itself the other way.
+        leaf = lower.rsplit("/", 1)[-1]
+        ct = overrides.get(lower) or defaults.get(leaf.rsplit(".", 1)[-1] if "." in leaf else "", "")
+        if ct in CT_MACRO:
+            findings.add("macros", name, f"macro content type {ct}")
+        elif ct == CT_SIGNATURE_ORIGIN:
+            findings.add("digital_signatures", name, "signature origin content type")
+        elif "oleobject" in ct or "activex" in ct:
+            findings.add("embedded_objects", name, ct)
     for ext, ct in defaults.items():
         if ct == CT_SIGNATURE_ORIGIN:
             findings.add("digital_signatures", "[Content_Types].xml", f"content type default for .{ext}")
+        elif ct in CT_MACRO:
+            findings.add("macros", "[Content_Types].xml", f"macro content type default for .{ext}")
     for part, ct in overrides.items():
-        if ct == CT_VBA:
-            findings.add("macros", part.lstrip("/"), "VBA content type")
-        if "oleObject" in ct or "activex" in ct.lower():
-            findings.add("embedded_objects", part.lstrip("/"), ct)
+        if ct in CT_MACRO:
+            findings.add("macros", part, "macro content type override")
 
 
 def _sdt_info(sdt: ET.Element) -> dict[str, str]:

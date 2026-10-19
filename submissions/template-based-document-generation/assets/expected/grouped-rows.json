@@ -1,0 +1,158 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "Phase",
+        "Task",
+        "{{ phase }}",
+        "{{ task }}"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p3#0-11",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "phase"
+      },
+      {
+        "id": "f:word/document.xml#p4#0-10",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "task"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "group label shown once per run of equal rows",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p3#0-11",
+            "decision": "field",
+            "field": "phase"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p4#0-10",
+            "decision": "field",
+            "field": "task"
+          }
+        ],
+        "fields": [
+          {
+            "name": "phase",
+            "type": "string",
+            "source": "phase",
+            "repeat": "tasks",
+            "group": true
+          },
+          {
+            "name": "task",
+            "type": "string",
+            "source": "task",
+            "repeat": "tasks"
+          }
+        ],
+        "operations": [
+          {
+            "op": "repeat_row",
+            "id": "tasks",
+            "paragraph": "word/document.xml#p3",
+            "source": "tasks"
+          }
+        ]
+      },
+      "values": {
+        "tasks": [
+          {
+            "phase": "Plan",
+            "task": "Scope"
+          },
+          {
+            "phase": "Plan",
+            "task": "Kick-off"
+          },
+          {
+            "phase": "Build",
+            "task": "Prototype"
+          },
+          {
+            "phase": "Plan",
+            "task": "Retrospective"
+          }
+        ]
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Phase",
+            "Task",
+            "Plan",
+            "Scope",
+            "",
+            "Kick-off",
+            "Build",
+            "Prototype",
+            "Plan",
+            "Retrospective"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": true
+    },
+    {
+      "name": "group needs a repeat",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p3#0-11",
+            "decision": "field",
+            "field": "phase"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p4#0-10",
+            "decision": "field",
+            "field": "task"
+          }
+        ],
+        "fields": [
+          {
+            "name": "phase",
+            "type": "string",
+            "source": "phase",
+            "group": true
+          },
+          {
+            "name": "task",
+            "type": "string",
+            "source": "task"
+          }
+        ]
+      },
+      "values": {
+        "phase": "Plan",
+        "task": "Scope"
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "only a field with a repeat can be grouped"
+        ]
+      },
+      "rerun": false
+    }
+  ]
+}

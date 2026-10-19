@@ -856,6 +856,9 @@ class RawPart:
     def paragraph_count_in(self, node: RawNode) -> int:
         return sum(1 for _ in self._iter_paragraphs(node))
 
+    def paragraphs_in(self, node: RawNode) -> list[RawNode]:
+        return list(self._iter_paragraphs(node))
+
     def _iter_paragraphs(self, node: RawNode):
         if node.name == "p":
             yield node

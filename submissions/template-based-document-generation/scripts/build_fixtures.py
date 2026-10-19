@@ -27,6 +27,11 @@ Fixture inventory:
     complex-field-result   placeholder in a complex field's result run -> ineligible
     signature-marker       synthetic signature-origin part -> blocked
     mc-ignorable-root      real-world root element (mc:Ignorable, unused xmlns:wpc, w14/rsid attributes)
+    macro-default-type     VBA project typed by a <Default> declaration in odd letter case -> blocked
+    wrapped-control        sole paragraphs under w:customXml in a block control and in the header -> refused
+    archive-debris         a "[trash]/old file.dat" entry that is not a part -> inspected, filled, preserved
+    repeated-text-off      a repeating short text, with a profile that sets repeated_text to null -> no finding
+    grouped-rows           a repeatable row whose first column groups the items -> shown once per group
 """
 from __future__ import annotations
 
@@ -187,7 +192,8 @@ BASE_PARTS = {
 ORDER = [
     "[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/_rels/document.xml.rels",
     "word/header1.xml", "word/footer1.xml", "word/footnotes.xml", "word/styles.xml", "word/settings.xml", "word/numbering.xml",
-    "word/comments.xml", "_xmlsignatures/origin.sigs", "docProps/core.xml", "docProps/app.xml",
+    "word/comments.xml", "word/macros.dat", "_xmlsignatures/origin.sigs", "docProps/core.xml", "docProps/app.xml",
+    "[trash]/old file.dat",
 ]
 
 
@@ -424,6 +430,50 @@ def mc_ignorable_root() -> dict[str, str | bytes]:
     }
 
 
+def macro_default_type() -> dict[str, str | bytes]:
+    # The macro part is typed only through <Default Extension="dat">, in a letter case no override match
+    # would catch. MIME types compare case-insensitively, so this is still a VBA project and must block.
+    return simple(
+        p(r(t("Client: {{ client_name }}"))),
+        ct_defaults=[("dat", "application/vnd.ms-office.VBAProject")],
+        doc_rels_extra='<Relationship Id="rId9" Type="http://schemas.microsoft.com/office/2006/relationships/vbaProject" Target="macros.dat"/>',
+        extra_parts={"word/macros.dat": b"synthetic, not a real VBA project"},
+    )
+
+
+def wrapped_control() -> dict[str, str | bytes]:
+    # Wrappers are transparent: deleting the only paragraph under w:customXml still empties the control,
+    # and deleting the header's only paragraph still empties the header, though the wrapper survives.
+    body = (
+        '<w:sdt><w:sdtPr><w:alias w:val="Optional note"/><w:tag w:val="note"/><w:id w:val="1002"/></w:sdtPr><w:sdtContent>'
+        + '<w:customXml w:element="note">' + p(r(t("Optional note"))) + "</w:customXml>"           # p1
+        + "</w:sdtContent></w:sdt>"
+        + p(r(t("Client: {{ client_name }}")))                                                    # p2
+    )
+    parts = simple(body)
+    parts["word/header1.xml"] = XML + f'<w:hdr {NS}><w:customXml w:element="banner">{p(r(t("Draft notice")))}</w:customXml></w:hdr>'
+    return parts
+
+
+def archive_debris() -> dict[str, str | bytes]:
+    # Left behind by tools that delete a part by moving it aside: no content type, no relationship, and a
+    # name that is a valid zip entry but not a valid part name. Preserved, never a reason to refuse.
+    return simple(p(r(t("Client: {{ client_name }}"))), extra_parts={"[trash]/old file.dat": b"stale bytes"})
+
+
+def repeated_text_off() -> dict[str, str | bytes]:
+    body = "".join(p(r(t("Not provided"))) for _ in range(3)) + p(r(t("Client: {{ client_name }}")))   # p1-p3, p4
+    return simple(body)
+
+
+def grouped_rows() -> dict[str, str | bytes]:
+    body = table(
+        cell(p(r(t("Phase")))) + cell(p(r(t("Task")))),                                           # p1, p2 header row
+        cell(p(r(t("{{ phase }}")))) + cell(p(r(t("{{ task }}")))),                               # p3, p4 repeatable row
+    )
+    return simple(body)
+
+
 FIXTURE_BUILDERS = {
     "six-position": six_position,
     "mixed-conventions": mixed_conventions,
@@ -436,6 +486,11 @@ FIXTURE_BUILDERS = {
     "complex-field-result": complex_field_result,
     "signature-marker": signature_marker,
     "mc-ignorable-root": mc_ignorable_root,
+    "macro-default-type": macro_default_type,
+    "wrapped-control": wrapped_control,
+    "archive-debris": archive_debris,
+    "repeated-text-off": repeated_text_off,
+    "grouped-rows": grouped_rows,
 }
 
 

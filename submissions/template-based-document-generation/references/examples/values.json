@@ -1,0 +1,17 @@
+{
+  "data": {
+    "client": { "name": "Contoso Ltd" },
+    "issued": "2026-09-30",
+    "total": "12500",
+    "reference": "Schedule A",
+    "items": [
+      { "name": "Discovery workshop", "qty": 2 },
+      { "name": "Solution design", "qty": 1 }
+    ],
+    "summary": ["Approved by the steering group on 28 September."],
+    "summary_rest": [
+      "Work starts in October with two discovery workshops.",
+      "The solution design follows once the workshops are signed off."
+    ]
+  }
+}

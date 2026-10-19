@@ -107,7 +107,9 @@ and the finding clears itself. Thresholds live in the profile's `repeated_text` 
 
 Constructs the policy classifies. `block` (signatures, macros, unreadable parts, too many candidates or
 paragraphs, and a part whose byte-level and parsed views disagree) sets `blocked: true`; no plan draft is
-written and execute refuses. `unsupported_part_markup` is the last of those: eligibility is decided on the
+written and execute refuses. A macro is recognised by a `vbaProject.bin` part, a VBA project relationship,
+or a macro content type, where a part's content type is its `Override` or else the `Default` for its
+extension, compared without regard to letter case. `unsupported_part_markup` is the last of those: eligibility is decided on the
 parsed tree while the filler edits bytes, so a part that only one of them understands (a non-UTF-8 encoding,
 several aliases for the WordprocessingML namespace) is refused at inspection rather than at apply time. `report` (comments,
 tracked changes, embedded objects, field codes, non-hyperlink external relationships, field-like text in
@@ -162,6 +164,7 @@ by an operation. Candidates inside a repeated row may be `field`, `literal`, `re
 | `source` | Path into `values.data`: dotted with `[n]` indexes (`client.name`, `items[2].qty`), or RFC 6901 (`/client/name`). Empty path is the whole data (or the whole item for repeat fields) |
 | `literal` | A constant instead of a source; review `literal_value` |
 | `repeat` | The `id` of a `repeat_row` operation; `source` is then relative to each item |
+| `group` | `true` on a repeat-scoped field prints its value only on the first of consecutive rows whose rendered value is the same; the following rows of the group get an empty cell. Only consecutive rows group, so sort the list first. Refused on a field without `repeat` |
 
 A `source` must be a well-formed path: dotted with `[n]` indexes, or an RFC 6901 pointer. An empty segment
 (`client..name`) is a typo and is rejected rather than resolved.
@@ -228,6 +231,8 @@ input list is empty. Refused: a region containing a `w:sectPr`; a region whose b
 are not all inside it, taking every removal in the run together; a deletion that would leave a table cell,
 body, header, footer, footnote or text box without a paragraph; deleting the only paragraph of a content
 control (delete the range covering the control instead); a range whose endpoints lie in different containers.
+These are judged by which paragraphs survive every removal in the run, not by which elements do: a wrapper
+such as `w:customXml` or a nested `w:sdt` that is left standing with no paragraph inside counts as empty.
 
 Deleting more than `limits.max_deleted_fraction` of the paragraphs needs `allow_large_deletion`, and rows
 removed by an empty repeat count toward that fraction.
@@ -242,9 +247,10 @@ into every row. A genuinely repeated placeholder such as `{{ client_name }}` kee
 `references/profile.default.json` declares `parts_in_scope` (globs), `field_patterns` and
 `instruction_patterns` (name, Python regex, confidence; group 1 is the field label), `instruction_formatting`
 (confidence for hidden and highlighted text), `blank_cells`, `repeated_text` (`min_occurrences`,
-`max_chars`; omit the block to disable the check), and `locale`. A per-job profile passed to
+`max_chars`), and `locale`. A per-job profile passed to
 `inspect --profile` is merged over it: its patterns take precedence and come first, `disable_patterns`
-removes defaults by name, `parts_in_scope` replaces, `locale` merges. The effective profile is recorded in
+removes defaults by name, `parts_in_scope` replaces, `locale` and `repeated_text` merge, and
+`"repeated_text": null` disables that check. The effective profile is recorded in
 the manifest, so execute re-inspects with exactly the same rules. A pattern is rejected when it is longer
 than 1000 characters, uses back-references, or applies a quantifier to a group that already contains one
 (`(a+)+` and the like), because that shape backtracks exponentially on a near miss and one paragraph would

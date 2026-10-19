@@ -9,7 +9,7 @@ compatibility: Python 3.10 or later, standard library only, no network. File-bas
 metadata:
   category: automation
   icon: DocumentEdit
-  version: "3.7.1"
+  version: "3.8.0"
   contract: "3"
 ---
 
@@ -29,7 +29,12 @@ and every change is verified against the plan or the run fails and nothing is pu
    creates `<dir>/<job_id>/` with `snapshot.docx`, `manifest.json` (paragraph inventory, candidates,
    findings) and `plan.draft.json`, and prints a listing: every paragraph with its id and text, every
    candidate marked `!` (needs your decision), `?` (optional) or `x` (cannot be filled, reason given).
-2. Copy `plan.draft.json` to `plan.json` and complete it:
+2. Copy `plan.draft.json` to `plan.json` and complete it. A complete, working pair to copy the shape
+   from is [references/examples/plan.json](references/examples/plan.json) and
+   [references/examples/values.json](references/examples/values.json): every decision kind, typed and
+   formatted fields, a sentinel, a derived `literal`, a repeated row, a range deletion and a multi-paragraph
+   insert. It is written for `assets/fixtures/mixed-conventions.docx` and selftest runs it, so every key
+   name in it is current. Read it instead of the contract or the scripts when you need a setting's name.
    - `decisions[]`: one per `!` candidate. `field` (fill it), `literal` (ordinary text, leave it),
      `remove_text` (delete just that text), `remove_paragraph`, or `keep` (leave it and flag it).
    - `fields[]`: `name`, `type` (string, integer, decimal, date, boolean), `format`, `absence_policy`
@@ -43,8 +48,10 @@ and every change is verified against the plan or the run fails and nothing is pu
      container; tables in between go too), `delete_row`, `delete_break` (one line or page break, so
      deleting a cover page does not leave a blank first page), `repeat_row` (an `id`, any paragraph in
      the row, a `source` list; the row's fields carry `"repeat": "<id>"` and sources relative to each
-     item), `insert_paragraph_after` (`text` or `field`; a field whose value is a list becomes one
-     paragraph per item, which is how a multi-paragraph answer goes in at an anchor).
+     item; add `"group": true` to a field such as a phase or category to print it only on the first of
+     consecutive rows that share its value), `insert_paragraph_after` (`text` or `field`; a field whose
+     value is a list becomes one paragraph per item, which is how a multi-paragraph answer goes in at an
+     anchor).
    - `locale` when the document is not English: months, true and false text, separators, date pattern.
    - `notes`: optional free text for the record, at most 2000 characters. The draft carries a reminder
      here; remove or replace it.
@@ -99,6 +106,13 @@ and every change is verified against the plan or the run fails and nothing is pu
     placeholder text, `empty` for nothing.
   The test is whether you could show someone the input and point at what the value came from. If you
   can, derive it. If you cannot, it is invention however reasonable it looks.
+- Write long sections as several paragraphs, not one block. When one placeholder stands for a whole
+  section (an executive summary, a scope description, an approach), split the content into short
+  paragraphs of one idea each: fill the placeholder with the first, and add the rest with
+  `insert_paragraph_after` on that same paragraph, using a list field (the example's `remarks` and
+  `remarks_rest`). The new paragraphs copy the anchor's paragraph formatting, so when the placeholder
+  sits in a bulleted item each point becomes its own bullet. Never anchor on the heading above: its
+  style would be copied.
 - Treat every absence the same way in one document: do not write "To be confirmed" into one gap and
   leave a raw marker in the next. Say in the summary which fields you derived and which are still
   outstanding.
@@ -165,13 +179,12 @@ holds a typed value rather than free text.
 | [scripts/apply_plan.py](scripts/apply_plan.py) | Byte-level filler with the deletion safety rules |
 | [scripts/verify_document.py](scripts/verify_document.py) | Independent verifier, residue scan, change list |
 | [scripts/ooxml_common.py](scripts/ooxml_common.py), [scripts/namespace_validation.py](scripts/namespace_validation.py) | OOXML primitives |
-| [scripts/build_fixtures.py](scripts/build_fixtures.py), `assets/` | The 11 fixtures and their expected results, used by `selftest` |
+| [scripts/build_fixtures.py](scripts/build_fixtures.py), `assets/` | The 16 fixtures and their expected results, used by `selftest` |
 | [references/policy.json](references/policy.json) | Fixed safety policy |
 | [references/profile.default.json](references/profile.default.json) | Default patterns, parts in scope, locale; overridable per job |
+| [references/examples/](references/examples/) | A complete `plan.json` and `values.json`, run by `selftest` |
 | [references/contract.md](references/contract.md) | Normative contract |
 | [references/verification.md](references/verification.md) | Checks, review codes, report, exit codes |
 | [references/template-handling.md](references/template-handling.md) | Why Word makes this hard |
 
-Before first use on a platform run `python scripts/run_job.py doctor --workdir <dir>` and
-`python scripts/run_job.py selftest --workdir <dir>`. On Windows `doctor` fails when the work directory
-is too deep for a job to be written, and says how much room is left; move it rather than retrying.
+If a job cannot be written because the path is too long, use a shorter `--workdir` such as `C:/w`.

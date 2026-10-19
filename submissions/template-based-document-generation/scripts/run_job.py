@@ -469,11 +469,13 @@ def do_execute(job_dir: str, policy_path: str, out_dir: str | None = None, dry_r
         loaded = Loaded(paths, policy, policy_sha)
     except Refused as exc:
         print(f"execute: refused: {exc}", file=sys.stderr)
-        _record_refusal(paths, policy_sha, str(exc), say)
+        if not dry_run:                                  # a dry run writes nothing, not even a refusal
+            _record_refusal(paths, policy_sha, str(exc), say)
         return EXIT_FAILED, None
     except OSError as exc:
         print(f"execute: failed: {exc.__class__.__name__}: {exc}", file=sys.stderr)
-        _record_refusal(paths, policy_sha, f"{exc.__class__.__name__}: {exc}", say)
+        if not dry_run:
+            _record_refusal(paths, policy_sha, f"{exc.__class__.__name__}: {exc}", say)
         return EXIT_FAILED, None
 
     phases.mark("load")
@@ -681,13 +683,20 @@ def do_selftest(workdir: str, policy_path: str, quiet: bool = True) -> int:
         paths = JobPaths(job_dir)
         plan = _read_json(paths.plan_draft)
         plan["notes"] = None
-        for key in ("decisions", "fields", "operations", "locale", "allow_large_deletion", "review_flags"):
-            if key in run.get("plan", {}):
-                plan[key] = run["plan"][key]
-        if "manifest_sha256" in run.get("plan", {}):
-            plan["manifest_sha256"] = run["plan"]["manifest_sha256"]
+        # A run may point at files in the package (the shipped examples) instead of inlining them, so the
+        # examples an agent copies from are executed by every selftest and cannot drift from the code.
+        run_plan = _read_json(os.path.join(root, run["plan_file"])) if "plan_file" in run else run.get("plan", {})
+        for key in ("decisions", "fields", "operations", "locale", "allow_large_deletion", "review_flags", "instructions_used", "notes"):
+            if key in run_plan:
+                plan[key] = run_plan[key]
+        if "manifest_sha256" in run_plan:
+            plan["manifest_sha256"] = run_plan["manifest_sha256"]
         _write_text(paths.plan, json.dumps(plan, indent=2) + "\n")
-        _write_text(paths.values, json.dumps({"schema": models.SCHEMA_VALUES, "data": run.get("values")}, indent=2) + "\n")
+        # `values_document` replaces the whole file, so a run can exercise a values.json that fails to load.
+        if "values_file" in run:
+            run = dict(run, values_document=_read_json(os.path.join(root, run["values_file"])))
+        values_doc = run.get("values_document", {"schema": models.SCHEMA_VALUES, "data": run.get("values")})
+        _write_text(paths.values, json.dumps(values_doc, indent=2) + "\n")
 
     for name, build in bf.FIXTURE_BUILDERS.items():
         exp_path = os.path.join(expected_dir, f"{name}.json")
@@ -697,7 +706,11 @@ def do_selftest(workdir: str, policy_path: str, quiet: bool = True) -> int:
         exp = _read_json(exp_path)
         template_path = os.path.join(templates, f"{name}.docx")
         _write_bytes(template_path, bf.package(build()))
-        rc, job_dir = do_inspect(template_path, jobs, policy_path, exp.get("profile"), quiet=True)
+        profile_path = None
+        if exp.get("profile") is not None:                       # an inline per-job profile
+            profile_path = os.path.join(templates, f"{name}.profile.json")
+            _write_text(profile_path, json.dumps(exp["profile"], indent=2) + "\n")
+        rc, job_dir = do_inspect(template_path, jobs, policy_path, profile_path, quiet=True)
         want_inspect = exp["inspect"]
         if want_inspect.get("blocked"):
             record(name, "inspect blocked", rc == EXIT_FAILED and os.path.exists(JobPaths(job_dir).manifest), f"rc={rc}")
@@ -718,7 +731,7 @@ def do_selftest(workdir: str, policy_path: str, quiet: bool = True) -> int:
         record(name, "candidates match oracle", got_c == want_c, "" if got_c == want_c else f"got {got_c}")
         record(name, "finding codes", sorted(f["code"] for f in manifest["findings"]) == sorted(want_inspect.get("findings", [])), str([f["code"] for f in manifest["findings"]]))
         for run in exp.get("runs", []):
-            rc, job_dir = do_inspect(template_path, jobs, policy_path, exp.get("profile"), quiet=True)
+            rc, job_dir = do_inspect(template_path, jobs, policy_path, profile_path, quiet=True)
             prepare(job_dir, run)
             want = run["expect"]
             paths = JobPaths(job_dir)

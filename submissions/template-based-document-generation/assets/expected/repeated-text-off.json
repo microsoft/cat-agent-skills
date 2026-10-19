@@ -1,0 +1,67 @@
+{
+  "profile": {
+    "repeated_text": null
+  },
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "Not provided",
+        "Not provided",
+        "Not provided",
+        "Client: {{ client_name }}"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p4#8-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "fill with the check disabled",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p4#8-25",
+            "decision": "field",
+            "field": "client_name"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Contoso"
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Not provided",
+            "Not provided",
+            "Not provided",
+            "Client: Contoso"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": true
+    }
+  ]
+}

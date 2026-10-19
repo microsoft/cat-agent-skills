@@ -1,0 +1,154 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "Optional note",
+        "Client: {{ client_name }}"
+      ],
+      "word/header1.xml": [
+        "Draft notice"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "c:word/document.xml#p1#0-13",
+        "kind": "control",
+        "pattern": "content_control",
+        "confidence": "high",
+        "eligible": false,
+        "decision_required": false,
+        "name_guess": "note"
+      },
+      {
+        "id": "f:word/document.xml#p2#8-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "refuse emptying a control through a wrapper",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p2#8-25",
+            "decision": "field",
+            "field": "client_name"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p1"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Contoso"
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "only paragraph of a content control"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "refuse emptying a header through a wrapper",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p2#8-25",
+            "decision": "field",
+            "field": "client_name"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/header1.xml#p0"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Contoso"
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "hdr with no paragraph"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "delete the whole control with a range",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p2#8-25",
+            "decision": "field",
+            "field": "client_name"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_range",
+            "from_paragraph": "word/document.xml#p1",
+            "to_paragraph": "word/document.xml#p1"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Contoso"
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Client: Contoso"
+          ],
+          "word/header1.xml": [
+            "Draft notice"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": true
+    }
+  ]
+}

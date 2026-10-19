@@ -122,8 +122,6 @@ def apply(snapshot: bytes, manifest: m.Manifest, compiled: m.Compiled, policy: d
             ppr = p.child("pPr")
             if ppr is not None and ppr.child("sectPr") is not None:
                 raise ApplyRefused(f"{part}: paragraph {idx} carries a section break and cannot be deleted")
-            if p.parent is not None and p.parent.name == "sdtContent" and raw.paragraph_count_in(p.parent) == 1:
-                raise ApplyRefused(f"{part}: paragraph {idx} is the only paragraph of a content control; delete a range covering the control instead")
             container, block = raw.real_container(p)
             if container is not None and container.name == "tc" and block is p and raw.paragraph_count_in(container) == 1:
                 cleared_nodes.append(p)                             # a cell keeps one (empty) paragraph
@@ -163,11 +161,30 @@ def apply(snapshot: bytes, manifest: m.Manifest, compiled: m.Compiled, policy: d
             if problems:
                 raise ApplyRefused(f"{part}: cannot remove that content: {problems[0]}")
         edits += [oc.clear_paragraph_edit(raw, n) for n in cleared_nodes]
+        # Survival is judged by paragraph, after every deletion: wrappers such as w:customXml or a nested
+        # w:sdt are transparent, so a wrapper still standing proves nothing if every paragraph in it is gone.
+        removed = {id(n) for n in deleted_nodes}
+        gone = {id(q) for n in deleted_nodes for q in raw.paragraphs_in(n)}
+
+        def is_removed(n: oc.RawNode) -> bool:
+            return id(n) in removed or any(id(a) in removed for a in n.ancestors())
+
+        def survives(n: oc.RawNode) -> bool:
+            return not is_removed(n) and any(id(q) not in gone for q in raw.paragraphs_in(n))
+
+        for idx in sorted({p.index for n in deleted_nodes for p in raw.paragraphs_in(n)}):
+            p = raw.paragraphs[idx]
+            container = raw.real_container(p)[0]
+            for a in p.ancestors():
+                if a is container:
+                    break
+                if a.name == "sdtContent" and not is_removed(a) and not survives(a):
+                    raise ApplyRefused(f"{part}: paragraph {idx} is the only paragraph of a content control; delete a range covering the control instead")
         touched_containers = {raw.real_container(n)[0] for n in deleted_nodes}
         for container in touched_containers:
             if container is None:
                 continue
-            remaining = [c for c in container.children if c not in deleted_nodes and raw.first_paragraph_in(c) is not None]
+            remaining = [c for c in container.children if survives(c)]
             if not remaining:
                 what = "table cell" if container.name == "tc" else container.name
                 raise ApplyRefused(f"{part}: the deletion would leave a {what} with no paragraph; delete the row or clear the text instead")

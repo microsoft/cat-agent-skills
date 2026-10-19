@@ -537,6 +537,45 @@
         "review_codes": []
       },
       "rerun": false
+    },
+    {
+      "name": "shipped example plan and values",
+      "plan_file": "references/examples/plan.json",
+      "values_file": "references/examples/values.json",
+      "expect": {
+        "result": "needs_review",
+        "output_texts": {
+          "word/document.xml": [
+            "STATEMENT OF WORK",
+            "Prepared for Contoso Ltd on 30 September 2026",
+            "Customer contact: To be confirmed",
+            "Total: 12,500.00",
+            "Item",
+            "Qty",
+            "Discovery workshop",
+            "2",
+            "Solution design",
+            "1",
+            "Signatory: Ada Lovelace, Director",
+            "Remarks: Approved by the steering group on 28 September.",
+            "Work starts in October with two discovery workshops.",
+            "The solution design follows once the workshops are signed off."
+          ],
+          "word/header1.xml": [
+            "Confidential - Contoso Ltd"
+          ],
+          "word/footnotes.xml": [
+            "",
+            "",
+            "See Schedule A for details."
+          ]
+        },
+        "review_codes": [
+          "literal_value",
+          "sentinel_used"
+        ]
+      },
+      "rerun": false
     }
   ]
 }

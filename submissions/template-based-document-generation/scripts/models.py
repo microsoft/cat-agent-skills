@@ -29,7 +29,7 @@ from typing import Any
 # Versions, identifiers, vocabularies
 # --------------------------------------------------------------------------------------
 
-SKILL_VERSION = "3.7.1"
+SKILL_VERSION = "3.8.0"
 CONTRACT_VERSION = "3"
 
 SCHEMA_MANIFEST = "fill-word-template/manifest/v3"
@@ -43,6 +43,9 @@ IDENTIFIER_PATTERN = r"^[A-Za-z_][A-Za-z0-9_]*$"
 IDENTIFIER_RE = re.compile(IDENTIFIER_PATTERN)
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 PART_NAME_PATTERN = r"^[A-Za-z0-9_.\[\]/-]+$"
+# Any zip entry name the package reader accepts (see ooxml_common._check_entry_name): archive debris such as
+# "[trash]/old file.dat" is not a part, but its digest is still recorded, so it needs the wider contract.
+ZIP_ENTRY_PATTERN = r"^[^\x00-\x1f\\/][^\x00-\x1f\\]{0,1023}$"
 PARAGRAPH_ID_PATTERN = r"^[A-Za-z0-9_.\[\]/-]+#p[0-9]+$"
 CANDIDATE_ID_PATTERN = r"^[fibc]:[A-Za-z0-9_.\[\]/-]+#p[0-9]+#[0-9]+-[0-9]+$"
 JOB_ID_PATTERN = r"^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{6}$"
@@ -119,7 +122,7 @@ class TemplateInfo:
 
 @dataclass
 class PartDigest:
-    name: str = dc_field(metadata=_m(pattern=PART_NAME_PATTERN))
+    name: str = dc_field(metadata=_m(pattern=ZIP_ENTRY_PATTERN))
     sha256: str = dc_field(metadata=_m(pattern=SHA256_PATTERN))
     size_bytes: int = dc_field(metadata=_m(minimum=0))
     in_scope: bool = False
@@ -234,6 +237,7 @@ class FieldSpec:
     source: str | None = dc_field(default=None, metadata=_m(maxLength=400))
     literal: Any = None
     repeat: str | None = dc_field(default=None, metadata=_m(maxLength=64))
+    group: bool = False         # in a repeated row: print the value only on the first of consecutive equal rows
     notes: str | None = dc_field(default=None, metadata=_m(maxLength=1000))
 
 
@@ -675,6 +679,16 @@ def parse_profile(default_raw: bytes, override_raw: bytes | None) -> tuple[dict[
     for key in ("parts_in_scope", "instruction_formatting", "blank_cells"):
         if key in override:
             profile[key] = override[key]
+    if "repeated_text" in override:
+        # null disables the check; an object merges over the default thresholds.
+        rt = override["repeated_text"]
+        if rt is None:
+            profile["repeated_text"] = None
+        elif isinstance(rt, dict) and all(k in ("min_occurrences", "max_chars") and isinstance(v, int) and not isinstance(v, bool) and v > 0
+                                          for k, v in rt.items()):
+            profile["repeated_text"] = {**(profile.get("repeated_text") or {}), **rt}
+        else:
+            errors.append("profile.repeated_text: must be null or an object with positive integer min_occurrences and max_chars")
     locale = dict(DEFAULT_LOCALE)
     for source in (profile.get("locale"), override.get("locale")):
         if source is None:
@@ -1249,6 +1263,8 @@ def compile_plan(plan: Plan, manifest: Manifest, values: Values, policy: dict[st
     for spec in plan.fields:
         if spec.repeat is not None and spec.repeat not in op_ids:
             errors.append(f"$.fields.{spec.name}.repeat: no repeat_row operation with id {spec.repeat!r}")
+        if spec.group and spec.repeat is None:
+            errors.append(f"$.fields.{spec.name}.group: only a field with a repeat can be grouped")
 
     rendered_cache: dict[str, Rendered] = {}
 
@@ -1500,8 +1516,10 @@ def compile_plan(plan: Plan, manifest: Manifest, values: Values, policy: dict[st
     for op_id, (op, row, items) in repeats_by_op.items():
         prefix = path_key(op.source or "")
         copies: list[dict[int, list[Replacement]]] = []
+        previous: dict[str, str] = {}            # grouped field -> its value in the previous row
         for n, item in enumerate(items):
             copy: dict[int, list[Replacement]] = {}
+            current: dict[str, str] = {}
             for c, spec in row_field_candidates[op_id]:
                 if spec is None:
                     text = ""
@@ -1516,6 +1534,10 @@ def compile_plan(plan: Plan, manifest: Manifest, values: Values, policy: dict[st
                     elif r.used_empty:
                         review.append(ReviewItem("empty_used", f"{spec.name} (row {n}): rendered empty; the placeholder disappears", spec.name))
                     text = r.text or ""
+                    if spec.group:
+                        current[spec.name] = text
+                        if previous.get(spec.name) == text:
+                            text = ""                # same group as the row above: shown once, on its first row
                 else:
                     rg = render_global(spec.name)
                     if rg is None or not rg.ok:
@@ -1523,6 +1545,7 @@ def compile_plan(plan: Plan, manifest: Manifest, values: Values, policy: dict[st
                     text = rg.text or ""
                 copy.setdefault(c.paragraph_index, []).append(Replacement(c.char_start, c.char_end, text, c.id, c.control is not None))
             copies.append(copy)
+            previous = current
         cpart(row.part).repeats.append(RowRepeat(anchor=paragraphs[op.paragraph or ""].index, first=row.first_index, last=row.last_index, copies=copies, op_id=op_id))
         if not items:
             review.append(ReviewItem("row_removed", f"{op_id}: the input list is empty, so the template row is removed", op_id))

@@ -133,6 +133,16 @@ def reference_problems(root: ET.Element) -> set[str]:
     for cell in root.iter(oc.w("tc")):
         if not any(True for _ in cell.iter(oc.P)):
             problems.add("table cell with no paragraph")
+    # The same rule for every other block container, and for a block-level content control (one not
+    # inside a paragraph): wrappers are transparent, so only a surviving w:p counts.
+    for tag in oc.REAL_CONTAINERS - {oc.w("tc"), oc.w("comment")}:
+        for el in root.iter(tag):
+            if not any(True for _ in el.iter(oc.P)):
+                problems.add(f"{_local(tag)} with no paragraph")
+    parents = oc.parent_map(root)
+    for content in root.iter(oc.w("sdtContent")):
+        if not any(True for _ in content.iter(oc.P)) and not any(a.tag == oc.P for a in oc.ancestors(content, parents)):
+            problems.add("block content control with no paragraph")
     return problems
 
 
