@@ -17,9 +17,9 @@ export type SkillType = "skill" | "plugin" | "automation";
 
 /** Brand accent color used for each platform's badge (CAT palette). */
 export const PLATFORM_COLORS: Record<Platform, string> = {
-  Cowork: "#7f39fb",
-  "Copilot Studio": "#0078d4",
-  Scout: "#0d9488",
+  Cowork: "#2899f5",
+  "Copilot Studio": "#0e9f8a",
+  Scout: "#b23fc4",
 };
 
 /**

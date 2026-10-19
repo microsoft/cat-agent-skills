@@ -19,11 +19,9 @@ const skills = (await getCollection("skills")).sort((a, b) => {
 const { microsoft, community } = partitionSubmissions(skills);
 const collection = microsoftOnly ? microsoft : skills;
 const gridItems = microsoftOnly ? microsoft : community;
-const platformCounts = new Map<string, number>();
 const tagCounts = new Map<string, number>();
 const contributorMap = new Map<string, { key: string; name: string; login: string; count: number }>();
 for (const { data } of collection) {
-  for (const platform of new Set(data.platforms)) platformCounts.set(platform, (platformCounts.get(platform) ?? 0) + 1);
   for (const tag of data.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
   const key = authorKey(data.authorGithub, data.author);
   if (!key) continue;
@@ -55,7 +53,7 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
           </p>
         </div>
         <div class="relative">
-          <label for="skill-search" class="sr-only">{microsoftOnly ? "Search Microsoft submissions" : "Search all submissions"}</label>
+          <label for="skill-search" class="sr-only">{microsoftOnly ? "Search Microsoft skills & plugins" : "Search all submissions"}</label>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true">
             <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
           </svg>
@@ -65,7 +63,7 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
     </div>
   </section>
 
-  <GalleryFilters microsoftOnly={microsoftOnly} platformCounts={platformCounts} tags={tags} contributors={contributors} total={collection.length} />
+  <GalleryFilters microsoftOnly={microsoftOnly} tags={tags} contributors={contributors} total={collection.length} />
 
   {!microsoftOnly && (
     <section id="microsoft-preview" class="mx-auto max-w-8xl px-4 pt-6 sm:px-6" aria-labelledby="microsoft-heading">
@@ -76,7 +74,7 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
       <div id="microsoft-preview-grid" class="submission-grid" hidden={microsoft.length === 0}>
         {microsoft.map((submission, index) => <SubmissionItem submission={submission} variant="spotlight" hidden={index > 0} />)}
       </div>
-      <p id="microsoft-empty" hidden={microsoft.length > 0} class="text-sm text-muted">No Microsoft submissions match these filters.</p>
+      <p id="microsoft-empty" hidden={microsoft.length > 0} class="text-sm text-muted">No Microsoft skills or plugins match these filters.</p>
     </section>
   )}
 
@@ -85,11 +83,11 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
   <section class="mx-auto max-w-8xl px-4 py-7 sm:px-6">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-xl font-bold tracking-tight text-fg">
-        {microsoftOnly ? "Microsoft submissions" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
+        {microsoftOnly ? "Microsoft skills & plugins" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
       </h2>
       <label class="flex items-center gap-2 text-sm text-muted">
-        <span class="hidden sm:inline">{microsoftOnly ? "Sort submissions" : "Sort community"}</span>
-        <select id="sort-select" aria-label={microsoftOnly ? "Sort Microsoft submissions" : "Sort community submissions"} class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none">
+        <span class="hidden sm:inline">{microsoftOnly ? "Sort" : "Sort community"}</span>
+        <select id="sort-select" aria-label={microsoftOnly ? "Sort Microsoft skills & plugins" : "Sort community submissions"} class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none">
           <option value="featured">Featured</option>
           <option value="rating">Top rated</option>
           <option value="downloads">Most downloaded</option>
@@ -102,9 +100,9 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
       {gridItems.map((submission) => <SubmissionItem submission={submission} variant={microsoftOnly ? "spotlight" : "gallery"} />)}
     </div>
     <p id="empty-state" hidden={gridItems.length > 0} class="text-sm text-muted">
-      No {microsoftOnly ? "Microsoft" : "community"} submissions match these filters.{" "}
+      {microsoftOnly ? "No Microsoft skills or plugins match these filters." : "No community submissions match these filters."}{" "}
       <button type="button" data-clear-filters class="font-semibold text-accent-text underline underline-offset-4">Clear filters</button>
-      {" "}to browse {microsoftOnly ? "the Microsoft collection" : "all submissions"}.
+      {" "}to see {microsoftOnly ? "all Microsoft skills & plugins" : "all submissions"}.
     </p>
     <div id="scroll-sentinel" class="h-10"></div>
   </section>
