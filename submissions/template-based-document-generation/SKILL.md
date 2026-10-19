@@ -179,7 +179,7 @@ holds a typed value rather than free text.
 | [scripts/apply_plan.py](scripts/apply_plan.py) | Byte-level filler with the deletion safety rules |
 | [scripts/verify_document.py](scripts/verify_document.py) | Independent verifier, residue scan, change list |
 | [scripts/ooxml_common.py](scripts/ooxml_common.py), [scripts/namespace_validation.py](scripts/namespace_validation.py) | OOXML primitives |
-| [scripts/build_fixtures.py](scripts/build_fixtures.py), `assets/` | The 16 fixtures and their expected results, used by `selftest` |
+| [scripts/build_fixtures.py](scripts/build_fixtures.py), `assets/` | The 17 fixtures and their expected results, used by `selftest` |
 | [references/policy.json](references/policy.json) | Fixed safety policy |
 | [references/profile.default.json](references/profile.default.json) | Default patterns, parts in scope, locale; overridable per job |
 | [references/examples/](references/examples/) | A complete `plan.json` and `values.json`, run by `selftest` |

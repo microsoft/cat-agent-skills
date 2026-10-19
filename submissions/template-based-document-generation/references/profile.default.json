@@ -13,7 +13,7 @@
     {"name": "guillemet",        "regex": "«\\s*([^«»\\n]{1,200}?)\\s*»", "confidence": "high"},
     {"name": "double_angle",     "regex": "<<\\s*([^<>\\n]{1,200}?)\\s*>>",          "confidence": "high"},
     {"name": "dollar_brace",     "regex": "\\$\\{\\s*([^{}\\n]{1,200}?)\\s*\\}",      "confidence": "high"},
-    {"name": "percent_marker",   "regex": "%([A-Za-z_][A-Za-z0-9_ ]{0,60}[A-Za-z0-9_])%", "confidence": "medium"},
+    {"name": "percent_marker",   "regex": "%([A-Za-z_]|[A-Za-z_][A-Za-z0-9_ ]{0,60}[A-Za-z0-9_])%", "confidence": "medium"},
     {"name": "square_bracket",   "regex": "\\[\\s*([^\\[\\]\\n]{1,200}?)\\s*\\]",     "confidence": "medium"},
     {"name": "angle_bracket",    "regex": "<\\s*([^<>\\n]{1,200}?)\\s*>",            "confidence": "medium"},
     {"name": "underscore_blank", "regex": "(_{3,})",                                  "confidence": "medium"},

@@ -411,13 +411,22 @@ def inspect(template: bytes, policy: dict[str, Any], policy_sha256: str, profile
             accepted_fields = _accept_non_overlapping(fields, accepted_instr)
             controls: list[_Match] = []
             inner_sdts = [el for el in p.iter(SDT) if _nearest(el, parents, oc.P) is p]
+            spans: dict[ET.Element, tuple[int, int]] = {}
             for sdt in inner_sdts:
-                info = _sdt_info(sdt)
                 owned = [t for t in tokens if sdt in oc.ancestors(t.element, parents)]
-                if not owned:
+                if owned:
+                    spans[sdt] = (min(t.start for t in owned), max(t.end for t in owned))
+            for sdt, (s, e) in spans.items():
+                info = _sdt_info(sdt)
+                nested = [d for d in spans if d is not sdt and sdt in oc.ancestors(d, parents)]
+                # One span, one candidate: a control that only wraps another control with exactly the same
+                # text yields to the innermost, which is the one Word lets the user type into. A wrapper
+                # holding more than its nested controls stays visible but cannot be filled, because
+                # replacing its text would overwrite those controls (a date picker, a bound value).
+                if any(spans[d] == (s, e) for d in nested):
                     continue
-                s, e = min(t.start for t in owned), max(t.end for t in owned)
-                controls.append(_Match("control", "content_control", "high", s, e, text[s:e], info["alias"] or info["tag"] or text[s:e], 0, info))
+                controls.append(_Match("control", "content_control", "high", s, e, text[s:e], info["alias"] or info["tag"] or text[s:e], 0,
+                                       dict(info, nested="true" if nested else "false")))
             block_sdt = next((a for a in chain if a.tag == SDT), None)
             if block_sdt is not None and not inner_sdts:
                 info = _sdt_info(block_sdt)
@@ -463,7 +472,9 @@ def inspect(template: bytes, policy: dict[str, Any], policy_sha256: str, profile
                 # also clear that placeholder state.
                 if mt.kind == "control" and mt.control is not None:
                     controls_seen += 1
-                    control_info: dict[str, str] | None = mt.control
+                    control_info: dict[str, str] | None = {k: v for k, v in mt.control.items() if k != "nested"}
+                    if mt.control.get("nested") == "true":
+                        reason = reason or "contains another content control; fill the inner control instead"
                     if mt.control["type"] not in TEXT_CONTROL_TYPES:
                         reason = reason or f"control type {mt.control['type']} is not fillable as text"
                     if mt.control["data_bound"] == "true":

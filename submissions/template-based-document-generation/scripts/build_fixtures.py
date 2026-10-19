@@ -32,6 +32,8 @@ Fixture inventory:
     archive-debris         a "[trash]/old file.dat" entry that is not a part -> inspected, filled, preserved
     repeated-text-off      a repeating short text, with a profile that sets repeated_text to null -> no finding
     grouped-rows           a repeatable row whose first column groups the items -> shown once per group
+    nested-controls        a control wrapping a text control, one wrapping a date picker, and %x% -> one id per
+                           span, the date-holding wrapper ineligible, the one-letter marker recognised
 """
 from __future__ import annotations
 
@@ -474,6 +476,23 @@ def grouped_rows() -> dict[str, str | bytes]:
     return simple(body)
 
 
+def nested_controls() -> dict[str, str | bytes]:
+    def sdt(pr: str, content: str) -> str:
+        return f"<w:sdt><w:sdtPr>{pr}</w:sdtPr><w:sdtContent>{content}</w:sdtContent></w:sdt>"
+
+    placeholder = '<w:rPr><w:rStyle w:val="PlaceholderText"/></w:rPr>'
+    name = sdt('<w:alias w:val="Client name"/><w:tag w:val="client_name"/><w:id w:val="2002"/><w:showingPlcHdr/><w:text/>',
+               r(t("Click to enter name"), placeholder))
+    date = sdt('<w:tag w:val="start_date"/><w:id w:val="2004"/><w:date w:fullDate="2026-01-01T00:00:00Z"><w:dateFormat w:val="d MMM yyyy"/></w:date>',
+               r(t("1 Jan 2026")))
+    body = (
+        p(sdt('<w:alias w:val="Client block"/><w:id w:val="2001"/><w:richText/>', name))                   # p1 wrapper, same span
+        + p(sdt('<w:alias w:val="Schedule"/><w:id w:val="2003"/><w:richText/>', r(t("Start: ")) + date))   # p2 wrapper around a date
+        + p(r(t("Ref %x%")))                                                                               # p3 one-letter marker
+    )
+    return simple(body)
+
+
 FIXTURE_BUILDERS = {
     "six-position": six_position,
     "mixed-conventions": mixed_conventions,
@@ -491,6 +510,7 @@ FIXTURE_BUILDERS = {
     "archive-debris": archive_debris,
     "repeated-text-off": repeated_text_off,
     "grouped-rows": grouped_rows,
+    "nested-controls": nested_controls,
 }
 
 

@@ -91,7 +91,10 @@ ineligible, because a date picker or a drop-down holds a typed value rather than
 data-bound control is ineligible however deep it sits, including a plain control nested inside a bound one,
 because Word repopulates a bound control from its custom XML part when the document opens and anything written
 there is discarded in silence. Only the binding is inherited this way: a text control legitimately nests inside
-a repeating section or a group. Each candidate records its enclosing control in `control`, and filling any candidate inside a
+a repeating section or a group. Nested controls get one candidate per span: a control that only wraps another
+control with exactly the same text yields to the innermost, and a control that holds other controls as well as
+its own text is ineligible, because replacing its text would overwrite them; fill the inner control instead.
+Each candidate records its enclosing control in `control`, and filling any candidate inside a
 control clears that control's placeholder state. An ineligible candidate needs no decision; it stays in the
 document and is reported as `unfillable`.
 
