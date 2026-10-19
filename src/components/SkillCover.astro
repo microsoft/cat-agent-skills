@@ -65,7 +65,7 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
       {
         isSample && (
           <span
-            class="flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-semibold text-neutral-900 shadow-sm"
+            class="flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm"
             title="A sample / demo skill — placeholder content, not a real submission"
           >
             Sample
@@ -74,29 +74,29 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
       }
       {
         type === "plugin" && (
-          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm" title="A Cowork plugin (M365 app package)">
+          <span class="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-black/5" title="A Cowork plugin (M365 app package)">
             Plugin{pluginSkillCount !== undefined && ` · ${pluginSkillCount} ${pluginSkillCount === 1 ? "skill" : "skills"}`}
           </span>
         )
       }
       {
         type === "automation" && (
-          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm" title="A Scout automation (scheduled .json)">
+          <span class="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-black/5" title="A Scout automation (scheduled .json)">
             Automation
           </span>
         )
       }
       {
         shownPlatforms.map((platform) => (
-          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm">
-            <span class="h-2 w-2 rounded-full ring-1 ring-white/80" style={`background:${PLATFORM_COLORS[platform]}`} />
+          <span class="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-black/5">
+            <span class="h-2 w-2 rounded-full" style={`background:${PLATFORM_COLORS[platform]}`} />
             {platform}
           </span>
         ))
       }
       {
         extraPlatforms > 0 && (
-          <span class="flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-inset ring-white/25 backdrop-blur-sm">+{extraPlatforms}</span>
+          <span class="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-black/5">+{extraPlatforms}</span>
         )
       }
     </div>
