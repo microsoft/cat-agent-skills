@@ -7,6 +7,7 @@ interface Props {
   platforms?: Platform[];
   type?: SkillType;
   pluginSkillCount?: number;
+  pluginConnectorCount?: number;
   tags?: string[];
   coverColor?: string;
   /** "card" for grid thumbnails, "hero" for the detail header. */
@@ -20,6 +21,7 @@ const {
   platforms = [],
   type = "skill",
   pluginSkillCount,
+  pluginConnectorCount = 0,
   tags = [],
   coverColor,
   variant = "card",
@@ -33,6 +35,17 @@ const isSample = tags.includes("sample");
 const shownTags = tags.filter((t) => t !== "sample");
 const shownPlatforms = isHero ? platforms : platforms.slice(0, 2);
 const extraPlatforms = platforms.length - shownPlatforms.length;
+// Icon-only mark from the official Model Context Protocol logo (same as the agents gallery).
+const MCP_ICON_PATHS = [
+  "M25 97.8528L92.8823 29.9706C102.255 20.598 117.451 20.598 126.823 29.9706C136.196 39.3431 136.196 54.5391 126.823 63.9117L75.5581 115.177",
+  "M76.2653 114.47L126.823 63.9117C136.196 54.5391 151.392 54.5391 160.765 63.9117L161.118 64.2652C170.491 73.6378 170.491 88.8338 161.118 98.2063L99.7248 159.6C96.6006 162.724 96.6006 167.789 99.7248 170.913L112.331 183.52",
+  "M109.853 46.9411L59.6482 97.1457C50.2757 106.518 50.2757 121.714 59.6482 131.087C69.0208 140.459 84.2168 140.459 93.5894 131.087L143.794 80.8822",
+];
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const pluginContents = [
+  pluginSkillCount !== undefined ? plural(pluginSkillCount, "skill") : "",
+  pluginConnectorCount > 0 ? plural(pluginConnectorCount, "MCP connector") : "",
+].filter(Boolean).join(", ");
 ---
 
 <div
@@ -74,8 +87,22 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
       }
       {
         type === "plugin" && (
-          <span class="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-black/5" title="A Cowork plugin (M365 app package)">
-            Plugin{pluginSkillCount !== undefined && ` · ${pluginSkillCount} ${pluginSkillCount === 1 ? "skill" : "skills"}`}
+          <span class="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-black/5" title={pluginContents ? `Cowork plugin: ${pluginContents}` : "Cowork plugin"}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-neutral-500" aria-hidden="true"><path d="m21 8-9-5-9 5v8l9 5 9-5z" /><path d="m3 8 9 5 9-5" /><path d="M12 13v8" /></svg>
+            Plugin
+            {pluginContents && <span class="sr-only">: {pluginContents}</span>}
+            {pluginSkillCount !== undefined && (
+              <span class="ml-0.5 flex items-center gap-1 border-l border-neutral-300 pl-2" aria-hidden="true">
+                <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 text-neutral-500"><path d="m12 2.5 8 4.6v9.8l-8 4.6-8-4.6V7.1l8-4.6Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" /><path d="m12 7.5.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6Z" fill="currentColor" /></svg>
+                {pluginSkillCount}
+              </span>
+            )}
+            {pluginConnectorCount > 0 && (
+              <span class="flex items-center gap-1 border-l border-neutral-300 pl-2" aria-hidden="true">
+                <svg viewBox="0 0 195 195" class="h-3.5 w-3.5 text-neutral-500">{MCP_ICON_PATHS.map((d) => <path d={d} fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" />)}</svg>
+                {pluginConnectorCount}
+              </span>
+            )}
           </span>
         )
       }
