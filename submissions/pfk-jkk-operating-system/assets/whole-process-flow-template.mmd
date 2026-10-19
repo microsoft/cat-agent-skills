@@ -1,0 +1,20 @@
+flowchart LR
+    Start([Start: agreed trigger]) --> N1["N1: First process<br/>Owner: accountable role<br/>Output: verified deliverable"]
+    N1 --> G1{{"G1: input / quality gate"}}
+    G1 -->|Pass| N2["N2: Next process<br/>Owner: accountable role<br/>Output: verified deliverable"]
+    G1 -.->|Fail: correct and recheck| N1
+    N2 --> D1{"Decision: exception or standard route?"}
+    D1 -->|Standard| N3["N3: Final process<br/>Owner: accountable role<br/>Output: accepted outcome"]
+    D1 -->|Blocked| A1["Andon: escalate blocker<br/>Owner: flow lead"]
+    A1 -.->|Resolution| N2
+    N3 --> End([End: customer or business outcome])
+
+    classDef process fill:#E8F1F5,stroke:#226A80,color:#102A35,stroke-width:2px;
+    classDef gate fill:#FFF3C4,stroke:#9A6700,color:#4D3500,stroke-width:2px;
+    classDef andon fill:#FCE8E6,stroke:#B3261E,color:#601410,stroke-width:2px;
+    classDef boundary fill:#E8F5E9,stroke:#2E7D32,color:#123819,stroke-width:2px;
+
+    class N1,N2,N3 process;
+    class G1,D1 gate;
+    class A1 andon;
+    class Start,End boundary;
