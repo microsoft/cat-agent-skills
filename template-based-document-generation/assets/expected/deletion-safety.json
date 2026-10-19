@@ -1,0 +1,290 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "First section text.",
+        "Bookmark starts here",
+        "and ends here.",
+        "Only paragraph in cell [x]",
+        "Tail paragraph {{ tail }}"
+      ],
+      "word/header1.xml": [
+        "Confidential"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p4#23-26",
+        "kind": "field",
+        "pattern": "square_bracket",
+        "confidence": "medium",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "x"
+      },
+      {
+        "id": "f:word/document.xml#p5#15-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "tail"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "refuse section break deletion",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p4#23-26",
+            "decision": "field",
+            "field": "x"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#15-25",
+            "decision": "field",
+            "field": "tail"
+          }
+        ],
+        "fields": [
+          {
+            "name": "x",
+            "type": "string",
+            "source": "x"
+          },
+          {
+            "name": "tail",
+            "type": "string",
+            "source": "tail"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p1"
+          }
+        ]
+      },
+      "values": {
+        "x": "filled",
+        "tail": "done"
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "section break"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "refuse split bookmark",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p4#23-26",
+            "decision": "field",
+            "field": "x"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#15-25",
+            "decision": "field",
+            "field": "tail"
+          }
+        ],
+        "fields": [
+          {
+            "name": "x",
+            "type": "string",
+            "source": "x"
+          },
+          {
+            "name": "tail",
+            "type": "string",
+            "source": "tail"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p2"
+          }
+        ]
+      },
+      "values": {
+        "x": "filled",
+        "tail": "done"
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "bookmark"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "refuse sole table row deletion",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p4#23-26",
+            "decision": "field",
+            "field": "x"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#15-25",
+            "decision": "field",
+            "field": "tail"
+          }
+        ],
+        "fields": [
+          {
+            "name": "x",
+            "type": "string",
+            "source": "x"
+          },
+          {
+            "name": "tail",
+            "type": "string",
+            "source": "tail"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_row",
+            "paragraph": "word/document.xml#p4"
+          }
+        ]
+      },
+      "values": {
+        "x": "filled",
+        "tail": "done"
+      },
+      "expect": {
+        "result": "failed",
+        "errors_contain": [
+          "only one row"
+        ]
+      },
+      "rerun": false
+    },
+    {
+      "name": "delete complete bookmark range",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p4#23-26",
+            "decision": "field",
+            "field": "x"
+          },
+          {
+            "candidate_id": "f:word/document.xml#p5#15-25",
+            "decision": "field",
+            "field": "tail"
+          }
+        ],
+        "fields": [
+          {
+            "name": "x",
+            "type": "string",
+            "source": "x"
+          },
+          {
+            "name": "tail",
+            "type": "string",
+            "source": "tail"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_range",
+            "from_paragraph": "word/document.xml#p2",
+            "to_paragraph": "word/document.xml#p3"
+          }
+        ]
+      },
+      "values": {
+        "x": "filled",
+        "tail": "done"
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "First section text.",
+            "Only paragraph in cell filled",
+            "Tail paragraph done"
+          ],
+          "word/header1.xml": [
+            "Confidential"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": false
+    },
+    {
+      "name": "clear sole cell paragraph without destroying cell",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p5#15-25",
+            "decision": "field",
+            "field": "tail"
+          }
+        ],
+        "fields": [
+          {
+            "name": "tail",
+            "type": "string",
+            "source": "tail"
+          }
+        ],
+        "operations": [
+          {
+            "op": "delete_paragraph",
+            "paragraph": "word/document.xml#p4"
+          }
+        ]
+      },
+      "values": {
+        "tail": "done"
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "First section text.",
+            "Bookmark starts here",
+            "and ends here.",
+            "",
+            "Tail paragraph done"
+          ],
+          "word/header1.xml": [
+            "Confidential"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": false
+    }
+  ]
+}

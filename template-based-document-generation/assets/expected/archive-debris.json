@@ -1,0 +1,85 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "Client: {{ client_name }}"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p1#8-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      }
+    ],
+    "findings": []
+  },
+  "runs": [
+    {
+      "name": "fill and preserve the debris entry",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#8-25",
+            "decision": "field",
+            "field": "client_name"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Contoso"
+      },
+      "expect": {
+        "result": "ok",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "Client: Contoso"
+          ]
+        },
+        "review_codes": []
+      },
+      "rerun": true
+    },
+    {
+      "name": "unloadable values refused, dry run writes nothing",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p1#8-25",
+            "decision": "field",
+            "field": "client_name"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          }
+        ]
+      },
+      "values_document": {
+        "schema": "not-a-values-schema",
+        "data": {}
+      },
+      "expect": {
+        "result": "refused"
+      },
+      "rerun": false
+    }
+  ]
+}
