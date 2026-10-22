@@ -47,3 +47,5 @@ Field rules:
   make every `name` a plain, self-explanatory label.
 - `flow` / `identity_flow`: 2–7 short labels each; they become the diagrams.
 - `source` on facts: `user`, `document: <file>` or `assumption`.
+- `sources[].url` must be an absolute `http://` or `https://` link; anything else is shown as plain,
+  non-clickable text.

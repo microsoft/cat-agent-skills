@@ -15,6 +15,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 CONF_COLORS = {"high": "#107c10", "medium": "#c19c00", "low": "#d13438"}
 SEVERITY_COLORS = {"high": "#d13438", "medium": "#c19c00", "low": "#107c10"}
@@ -23,6 +24,31 @@ FIT_COLORS = {"recommended": "#107c10", "complementary": "#0f6cbd", "not a fit":
 
 def esc(value):
     return html.escape(str(value if value is not None else ""), quote=True)
+
+
+def safe_url(value):
+    """Return the URL only if it is an absolute http(s) link; otherwise None (rendered as text)."""
+    url = str(value or "").strip()
+    # Drop control characters and whitespace that browsers ignore inside schemes ("java\nscript:").
+    if not url or re.search(r"[\x00-\x20\x7f]", url):
+        return None
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return None
+    if parts.scheme.lower() not in ("http", "https") or not parts.netloc:
+        return None
+    return url
+
+
+def source_item(s):
+    title = s.get("title") or s.get("url")
+    url = safe_url(s.get("url"))
+    if url:
+        return '<li><a href="%s">%s</a></li>' % (esc(url), esc(title))
+    raw = str(s.get("url") or "").strip()
+    suffix = " (%s)" % esc(raw) if raw and raw != str(title) else ""
+    return "<li>%s%s</li>" % (esc(title), suffix)
 
 
 def slug(text):
@@ -131,8 +157,7 @@ def render(spec):
                    for r in spec.get("risks", [])])
     steps = "".join("<h3>%s</h3>%s" % (esc(s.get("phase")), ul(s.get("items")))
                     for s in spec.get("steps", []))
-    sources = "<ol>%s</ol>" % "".join('<li><a href="%s">%s</a></li>' % (esc(s.get("url")), esc(s.get("title") or s.get("url")))
-                                       for s in spec.get("sources", [])) if spec.get("sources") else ""
+    sources = "<ol>%s</ol>" % "".join(source_item(s) for s in spec.get("sources", [])) if spec.get("sources") else ""
     diagrams = ""
     if spec.get("flow"):
         diagrams += "<h3>Data flow</h3>" + svg_chain(spec["flow"], "#0f6cbd")
