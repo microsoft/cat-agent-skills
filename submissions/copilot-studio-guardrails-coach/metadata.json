@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Guardrails Coach",
+  "description": "Review a Copilot Studio agent's authentication, knowledge and tool boundaries with no-code checks and benign manual tests. Map built-in evaluation results to documented maker fixes or admin handoffs, then report evidence, coverage gaps, and a scoped release recommendation. Scout can host the coach; it isn't the target.",
+  "platforms": ["Copilot Studio", "Scout"],
+  "tags": ["red-teaming", "safety", "guardrails", "responsible-ai", "security", "no-code", "prompt-injection"],
+  "author": "Swarup Mishra",
+  "authorUrl": "https://github.com/1999Swarup",
+  "version": "2.0.0",
+  "createdAt": "2026-08-15",
+  "updatedAt": "2026-10-23"
+}
