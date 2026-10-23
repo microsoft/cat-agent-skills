@@ -1,0 +1,54 @@
+{
+  "description": "Adaptive Daily Work Plan — merges tasks from mail, chat, and calendar into one ranked daily plan.",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "every day at 8:00am",
+    "days": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "time": {
+      "hour": 8,
+      "minute": 0
+    },
+    "hour": 8,
+    "minute": 0
+  },
+  "teamsNotify": "auto",
+  "name": "Daily Consolidated Task List",
+  "steps": [
+    {
+      "id": "1",
+      "label": "Collect calendar commitments",
+      "prompt": "Read today’s calendar and list all meetings/appointments, deadlines, and required prep or follow-up items. Capture fixed time constraints and open work windows between meetings."
+    },
+    {
+      "id": "2",
+      "label": "Extract actionable items from email",
+      "prompt": "Review recent and unread Outlook emails relevant to today. Extract only actionable tasks, requests, and deadlines. Ignore FYI-only messages. Tag each item with sender, due cue, and urgency signal."
+    },
+    {
+      "id": "3",
+      "label": "Extract actionable items from Teams",
+      "prompt": "Review recent Teams chats/messages for explicit asks, decisions, commitments, and pending follow-ups. Convert them into clear action items with owner (me/others), due cues, and dependency notes."
+    },
+    {
+      "id": "4",
+      "label": "Normalize, deduplicate, and rank",
+      "prompt": "Merge tasks from calendar, email, and Teams into one list. Deduplicate overlaps, combine related tasks, and rank by urgency, deadline proximity, impact, effort, and blocking dependencies."
+    },
+    {
+      "id": "5",
+      "label": "Produce adaptive daily work plan",
+      "prompt": "Generate today’s ranked plan with sections: Top 3 must-do items, Important tasks, Quick wins, and Waiting-on-others follow-ups. For each item include source, reason for priority, estimated effort, and suggested time block fitted around today’s meetings."
+    }
+  ],
+  "enabled": false,
+  "oneShot": false,
+  "triggerType": "schedule"
+}

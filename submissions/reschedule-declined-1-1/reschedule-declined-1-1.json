@@ -1,0 +1,58 @@
+{
+  "description": "Meeting recovery workflow for declined one-on-one meetings with structured detection, triage, and rescheduling recommendations.",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "",
+    "days": [],
+    "time": {
+      "hour": 0,
+      "minute": 0
+    },
+    "hour": 0,
+    "minute": 0
+  },
+  "condition": "A newly declined one-on-one meeting is detected in my calendar or inbox responses.",
+  "conditionCheckInterval": 15,
+  "teamsNotify": "auto",
+  "name": "Reschedule Declined 1:1",
+  "steps": [
+    {
+      "id": "1",
+      "label": "Collect recent decline signals",
+      "prompt": "Review recent calendar responses and meeting-related emails since the last run. Identify decline actions tied to meeting invitations."
+    },
+    {
+      "id": "2",
+      "label": "Filter to valid 1:1 candidates",
+      "prompt": "Keep only meetings that are true one-on-one sessions (organizer + one attendee), excluding room/resource-only scenarios and group meetings."
+    },
+    {
+      "id": "3",
+      "label": "Build meeting context",
+      "prompt": "For each declined 1:1, capture key context: subject, organizer, attendee, original date/time, duration, timezone, and whether this appears to be a recurring series."
+    },
+    {
+      "id": "4",
+      "label": "Resolve participants and constraints",
+      "prompt": "Resolve both participants to canonical identities and gather scheduling constraints including working hours, conflicts, and out-of-office blocks."
+    },
+    {
+      "id": "5",
+      "label": "Generate recovery options",
+      "prompt": "Find the best 3 replacement slots within the next 7 business days that fit both calendars, preserving original duration and timezone when possible. Rank by earliest viable and minimal disruption."
+    },
+    {
+      "id": "6",
+      "label": "Draft reschedule message",
+      "prompt": "Compose a concise draft message proposing the 3 options and asking for confirmation. Keep it ready for review only; do not send automatically."
+    },
+    {
+      "id": "7",
+      "label": "Publish summary",
+      "prompt": "Return a compact summary listing each declined 1:1 and its proposed slots, plus the draft text for each thread."
+    }
+  ],
+  "enabled": false,
+  "oneShot": true,
+  "triggerType": "condition"
+}

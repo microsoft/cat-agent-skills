@@ -1,0 +1,10 @@
+{
+  "name": "Nudge for Response",
+  "description": "Every weekday at 9:00 AM, finds emails you sent with an ask that has gone unanswered for 3+ business days and saves polite nudge replies as drafts for you to review. Never sends mail.",
+  "tags": ["automation", "email", "follow-up", "drafts", "productivity"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.0.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-10-24"
+}

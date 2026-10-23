@@ -1,0 +1,10 @@
+{
+  "name": "Prompt to Set Agenda",
+  "description": "Every weekday at 8:00 AM, reviews your meetings for the next 48 hours and drafts a timed agenda with objectives, owners, decisions needed, and pre-reads, using thread and chat context. Recommendations only; nothing is sent or changed.",
+  "tags": ["automation", "meetings", "agenda", "calendar", "productivity"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.0.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-10-24"
+}

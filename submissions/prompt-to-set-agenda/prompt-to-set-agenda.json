@@ -1,0 +1,67 @@
+{
+  "description": "Meeting-Readiness Assistant: Flags upcoming meetings with no agenda and drafts one from thread context.",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "every weekday at 8:00am",
+    "days": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "time": {
+      "hour": 8,
+      "minute": 0
+    },
+    "hour": 8,
+    "minute": 0
+  },
+  "teamsNotify": "always",
+  "name": "Prompt to Set Agenda",
+  "steps": [
+    {
+      "id": "1",
+      "label": "Collect Meeting Context",
+      "prompt": "Retrieve all non-cancelled meetings in the next 48 hours. For each meeting, capture title, date/time, duration, attendees, organizer, and infer meeting type (1:1, project sync, review, decision meeting)."
+    },
+    {
+      "id": "2",
+      "label": "Define Objective",
+      "prompt": "For each meeting, infer or state a one-sentence objective describing what outcome this meeting should achieve."
+    },
+    {
+      "id": "3",
+      "label": "Propose Prioritized Topics",
+      "prompt": "Using available thread/chat/context signals, generate 3-7 agenda topics in strict priority order for each meeting."
+    },
+    {
+      "id": "4",
+      "label": "Allocate Time Blocks",
+      "prompt": "Assign realistic minutes to each topic so the total fits meeting duration. Keep agenda balanced and executable."
+    },
+    {
+      "id": "5",
+      "label": "Suggest Topic Owners",
+      "prompt": "Suggest likely owner/facilitator for each agenda topic when inferable from participants/context; otherwise mark owner as TBD."
+    },
+    {
+      "id": "6",
+      "label": "List Decisions Needed",
+      "prompt": "Identify explicit decisions that should be made in the meeting to avoid ambiguity and drive closure."
+    },
+    {
+      "id": "7",
+      "label": "Attach Pre-Reads",
+      "prompt": "Recommend relevant pre-reads and prep items participants should review before the meeting (docs, threads, notes, artifacts)."
+    },
+    {
+      "id": "8",
+      "label": "Assemble Final Agenda Output",
+      "prompt": "Return a final per-meeting agenda package containing: context summary, objective, timed agenda table (topic/owner/time), decisions needed, pre-reads, and expected outcomes with next-step placeholders (owner + due date). Safety rule: do not send messages and do not modify meetings; produce recommendations/drafts only."
+    }
+  ],
+  "enabled": false,
+  "oneShot": false,
+  "triggerType": "schedule"
+}

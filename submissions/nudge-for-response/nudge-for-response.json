@@ -1,0 +1,51 @@
+{
+  "description": "Multi-step follow-through: find unanswered sent asks (3+ business days), draft polite nudges only, and summarize results.",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "every weekday at 9am",
+    "days": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "time": {
+      "hour": 9,
+      "minute": 0
+    },
+    "hour": 9,
+    "minute": 0
+  },
+  "name": "Nudge for Response",
+  "steps": [
+    {
+      "id": "1",
+      "label": "Collect mail scope",
+      "prompt": "Gather source data for this run.\n1. Call workiq_get_my_profile and store the user's own email addresses (mail and UPN).\n2. Call workiq_list_emails on folder \"sent\" with limit 50 ordered by most recent.\n3. Call workiq_search_emails on folder \"sent\" over last ~14 calendar days with ask-oriented terms to broaden coverage.\n4. Call workiq_list_emails on folder \"drafts\" with limit 100 to detect existing draft nudges.\n5. Build a de-duplicated working set of sent messages from steps 2 and 3."
+    },
+    {
+      "id": "2",
+      "label": "Identify actionable asks",
+      "prompt": "From the sent working set, identify true follow-up candidates.\n1. Include messages where the user's authored content contains a request/question/action ask.\n2. Do NOT auto-exclude just because subject starts with \"Re:\" or \"Fw:\".\n3. Exclude true answer-only messages where user is clearly responding and not asking for anything new.\n4. Identify primary external recipient(s): exclude the user's own addresses and recipients where direct reply is not expected.\n5. Keep one logical candidate per original sent ask for this run."
+    },
+    {
+      "id": "3",
+      "label": "Check unanswered and age gates",
+      "prompt": "For each candidate, apply reply and time gates.\n1. Check inbox and relevant subfolders (including archive) for replies from the primary recipient(s) after original send time.\n2. Prefer same-thread/conversation matching where available; otherwise use robust subject/thread + sender + timestamp matching.\n3. Mark candidate answered if any qualifying reply exists; otherwise unanswered.\n4. Apply 3+ business-day rule relative to current run datetime (skip Sat/Sun in counting).\n5. Keep only candidates that are both unanswered and old enough."
+    },
+    {
+      "id": "4",
+      "label": "Draft nudges only",
+      "prompt": "Create draft nudges for qualifying items only.\n1. Before drafting each item, check Drafts for an existing nudge draft in same thread/conversation; if present, skip creating another.\n2. If prior draft was deleted and item is still unanswered, create one new draft.\n3. Use workiq_reply_to_email with emailId set to ORIGINAL sent email.\n4. Set replyAll false unless multiple recipients were directly asked, then true.\n5. MANDATORY: set saveAsDraft true. NEVER send mail; never use workiq_send_email.\n6. Nudge body should be brief, warm, professional, and minimal-detail."
+    },
+    {
+      "id": "5",
+      "label": "Report outcome",
+      "prompt": "Produce final run summary and optional Teams notice.\n1. Summarize: number of asks checked, number already answered, number of drafts created.\n2. List each nudged thread as subject + recipient(s) only (no sensitive body details).\n3. If zero drafts were created, report \"No unanswered asks found\" and do NOT send Teams message.\n4. If drafts were created, send concise Teams summary noting subject/recipient list and that drafts are waiting in Drafts for manual review/send.\n5. Reiterate that no emails were auto-sent."
+    }
+  ],
+  "enabled": false,
+  "oneShot": false,
+  "triggerType": "schedule"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Missed-Meeting Recovery",
+  "description": "When you miss or decline a calendar meeting, pulls the transcript, meeting chat, or event details and produces a recap with the decisions made and the action items assigned to you.",
+  "tags": ["automation", "meetings", "calendar", "transcripts", "action-items"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.0.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-10-24"
+}

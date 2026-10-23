@@ -1,0 +1,47 @@
+{
+  "description": "Pulls transcript/recap for a meeting you skipped and extracts your action items.",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "",
+    "days": [],
+    "time": {
+      "hour": 0,
+      "minute": 0
+    },
+    "hour": 0,
+    "minute": 0
+  },
+  "condition": "I miss or decline a calendar meeting",
+  "conditionCheckInterval": 15,
+  "name": "Missed-Meeting Recovery",
+  "steps": [
+    {
+      "id": "1",
+      "label": "Find missed meetings",
+      "prompt": "Find meetings I missed in the last 24 hours and sort them most recent first. For each candidate, include event id, subject, start/end time, organizer, and attendee response status. Exclude meetings I attended or accepted and joined."
+    },
+    {
+      "id": "2",
+      "label": "Collect recap sources",
+      "prompt": "For each missed meeting, collect recap material in this priority order: (1) transcript segments, (2) meeting chat messages, (3) calendar event details/body/attachments metadata. Record which source(s) were available and chosen for each meeting."
+    },
+    {
+      "id": "3",
+      "label": "Summarize outcomes",
+      "prompt": "Using the best available source for each missed meeting, produce concise bullets for key decisions, outcomes, and unresolved questions. Keep each meeting summary separate and clearly labeled with meeting title and time."
+    },
+    {
+      "id": "4",
+      "label": "Extract my action items",
+      "prompt": "From each meeting summary/source, extract only action items assigned to me. For each item, include: action, owner (must be me), due date if present, confidence (high/medium/low), and exact supporting quote/snippet from the source. If none are assigned to me, state 'No direct action items for me found.' for that meeting."
+    },
+    {
+      "id": "5",
+      "label": "Produce final recovery brief",
+      "prompt": "Return a final 'Missed-Meeting Recovery' brief prioritized by recency. Include per-meeting sections with: source used, summary bullets, and my action items. End with a consolidated checklist of my action items across all meetings."
+    }
+  ],
+  "enabled": false,
+  "oneShot": true,
+  "triggerType": "condition"
+}

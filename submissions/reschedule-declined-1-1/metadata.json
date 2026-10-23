@@ -1,0 +1,10 @@
+{
+  "name": "Reschedule Declined 1:1",
+  "description": "When a one-on-one meeting is declined, checks both calendars, proposes the three best replacement slots in the next 7 business days, and drafts a reschedule message for your review. Never sends automatically.",
+  "tags": ["automation", "meetings", "calendar", "scheduling", "one-on-one"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.0.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-10-24"
+}
