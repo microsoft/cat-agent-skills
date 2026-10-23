@@ -1,0 +1,7 @@
+{ "contract_version": "rtl.returns-refund-case.v1", "case_id": "RET-2026-08977",
+  "return_request": {"category": "electronics", "value": 249.0, "has_receipt": false, "opened": true,
+    "requested_on": "2026-08-06", "reason_text": "It was a gift and he changed his mind, doesn't need it",
+    "unit_serial": "SN-KX88231"},
+  "order": {"order_id": "ORD-544102", "order_date": "2026-07-05", "sold_serial": "SN-KX88117"},
+  "customer_history": {"receiptless_returns_90d": 4},
+  "escalations": [] }
