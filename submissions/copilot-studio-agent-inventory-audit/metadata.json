@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Agent Inventory Audit",
+  "description": "Audit every Copilot Studio agent in a tenant from one inventory export: who needs attention and who owns it, identity coverage, exposure, maker-connection credentials, lifecycle, and ownership, with a remediation plan mapped to the control that fixes each finding.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["copilot-studio", "governance", "security", "agent", "power-platform", "admin", "audit", "python", "scripts"],
+  "author": "Arindam Choudhury",
+  "authorUrl": "https://github.com/ari20089",
+  "version": "1.0.0",
+  "createdAt": "2026-10-16",
+  "updatedAt": "2026-10-16"
+}
