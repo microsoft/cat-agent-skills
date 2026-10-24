@@ -1,0 +1,11 @@
+{
+  "name": "Financial Statement Intelligence",
+  "description": "Analyse annual or interim financial statements (PDF, OCR text, XLSX or CSV) for any entity type, including banks and insurers: map the three statements, run accounting tie-outs, compute auditable ratios and trends, and deliver a formula-driven Excel workbook and HTML report with source page citations.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["finance", "financial-statements", "annual-report", "ratios", "excel", "xlsx", "analysis", "python"],
+  "author": "sgshaji",
+  "authorUrl": "https://github.com/sgshaji",
+  "version": "0.8.1",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-10-24"
+}
