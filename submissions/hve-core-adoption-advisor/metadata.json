@@ -1,0 +1,11 @@
+{
+  "name": "HVE Core Adoption Advisor",
+  "description": "Adopt Microsoft's HVE Core (Hyper Velocity Engineering) for GitHub Copilot: explain what it is, choose the install method, match a need to the right agent or skill, run a task through Research-Plan-Implement-Review, plan a team rollout, and audit a repository's Copilot customizations against HVE Core conventions.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["hve-core", "github-copilot", "vs-code", "copilot-agents", "copilot-instructions", "agent-skills", "rpi", "sdlc", "governance", "python", "scripts"],
+  "author": "Arindam Choudhury",
+  "authorUrl": "https://github.com/ari20089",
+  "version": "1.0.0",
+  "createdAt": "2026-10-17",
+  "updatedAt": "2026-10-17"
+}
