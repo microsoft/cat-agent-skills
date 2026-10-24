@@ -1,4 +1,0 @@
-# Core analysis and the Excel/HTML outputs use only the Python standard library (3.9+). Nothing is installed by the skill.
-# PDF input uses PyMuPDF (pymupdf) or pypdfium2, whichever the runtime already has. Without either, pass a .txt copy made by the platform.
-# Scanned PDFs: ocr-pdf uses rapidocr (rapidocr_onnxruntime or rapidocr) with numpy if the runtime already has them; otherwise use the platform's OCR text.
-# XLSX input and XLSX output use built-in ZIP/XML handling.
