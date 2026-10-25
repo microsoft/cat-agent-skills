@@ -1,0 +1,11 @@
+{
+  "name": "Hebrew-English Bidi",
+  "description": "Create and repair mixed Hebrew-English text with format-aware RTL/LTR guidance for Office, Markdown, HTML, spreadsheets, email, and PDF while preserving logical order and editability.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["hebrew", "english", "rtl", "bidi", "documents", "productivity"],
+  "author": "Ofir Gavish",
+  "authorUrl": "https://github.com/OfirGavish",
+  "version": "1.0.0",
+  "createdAt": "2026-10-26",
+  "updatedAt": "2026-10-26"
+}
