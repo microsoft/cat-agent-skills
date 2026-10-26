@@ -2,6 +2,8 @@
 import { withBase } from "../lib/url";
 import { coverGradient, initials } from "../lib/skills";
 import type { Platform, SkillType } from "../lib/skills";
+import { CATEGORY_COLORS, type Category } from "../lib/categories";
+import CategoryIcon from "./CategoryIcon.astro";
 
 interface Props {
   slug: string;
@@ -9,6 +11,8 @@ interface Props {
   description: string;
   platforms?: Platform[];
   type?: SkillType;
+  category?: Category;
+  builtByMicrosoft?: boolean;
   tags?: string[];
   coverColor?: string;
   featured?: boolean;
@@ -16,8 +20,12 @@ interface Props {
 
 const {
   slug, name, description, platforms = [], type = "skill",
+  category = "productivity", builtByMicrosoft = false,
   tags = [], coverColor, featured = false,
 } = Astro.props;
+const gradient = builtByMicrosoft
+  ? `linear-gradient(135deg, color-mix(in srgb, ${CATEGORY_COLORS[category]} 70%, white), ${CATEGORY_COLORS[category]})`
+  : coverGradient(slug, coverColor);
 const isSample = tags.includes("sample");
 const Wrapper = isSample ? "div" : "a";
 const wrapperProps = isSample
@@ -38,10 +46,10 @@ const wrapperProps = isSample
     <div class="relative shrink-0">
       <span
         class="grid h-9 w-9 place-items-center rounded-lg text-xs font-bold text-white shadow-sm"
-        style={`background-image:${coverGradient(slug, coverColor)}`}
+        style={`background-image:${gradient}`}
         aria-hidden="true"
-      >{initials(name)}</span>
-      {featured && (
+      >{builtByMicrosoft ? <CategoryIcon category={category} /> : initials(name)}</span>
+      {featured && !builtByMicrosoft && (
         <span
           class="absolute -right-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-white text-amber-500 shadow ring-1 ring-black/5"
           title="Hand-picked featured skill"

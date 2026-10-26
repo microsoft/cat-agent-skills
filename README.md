@@ -18,8 +18,10 @@ deployed as a static site to GitHub Pages.
   The catalog includes 20 industry plugins (10 Manufacturing and 10 Retail & CPG)
   from [industry-templates at pinned commit e4a0ab3](https://github.com/SravaniSeethi/industry-templates/tree/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682),
   with original source and license notices retained.
-- **Infinite-scroll galleries** with compact, consistently sized cards and
-  auto-generated monograms (no image assets to maintain).
+- **Infinite-scroll galleries** with compact, consistently sized cards,
+  category icons for Microsoft submissions, and auto-generated monograms for
+  community submissions (no image assets to maintain).
+  Featured stars appear only on community cards.
 - **Product filtering** in one horizontal row: exclusive
   **Any** (default), Copilot Studio, Cowork, and Scout pills.
   Choosing a product replaces the selection; clicking the active option keeps
