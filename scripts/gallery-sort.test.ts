@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compareNewest, compareRecentlyUpdated } from "../src/lib/gallery-sort";
+import { compareCategoryThenName, compareNewest, compareRecentlyUpdated } from "../src/lib/gallery-sort";
 
 const item = (
   name: string,
@@ -9,6 +9,26 @@ const item = (
   sample = "0",
 ) => ({
   dataset: { name, created, updated, sample },
+});
+
+test("Microsoft previews sort by category label and then title, regardless of featured status", () => {
+  const submissions = [
+    { category: "retail-cpg", name: "Zulu retail", featured: true },
+    { category: "manufacturing", name: "Zulu manufacturing", featured: true },
+    { category: "manufacturing", name: "Beta manufacturing", featured: false },
+    { category: "retail-cpg", name: "Alpha retail", featured: false },
+    { category: "productivity", name: "Zulu productivity", featured: false },
+    { category: "agent-development", name: "Zulu agents", featured: false },
+  ] as const;
+
+  assert.deepEqual(submissions.toSorted(compareCategoryThenName).map(({ name }) => name), [
+    "Zulu agents",
+    "Beta manufacturing",
+    "Zulu manufacturing",
+    "Zulu productivity",
+    "Alpha retail",
+    "Zulu retail",
+  ]);
 });
 
 test("newest orders skills by creation date rather than update date", () => {

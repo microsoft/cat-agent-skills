@@ -4,6 +4,7 @@ import GalleryFilters from "./GalleryFilters.astro";
 import SubmissionItem from "./SubmissionItem.astro";
 import { authorKey, normalizeLogin } from "../lib/badges";
 import { withBase } from "../lib/url";
+import { compareCategoryThenName } from "../lib/gallery-sort";
 
 interface Props {
   scope?: "all" | "microsoft";
@@ -17,6 +18,7 @@ const skills = (await getCollection("skills")).sort((a, b) => {
   return sampleDiff || Number(b.data.featured) - Number(a.data.featured) || a.data.name.localeCompare(b.data.name);
 });
 const microsoft = skills.filter(({ data }) => data.builtByMicrosoft);
+const microsoftPreview = microsoft.toSorted((a, b) => compareCategoryThenName(a.data, b.data));
 const community = skills.filter(({ data }) => !data.builtByMicrosoft);
 const collection = microsoftOnly ? microsoft : skills;
 const gridItems = microsoftOnly ? microsoft : community;
@@ -38,7 +40,10 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
   <section class="border-b border-border bg-surface/40">
     <div class="mx-auto max-w-8xl px-4 py-6 sm:px-6 sm:py-7">
       {microsoftOnly && (
-        <a data-gallery-link data-destination={withBase("/")} href={withBase("/")} class="mb-4 inline-flex text-sm font-medium text-muted underline underline-offset-4 hover:text-fg">Back to gallery</a>
+        <a data-gallery-link data-destination={withBase("/")} href={withBase("/")} class="gallery-nav-link gallery-nav-link--back mb-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H5m6-6-6 6 6 6" /></svg>
+          Back to gallery
+        </a>
       )}
       <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] lg:items-center">
         <div>
@@ -64,15 +69,20 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
   <p id="filter-status" class="sr-only" role="status" aria-live="polite"></p>
 
   {!microsoftOnly && (
-    <section class="mx-auto max-w-8xl px-4 pt-6 sm:px-6" aria-labelledby="microsoft-heading">
-      <div class="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h2 id="microsoft-heading" class="text-xl font-bold tracking-tight text-fg">Built by Microsoft <span id="microsoft-count" class="text-base font-normal text-muted">({microsoft.length})</span></h2>
-        <a id="microsoft-view-all" data-gallery-link data-destination={withBase("/built-by-microsoft/")} href={withBase("/built-by-microsoft/")} hidden={microsoft.length <= 1} aria-label="View all Microsoft submissions" class="text-sm font-medium text-muted underline underline-offset-4 hover:text-fg">View all</a>
+    <section class="border-b border-border" aria-labelledby="microsoft-heading">
+      <div class="mx-auto max-w-8xl px-4 py-6 sm:px-6">
+        <div class="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h2 id="microsoft-heading" class="text-xl font-bold tracking-tight text-fg">Built by Microsoft <span id="microsoft-count" class="text-base font-normal text-muted">({microsoft.length})</span></h2>
+          <a id="microsoft-view-all" data-gallery-link data-destination={withBase("/built-by-microsoft/")} href={withBase("/built-by-microsoft/")} hidden={microsoft.length <= 1} aria-label="View more Microsoft submissions" class="gallery-nav-link">
+            View more
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+          </a>
+        </div>
+        <div id="microsoft-preview-grid" class="submission-grid" hidden={microsoft.length === 0}>
+          {microsoftPreview.map((submission, index) => <SubmissionItem submission={submission} hidden={index > 0} />)}
+        </div>
+        <p id="microsoft-empty" hidden={microsoft.length > 0} class="text-sm text-muted">No Microsoft submissions match these filters.</p>
       </div>
-      <div id="microsoft-preview-grid" class="submission-grid" hidden={microsoft.length === 0}>
-        {microsoft.map((submission, index) => <SubmissionItem submission={submission} hidden={index > 0} />)}
-      </div>
-      <p id="microsoft-empty" hidden={microsoft.length > 0} class="text-sm text-muted">No Microsoft submissions match these filters.</p>
     </section>
   )}
 

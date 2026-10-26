@@ -19,7 +19,7 @@ export interface FilterableSubmission {
 
 export interface GalleryFilters {
   query: string;
-  platform: Platform | "";
+  platforms: ReadonlySet<string>;
   categories: ReadonlySet<string>;
   types: ReadonlySet<string>;
   tags: ReadonlySet<string>;
@@ -29,6 +29,7 @@ export interface GalleryFilters {
 export function copyGalleryFilters(filters: GalleryFilters) {
   return {
     ...filters,
+    platforms: new Set(filters.platforms),
     categories: new Set(filters.categories),
     types: new Set(filters.types),
     tags: new Set(filters.tags),
@@ -37,8 +38,8 @@ export function copyGalleryFilters(filters: GalleryFilters) {
 }
 
 export function sameGalleryFilters(a: GalleryFilters, b: GalleryFilters): boolean {
-  return a.query === b.query && a.platform === b.platform &&
-    (["categories", "types", "tags", "authors"] as const).every((field) =>
+  return a.query === b.query &&
+    (["platforms", "categories", "types", "tags", "authors"] as const).every((field) =>
       a[field].size === b[field].size && [...a[field]].every((value) => b[field].has(value)),
     );
 }
@@ -52,8 +53,7 @@ export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
   );
   return {
     query: (params.get("q") ?? "").toLowerCase(),
-    // Legacy unions covering every platform remain unrestricted; partial unions use the first valid choice.
-    platform: platforms.length === PLATFORMS.length ? "" : platforms[0] ?? "",
+    platforms: new Set(platforms),
     categories: new Set([...selections("category")].map((value) => value.toLowerCase())),
     types: new Set([...selections("type")].map((value) => value.toLowerCase())),
     tags: selections("tag"),
@@ -64,7 +64,7 @@ export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
 export function galleryFilterParams(filters: GalleryFilters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.query) params.set("q", filters.query);
-  if (filters.platform) params.set("platform", filters.platform);
+  if (filters.platforms.size) params.set("platform", [...filters.platforms].join(","));
   if (filters.categories.size) params.set("category", [...filters.categories].join(","));
   if (filters.types.size) params.set("type", [...filters.types].join(","));
   if (filters.tags.size) params.set("tag", [...filters.tags].join(","));
@@ -80,7 +80,7 @@ export function matchesFilters(item: FilterableSubmission, filters: GalleryFilte
   ].join(" ").toLowerCase();
   return (
     (!filters.query || text.includes(filters.query.trim().toLowerCase())) &&
-    (!filters.platform || item.platforms.includes(filters.platform)) &&
+    (!filters.platforms.size || item.platforms.some((platform) => filters.platforms.has(platform))) &&
     (!filters.categories.size || filters.categories.has(item.category)) &&
     (!filters.types.size || filters.types.has(item.type)) &&
     [...filters.tags].every((tag) => item.tags.includes(tag)) &&

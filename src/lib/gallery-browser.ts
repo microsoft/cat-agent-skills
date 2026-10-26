@@ -128,7 +128,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     microsoft.count.textContent = `(${microsoftMatched.length})`;
     microsoft.empty.hidden = microsoftMatched.length > 0;
     microsoft.viewAll.hidden = microsoftMatched.length <= columns;
-    microsoft.viewAll.setAttribute("aria-label", `View all ${microsoftMatched.length} Microsoft submissions`);
+    microsoft.viewAll.setAttribute("aria-label", `View more Microsoft submissions (${microsoftMatched.length} matches)`);
   }
 
   function fill() {
@@ -173,9 +173,7 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function paintApplied() {
     platformPills.forEach((button) => {
-      const selected = applied.platform === button.dataset.platform;
-      button.setAttribute("aria-checked", String(selected));
-      button.tabIndex = selected ? 0 : -1;
+      button.setAttribute("aria-pressed", String(applied.platforms.has(button.dataset.platform ?? "")));
     });
     categoryPills.forEach((button) => {
       button.setAttribute("aria-pressed", String(applied.categories.has(button.dataset.category ?? "")));
@@ -200,7 +198,7 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function revealCurrentFilter() {
     const firstApplied = appliedChips.querySelector<HTMLButtonElement>("button");
-    const selected = platformPills.find((button) => button.getAttribute("aria-checked") === "true");
+    const selected = [...platformPills, ...categoryPills].find((button) => button.getAttribute("aria-pressed") === "true");
     const button = firstApplied ?? selected;
     if (button) revealFilter(button);
   }
@@ -287,7 +285,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     filterPicker(tagOptions, "", "tagOption", get("#tag-search-empty"));
     filterPicker(authorOptions, "", "authorSearch", get("#author-search-empty"));
     get<HTMLElement>("#filters-context").textContent = [
-      applied.platform || "Any product",
+      [...applied.platforms].join(" or ") || "All products",
       [...applied.categories].map((category) => categoryNames.get(category) ?? category).join(" or "),
       applied.query ? `Search: ${search.value}` : "",
     ].filter(Boolean).join(" \u00b7 ");
@@ -369,22 +367,15 @@ export function initGalleryBrowser(root: HTMLElement) {
     const button = event.target;
     if (button instanceof HTMLButtonElement && button.matches(":focus-visible")) revealFilter(button);
   });
-  platformPills.forEach((button, index) => {
+  platformPills.forEach((button) => {
+    const platform = PLATFORMS.find((value) => value === button.dataset.platform);
+    if (!platform) throw new Error(`Unknown gallery product: ${button.dataset.platform}`);
     button.addEventListener("click", () => {
-      if (button.dataset.platform === applied.platform) return;
       flushSearch();
-      applied.platform = PLATFORMS.find((platform) => platform === button.dataset.platform) ?? "";
+      if (applied.platforms.has(platform)) applied.platforms.delete(platform);
+      else applied.platforms.add(platform);
       commit();
       revealFilter(button);
-    });
-    button.addEventListener("keydown", (event) => {
-      const direction = ["ArrowRight", "ArrowDown"].includes(event.key) ? 1
-        : ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 0;
-      if (!direction) return;
-      event.preventDefault();
-      const next = platformPills[(index + direction + platformPills.length) % platformPills.length];
-      next.focus({ preventScroll: true });
-      next.click();
     });
   });
   categoryPills.forEach((button) => {
@@ -428,7 +419,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     const params = new URLSearchParams(location.search);
     applied = copyGalleryFilters(parseGalleryFilters(params));
     const previous = params.toString();
-    if (applied.platform) params.set("platform", applied.platform);
+    if (applied.platforms.size) params.set("platform", [...applied.platforms].join(","));
     else params.delete("platform");
     if (params.toString() !== previous) {
       const query = params.toString();
