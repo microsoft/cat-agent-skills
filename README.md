@@ -12,7 +12,8 @@ deployed as a static site to GitHub Pages.
 ## ✨ Features
 
 - **A Built by Microsoft preview row above the community gallery**, with a
-  **View more** link beside the heading, wrapping underneath on narrow screens.
+  **View all** link aligned with the grid's right edge, wrapping beneath the
+  heading on narrow screens.
   It includes the matching count and no arrow, and opens the Microsoft-only
   collection. Both galleries use the same product,
   category, search and extra filters; collection/back links preserve selections

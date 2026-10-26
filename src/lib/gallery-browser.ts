@@ -125,10 +125,10 @@ export function initGalleryBrowser(root: HTMLElement) {
     const columns = getComputedStyle(microsoft.grid).gridTemplateColumns.split(/\s+/).length;
     microsoft.items.forEach((element) => { element.hidden = true; });
     microsoftMatched.slice(0, columns).forEach((element) => { element.hidden = false; });
-    microsoft.count.textContent = `(${microsoftMatched.length})`;
+    microsoft.count.textContent = String(microsoftMatched.length);
     microsoft.empty.hidden = microsoftMatched.length > 0;
     microsoft.viewAll.hidden = microsoftMatched.length <= columns;
-    microsoft.viewAll.setAttribute("aria-label", `View more (${microsoftMatched.length}) Microsoft submissions`);
+    microsoft.viewAll.setAttribute("aria-label", `View all ${microsoftMatched.length} Microsoft submissions`);
   }
 
   function fill() {
