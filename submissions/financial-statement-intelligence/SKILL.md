@@ -4,7 +4,7 @@ description: 'Analyses company annual or interim financial statements (PDF, OCR 
 ---
 # Financial Statement Intelligence
 
-**Skill version 0.8.1.** If asked which version is loaded, quote this line.
+**Skill version 0.8.2.** If asked which version is loaded, quote this line.
 
 The model reviews and completes the mapping; the bundled script drafts it and does every calculation and check. Every number you report comes from the user's document or from the script's output, never from your own arithmetic.
 
@@ -49,7 +49,7 @@ Everything you need is in this file and `references/`. Do not read `finance_skil
    ```bash
    python <skill_dir>/scripts/finance_skill.py draft-map input/annual-report.pdf --out working/<company>.json
    ```
-   It finds the primary statements, reads every line with its page, assigns year columns, infers signs and subtotals from how the lines add up, assigns canonical ids, and lists what needs your judgement under `REVIEW`. If it picked the wrong pages, pass them: `--is 197 --bs 199 --cf 201,202`. It never overwrites an existing file (your edits are safe); `--force` starts that report again from scratch. For spreadsheets use `extract-xlsx` / `extract-csv` and map by hand.
+   It finds the primary statements, reads every line with its page, assigns year columns, infers signs and subtotals from how the lines add up, assigns canonical ids, and lists what needs your judgement under `REVIEW`. If it picked the wrong pages, pass them: `--is 197 --bs 199 --cf 201,202`. It never overwrites an existing file (your edits are safe); `--force` starts that report again from scratch. For spreadsheets use `extract-xlsx` / `extract-csv` and map by hand, citing the sheet name in each `location` (e.g. `Balance Sheet!B12`).
 3. **Review and complete the draft** — do **not** retype values that are already there.
    - **Read notes** with `page-text` (no other extraction): `page-text <pdf> --find "EBITDA|finance costs"` lists the pages and lines that match; `page-text <pdf> --pages 95,100` prints those pages.
    - **Make every change with `edit-map`**, applied in order; it covers all mapping edits, so never write your own script or module for them. Put many edits in one JSON file with `--ops`:
@@ -71,7 +71,7 @@ Everything you need is in this file and `references/`. Do not read `finance_skil
    ```bash
    python <skill_dir>/scripts/finance_skill.py analyze working/<company>.json --out working/fsi-output --doc input/annual-report.pdf
    ```
-   Always pass `--doc` (the PDF, or the OCR `.txt` for a scanned report): `analyze` then checks every cited value against its page and prints `SOURCES:`. On `ERROR:`, fix the input the message names and re-run. Never work around an error by changing or inventing figures.
+   Always pass `--doc` (the PDF, the OCR `.txt` for a scanned report, or the XLSX/CSV the statements came from): `analyze` then checks every cited value against its page or sheet and prints `SOURCES:`. On `ERROR:`, fix the input the message names and re-run. Never work around an error by changing or inventing figures.
 5. **Verify before delivering.**
    - The `ANALYSED:` line (company, currency, unit, period labels, INTERIM / UNAUDITED / entity flags) must match the document. If it does not, fix the input and re-run.
    - Citations: the `SOURCES:` block must show no `NOT ON CITED PAGE` lines; fix each one (always cite the PDF page number that `draft-map` and `page-text` show, never the page number printed in the report's footer) and re-run `analyze`. `check-sources <json> --doc <file>` runs the same check on its own.

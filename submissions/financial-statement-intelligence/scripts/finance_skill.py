@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Auditable three-statement analysis. Core uses standard library only."""
-__version__='0.8.1'
+__version__='0.8.2'
 import argparse, csv, json, math, re, html, zipfile
 from pathlib import Path
 from datetime import datetime, timezone
@@ -284,7 +284,7 @@ class Ctx:
             d=self.m['days'][y]
             if self.m['period_info'][y]['type']!='interim' and 360<=d<=371: return (v,f)
             dref=self.ref(*self.item_addr['days'],yi,cur) if 'days' in self.item_addr else str(d)
-            return (v*365/d,f'{f}*365/{dref}')
+            return (v*365/d,f'({f}*365/{dref})')   # parenthesised so a/ann(b) stays a/(b*365/d) when Excel recalculates
         if t=='cmp':
             if yi<1: return NA
             a,b=self.m['period_info'][self.years[yi]],self.m['period_info'][self.years[yi-1]]
@@ -373,6 +373,12 @@ def ord_profit(m):
 
 def tagged(m,tag,st=None):
     return [lid for s in m['order'] for lid in m['order'][s] if tag in m['lines'][lid]['tags'] and (st is None or s==st)]
+
+def cash_bridge_options(m):
+    """Opening cash + flows expressions for the cash-flow check, most complete first: with FX and the bridging lines,
+    then without FX (many reports have none), then without the bridging lines. The cash schedule uses the same rows."""
+    base=[L('cash_begin'),L('ocf'),L('icf'),L('financing_cf')]; rec=[L(x) for x in cash_reconciling(m)]
+    return ([add(*base,L('fx_cash'),*rec),add(*base,*rec)] if rec else [])+[add(*base,L('fx_cash')),add(*base)]
 
 def cash_reconciling(m):
     """Cash flow lines that bridge opening and closing cash besides the three activities and FX: tagged
@@ -475,6 +481,7 @@ def schedule_spec(m):
         item('cr_icf','Investing activities','num',L('icf'),'Cash flow statement'),
         item('cr_fin','Financing activities','num',L('financing_cf'),'Cash flow statement'),
         item('cr_fx','FX and other movements','num',L('fx_cash'),'Cash flow statement')]
+    cr+=[item(f'cr_bridge_{i}',lines[x]['label'],'num',L(x),'Cash flow statement (bridging line; also in the cash-flow check)') for i,x in enumerate(cash_reconciling(m),1)]
     flows=[X(it['id']) for it in cr if it['expr'][1] in lines]
     cr+=[item('cr_computed','Computed closing cash','num',add(*flows) if len(flows)>=4 else L('cash_begin__unavailable'),'Sum of the rows above','subtotal'),
          item('cr_reported','Reported closing cash (cash flow)','num',L('cash_end'),'Cash flow statement'),
@@ -656,8 +663,7 @@ def check_spec(m):
         extra.append(('Opening cash = prior year-end balance sheet cash',L('cash_begin'),LP_bs_cash(m),True,prior_year_end,True))
     return extra+[
         ('Balance sheet: assets = liabilities + equity',L('total_assets'),first(L('total_liabilities_and_equity'),add(L('total_liabilities'),L('equity'))),False,None,False),
-        ('Cash flow: opening cash + net flows = closing cash',L('cash_end'),first(*([add(L('cash_begin'),L('ocf'),L('icf'),L('financing_cf'),L('fx_cash'),*[L(x) for x in cash_reconciling(m)])] if cash_reconciling(m) else []),
-                                                                                   add(L('cash_begin'),L('ocf'),L('icf'),L('financing_cf'),L('fx_cash')),add(L('cash_begin'),L('ocf'),L('icf'),L('financing_cf'))),False,None,False),
+        ('Cash flow: opening cash + net flows = closing cash',L('cash_end'),first(*cash_bridge_options(m)),False,None,False),
         ('Cash flow closing cash = balance sheet cash (excl. restricted)',L('cash_end'),bs_cash(m),False,same_date,True),
         ('Profit before tax: income statement = cash flow statement',L('cf_pretax_income'),L('pretax_income'),False,None,False),
         ('Opening cash = prior-period closing cash',L('cash_begin'),LP('cash_end'),True,consecutive,False),
@@ -693,7 +699,9 @@ def run_analysis(data):
                 elif kind=='reported_rounded':
                     sv=sum(m['resolved'][(c,y)][0] for c in ln['total_of'])
                     ck=mk_check(y,f"Subtotal ties: {ln['label']}",rep,sv,src_refs([f'{lid}[{y}]'],y),('const',rep),('const',sv))
-                    ck['status']='pass'; ck['message']=f'Printed total kept; its components add up to {sv:,.2f} (difference {rep-sv:,.2f} is rounding in the source)'
+                    q=1 if all(float(x).is_integer() for x in [m['resolved'][(c,y)][0] for c in ln['total_of']]+[rep]) else 0.01
+                    ck['tolerance']=max(ck['tolerance'],round(0.51*len(ln['total_of'])*q,6)); ck['rounding_tol']=True   # same threshold as load_model; the live Excel check uses it too
+                    ck['status']='pass'; ck['message']=f'Printed total kept; its components add up to {sv:,.2f} (difference {rep-sv:,.2f} is rounding in the source; tolerance {ck["tolerance"]:.3f})'
                     checks.append(ck)
                 else: checks.append(mk_check(y,f"Subtotal ties: {ln['label']}",None,None,src_refs([f'{lid}[{y}]'],y),None,None,'Components incomplete; reported total used'))
             if lid in EXPECTED_SIGN and v is not None and v*EXPECTED_SIGN[lid]<0:
@@ -951,7 +959,9 @@ def report_html(res):
         for it in items: rt.append([it['label']]+[dv(p['metrics'].get(it['id']),it['kind']) for p in res['periods']]); rc.append('')
     checktable=table(['Year','Check','Status','Difference','Details','Source refs'],[[c['year'],c['check'],c['status'],fmt(c['difference']),c['message'],c['source_refs']] for c in checks])
     audittable=table(['Year','Metric','Definition','Excel formula','Result','Status'],[[a['year'],a['label'],a['formula'],a['excel_formula'],a['display'],a['status']] for a in audits if a['sheet']!='Schedules'])
-    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Financial Intelligence — {esc(res['company'])}</title><style>body{{font:15px/1.55 system-ui,Arial,sans-serif;color:#15243b;background:#f1f5fa;margin:0}}main{{max-width:1100px;margin:36px auto;background:white;padding:40px;border-radius:16px;box-shadow:0 8px 30px #172b4d15}}h1{{font-size:30px;margin:0}}h2{{margin-top:38px;padding-bottom:9px;border-bottom:2px solid #dbe8f4}}h3{{margin:24px 0 4px;color:#1f3864}}.sub{{color:#607188}}.flag{{padding:14px;background:#fff1e8;border-left:4px solid #df7a24}}.ok{{padding:14px;background:#eaf6f2;border-left:4px solid #16896d}}table{{border-collapse:collapse;width:100%;font-size:12px;margin:10px 0 22px}}td,th{{padding:7px 9px;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top}}td:first-child,th:first-child{{text-align:left}}th{{background:#1f3864;color:white}}tr.sec td{{background:#dce6f1;font-weight:600;color:#1f3864}}tr.tot td{{font-weight:600;border-top:1px solid #8aa0bf}}.scroll{{overflow-x:auto}}footer{{color:#526475;font-size:12px;margin-top:30px}}@media print{{body{{background:white}}main{{margin:0;box-shadow:none;padding:12px}}}}</style></head><body><main>{'<div class="flag" style="background:#fde8e7;border-color:#b42318;color:#b42318;font-weight:700">DEMO DATA: synthetic figures for testing only. This is not an analysis of any real company.</div>' if res.get('demo') else ''}<p class="sub">FINANCIAL STATEMENT INTELLIGENCE · AUDITABLE ANALYSIS</p><h1>{esc(res['company'])}</h1><p class="sub">{esc(res['currency'])} · {esc(m['display_unit'])} · {esc(res['basis'])} · {esc(flow_h[0])} – {esc(flow_h[-1])}{' · <strong>UNAUDITED</strong>' if m['unaudited'] else ''}</p><div class="{'flag' if cfail else 'ok'}"><strong>{'Reconciliation issues detected' if cfail else 'No detected reconciliation failures'}</strong><div>{len(cfail)} failed checks; {sum(c['status']=='not_tested' for c in checks)} checks not testable. A passing check does not prove audit assurance or extraction accuracy.</div></div><h2>Executive assessment</h2><ul>{''.join('<li>'+esc(f)+'</li>' for f in findings(res))}</ul><p><strong>Interpretation limits:</strong> Automated findings describe observed movements only. Missing fields, business models, notes and restatements may change conclusions. Do not treat this report as investment advice.</p><h2>Financial statements</h2>{st_html}<h2>Ratio and trend dashboard</h2>{table(['Ratio / metric']+flow_h,rt,rc)}<h2>Reconciliation controls</h2>{checktable}<h2>Calculation register</h2>{audittable}<footer>Expenses and cash outflows are shown as negative values. Source references appear in each calculation and check; detailed source metadata remains in analysis.json and the workbook Sources sheet. Generated {esc(res['generated_utc'])}. This report must be reviewed against the original audited sources.</footer></main></body></html>'''
+    disc=[(str(d.get('text','')),((d['source'].get('location','') if isinstance(d.get('source'),dict) else d.get('source')) or '') if d.get('source') else '') for d in res.get('key_disclosures') or []]
+    disc_html=('<h2>Key disclosures (from the report)</h2><ul>'+''.join('<li>'+esc(t)+(f' <span class="sub">[{esc(s)}]</span>' if s else '')+'</li>' for t,s in disc)+'</ul>') if disc else ''
+    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Financial Intelligence — {esc(res['company'])}</title><style>body{{font:15px/1.55 system-ui,Arial,sans-serif;color:#15243b;background:#f1f5fa;margin:0}}main{{max-width:1100px;margin:36px auto;background:white;padding:40px;border-radius:16px;box-shadow:0 8px 30px #172b4d15}}h1{{font-size:30px;margin:0}}h2{{margin-top:38px;padding-bottom:9px;border-bottom:2px solid #dbe8f4}}h3{{margin:24px 0 4px;color:#1f3864}}.sub{{color:#607188}}.flag{{padding:14px;background:#fff1e8;border-left:4px solid #df7a24}}.ok{{padding:14px;background:#eaf6f2;border-left:4px solid #16896d}}table{{border-collapse:collapse;width:100%;font-size:12px;margin:10px 0 22px}}td,th{{padding:7px 9px;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top}}td:first-child,th:first-child{{text-align:left}}th{{background:#1f3864;color:white}}tr.sec td{{background:#dce6f1;font-weight:600;color:#1f3864}}tr.tot td{{font-weight:600;border-top:1px solid #8aa0bf}}.scroll{{overflow-x:auto}}footer{{color:#526475;font-size:12px;margin-top:30px}}@media print{{body{{background:white}}main{{margin:0;box-shadow:none;padding:12px}}}}</style></head><body><main>{'<div class="flag" style="background:#fde8e7;border-color:#b42318;color:#b42318;font-weight:700">DEMO DATA: synthetic figures for testing only. This is not an analysis of any real company.</div>' if res.get('demo') else ''}<p class="sub">FINANCIAL STATEMENT INTELLIGENCE · AUDITABLE ANALYSIS</p><h1>{esc(res['company'])}</h1><p class="sub">{esc(res['currency'])} · {esc(m['display_unit'])} · {esc(res['basis'])} · {esc(flow_h[0])} – {esc(flow_h[-1])}{' · <strong>UNAUDITED</strong>' if m['unaudited'] else ''}</p><div class="{'flag' if cfail else 'ok'}"><strong>{'Reconciliation issues detected' if cfail else 'No detected reconciliation failures'}</strong><div>{len(cfail)} failed checks; {sum(c['status']=='not_tested' for c in checks)} checks not testable. A passing check does not prove audit assurance or extraction accuracy.</div></div><h2>Executive assessment</h2><ul>{''.join('<li>'+esc(f)+'</li>' for f in findings(res))}</ul>{disc_html}<p><strong>Interpretation limits:</strong> Automated findings describe observed movements only. Missing fields, business models, notes and restatements may change conclusions. Do not treat this report as investment advice.</p><h2>Financial statements</h2>{st_html}<h2>Ratio and trend dashboard</h2>{table(['Ratio / metric']+flow_h,rt,rc)}<h2>Reconciliation controls</h2>{checktable}<h2>Calculation register</h2>{audittable}<footer>Expenses and cash outflows are shown as negative values. Source references appear in each calculation and check; detailed source metadata remains in analysis.json and the workbook Sources sheet. Generated {esc(res['generated_utc'])}. This report must be reviewed against the original audited sources.</footer></main></body></html>'''
 
 def write_csv(path,rows,fields):
     with open(path,'w',newline='',encoding='utf-8-sig') as f:
@@ -1141,7 +1151,7 @@ def write_xlsx(path, res):
             elif kind=='ref': sh,row=ctx.line_addr[val]; ck.put(r,k,v,nf,ctx.ref(sh,row,yi,'Checks'))
             else: ck.put(r,k,v,nf,val)
         ck.put(r,4,c['lhs']-c['rhs'],S(fmt='#,##0.000_);(#,##0.000);"–"_)'),f'C{r}-D{r}')
-        ck.put(r,5,c['tolerance'],S(fmt='#,##0.000'),f'MAX(0.02,ABS(C{r})*0.001)')
+        ck.put(r,5,c['tolerance'],S(fmt='#,##0.000'),f'MAX(0.02,ABS(C{r})*0.001'+(f",{c['tolerance']}" if c.get('rounding_tol') else '')+')')
         rule=f'IF(ABS(E{r})<=F{r},"PASS",IF(E{r}<0,"REVIEW","FAIL"))' if c.get('review_rule') else f'IF(ABS(E{r})<=F{r},"PASS","FAIL")'
         ck.put(r,6,c['status'].upper(),S(font={'b':1},align={'h':'center'}),rule)
     ck.cf.append((f'G{HEADER_ROW+1}:G{max(r,HEADER_ROW+1)}',[('PASS',0),('FAIL',1),('NOT TESTED',2),('REVIEW',2)]))
@@ -1238,16 +1248,19 @@ def write_xlsx(path, res):
     save_workbook(path,sheets,S)
 
 # ------------------------------------------------------------- extraction
+_OPEN_DOCS=[]   # documents opened by open_pdf, kept for the life of the process: their pages only weakly reference them
+
 def open_pdf(input_file):
     """List of (page_no, page). PyMuPDF if installed, else pypdfium2; both are fast and keep word positions."""
     reader=pdf_reader()
     if reader=='pymupdf':
         try: import pymupdf as fitz
         except ImportError: import fitz
-        return [(i+1,pg) for i,pg in enumerate(fitz.open(input_file))]
+        doc=fitz.open(input_file); _OPEN_DOCS.append(doc)   # a page's get_text() fails once its Document is garbage-collected
+        return [(i+1,pg) for i,pg in enumerate(doc)]
     if reader=='pypdfium2':
         import pypdfium2 as pdfium
-        doc=pdfium.PdfDocument(input_file); return [(i+1,PdfiumPage(doc[i])) for i in range(len(doc))]
+        doc=pdfium.PdfDocument(input_file); _OPEN_DOCS.append(doc); return [(i+1,PdfiumPage(doc[i])) for i in range(len(doc))]
     raise SystemExit('ERROR: no fast PDF reader here (PyMuPDF or pypdfium2). Make a text copy with the platform\'s PDF extraction, one file at a time, and pass the .txt instead.')
 
 PAGE_MARK=re.compile(r'^\s*(?:[-=#*_\[<]+\s*)?(?:page|p\.|第)\s*(\d{1,4})\s*(?:页)?\s*(?:(?:of|/)\s*\d+)?\s*(?:[-=#*_\]>]+)?\s*$',re.I|re.M)
@@ -1266,7 +1279,7 @@ def load_document(input_file):
         if '\f' in text: parts=text.split('\f'); nums=list(range(1,len(parts)+1))
         else:
             marks=list(PAGE_MARK.finditer(text))
-            if len(marks)>=2:
+            if marks and (len(marks)>=2 or not text[:marks[0].start()].strip()):   # one marker counts when the text starts with it (ocr-pdf --pages 88)
                 parts=[text[mk.end():(marks[i+1].start() if i+1<len(marks) else len(text))] for i,mk in enumerate(marks)]; nums=[int(mk.group(1)) for mk in marks]
             else: parts,nums=[text],[1]
         return [(n,TextPage(t)) for n,t in zip(nums,parts)],'text'
@@ -1898,7 +1911,7 @@ def assign_ids(items,children,st,used):
 def detect_meta(texts):
     t=' '.join(texts); low=t.lower()
     unit='TODO'
-    for rx,u in ((r'crore','crores'),(r'lakh','lakhs'),(r'万元','ten_thousands'),(r'千元','thousands'),(r'百万元','millions'),(r'millions?\b|\$m\b|\$\s?mn|hk\$m|€m|£m|rmb ?m\b','millions'),
+    for rx,u in ((r'crore','crores'),(r'lakh','lakhs'),(r'百万元','millions'),(r'万元','ten_thousands'),(r'千元','thousands'),(r'millions?\b|\$m\b|\$\s?mn|hk\$m|€m|£m|rmb ?m\b','millions'),
                  (r'thousands?\b|’000|\'000|k ?€|k ?eur|milliers|£000','thousands'),(r'billions?\b|\$bn','billions'),(r'单位[:：]\s*(?:人民币)?\s*元|en euros|montants.{0,60}en €|\(euros?\)','ones')):
         if re.search(rx,low): unit=u; break
     cur='TODO'
@@ -1953,9 +1966,10 @@ def draft_map(input_file,out,pages=None,force=False):
     seqs=list(header_years_all.values()); years_order=max(seqs,key=len) if seqs else None
     N=len(years_order) if years_order else 2
     for st,rows in probe.items():
-        items,hy=build_items(rows,N)
         order=header_years_all.get(st) or years_order
-        if not order or len(order)!=N: review.append(f'{st}: year columns not detected; columns assumed most recent first'); order=order or list(range(N))
+        if not order: review.append(f'{st}: year columns not detected; columns assumed most recent first'); order=list(range(N))
+        elif len(order)!=N: review.append(f'{st}: {len(order)} year column(s) here but {N} elsewhere; the periods missing from this statement stay unavailable')
+        items,hy=build_items(rows,len(order))   # each statement is parsed with its own column count, so order[j] always exists
         children=fit_totals(items,st) if items else {}
         filled=nil_fill(items,children)
         if filled: review.append(f"{st}: entered 0 for {len(filled)} blank value(s) whose printed subtotal ties without them ({', '.join(sorted(set(filled))[:5])}{'…' if len(set(filled))>5 else ''})")
@@ -2211,7 +2225,8 @@ def safe_xml(raw):
     if b'<!DOCTYPE' in raw[:4096].upper() or b'<!ENTITY' in raw.upper(): raise ValueError('XLSX contains a DTD/entity declaration; refusing to parse it')
     return ET.fromstring(raw)  # nosec B314 - DTD/entities refused above
 
-def extract_xlsx(input_file,out):
+def read_xlsx(input_file):
+    """Worksheets of an XLSX as [{'sheet','sheet_xml','rows':[[{'cell','value','formula'}]]}], standard library only."""
     ns={'x':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
     with zipfile.ZipFile(input_file) as z:
         strings=[]; names={}
@@ -2235,13 +2250,34 @@ def extract_xlsx(input_file,out):
                     values.append({'cell':cell.get('r'),'value':raw,'formula':cell.find('x:f',ns).text if cell.find('x:f',ns) is not None else None})
                 if values:rows.append(values)
             sheets.append({'sheet':names.get(file,file),'sheet_xml':file,'rows':rows})
+    return sheets
+
+def extract_xlsx(input_file,out):
+    sheets=read_xlsx(input_file)
     out=write_text_safe(out,json.dumps({'source':str(input_file),'sheets':sheets,'status':'unverified_extraction_do_not_analyze_directly'},indent=2,ensure_ascii=False))
     print('Wrote REVIEW-REQUIRED candidates:',Path(out).resolve())
 
+PCT_IDS={'cet1_ratio','total_capital_ratio','solvency_ratio'}   # entered as decimals (0.145); reports print them as percentages (14.5%)
+SHEET_SUFFIXES=('.xlsx','.xlsm','.csv','.tsv')
+
+def sheet_pages(doc_file):
+    """(sheet name, TextPage) per worksheet of an XLSX, or one page for a CSV/TSV, so spreadsheet citations can be
+    checked like PDF pages. Cite the sheet name in the location (e.g. 'Balance Sheet!B12')."""
+    p=Path(doc_file); suf=p.suffix.lower()
+    # cells are tab-separated: a space between two amounts would read as a thousands separator ("600 310" -> 600310)
+    if suf in ('.csv','.tsv'):
+        with open(p,encoding='utf-8-sig',newline='') as f: rows=list(csv.reader(f,delimiter='\t' if suf=='.tsv' else ','))
+        return [(p.stem,TextPage('\n'.join('\t'.join(r) for r in rows)))]
+    return [(sh['sheet'],TextPage('\n'.join('\t'.join(str(c['value']) for c in row) for row in sh['rows']))) for sh in read_xlsx(p)]
+
 def check_sources(json_file,doc_file):
-    """Check each source value of a normalized input against the text of the page it cites (PDF page numbers, as
-    draft-map and page-text show them). Reports values not found there and the pages where they do appear."""
-    d=json.loads(Path(json_file).read_text(encoding='utf-8-sig')); doc,kind=load_document(doc_file); byno=dict(doc); cache={}
+    """Check each source value of a normalized input against the text it cites: a PDF page (page numbers as draft-map
+    and page-text show them), a page-marked OCR text, or a worksheet / CSV (cited by sheet name). Reports values not
+    found there and where they do appear."""
+    d=json.loads(Path(json_file).read_text(encoding='utf-8-sig')); cache={}
+    if Path(doc_file).suffix.lower() in SHEET_SUFFIXES: doc,kind=sheet_pages(doc_file),'sheet'
+    else: doc,kind=load_document(doc_file)
+    byno=dict(doc)
     if kind=='pdf' and sum(len(pg.get_text().strip()) for _,pg in doc[:min(len(doc),20)])<200:
         print('SOURCES: the PDF has no text layer (scanned), so citations were not checked; pass the OCR text copy (with page markers) as --doc instead.'); return
     sep='[ ,\u00a0\u202f\u2009]'
@@ -2253,21 +2289,29 @@ def check_sources(json_file,doc_file):
                 except ValueError: pass
             cache[pno]=out
         return cache[pno]
+    def on(pno,a): return a in nums(pno) or (float(a).is_integer() and any(a==round(x) for x in nums(pno) if abs(x-a)<1))
+    where_word='sheet' if kind=='sheet' else 'page'; unit='sheet ' if kind=='sheet' else 'p.'
     total=found=0; miss=[]; skipped=0
     for st,lines in d.get('statements',{}).items():
         for l in lines:
             for y,v in (l.get('values') or {}).items():
                 if not isinstance(v,(int,float)) or v==0: continue
                 src=((l.get('sources') or {}).get(y) or l.get('source') or {}); loc=str(src.get('location',''))
-                mm=re.search(r'p(?:age)?\.?\s*(\d+)',loc,re.I)
-                if not mm or re.search(r'derived|\+|=|sum|less|excl',loc+' '+str(l.get('label','')),re.I): skipped+=1; continue
-                total+=1; pg=int(mm.group(1)); a=round(abs(v),2)
-                if a in nums(pg) or (float(a).is_integer() and any(a==round(x) for x in nums(pg) if abs(x-a)<1)): found+=1; continue
-                alt=[q for q in sorted(byno) if a in nums(q)][:4]
-                miss.append(f"  NOT ON CITED PAGE: {l['id']}[{y}] = {v:,} cited {loc!r}"+(f" - appears on p.{', p.'.join(map(str,alt))}" if alt else ' - not found in the document'))
-    print(f'SOURCES: {found} of {total} values found on their cited page ({skipped} derived/unnumbered values skipped)'+('' if miss else ' - all citations verified'))
+                if re.search(r'derived|\+|=|sum|less|excl',loc+' '+str(l.get('label','')),re.I): skipped+=1; continue
+                if kind=='sheet': where=[k for k in byno if str(k).lower() in loc.lower()] or list(byno)   # the cited sheet, else any sheet
+                else:
+                    mm=re.search(r'p(?:age)?\.?\s*(\d+)',loc,re.I)
+                    if not mm: skipped+=1; continue
+                    where=[int(mm.group(1))]
+                cands={round(abs(v),2)}
+                if l['id'] in PCT_IDS or (st=='supplementary' and l['id'].endswith(('_ratio','_pct')) and abs(v)<1): cands.add(round(abs(v)*100,2))   # 0.145 is printed as 14.5
+                total+=1
+                if any(on(p,a) for p in where for a in cands): found+=1; continue
+                alt=[q for q in (list(byno) if kind=='sheet' else sorted(byno)) if q not in where and any(a in nums(q) for a in cands)][:4]
+                miss.append(f"  NOT ON CITED {where_word.upper()}: {l['id']}[{y}] = {v:,} cited {loc!r}"+(f" - appears on {unit}{(', '+unit).join(map(str,alt))}" if alt else ' - not found in the document'))
+    print(f'SOURCES: {found} of {total} values found on their cited {where_word} ({skipped} derived/unnumbered values skipped)'+('' if miss else ' - all citations verified'))
     for x in miss[:40]: print(x)
-    if miss: print('Fix each citation (use the PDF page number shown by page-text, not the page number printed on the page), or mark derived values "(derived ...)" in the location, then re-run analyze.')
+    if miss: print('Fix each citation (for spreadsheets cite the sheet name; for PDFs use the page number shown by page-text, not the one printed on the page), or mark derived values "(derived ...)" in the location, then re-run analyze.')
 
 def page_text(input_file,pages=None,find=None,width=4000):
     """Print the text of selected pages (with page numbers), or with --find the pages and lines that match a term."""
