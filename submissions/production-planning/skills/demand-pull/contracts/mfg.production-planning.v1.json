@@ -1,0 +1,24 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "mfg.production-planning.v1",
+  "title": "Production Planning contract v1",
+  "description": "Chains demand-pull -> capacity-check -> schedule-optimize -> shift-plan-draft. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "plan_week", "orders"],
+  "properties": {
+    "contract_version": { "const": "mfg.production-planning.v1" },
+    "plan_week": { "type": "string" }, "line": { "type": "string" },
+    "orders": { "type": "array", "items": { "type": "object" } },
+    "capacity": { "type": "object", "properties": {
+        "available_hours": { "type": "number" }, "load_hours": { "type": "number" },
+        "utilization_pct": { "type": "number" },
+        "material_gates": { "type": "array", "items": { "type": "object" } },
+        "feasible": { "type": "boolean" },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "schedule": { "type": "object", "properties": {
+        "naive_sequence": { "type": "array", "items": { "type": "string" } },
+        "naive_changeover_hours": { "type": "number" },
+        "optimized_sequence": { "type": "array", "items": { "type": "string" } },
+        "optimized_changeover_hours": { "type": "number" },
+        "late_committed_naive": { "type": "array", "items": { "type": "string" } },
+        "late_committed_optimized": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

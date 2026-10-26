@@ -1,6 +1,7 @@
 ---
 import { PLATFORMS } from "../lib/skills";
 import { FORMAT_LABELS } from "../lib/gallery-filters";
+import { CATEGORIES, CATEGORY_LABELS } from "../lib/categories";
 
 interface Props {
   tags: [string, number][];
@@ -21,12 +22,17 @@ const { tags, contributors, total } = Astro.props;
         </svg>
         Filters <span id="filters-count" hidden class="filter-count"></span>
       </button>
-      <div id="filter-options" class="filter-options" role="group" aria-label="Platform and applied filters">
+      <div id="filter-options" class="filter-options" role="group" aria-label="Product, categories and applied filters">
         <div id="applied-filters" hidden class="applied-filters" role="group" aria-label="Applied extra filters"></div>
-        <div class="fixed-options" role="radiogroup" aria-label="Platform">
-          <button type="button" role="radio" data-platform="" aria-checked="true" tabindex="0" class="fixed-choice">All platforms</button>
-          {PLATFORMS.map((platform) => (
+        <div class="fixed-options" role="radiogroup" aria-label="Product">
+          <button type="button" role="radio" data-platform="" aria-checked="true" tabindex="0" class="fixed-choice">Any</button>
+          {PLATFORMS.toSorted().map((platform) => (
             <button type="button" role="radio" data-platform={platform} aria-checked="false" tabindex="-1" class="fixed-choice">{platform}</button>
+          ))}
+        </div>
+        <div class="fixed-options category-options" role="group" aria-label="Categories (match any selected)">
+          {CATEGORIES.map((category) => (
+            <button type="button" data-category={category} aria-pressed="false" class="fixed-choice">{CATEGORY_LABELS[category]}</button>
           ))}
         </div>
       </div>
@@ -43,7 +49,7 @@ const { tags, contributors, total } = Astro.props;
       </button>
     </header>
     <div class="dialog-body px-5 sm:px-6">
-      <p id="filters-scope" class="pt-5 text-sm text-muted">Match any selected format and require every selected tag and contributor. Each filter narrows the selected platform.</p>
+      <p id="filters-scope" class="pt-5 text-sm text-muted">Match any selected category or format and require every selected tag and contributor. Each filter narrows the selected product. Filters apply to Microsoft and community submissions.</p>
       <p id="filters-context" class="mt-1 text-sm text-muted"></p>
       <div id="draft-selections" hidden class="mt-3 flex flex-wrap gap-2" aria-label="Selected extra filters"></div>
 
@@ -116,6 +122,7 @@ const { tags, contributors, total } = Astro.props;
   }
   .filter-options::-webkit-scrollbar { display: none; }
   .fixed-options, .applied-filters { display: flex; flex-shrink: 0; align-items: center; gap: 0.5rem; }
+  .category-options { border-left: 1px solid var(--border); padding-left: 0.5rem; }
   .applied-filters :global(button) {
     flex-shrink: 0;
     min-height: 2.5rem;
@@ -143,7 +150,7 @@ const { tags, contributors, total } = Astro.props;
     font-weight: 600;
   }
   .fixed-choice { flex-shrink: 0; border-radius: 999px; color: var(--fg); white-space: nowrap; }
-  .applied-filters :global(button), .fixed-choice[aria-checked="true"] {
+  .applied-filters :global(button), .fixed-choice[aria-checked="true"], .fixed-choice[aria-pressed="true"] {
     border-color: color-mix(in srgb, var(--fg) 45%, var(--border));
     background: var(--surface);
   }

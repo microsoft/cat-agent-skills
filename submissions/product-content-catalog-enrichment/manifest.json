@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "6d86cd72-bbd1-5835-b1f0-166cd4be51e0",
+    "developer": {
+        "name": "Microsoft Retail & CPG Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Product Content Catalog",
+        "full": "Product Content Catalog Enrichment"
+    },
+    "description": {
+        "short": "Retail Wave 1 Cowork plugin (retailer-side, CPG-enabled): turn incomplete",
+        "full": "Retail Wave 1 Cowork plugin (retailer-side, CPG-enabled): turn incomplete supplier data into channel-ready, claim-safe product records. Ingests supplier sheets and specs; normalises attributes against the taxonomy with GTIN validation (attribute_normalize); scores completeness per channel (completeness_score); validates claims and regulated terms against the approved claim library - the explicit Govern step (claim_check); drafts descriptions and the review packet. Ends at an approval-ready draft record: it does not publish to channel, approve a regulated claim or change the taxonomy."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/attribute-normalize"
+        },
+        {
+            "folder": "./skills/claim-check"
+        },
+        {
+            "folder": "./skills/content-draft"
+        },
+        {
+            "folder": "./skills/gap-score"
+        },
+        {
+            "folder": "./skills/source-ingest"
+        }
+    ]
+}

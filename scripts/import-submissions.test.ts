@@ -18,6 +18,28 @@ import {
   writeCopilotStudioSkill,
 } from "./import-submissions.ts";
 import { validatePluginFiles } from "./validate-plugin.ts";
+import { skillSchema } from "../src/lib/skill-schema.ts";
+
+test("gallery classification preserves existing defaults without changing plugin platforms or type", () => {
+  const required = { name: "Example", description: "Example submission", tags: ["example"], author: "Example" };
+  const existing = skillSchema.parse(buildMeta({ ...required, platforms: ["Scout"] }, {}));
+  assert.equal(existing.category, "productivity");
+  assert.equal(existing.builtByMicrosoft, false);
+  assert.equal(existing.type, "skill");
+
+  const plugin = skillSchema.parse(buildMeta(
+    { ...required, type: "plugin", platforms: ["Cowork"], bundle: "bundles/example.zip" },
+    { category: "manufacturing", builtByMicrosoft: true, type: "skill", platforms: ["Scout"] },
+  ));
+  assert.equal(plugin.category, "manufacturing");
+  assert.equal(plugin.builtByMicrosoft, true);
+  assert.equal(plugin.type, "plugin");
+  assert.deepEqual(plugin.platforms, ["Cowork"]);
+  assert.equal(plugin.bundle, "bundles/example.zip");
+  for (const invalid of [{ category: "unknown" }, { builtByMicrosoft: "true" }]) {
+    assert.equal(skillSchema.safeParse({ ...plugin, ...invalid }).success, false);
+  }
+});
 
 test("derived fields always win over same-named catalog keys", () => {
   const meta = buildMeta(
@@ -67,6 +89,8 @@ test("only allowlisted catalog fields pass through; everything else is dropped",
     type: "automation",
     // allowlisted, human-authored:
     platforms: ["Cowork"],
+    category: "manufacturing",
+    builtByMicrosoft: true,
     tags: ["a", "b"],
     author: "Ada",
     authorUrl: "https://github.com/ada",

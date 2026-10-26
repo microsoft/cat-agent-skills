@@ -1,0 +1,21 @@
+{
+  "name": "Production Planning",
+  "description": "Turn demand into a publishable shift plan: pull the forecast and open orders, check capacity, constraints and material availability, sequence the week to minimise changeovers with a deterministic campaign heuristic, and draft the shift plan for the planner to publish.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "operations",
+    "scheduling",
+    "production-planning",
+    "changeover",
+    "capacity"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-01",
+  "updatedAt": "2026-09-04",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}

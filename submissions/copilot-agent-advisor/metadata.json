@@ -1,4 +1,5 @@
 {
+  "category": "agent-development",
   "name": "Copilot Agent Advisor",
   "description": "Tells you which Microsoft 365 / Copilot Studio agent option fits your scenario — use M365 Copilot as-is, build a standard (declarative) agent, or build a custom (custom engine) agent — and which Copilot Studio harness (GitHub Copilot, standard, or Copilot chat) to build on.",
   "platforms": ["Cowork", "Copilot Studio", "Scout"],

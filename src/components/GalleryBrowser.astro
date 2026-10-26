@@ -3,14 +3,26 @@ import { getCollection } from "astro:content";
 import GalleryFilters from "./GalleryFilters.astro";
 import SubmissionItem from "./SubmissionItem.astro";
 import { authorKey, normalizeLogin } from "../lib/badges";
+import { withBase } from "../lib/url";
+
+interface Props {
+  scope?: "all" | "microsoft";
+}
+
+const { scope = "all" } = Astro.props;
+const microsoftOnly = scope === "microsoft";
 
 const skills = (await getCollection("skills")).sort((a, b) => {
   const sampleDiff = Number(a.data.tags.includes("sample")) - Number(b.data.tags.includes("sample"));
   return sampleDiff || Number(b.data.featured) - Number(a.data.featured) || a.data.name.localeCompare(b.data.name);
 });
+const microsoft = skills.filter(({ data }) => data.builtByMicrosoft);
+const community = skills.filter(({ data }) => !data.builtByMicrosoft);
+const collection = microsoftOnly ? microsoft : skills;
+const gridItems = microsoftOnly ? microsoft : community;
 const tagCounts = new Map<string, number>();
 const contributorMap = new Map<string, { key: string; name: string; login: string; count: number }>();
-for (const { data } of skills) {
+for (const { data } of collection) {
   for (const tag of new Set(data.tags)) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
   const key = authorKey(data.authorGithub, data.author);
   if (!key) continue;
@@ -22,20 +34,23 @@ const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeC
 const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 ---
 
-<div data-gallery-browser>
+<div data-gallery-browser data-scope={scope}>
   <section class="border-b border-border bg-surface/40">
     <div class="mx-auto max-w-8xl px-4 py-6 sm:px-6 sm:py-7">
+      {microsoftOnly && (
+        <a data-gallery-link data-destination={withBase("/")} href={withBase("/")} class="mb-4 inline-flex text-sm font-medium text-muted underline underline-offset-4 hover:text-fg">Back to gallery</a>
+      )}
       <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] lg:items-center">
         <div>
-          <h1 class="text-2xl font-bold tracking-tight text-fg sm:text-3xl">The gallery of skills and plugins for your AI agents</h1>
+          <h1 class="text-2xl font-bold tracking-tight text-fg sm:text-3xl">{microsoftOnly ? "Built by Microsoft" : "The gallery of skills and plugins for your AI agents"}</h1>
           <p class="mt-2 max-w-2xl text-muted">
-            Find <span class="text-fg">skills, plugins, and automations contributed by the community</span>.
+            Find <span class="text-fg">skills, plugins, and automations from {microsoftOnly ? "Microsoft" : "Microsoft and the community"}</span>.
             Download a submission and add it to <span class="text-fg">Cowork</span>,{" "}
             <span class="text-fg">Copilot Studio</span>, or <span class="text-fg">Scout</span>.
           </p>
         </div>
         <div class="relative">
-          <label for="skill-search" class="sr-only">Search all submissions</label>
+          <label for="skill-search" class="sr-only">{microsoftOnly ? "Search Microsoft submissions" : "Search all submissions"}</label>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true">
             <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
           </svg>
@@ -45,13 +60,26 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
     </div>
   </section>
 
-  <GalleryFilters tags={tags} contributors={contributors} total={skills.length} />
+  <GalleryFilters tags={tags} contributors={contributors} total={collection.length} />
   <p id="filter-status" class="sr-only" role="status" aria-live="polite"></p>
+
+  {!microsoftOnly && (
+    <section class="mx-auto max-w-8xl px-4 pt-6 sm:px-6" aria-labelledby="microsoft-heading">
+      <div class="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <h2 id="microsoft-heading" class="text-xl font-bold tracking-tight text-fg">Built by Microsoft <span id="microsoft-count" class="text-base font-normal text-muted">({microsoft.length})</span></h2>
+        <a id="microsoft-view-all" data-gallery-link data-destination={withBase("/built-by-microsoft/")} href={withBase("/built-by-microsoft/")} hidden={microsoft.length <= 1} aria-label="View all Microsoft submissions" class="text-sm font-medium text-muted underline underline-offset-4 hover:text-fg">View all</a>
+      </div>
+      <div id="microsoft-preview-grid" class="submission-grid" hidden={microsoft.length === 0}>
+        {microsoft.map((submission, index) => <SubmissionItem submission={submission} hidden={index > 0} />)}
+      </div>
+      <p id="microsoft-empty" hidden={microsoft.length > 0} class="text-sm text-muted">No Microsoft submissions match these filters.</p>
+    </section>
+  )}
 
   <section class="mx-auto max-w-8xl px-4 py-7 sm:px-6">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-xl font-bold tracking-tight text-fg">
-        Submissions <span id="result-count" class="text-base font-normal text-muted">({skills.length})</span>
+        {microsoftOnly ? "Microsoft submissions" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
       </h2>
       <label class="flex items-center gap-2 text-sm text-muted">
         <span class="hidden sm:inline">Sort by</span>
@@ -66,10 +94,10 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
       </label>
     </div>
     <div id="gallery" class="submission-grid">
-      {skills.map((submission) => <SubmissionItem submission={submission} />)}
+      {gridItems.map((submission) => <SubmissionItem submission={submission} />)}
     </div>
-    <p id="empty-state" hidden={skills.length > 0} class="text-sm text-muted">
-      No submissions match these filters.{" "}
+    <p id="empty-state" hidden={gridItems.length > 0} class="text-sm text-muted">
+      No {microsoftOnly ? "Microsoft" : "community"} submissions match these filters.{" "}
       <button type="button" data-clear-filters class="font-semibold text-accent-text underline underline-offset-4">Clear filters</button>
       {" "}to browse all submissions.
     </p>
@@ -79,7 +107,7 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
 
 <style>
   .submission-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   @media (min-width: 40rem) {
     .submission-grid { grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
   }

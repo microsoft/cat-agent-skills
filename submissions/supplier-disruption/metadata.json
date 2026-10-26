@@ -1,0 +1,22 @@
+{
+  "name": "Supplier Disruption Assist",
+  "description": "Get ahead of a supply problem: take a late PO, shipment delay or supplier notice, map the shortage through BOM where-used to the affected products, lines, open orders and at-risk dates, recommend expedite / substitute / reschedule, and draft both the supplier follow-up and the internal escalation brief.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "supply-chain",
+    "procurement",
+    "shortage",
+    "po",
+    "erp",
+    "mrp"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-08-01",
+  "updatedAt": "2026-09-04",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}

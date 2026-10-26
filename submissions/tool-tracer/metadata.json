@@ -1,4 +1,5 @@
 {
+  "category": "agent-development",
   "name": "Tool Tracer",
   "description": "On-demand tool/action trace for Copilot Studio runs (`/special-debug tool-trace` \u2192 `tool_trace.json`).",
   "platforms": [

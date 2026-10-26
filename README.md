@@ -11,13 +11,24 @@ deployed as a static site to GitHub Pages.
 
 ## ✨ Features
 
-- **One infinite-scroll gallery** with compact, consistently sized cards and
+- **A Built by Microsoft preview row above the community gallery**, with a
+  **View all** link to the Microsoft-only collection. Both use the same product,
+  category, search and extra filters; collection/back links preserve selections
+  and sorting. The preview uses the community grid's responsive card widths.
+  The catalog includes 20 industry plugins (10 Manufacturing and 10 Retail & CPG)
+  from [industry-templates at pinned commit e4a0ab3](https://github.com/SravaniSeethi/industry-templates/tree/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682),
+  with original source and license notices retained.
+- **Infinite-scroll galleries** with compact, consistently sized cards and
   auto-generated monograms (no image assets to maintain).
-- **Platform filtering** in one horizontal row: exclusive
-  **All platforms** (default), Cowork, Copilot Studio, and Scout pills.
-  Choosing a platform replaces the selection; clicking the active option keeps
-  it selected. All platforms clears only the platform restriction.
-  Platform choices support arrow keys and Space, with one keyboard tab stop.
+- **Product filtering** in one horizontal row: exclusive
+  **Any** (default), Copilot Studio, Cowork, and Scout pills.
+  Choosing a product replaces the selection; clicking the active option keeps
+  it selected. Any clears only the product restriction.
+  Product choices support arrow keys and Space, with one keyboard tab stop.
+- **Multi-select categories** alongside products: Manufacturing, Retail & CPG,
+  Productivity and Agent development. Categories match **any selected value**
+  (OR), then intersect with the product and other filters (AND). Selecting an
+  active category removes it; no categories selected means all categories.
 - **Client-side search** and a **Filters dialog** for Format, Tags, and
   Contributor. Format offers multi-select Skills, Plugins, and Automations:
   any selected format matches (OR), and must also match the chosen platform
@@ -35,15 +46,16 @@ deployed as a static site to GitHub Pages.
   formats, tags, and contributors appear as removable pills before platforms in
   the same scrolling row, with each choice counted in the Filters badge.
   Clear extra filters clears draft formats/tags/contributors, keeping the
-  platform selection, search, and sort. Applying the same selections after
+  product selection, categories, search, and sort. Applying the same selections after
   toggling them off/on or clearing/reselecting preserves their existing order,
   URL, revealed cards, and scroll.
-- **Shareable filters** using `?q=`, `?platform=`, `?type=`, `?tag=`, and `?author=`.
-  `platform` is a single value (omitted for All platforms); `type` still accepts
+- **Shareable filters** using `?q=`, `?platform=`, `?category=`, `?type=`, `?tag=`, and `?author=`.
+  `category` accepts one slug or a comma-separated union. `platform` remains
+  the product query key and is a single value (omitted for Any); `type` still accepts
   single values or comma-separated selections, including all three formats.
   Legacy comma-separated platforms are trimmed, deduplicated, and restricted
-  to valid platform names: all three valid choices mean All platforms;
-  otherwise the first valid choice wins, or All platforms if none are valid.
+  to valid platform names: all three valid choices mean Any;
+  otherwise the first valid choice wins, or Any if none are valid.
   The URL is normalized to that visible platform choice without changing other
   parameters. Format values remain lowercase (`skill`, `plugin`, `automation`). Search,
   tags, and contributors AND-narrow the platform/format results. Every selected

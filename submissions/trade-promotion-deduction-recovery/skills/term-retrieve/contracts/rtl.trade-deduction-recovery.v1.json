@@ -1,0 +1,17 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.trade-deduction-recovery.v1",
+  "title": "Trade Promotion & Deduction Recovery contract v1",
+  "description": "Chains claim-ingest -> term-retrieve -> claim-match -> validity-classify (Govern) -> dispute-packet. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "deduction_id", "claims"],
+  "properties": {
+    "contract_version": { "const": "rtl.trade-deduction-recovery.v1" },
+    "deduction_id": { "type": "string" }, "customer": { "type": "string" },
+    "claims": { "type": "array", "items": { "type": "object" } },
+    "matches": { "type": "array", "items": { "type": "object" } },
+    "validity": { "type": "array", "items": { "type": "object",
+      "required": ["claim_id", "verdict", "disputable_amount", "source", "citation"],
+      "properties": { "claim_id": {"type": "string"}, "verdict": {"enum": ["valid", "invalid", "partial", "unsupported"]},
+        "disputable_amount": {"type": "number"}, "calculation": {"type": "string"},
+        "confidence": {"type": "number"}, "source": {"type": "string"}, "citation": {"type": "string"} } } },
+    "promo_lift": { "type": "object" },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

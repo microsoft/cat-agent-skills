@@ -1,0 +1,5 @@
+{ "approved": [
+    {"gtin": "00012345678905", "claim": "dishwasher safe", "substantiation": "LAB-2211", "markets": ["US", "EU"]},
+    {"gtin": "00099887766554", "claim": "antibacterial coating", "substantiation": "EPA Reg 12345-6", "markets": ["US"]}
+  ],
+  "regulated_terms": ["organic", "biodegradable", "antibacterial", "clinically proven", "compostable", "kills 99.9%"] }

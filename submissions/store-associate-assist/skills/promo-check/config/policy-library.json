@@ -1,0 +1,6 @@
+{
+  "returns.standard": {"clause": "RET-2.1", "text": "Unworn/unused items with receipt returnable within 30 days (fashion) / 15 days (electronics)", "topics": ["return", "refund"], "determination_hint": "eligible_within_window"},
+  "price_match.eligible": {"clause": "PM-1.2", "text": "Price match applies to listed brick-and-mortar competitors and their own websites", "topics": ["price match", "price-match", "competitor"], "determination_hint": "eligible_if_listed_competitor"},
+  "price_match.marketplace_excluded": {"clause": "PM-1.4", "text": "Marketplace and third-party sellers (including Amazon Marketplace, eBay) are EXCLUDED from price match", "topics": ["price match", "price-match", "marketplace", "third-party"], "determination_hint": "excluded"},
+  "raincheck.promo": {"clause": "PRC-3.3", "text": "Rainchecks offered for advertised promo items out of stock, valid 30 days", "topics": ["rain check", "raincheck", "out of stock promo"], "determination_hint": "offer_raincheck"}
+}

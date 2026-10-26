@@ -7,19 +7,23 @@ import { getDownloads } from "../lib/downloads";
 
 interface Props {
   submission: CollectionEntry<"skills">;
+  hidden?: boolean;
 }
 
-const { submission: { id, data: d } } = Astro.props;
+const { submission: { id, data: d }, hidden = false } = Astro.props;
 ---
 
 <div
   class="submission-item"
+  hidden={hidden}
   data-slug={id}
   data-name={d.name.toLowerCase()}
   data-desc={d.description.toLowerCase()}
   data-tags={d.tags.join(",")}
   data-platforms={d.platforms.join(",")}
   data-type={d.type}
+  data-category={d.category}
+  data-microsoft={String(d.builtByMicrosoft)}
   data-author-name={d.author}
   data-author-login={normalizeLogin(d.authorGithub)}
   data-author-key={authorKey(d.authorGithub, d.author)}

@@ -10,6 +10,8 @@ export interface FilterableSubmission {
   tags: readonly string[];
   platforms: readonly string[];
   type: string;
+  category: string;
+  builtByMicrosoft: boolean;
   authorName: string;
   authorLogin: string;
   authorKey: string;
@@ -18,6 +20,7 @@ export interface FilterableSubmission {
 export interface GalleryFilters {
   query: string;
   platform: Platform | "";
+  categories: ReadonlySet<string>;
   types: ReadonlySet<string>;
   tags: ReadonlySet<string>;
   authors: ReadonlySet<string>;
@@ -26,6 +29,7 @@ export interface GalleryFilters {
 export function copyGalleryFilters(filters: GalleryFilters) {
   return {
     ...filters,
+    categories: new Set(filters.categories),
     types: new Set(filters.types),
     tags: new Set(filters.tags),
     authors: new Set(filters.authors),
@@ -34,7 +38,7 @@ export function copyGalleryFilters(filters: GalleryFilters) {
 
 export function sameGalleryFilters(a: GalleryFilters, b: GalleryFilters): boolean {
   return a.query === b.query && a.platform === b.platform &&
-    (["types", "tags", "authors"] as const).every((field) =>
+    (["categories", "types", "tags", "authors"] as const).every((field) =>
       a[field].size === b[field].size && [...a[field]].every((value) => b[field].has(value)),
     );
 }
@@ -50,6 +54,7 @@ export function parseGalleryFilters(params: URLSearchParams): GalleryFilters {
     query: (params.get("q") ?? "").toLowerCase(),
     // Legacy unions covering every platform remain unrestricted; partial unions use the first valid choice.
     platform: platforms.length === PLATFORMS.length ? "" : platforms[0] ?? "",
+    categories: new Set([...selections("category")].map((value) => value.toLowerCase())),
     types: new Set([...selections("type")].map((value) => value.toLowerCase())),
     tags: selections("tag"),
     authors: new Set([...selections("author")].map((value) => value.toLowerCase())),
@@ -60,6 +65,7 @@ export function galleryFilterParams(filters: GalleryFilters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.query) params.set("q", filters.query);
   if (filters.platform) params.set("platform", filters.platform);
+  if (filters.categories.size) params.set("category", [...filters.categories].join(","));
   if (filters.types.size) params.set("type", [...filters.types].join(","));
   if (filters.tags.size) params.set("tag", [...filters.tags].join(","));
   if (filters.authors.size) params.set("author", [...filters.authors].join(","));
@@ -70,10 +76,12 @@ export function matchesFilters(item: FilterableSubmission, filters: GalleryFilte
   const text = [
     item.name, item.description, ...item.tags, item.authorName, item.authorLogin,
     item.type, `${item.type}s`,
+    item.builtByMicrosoft ? "Microsoft" : "",
   ].join(" ").toLowerCase();
   return (
     (!filters.query || text.includes(filters.query.trim().toLowerCase())) &&
     (!filters.platform || item.platforms.includes(filters.platform)) &&
+    (!filters.categories.size || filters.categories.has(item.category)) &&
     (!filters.types.size || filters.types.has(item.type)) &&
     [...filters.tags].every((tag) => item.tags.includes(tag)) &&
     [...filters.authors].every((author) => author === item.authorKey)

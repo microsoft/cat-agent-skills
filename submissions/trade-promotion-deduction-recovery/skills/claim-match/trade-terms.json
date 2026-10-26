@@ -1,0 +1,6 @@
+[
+  {"term_id": "TT-PROMO-88", "customer": "Summit Grocers", "type": "promo_allowance", "rate_pct": 8.0,
+   "period": "2026-06", "signed": true, "citation": "signed agreement TT-PROMO-88 (Jun 2026)"},
+  {"term_id": "TT-SLOT-12", "customer": "Summit Grocers", "type": "slotting", "flat_amount": 5000.0,
+   "period": "2026-06", "signed": true, "citation": "signed agreement TT-SLOT-12"}
+]

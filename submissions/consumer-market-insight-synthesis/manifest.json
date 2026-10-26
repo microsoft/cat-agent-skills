@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "6eb9afb6-3378-5582-b62e-fc1865d9708f",
+    "developer": {
+        "name": "Microsoft Retail & CPG Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Consumer Market Insight",
+        "full": "Consumer Market Insight Synthesis"
+    },
+    "description": {
+        "short": "CPG Wave 2 Cowork plugin: prior research reused instead of re-commissioned.",
+        "full": "CPG Wave 2 Cowork plugin: prior research reused instead of re-commissioned. Retrieves and ranks prior research and panel extracts; compares trends across markets and periods (trend_compare); flags contradictory evidence rather than smoothing it; checks usage rights, geography and claim provenance - the explicit Govern step (provenance_check); drafts a cited insight brief with a provenance record. Scoped to retrieval, comparison and citation - it does not forecast demand, approve claims or assert causal attribution, and it does not analyse large tabular files."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/contradiction-flag"
+        },
+        {
+            "folder": "./skills/insight-brief"
+        },
+        {
+            "folder": "./skills/provenance-check"
+        },
+        {
+            "folder": "./skills/research-retrieve"
+        },
+        {
+            "folder": "./skills/trend-compare"
+        }
+    ]
+}

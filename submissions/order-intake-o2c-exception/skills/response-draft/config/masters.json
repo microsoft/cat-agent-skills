@@ -1,0 +1,6 @@
+{ "customers": { "CUST-NW-01": {"name": "Northwind Foods", "credit_limit": 100000, "open_exposure": 82000,
+    "historical_uom": {"SKU-CH-500": "CS24"}, "typical_qty": {"SKU-CH-500": 40} } },
+  "alias_map": { "CHOC500": ["SKU-CH-500"], "CHOCV": ["SKU-CH-500V", "SKU-CH-500"], "OATB12": ["SKU-OB-012"] },
+  "products": { "SKU-CH-500": {"name": "Choc bar 500g", "list_price_cs24": 62.4, "uoms": ["CS24"]},
+                "SKU-CH-500V": {"name": "Choc bar 500g VEGAN", "list_price_cs24": 71.9, "uoms": ["CS24"]},
+                "SKU-OB-012": {"name": "Oat bites 12pk", "list_price_cs12": 28.8, "uoms": ["CS12"]} } }

@@ -1,0 +1,22 @@
+{
+  "name": "Order Intake & O2C Exception",
+  "description": "Orders arriving by email, PDF and portal validated and exceptions routed instead of rekeyed: extract and normalise order lines, validate against customer, pricing, product and credit master data, queue exceptions with reason codes and a recommended correction, and draft the customer response.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "retailer",
+    "order-management",
+    "o2c",
+    "exception",
+    "validation",
+    "edi"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

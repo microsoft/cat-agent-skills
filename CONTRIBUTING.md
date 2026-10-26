@@ -115,12 +115,21 @@ the download bundle):
 | `author`      | yes      | Person or team who wrote the skill.                 |
 
 Optional: `authorUrl`, `authorGithub`, `version`, `createdAt`, `updatedAt`,
-`coverColor`, `featured`. (`bundle` is set automatically when your skill ships
+`coverColor`, `featured`, `category`, `builtByMicrosoft`. (`bundle` is set automatically when your skill ships
 files beyond `SKILL.md`. `authorGithub` — the author's GitHub login — is
 normally derived from an `authorUrl` that points to a GitHub profile
 (`https://github.com/<login>`); the *skillbot* uses it to @-mention the author
 on the first comment of the skill's discussion. Set it explicitly only when your
 only link isn't a GitHub profile, e.g. LinkedIn.)
+
+`category` is `manufacturing`, `retail-cpg`, `productivity` (the default), or
+`agent-development`. Visitors can select multiple categories; a submission
+matches any selected category and must also match the product and other filters.
+
+`builtByMicrosoft` defaults to `false`. Set it to `true` only for verified
+Microsoft-built submissions. These appear in the Microsoft preview and collection
+instead of the community grid, without changing author attribution or plugin
+handling. Keep both fields in `metadata.json`, not agent-facing instructions.
 
 ## Validate locally
 

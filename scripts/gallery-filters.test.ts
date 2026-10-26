@@ -6,16 +6,17 @@ import {
 } from "../src/lib/gallery-filters";
 import { PLATFORMS } from "../src/lib/skills";
 import { authorKey } from "../src/lib/badges";
+import { CATEGORIES } from "../src/lib/categories";
 
 const filters: GalleryFilters = {
-  query: "", platform: "", types: new Set(), tags: new Set(), authors: new Set(),
+  query: "", platform: "", categories: new Set(), types: new Set(), tags: new Set(), authors: new Set(),
 };
 
-for (const field of ["types", "tags", "authors"] as const) {
+for (const field of ["categories", "types", "tags", "authors"] as const) {
   for (const clear of [false, true]) {
     test(`${field} ${clear ? "clear/reselect" : "off/on"} is a semantic no-op without changing selection order`, () => {
       const applied = copyGalleryFilters(parseGalleryFilters(new URLSearchParams(
-        "q=skill&platform=Cowork&type=skill,automation&tag=BATNA,ZOPA&author=ada,bea",
+        "q=skill&platform=Cowork&category=manufacturing,retail-cpg&type=skill,automation&tag=BATNA,ZOPA&author=ada,bea",
       )));
       const before = galleryFilterParams(applied).toString();
       const draft = copyGalleryFilters(applied);
@@ -56,6 +57,8 @@ const submission: FilterableSubmission = {
   tags: ["BATNA", "ZOPA", "business"],
   platforms: ["Cowork", "Copilot Studio"],
   type: "skill",
+  category: "productivity",
+  builtByMicrosoft: false,
   authorName: "Ada Example",
   authorLogin: "ada-example",
   authorKey: "ada-example",
@@ -144,6 +147,7 @@ test("search, tags and contributors AND-narrow all 32 platform/format combinatio
 test("tags and contributors require every selected value", () => {
   const selected: GalleryFilters = {
     query: "NEGOTIATION",
+    categories: new Set(),
     platform: "Cowork", types: new Set(["skill"]),
     tags: new Set(["BATNA", "ZOPA"]),
     authors: new Set(["ada-example"]),
@@ -412,7 +416,62 @@ test("empty filters show the full catalog and serialize without query parameters
 
 test("unknown platforms select All, while other unknown selections retain no-results behavior", () => {
   assert.deepEqual(parseGalleryFilters(new URLSearchParams("platform=Unknown")), filters);
-  for (const params of ["type=unknown", "tag=unknown", "author=unknown", "q=not-a-result"]) {
+  for (const params of ["category=unknown", "type=unknown", "tag=unknown", "author=unknown", "q=not-a-result"]) {
     assert.equal(items.filter((item) => matchesFilters(item, parseGalleryFilters(new URLSearchParams(params)))).length, 0);
   }
+});
+
+test("all category subsets use OR within categories and AND with every existing filter", () => {
+  const catalog = CATEGORIES.flatMap((category) => items.map((item) => ({ ...item, category })));
+  for (let mask = 0; mask < 1 << CATEGORIES.length; mask++) {
+    const categories = new Set(CATEGORIES.filter((_, bit) => mask & (1 << bit)));
+    for (const platform of ["", ...PLATFORMS] as const) {
+      for (const refinements of [
+        {}, { types: new Set(["skill", "automation"]) },
+        { tags: new Set(["reports", "business"]) }, { authors: new Set(["bea", "cy"]) },
+        { query: "report", types: new Set(["plugin"]), tags: new Set(["business"]), authors: new Set(["bea"]) },
+      ]) {
+        const selected = { ...filters, platform, categories, ...refinements };
+        const withoutCategories = { ...selected, categories: new Set<string>() };
+        const expected = catalog.filter((item) => (!categories.size || categories.has(item.category)) &&
+          matchesFilters(item, withoutCategories));
+        assert.deepEqual(catalog.filter((item) => matchesFilters(item, selected)), expected);
+        assert.deepEqual(parseGalleryFilters(galleryFilterParams(selected)), selected);
+        assert.equal(new Set(expected).size, expected.length);
+      }
+    }
+  }
+});
+
+test("category URLs normalize case, preserve single-category links and deduplicate unions", () => {
+  const parsed = parseGalleryFilters(new URLSearchParams("category=Manufacturing,retail-cpg,manufacturing&platform=Cowork&sort=updated"));
+  assert.deepEqual([...parsed.categories], ["manufacturing", "retail-cpg"]);
+  assert.equal(parsed.platform, "Cowork");
+  assert.deepEqual(parseGalleryFilters(galleryFilterParams(parsed)), parsed);
+  assert.deepEqual([...parseGalleryFilters(new URLSearchParams("category=manufacturing")).categories], ["manufacturing"]);
+});
+
+test("category drafts and extra-filter clearing leave the applied category union intact", () => {
+  const applied = copyGalleryFilters({ ...filters, categories: new Set(["manufacturing", "retail-cpg"]) });
+  const draft = copyGalleryFilters(applied);
+  draft.categories.delete("manufacturing");
+  assert.deepEqual([...applied.categories], ["manufacturing", "retail-cpg"]);
+  assert.equal(sameGalleryFilters(applied, draft), false);
+  draft.types.clear();
+  draft.tags.clear();
+  draft.authors.clear();
+  assert.deepEqual([...draft.categories], ["retail-cpg"]);
+});
+
+test("Microsoft search and facet counts use the full selected category and product scope", () => {
+  const industry = [
+    { ...submission, category: "manufacturing", builtByMicrosoft: true, type: "plugin", platforms: ["Cowork"] },
+    { ...submission, category: "retail-cpg", builtByMicrosoft: true, type: "plugin", platforms: ["Cowork"] },
+    submission,
+  ];
+  const selected = { ...filters, query: "Microsoft", categories: new Set(["manufacturing", "retail-cpg"]) };
+  assert.equal(industry.filter((item) => matchesFilters(item, selected)).length, 2);
+  assert.deepEqual(countFacet(industry, selected, "types"), new Map([["plugin", 2]]));
+  assert.equal(industry.filter((item) => matchesFilters(item, { ...selected, platform: "Scout" })).length, 0);
+  assert.deepEqual(countFacet(industry, { ...selected, categories: new Set(["manufacturing"]) }, "types"), new Map([["plugin", 1]]));
 });

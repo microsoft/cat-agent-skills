@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.1",
+    "id": "a7d668c1-6378-5bc3-8fcd-fe615fd647fc",
+    "developer": {
+        "name": "Microsoft Retail & CPG Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Customer Service Order Support",
+        "full": "Customer Service Order Support"
+    },
+    "description": {
+        "short": "Retail Wave 1 Cowork plugin: a grounded first response, and a clean escalation",
+        "full": "Retail Wave 1 Cowork plugin: a grounded first response, and a clean escalation packet when it cannot resolve. Classifies intent against the taxonomy (intent_classify); assembles customer, order, loyalty and delivery context and detects contradictions (context_assemble); retrieves the approved answer; drafts the resolution in channel and tone or builds the structured handoff packet. Reliability beats reach: it does not issue goodwill credit, change payment details or grant unsupported policy exceptions."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/context-assemble"
+        },
+        {
+            "folder": "./skills/handoff-packet"
+        },
+        {
+            "folder": "./skills/inquiry-intake"
+        },
+        {
+            "folder": "./skills/knowledge-retrieve"
+        },
+        {
+            "folder": "./skills/resolution-draft"
+        }
+    ]
+}
