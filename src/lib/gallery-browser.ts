@@ -128,7 +128,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     microsoft.count.textContent = `(${microsoftMatched.length})`;
     microsoft.empty.hidden = microsoftMatched.length > 0;
     microsoft.viewAll.hidden = microsoftMatched.length <= columns;
-    microsoft.viewAll.setAttribute("aria-label", `View more Microsoft submissions (${microsoftMatched.length} matches)`);
+    microsoft.viewAll.setAttribute("aria-label", `View more (${microsoftMatched.length}) Microsoft submissions`);
   }
 
   function fill() {
