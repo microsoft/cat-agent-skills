@@ -3,6 +3,7 @@ name: Copilot Studio Harness Picker
 description: "Choose the right Copilot Studio harness and build shape; in Cowork, use GPT-5.6 with High effort for Detailed mode, Claude Opus 5 as fallback, or Auto for Quick mode."
 agentDescription: "Assess business, experience, channel, identity, orchestration, governance, maturity, and cost requirements to recommend the right Microsoft Copilot Studio harness: GitHub Copilot, standard, or Copilot chat. Use when asked which harness to choose, what to build something with, agent versus workflow, classic versus new experience, whether to migrate or rebuild an existing agent, multi-channel architecture, licensing or Copilot Credit estimates, or whether a Microsoft platform outside Copilot Studio fits better. Supports Quick and Detailed modes and produces an evidence-labelled Harness Decision Brief."
 platforms: [Cowork, Copilot Studio]
+category: agent-development
 tags: [copilot-studio, cowork, architecture, agent-design, governance, licensing]
 author: "Liam O'Grady"
 authorUrl: "https://github.com/ogradyliam5"
