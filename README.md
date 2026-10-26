@@ -12,8 +12,9 @@ deployed as a static site to GitHub Pages.
 ## ✨ Features
 
 - **A Built by Microsoft preview row above the community gallery**, with a
-  **View more** link beneath the heading, including the matching count and no
-  arrow. The link opens the Microsoft-only collection. Both galleries use the same product,
+  **View more** link beside the heading, wrapping underneath on narrow screens.
+  It includes the matching count and no arrow, and opens the Microsoft-only
+  collection. Both galleries use the same product,
   category, search and extra filters; collection/back links preserve selections
   and sorting. Collection and detail pages use matching **Back to gallery**
   arrow links. The preview uses the community grid's responsive card widths
