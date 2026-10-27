@@ -2,7 +2,7 @@
 ## 1. Matching
 1.1 A claim matches when customer + period + type align with a signed term or calendared promotion. Unmatched claims are UNSUPPORTED, not assumed valid.
 ## 2. Validity (Govern)
-2.1 valid: claimed amount <= entitled amount from the signed term (rate x actual volume).
+2.1 valid: claimed amount <= entitled amount from the signed term (rate x actual volume, or the agreed flat amount).
 2.2 partial: claimed > entitled -> disputable = claimed - entitled, calculation shown.
 2.3 unsupported: no backup document or no matching term -> fully disputable pending backup.
 2.4 Write-off is a business decision a human makes; the engine only quantifies. "Not worth chasing" is not a verdict.

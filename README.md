@@ -113,6 +113,12 @@ Run the focused gallery checks with
 `node --import tsx --test scripts/gallery-filters.test.ts scripts/gallery-sort.test.ts`.
 These checks and the site build do not execute submission runtimes.
 
+`npm run test:industry-plugins` runs opt-in regression checks for the store
+policy and trade-deduction engines using synthetic temporary fixtures. It
+requires Python 3 (`python3` on macOS/Linux, `python` on Windows). Run it only
+after reviewing the targeted Python scripts; it is deliberately separate from
+`npm test` and normal gallery CI, which do not execute submitted Python code.
+
 ## 🧩 Adding a skill
 
 Add **one submission to the [`submissions/`](submissions/) folder** and open a

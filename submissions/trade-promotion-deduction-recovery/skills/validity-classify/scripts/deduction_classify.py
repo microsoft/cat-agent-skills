@@ -25,17 +25,26 @@ def main():
                 "confidence": 0.9, "source": ENGINE, "citation": m["citation"] + "; deduction-rules.md #2.3"})
             continue
         t = m["term"]
-        entitled = round(t["rate_pct"]/100.0 * c["actual_volume_value"], 2) if "rate_pct" in t else t.get("flat_amount", 0.0)
+        if "rate_pct" in t:
+            entitled = round(t["rate_pct"]/100.0 * c["actual_volume_value"], 2)
+            basis = f"{t['rate_pct']}% x {c['actual_volume_value']}"
+            overage = f"claimed rate exceeds signed {t['rate_pct']}%"
+        elif "flat_amount" in t:
+            entitled = round(t["flat_amount"], 2)
+            basis = f"flat amount {entitled}"
+            overage = f"claimed amount exceeds signed flat amount {entitled}"
+        else:
+            raise ValueError(f"Signed term {m['term_id']} must specify rate_pct or flat_amount")
         if c["claimed_amount"] <= entitled + 0.01:
             validity.append({"claim_id": c["claim_id"], "verdict": "valid", "disputable_amount": 0.0,
-                "calculation": f"claimed {c['claimed_amount']} <= entitled {entitled} ({t.get('rate_pct','flat')}% x {c.get('actual_volume_value','-')})",
+                "calculation": f"claimed {c['claimed_amount']} <= entitled {entitled} ({basis})",
                 "confidence": 0.93, "source": ENGINE, "citation": t["citation"] + "; deduction-rules.md #2.1"})
         else:
             disp = round(c["claimed_amount"] - entitled, 2)
             validity.append({"claim_id": c["claim_id"], "verdict": "partial", "disputable_amount": disp,
-                "calculation": f"claimed {c['claimed_amount']} - entitled {entitled} ({t['rate_pct']}% x {c['actual_volume_value']}) = {disp}",
+                "calculation": f"claimed {c['claimed_amount']} - entitled {entitled} ({basis}) = {disp}",
                 "confidence": 0.9, "source": ENGINE, "citation": t["citation"] + "; deduction-rules.md #2.2"})
-            esc.append(f"{c['claim_id']}: claimed rate exceeds signed {t['rate_pct']}% - disputable {disp} with calculation shown (#2.2). Write-off is a human decision (#2.4)")
+            esc.append(f"{c['claim_id']}: {overage} - disputable {disp} with calculation shown (#2.2). Write-off is a human decision (#2.4)")
     total = round(sum(v["disputable_amount"] for v in validity), 2)
     # promo lift - scoped by RGM foundation (#3.1)
     if scope.get("account_pnl_present") and a.scan:

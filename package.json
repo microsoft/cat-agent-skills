@@ -14,6 +14,7 @@
     "import:submissions": "tsx scripts/import-submissions.ts",
     "check:submissions": "tsx scripts/import-submissions.ts --check",
     "test": "node --import tsx --test scripts/*.test.ts",
+    "test:industry-plugins": "node --import tsx --test scripts/runtime-tests/industry-plugins.test.ts",
     "ratings:fetch": "tsx scripts/fetch-ratings.ts"
   },
   "dependencies": {
