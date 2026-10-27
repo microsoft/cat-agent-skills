@@ -2297,7 +2297,7 @@ def check_sources(json_file,doc_file):
             for y,v in (l.get('values') or {}).items():
                 if not isinstance(v,(int,float)) or v==0: continue
                 src=((l.get('sources') or {}).get(y) or l.get('source') or {}); loc=str(src.get('location',''))
-                if re.search(r'derived|\+|=|sum|less|excl',loc+' '+str(l.get('label','')),re.I): skipped+=1; continue
+                if re.search(r'\bderived\b',loc,re.I): skipped+=1; continue
                 if kind=='sheet': where=[k for k in byno if str(k).lower() in loc.lower()] or list(byno)   # the cited sheet, else any sheet
                 else:
                     mm=re.search(r'p(?:age)?\.?\s*(\d+)',loc,re.I)
