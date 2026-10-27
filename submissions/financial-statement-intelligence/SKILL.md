@@ -4,7 +4,7 @@ description: 'Analyses company annual or interim financial statements (PDF, OCR 
 ---
 # Financial Statement Intelligence
 
-**Skill version 0.8.2.** If asked which version is loaded, quote this line.
+**Skill version 0.8.3.** If asked which version is loaded, quote this line.
 
 The model reviews and completes the mapping; the bundled script drafts it and does every calculation and check. Every number you report comes from the user's document or from the script's output, never from your own arithmetic.
 

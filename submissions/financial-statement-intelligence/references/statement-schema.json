@@ -190,6 +190,10 @@
   "ebit_includes_associates": {
    "type": "boolean",
    "description": "Optional override: whether the EBIT used (reported ebit line or derived) already contains the post-tax share of associates/JVs. Normally detected automatically."
+  },
+  "owners_profit_excludes_perpetual": {
+   "type": "boolean",
+   "description": "true when net_income_attributable already excludes the perpetual holders' share (the income statement shows it as its own attribution line). Ordinary-shareholder ROE and EPS then use it directly without a perpetual_distributions line."
   }
  },
  "$defs": {

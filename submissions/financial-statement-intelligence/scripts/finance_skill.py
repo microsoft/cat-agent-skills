@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Auditable three-statement analysis. Core uses standard library only."""
-__version__='0.8.2'
+__version__='0.8.3'
 import argparse, csv, json, math, re, html, zipfile
 from pathlib import Path
 from datetime import datetime, timezone
@@ -184,6 +184,7 @@ def load_model(data):
             'annualise':any(pinfo[y]['type']=='interim' or not 360<=days[y]<=371 for y in years),
             'entity_type':entity_type,'financial_model':entity_type in FINANCIAL_MODEL,'has_cash_flow':bool(order.get('cash_flow')),
             'audited':all(pinfo[y]['audited'] is True for y in years),'going_concern':bool(data.get('going_concern_uncertainty')),
+            'owners_profit_excludes_perpetual':bool(data.get('owners_profit_excludes_perpetual')),
             'key_disclosures':[d for d in ((d if isinstance(d,dict) else {'text':str(d)}) for d in (data.get('key_disclosures') or []))
                                if order.get('cash_flow') or not re.match(r'\s*no (?:cash[- ]flow|statement of cash flows)',str(d.get('text','')),re.I)],'no_cash_flow_reason':data.get('no_cash_flow_reason','')}
 
@@ -346,9 +347,9 @@ def opens_next(m,yi):
     return bool(bd) and bd.endswith('-12-31') and int(bd[:4])+1==m['years'][yi+1] and q['type']=='interim'
 
 def bs_cash(m):
-    """Balance sheet cash excluding restricted deposits that are shown (used by the cash checks)."""
+    """Balance sheet cash excluding restricted deposits that are shown (used by the cash checks). Always consolidated cash:
+    the cash flow statement's closing cash is consolidated too, so a conglomerate's non-financial cash belongs only in net debt."""
     lines=m['lines']
-    if m.get('entity_type')=='conglomerate' and 'cash_non_financial' in lines: return L('cash_non_financial')
     if 'cash_equivalents' in lines: return first(L('cash_equivalents'),L('cash'))
     if 'restricted_cash' in lines and 'cash' in lines and 'restricted_cash' in (lines['cash']['total_of'] or []): return sub(L('cash'),L('restricted_cash'))
     return L('cash')
@@ -367,9 +368,18 @@ def unrestricted_cash(m):
 
 def ord_profit(m):
     """Profit attributable to ordinary shareholders. When perpetual bonds are deducted from equity, the distributions to their
-    holders must be deducted from profit too; without them the ordinary basis is N/A (never a mixed basis)."""
+    holders must be deducted from profit too, unless the owners' profit line already excludes them (the report shows the
+    perpetual holders' share as its own attribution line: owners_profit_excludes_perpetual). Otherwise the ordinary basis is
+    N/A (never a mixed basis)."""
+    if m.get('owners_profit_excludes_perpetual'): return L('net_income_attributable')
     if 'perpetual_bonds' in m['lines']: return sub(L('net_income_attributable'),L('perpetual_distributions'))
     return first(sub(L('net_income_attributable'),L('perpetual_distributions')),L('net_income_attributable'))
+
+def ordinary_equity_prev(m):
+    """Prior-period ordinary shareholders' equity from the sourced balances (prior column, or opening_* lines in the first
+    period), on the same basis as ordinary_equity: perpetual instruments are deducted whenever the entity has them."""
+    if 'perpetual_bonds' in m['lines']: return sub(LP('shareholders_equity'),LP('perpetual_bonds'))
+    return LP('shareholders_equity')
 
 def tagged(m,tag,st=None):
     return [lid for s in m['order'] for lid in m['order'][s] if tag in m['lines'][lid]['tags'] and (st is None or s==st)]
@@ -418,7 +428,8 @@ def in_tree(m,root,leaf):
 
 def schedule_spec(m):
     lines=m['lines']; has=lambda *ids: all(i in lines for i in ids); ucash=unrestricted_cash(m)
-    debt=[lid for st in m['order'] for lid in m['order'][st] if 'debt' in lines[lid]['tags']]
+    debt_all=[lid for st in m['order'] for lid in m['order'][st] if 'debt' in lines[lid]['tags']]
+    debt=[lid for lid in debt_all if not any(in_tree(m,t,lid) for t in debt_all if t!=lid)]   # a tagged subtotal counts once: its tagged components are not added again
     S=[]
     S.append(('Working capital schedule',[
         item('wc_receivables','Trade receivables','num',L('receivables'),'Balance sheet'),
@@ -435,7 +446,7 @@ def schedule_spec(m):
         dsec+=[item('total_debt','Total interest-bearing debt','num',add(*[X('debt__'+lid) for lid in debt]),'Sum of lines tagged "debt"','subtotal'),
                item('nd_cash','Less: cash and equivalents','num',neg(ucash),'Cash excluding financial-services businesses (supply cash_non_financial)' if m.get('entity_type')=='conglomerate' else 'Cash and cash equivalents: excludes restricted deposits that are shown; else the cash flow statement figure at the same date (shown negative)'),
                item('net_debt','Net debt (negative = net cash)','num',add(X('total_debt'),X('nd_cash')),'Total debt − cash','grand')]
-        perp=[lid for lid in debt if 'perpetual' in lines[lid]['tags']]
+        perp=[lid for lid in debt_all if 'perpetual' in lines[lid]['tags']]
         if perp: dsec+=[item('debt_ex_perpetual','Debt excluding perpetual securities','num',sub(X('total_debt'),add(*[L(x) for x in perp])),'Comparable debt when perpetual securities move between equity and debt')]
         if 'cash' in lines and 'cash_end' in lines and 'restricted_cash' not in lines and m.get('entity_type')!='conglomerate':
             dsec+=[item('implied_restricted','Memo: cash not counted (restricted / not cash equivalents)','num',bsflow(sub(L('cash'),L('cash_end'))),'Balance sheet cash − cash flow cash and equivalents at the same date')]
@@ -452,9 +463,11 @@ def schedule_spec(m):
         ebit_expr=first(sub(sub(L('pretax_income'),L('interest_expense')),L('interest_income')),sub(L('pretax_income'),L('interest_expense')))
         ebit_def='derived: profit before tax + interest expense − interest income (no operating profit line is mapped)'
     else: ebit_expr,ebit_def=L('operating_income'),'operating income per income statement'
-    imp=tagged(m,'impairment','income_statement')
     # one-off gains/losses (e.g. remeasurement or disposal gains) that sit inside EBIT are taken out of derived EBITDA too
     eroot='operating_income' if ('operating_income' in lines and m['ebit_method']!='pretax_plus_interest') else 'pretax_income'
+    # impairments are added back only when the EBIT basis deducted them: a charge below operating profit never left EBIT.
+    # When the EBIT line's components are unknown (no total_of), every tagged impairment is assumed to sit inside it.
+    imp=[x for x in tagged(m,'impairment','income_statement') if eroot not in lines or not lines[eroot]['total_of'] or in_tree(m,eroot,x)]
     nrec=[x for x in tagged(m,'non_recurring','income_statement') if x not in imp and in_tree(m,eroot,x)
           and not re.search(r'interest|finance|financial|tax',lines[x]['label'],re.I)] if 'ebit' not in lines else []
     comps=[X('ebit'),X('eb_d_and_a')]+[neg(L(x)) for x in imp]+[neg(L(x)) for x in nrec]+([L('share_of_associates_itda')] if 'share_of_associates_itda' in lines else [])
@@ -483,7 +496,8 @@ def schedule_spec(m):
         item('cr_fx','FX and other movements','num',L('fx_cash'),'Cash flow statement')]
     cr+=[item(f'cr_bridge_{i}',lines[x]['label'],'num',L(x),'Cash flow statement (bridging line; also in the cash-flow check)') for i,x in enumerate(cash_reconciling(m),1)]
     flows=[X(it['id']) for it in cr if it['expr'][1] in lines]
-    cr+=[item('cr_computed','Computed closing cash','num',add(*flows) if len(flows)>=4 else L('cash_begin__unavailable'),'Sum of the rows above','subtotal'),
+    bridge_complete=all(x in lines for x in ('cash_begin','ocf','icf','financing_cf'))   # FX and bridging rows are optional; the activity totals are not
+    cr+=[item('cr_computed','Computed closing cash','num',add(*flows) if bridge_complete else L('cash_begin__unavailable'),'Sum of the rows above','subtotal'),
          item('cr_reported','Reported closing cash (cash flow)','num',L('cash_end'),'Cash flow statement'),
          item('cr_difference','Difference','num',sub(X('cr_reported'),X('cr_computed')),'Reported − computed (should be ~0)'),
          item('cr_bs_cash','Cash per balance sheet (excl. restricted shown)','num',bs_cash(m),'Balance sheet cash excluding restricted deposits that are shown'),
@@ -517,7 +531,7 @@ def financial_ratio_spec(m,AN,GR):
         item('avg_assets','Average total assets','num',avg(L('total_assets'),LP('total_assets')),'(Opening + closing) / 2'),
         item('avg_equity','Average total equity','num',avg(L('equity'),LP('equity')),'(Opening + closing) / 2, including non-controlling interests'),
         item('ordinary_equity','Ordinary shareholders\u2019 equity','num',first(sub(L('shareholders_equity'),L('perpetual_bonds')),L('shareholders_equity')),'Equity attributable to shareholders, less perpetual / AT1 instruments when supplied',optional=True),
-        item('avg_shareholders_equity','Average ordinary shareholders\u2019 equity','num',avg(X('ordinary_equity'),XP('ordinary_equity')),'(Opening + closing) / 2',optional=True),
+        item('avg_shareholders_equity','Average ordinary shareholders\u2019 equity','num',avg(X('ordinary_equity'),ordinary_equity_prev(m)),'(Opening + closing) / 2 (the first period uses opening_shareholders_equity when supplied)',optional=True),
         item('effective_tax_rate','Effective tax rate','pct',div(neg(L('tax_expense')),L('pretax_income')),'Tax expense / pre-tax income')]),
     ('Profitability and efficiency',[
         item('net_margin','Net margin','pct',div(L('net_income'),L('revenue')),'Net income / total operating income'),
@@ -575,7 +589,7 @@ def operating_ratio_spec(m,AN,GR):
         item('avg_assets','Average total assets','num',savg(L('total_assets'),LP('total_assets')),'(Opening + closing) / 2; N/A if the balance moved more than 5×'),
         item('avg_equity','Average total equity','num',savg(L('equity'),LP('equity')),'(Opening + closing) / 2, including non-controlling interests; N/A if equity moved more than 5×'),
         item('ordinary_equity','Ordinary shareholders\u2019 equity','num',first(sub(L('shareholders_equity'),L('perpetual_bonds')),L('shareholders_equity')),'Equity attributable to shareholders, less perpetual bonds / other equity instruments when supplied',optional=True),
-        item('avg_shareholders_equity','Average ordinary shareholders\u2019 equity','num',savg(X('ordinary_equity'),XP('ordinary_equity')),'(Opening + closing) / 2; N/A if it moved more than 5×',optional=True),
+        item('avg_shareholders_equity','Average ordinary shareholders\u2019 equity','num',savg(X('ordinary_equity'),ordinary_equity_prev(m)),'(Opening + closing) / 2; N/A if it moved more than 5×',optional=True),
         item('effective_tax_rate','Effective tax rate','pct',within(etr,0,1),'Tax expense / pre-tax income'+(' excluding post-tax results of associates/JVs' if 'share_of_associates' in lines else '')+'; N/A outside 0–100%'),
         item('nopat','NOPAT','num',nopat,'EBIT × (1 − effective tax rate)'+(' on EBIT excluding associates, + post-tax associates\u2019 results' if 'share_of_associates' in lines else '')+'; N/A if rate outside 0–100%'),
         item('invested_capital','Invested capital','num',sub(add(L('equity'),X('total_debt')),unrestricted_cash(m)),'Equity + total debt − cash (excl. restricted)'),
@@ -585,7 +599,7 @@ def operating_ratio_spec(m,AN,GR):
         item('ebitda_margin','EBITDA margin','pct',div(X('ebitda'),L('revenue')),'EBITDA / revenue'),
         item('operating_margin','EBIT margin','pct',div(X('ebit'),L('revenue')),'EBIT / revenue'),
         item('net_margin','Net margin','pct',div(L('net_income'),L('revenue')),'Net income / revenue'),
-        item('net_income_ex_one_offs','Net income before one-off items','num',sub(L('net_income'),add(*[L(x) for x in tagged(m,'non_recurring','income_statement')+tagged(m,'impairment','income_statement')])),'Net income − lines tagged "non_recurring"/"impairment" (pre-tax amounts; tax effect not adjusted)',optional=True),
+        item('net_income_ex_one_offs','Net income before one-off items','num',sub(L('net_income'),add(*[L(x) for x in dict.fromkeys(tagged(m,'non_recurring','income_statement')+tagged(m,'impairment','income_statement'))])),'Net income − lines tagged "non_recurring"/"impairment" (pre-tax amounts; tax effect not adjusted)',optional=True),
         item('net_margin_ex_one_offs','Net margin before one-off items','pct',div(X('net_income_ex_one_offs'),L('revenue')),'Net income before one-offs / revenue',optional=True)]),
     ('Returns',[
         item('roa','Return on assets','pct',ann(div(L('net_income'),X('avg_assets'))),'Net income / average total assets'+AN),
@@ -698,7 +712,7 @@ def run_analysis(data):
                 if kind=='formula': checks.append(mk_check(y,f"Subtotal ties: {ln['label']}",rep,v,src_refs([f'{lid}[{y}]'],y),('const',rep),('ref',lid)))
                 elif kind=='reported_rounded':
                     sv=sum(m['resolved'][(c,y)][0] for c in ln['total_of'])
-                    ck=mk_check(y,f"Subtotal ties: {ln['label']}",rep,sv,src_refs([f'{lid}[{y}]'],y),('const',rep),('const',sv))
+                    ck=mk_check(y,f"Subtotal ties: {ln['label']}",rep,sv,src_refs([f'{lid}[{y}]'],y),('ref',lid),('refs',list(ln['total_of'])))   # live: printed total cell vs the sum of its component cells
                     q=1 if all(float(x).is_integer() for x in [m['resolved'][(c,y)][0] for c in ln['total_of']]+[rep]) else 0.01
                     ck['tolerance']=max(ck['tolerance'],round(0.51*len(ln['total_of'])*q,6)); ck['rounding_tol']=True   # same threshold as load_model; the live Excel check uses it too
                     ck['status']='pass'; ck['message']=f'Printed total kept; its components add up to {sv:,.2f} (difference {rep-sv:,.2f} is rounding in the source; tolerance {ck["tolerance"]:.3f})'
@@ -734,7 +748,7 @@ def run_analysis(data):
                       'values':{str(y):m['resolved'][(lid,y)][0] for y in years},'sources':{str(y):s for y,s in lines[lid]['sources'].items()}} for lid in m['order'][st]] for st in m['order']}
     res={'company':m['company'],'currency':m['currency'],'unit':m['unit'],'basis':m['basis'],'industry':m['industry'],'fiscal_year_end':m['fiscal_year_end'],
          'schema_version':m['schema_version'],'years':years,'periods':periods,'statements':statements,'checks':checks,'audit':audit,
-         'unaudited':m['unaudited'],'audited':m['audited'],'framework':m['framework'],'going_concern':m['going_concern'],'key_disclosures':m['key_disclosures'],'no_cash_flow_reason':m['no_cash_flow_reason'],'interim':m['interim'],'annualise':m['annualise'],'entity_type':m['entity_type'],'has_cash_flow':m['has_cash_flow'],'display_unit':m['display_unit'],'ebit_method':m['ebit_method'],'demo':is_demo(data),'generated_utc':datetime.now(timezone.utc).isoformat()}
+         'unaudited':m['unaudited'],'audited':m['audited'],'framework':m['framework'],'going_concern':m['going_concern'],'owners_profit_excludes_perpetual':m['owners_profit_excludes_perpetual'],'key_disclosures':m['key_disclosures'],'no_cash_flow_reason':m['no_cash_flow_reason'],'interim':m['interim'],'annualise':m['annualise'],'entity_type':m['entity_type'],'has_cash_flow':m['has_cash_flow'],'display_unit':m['display_unit'],'ebit_method':m['ebit_method'],'demo':is_demo(data),'generated_utc':datetime.now(timezone.utc).isoformat()}
     res['_render']={'model':m,'ctx':ctx,'layout':layout,'statement_rows':statement_rows,'computed_rows':computed_rows}
     return res
 
@@ -828,8 +842,8 @@ def agent_hints(res):
             v=p['values'].get(lid); ni=p['values'].get('net_income')
             if v and ni and abs(v)>0.5*abs(ni):
                 out.append(f"'{l['label']}' ({lid}) is {abs(v)/abs(ni):.0%} of net income in {p['label']}: read its note and split out and tag any one-off part (e.g. remeasurement, disposal or fair-value gains) non_recurring."); break
-    if 'perpetual_bonds' in lines and 'perpetual_distributions' not in lines:
-        out.append('Perpetual bonds are deducted from equity: add perpetual_distributions (profit attributable to perpetual holders) so ROE on ordinary equity can be shown.')
+    if 'perpetual_bonds' in lines and 'perpetual_distributions' not in lines and not res.get('owners_profit_excludes_perpetual'):
+        out.append('Perpetual bonds are deducted from equity: add perpetual_distributions (profit attributable to perpetual holders) so ROE on ordinary equity can be shown, or set owners_profit_excludes_perpetual: true when the owners’ profit line already excludes them.')
     first=per[0]; et=res.get('entity_type')
     # client money: restricted cash that is large against current liabilities, or a disclosure that mentions client money
     if et not in FINANCIAL_MODEL+('payment_institution','asset_manager') and 'client_funds' not in lines and 'restricted_cash' in lines:
@@ -916,7 +930,7 @@ def findings(res):
     if 'share_of_associates' in lines and 'ebitda' not in lines and 'share_of_associates_itda' not in lines:
         warn.append("EBITDA is derived as EBIT + D&A and excludes associates'/JVs' interest, tax and D&A, so EBITDA-based ratios can differ from the company's own EBITDA.")
     perp=[lid for lid,l in lines.items() if 'perpetual' in l['tags'] and 'debt' in l['tags']]
-    if 'perpetual_bonds' in lines and 'perpetual_distributions' not in lines and last.get('roe') is not None:
+    if 'perpetual_bonds' in lines and 'perpetual_distributions' not in lines and not res.get('owners_profit_excludes_perpetual') and last.get('roe') is not None:
         warn.append('Perpetual bonds are part of equity attributable to owners but the distributions to their holders are not given, so return on equity is shown on net income / total equity rather than on ordinary shareholders\u2019 equity.')
     if perp: warn.append('Perpetual securities are classified as debt in at least one period; debt and leverage are not comparable across periods. See "Debt excluding perpetual securities".')
     if res.get('annualise') and any(last.get(k) is not None for k in ('roe','roa','roic','asset_turnover')):
@@ -963,9 +977,15 @@ def report_html(res):
     disc_html=('<h2>Key disclosures (from the report)</h2><ul>'+''.join('<li>'+esc(t)+(f' <span class="sub">[{esc(s)}]</span>' if s else '')+'</li>' for t,s in disc)+'</ul>') if disc else ''
     return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Financial Intelligence — {esc(res['company'])}</title><style>body{{font:15px/1.55 system-ui,Arial,sans-serif;color:#15243b;background:#f1f5fa;margin:0}}main{{max-width:1100px;margin:36px auto;background:white;padding:40px;border-radius:16px;box-shadow:0 8px 30px #172b4d15}}h1{{font-size:30px;margin:0}}h2{{margin-top:38px;padding-bottom:9px;border-bottom:2px solid #dbe8f4}}h3{{margin:24px 0 4px;color:#1f3864}}.sub{{color:#607188}}.flag{{padding:14px;background:#fff1e8;border-left:4px solid #df7a24}}.ok{{padding:14px;background:#eaf6f2;border-left:4px solid #16896d}}table{{border-collapse:collapse;width:100%;font-size:12px;margin:10px 0 22px}}td,th{{padding:7px 9px;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top}}td:first-child,th:first-child{{text-align:left}}th{{background:#1f3864;color:white}}tr.sec td{{background:#dce6f1;font-weight:600;color:#1f3864}}tr.tot td{{font-weight:600;border-top:1px solid #8aa0bf}}.scroll{{overflow-x:auto}}footer{{color:#526475;font-size:12px;margin-top:30px}}@media print{{body{{background:white}}main{{margin:0;box-shadow:none;padding:12px}}}}</style></head><body><main>{'<div class="flag" style="background:#fde8e7;border-color:#b42318;color:#b42318;font-weight:700">DEMO DATA: synthetic figures for testing only. This is not an analysis of any real company.</div>' if res.get('demo') else ''}<p class="sub">FINANCIAL STATEMENT INTELLIGENCE · AUDITABLE ANALYSIS</p><h1>{esc(res['company'])}</h1><p class="sub">{esc(res['currency'])} · {esc(m['display_unit'])} · {esc(res['basis'])} · {esc(flow_h[0])} – {esc(flow_h[-1])}{' · <strong>UNAUDITED</strong>' if m['unaudited'] else ''}</p><div class="{'flag' if cfail else 'ok'}"><strong>{'Reconciliation issues detected' if cfail else 'No detected reconciliation failures'}</strong><div>{len(cfail)} failed checks; {sum(c['status']=='not_tested' for c in checks)} checks not testable. A passing check does not prove audit assurance or extraction accuracy.</div></div><h2>Executive assessment</h2><ul>{''.join('<li>'+esc(f)+'</li>' for f in findings(res))}</ul>{disc_html}<p><strong>Interpretation limits:</strong> Automated findings describe observed movements only. Missing fields, business models, notes and restatements may change conclusions. Do not treat this report as investment advice.</p><h2>Financial statements</h2>{st_html}<h2>Ratio and trend dashboard</h2>{table(['Ratio / metric']+flow_h,rt,rc)}<h2>Reconciliation controls</h2>{checktable}<h2>Calculation register</h2>{audittable}<footer>Expenses and cash outflows are shown as negative values. Source references appear in each calculation and check; detailed source metadata remains in analysis.json and the workbook Sources sheet. Generated {esc(res['generated_utc'])}. This report must be reviewed against the original audited sources.</footer></main></body></html>'''
 
+def csv_safe(v):
+    """Text that a spreadsheet would run as a formula (leading = + - @ or a control character) is exported as literal text:
+    labels come from the uploaded statement, and the audit's Excel formulas are documentation, not something to execute."""
+    if isinstance(v,str) and v[:1] in ('=','+','-','@','\t','\r') and not re.fullmatch(r'[-+]?\d[\d,]*(?:\.\d+)?',v): return "'"+v
+    return v
+
 def write_csv(path,rows,fields):
     with open(path,'w',newline='',encoding='utf-8-sig') as f:
-        w=csv.DictWriter(f,fieldnames=fields,extrasaction='ignore');w.writeheader();w.writerows(rows)
+        w=csv.DictWriter(f,fieldnames=fields,extrasaction='ignore');w.writeheader();w.writerows({k:csv_safe(x) for k,x in r.items()} for r in rows)
 
 # ------------------------------------------------------------------- XLSX
 NAVY='1F3864'; SECTION='DCE6F1'; INPUT='0000CC'; GREY='6B7280'; RULE='8EA9C8'
@@ -1132,7 +1152,7 @@ def write_xlsx(path, res):
     # checks
     ck=Sheet('Checks','B42318'); sheets.append(ck)
     ck.put(1,0,'Accounting checks',title); ck.heights[1]=24; ck.put(2,0,meta,subtitle)
-    ck.put(3,0,'Status cells are live formulas: edit a statement input and the checks re-evaluate. Tolerance = max(0.02, 0.1% of value). REVIEW = explainable difference to confirm.'+src_note,legend)
+    ck.put(3,0,'Status cells are live formulas: edit a statement input and the checks re-evaluate. Tolerance = max(0.02, 0.1% of value), or the source’s rounding allowance for a printed total. REVIEW = explainable difference to confirm.'+src_note,legend)
     heads=['Year','Check','Value','Expected','Difference','Tolerance','Status','Source references']
     for c,h in enumerate(heads): ck.put(HEADER_ROW,c,h,hdr_l if c in (1,7) else hdr)
     for c,w in enumerate([8,52,13,13,13,11,13,70]): ck.widths[c]=w
@@ -1141,7 +1161,8 @@ def write_xlsx(path, res):
     for c in res['checks']:
         r+=1; ck.put(r,0,c['year'],text_c); ck.put(r,1,c['check'],text); ck.put(r,7,c['source_refs'],note)
         if c['kind']=='sign':
-            sh,row=ctx.line_addr[c['line']]; ck.put(r,2,c['lhs'],nf,ctx.ref(sh,row,years.index(c['year']),'Checks')); ck.put(r,3,'Sign',S(align={'h':'right'})); ck.put(r,6,'FAIL',S(font={'b':1},align={'h':'center'})); continue
+            sh,row=ctx.line_addr[c['line']]; sign=EXPECTED_SIGN[c['line']]; ck.put(r,2,c['lhs'],nf,ctx.ref(sh,row,years.index(c['year']),'Checks'))
+            ck.put(r,3,'Expected '+('positive' if sign>0 else 'negative'),S(align={'h':'right'})); ck.put(r,6,'FAIL',S(font={'b':1},align={'h':'center'}),f'IF(C{r}*({sign})>=0,"PASS","FAIL")'); continue   # live: re-evaluates when the input is corrected
         if c['status']=='not_tested':
             for k in (2,3,5): ck.put(r,k,'N/A',na)
             ck.put(r,4,c['message'],note); ck.put(r,6,'NOT TESTED',S(font={'b':1},align={'h':'center'})); continue
@@ -1149,6 +1170,7 @@ def write_xlsx(path, res):
         for k,(kind,val),v in ((2,c['lf'],c['lhs']),(3,c['rf'],c['rhs'])):
             if kind=='const': ck.put(r,k,v,ni)
             elif kind=='ref': sh,row=ctx.line_addr[val]; ck.put(r,k,v,nf,ctx.ref(sh,row,yi,'Checks'))
+            elif kind=='refs': ck.put(r,k,v,nf,'+'.join(ctx.ref(*ctx.line_addr[x],yi,'Checks') for x in val))
             else: ck.put(r,k,v,nf,val)
         ck.put(r,4,c['lhs']-c['rhs'],S(fmt='#,##0.000_);(#,##0.000);"–"_)'),f'C{r}-D{r}')
         ck.put(r,5,c['tolerance'],S(fmt='#,##0.000'),f'MAX(0.02,ABS(C{r})*0.001'+(f",{c['tolerance']}" if c.get('rounding_tol') else '')+')')
@@ -1752,12 +1774,19 @@ def flip(items,i,children):
     items[i]['vals']=[-v if v is not None else None for v in items[i]['vals']]
     for c in children.get(i,[]): flip(items,c,children)
 
+KEEP_SIGN=re.compile(r'accumulated|retained|deficit|reserve|other comprehensive|translation|revaluation|hedg|fair value|non-?controlling|minority|'
+                     r'total equity|equity attributable|shareholders.? (?:equity|funds)|net assets|capital and reserves|owners.? equity|'
+                     r'未分配利润|盈余公积|其他综合收益|储备|股东权益|所有者权益|净资产|少数股东|report à nouveau|réserves|capitaux propres',re.I)
+
 def fit_totals(items,st):
     q=0.01 if any(v is not None and not float(v).is_integer() for it in items for v in it['vals']) else 1
     if st=='balance_sheet':
+        # Liabilities printed in brackets (net-current-liabilities layouts) become positive. Genuine deficits are kept:
+        # accumulated losses, negative reserves, negative equity and other contra balances stay negative.
         for it in items:
             ded=re.match(r'^(?:减[:：]|less[:：]?\s)',it['label'],re.I) or re.search(r'treasury (?:shares|stock)|own shares held|库存股',it['label'],re.I)
-            it['vals']=[(-abs(v) if ded else abs(v)) if v is not None else None for v in it['vals']]
+            if ded: it['vals']=[-abs(v) if v is not None else None for v in it['vals']]
+            elif not KEEP_SIGN.search(it['label']): it['vals']=[abs(v) if v is not None else None for v in it['vals']]
     nodes=[]; children={}; consumed=set(); forward=set()
     for i,it in enumerate(items):          # totals printed ABOVE their lines, e.g. 二、营业总成本 followed by its costs
         if it['memo'] or not HEADING_RE.match(it['label']): continue
@@ -1977,7 +2006,7 @@ def draft_map(input_file,out,pages=None,force=False):
         all_texts+= [' '.join(c[0] for c in r['cells']) for _,r in rows[:12]]
         lines=[]; doc_name=Path(input_file).name
         for i,it in enumerate(items):
-            vals={str(order[j]):(round(v,2) if v is not None else None) for j,v in enumerate(it['vals']) if isinstance(order[j],int)}
+            vals={str(order[j]):v for j,v in enumerate(it['vals']) if isinstance(order[j],int)}   # source precision is kept; rounding happens only when output is formatted
             it['label']=clean_label(it['label'])
             ln={'id':it['id'],'label':it['label'],'section':('memo' if it['memo'] else re.sub(r'[^a-z0-9]+','_',(it['section'] or '').lower()).strip('_')[:40] or None),'values':vals,
                 'source':{'document':doc_name,'location':f"p.{it['page']}",'label':it['label']}}
@@ -2046,7 +2075,7 @@ def draft_map(input_file,out,pages=None,force=False):
     ids={l['id'] for s_ in statements.values() for l in s_}   # include derived totals added above
     bsl=statements.get('balance_sheet',[])
     if any(l['id']=='perpetual_bonds' for l in bsl):
-        review.append('perpetual_bonds: add perpetual_distributions (supplementary; profit or interest attributable to perpetual holders, e.g. 归属于永续债持有人的利息) so ROE on ordinary equity is correct')
+        review.append('perpetual_bonds: add perpetual_distributions (supplementary; profit or interest attributable to perpetual holders, e.g. 归属于永续债持有人的利息) so ROE on ordinary equity is correct; if the owners’ profit line already excludes the perpetual holders’ share, set owners_profit_excludes_perpetual: true instead')
     for l in bsl:
         if re.search(r'perpetual|永续',l['label'],re.I):
             v=[l['values'].get(str(y)) for y in sorted(int(k) for k in l['values'])] if l['values'] else []
@@ -2219,6 +2248,16 @@ def extract_csv(input_file,out):
     out=write_text_safe(out,json.dumps({'source':str(input_file),'rows':rows,'status':'unverified_extraction_do_not_analyze_directly'},indent=2,ensure_ascii=False))
     print('Wrote REVIEW-REQUIRED candidates:',Path(out).resolve())
 
+MAX_XLSX_PART=200*1024*1024; MAX_XLSX_TOTAL=1024*1024*1024
+def zread(z,name,budget):
+    """Bounded read of one XLSX part: decompression stops at the limit instead of inflating the whole entry first, so a small
+    archive that expands to gigabytes cannot exhaust memory. `budget` accumulates the bytes read across parts."""
+    with z.open(name) as f: data=f.read(MAX_XLSX_PART+1)
+    if len(data)>MAX_XLSX_PART: raise ValueError(f'XLSX part {name} is too large to read safely')
+    budget[0]+=len(data)
+    if budget[0]>MAX_XLSX_TOTAL: raise ValueError('XLSX expands to more than the supported size')
+    return data
+
 def safe_xml(raw):
     """Parse an XLSX part from an untrusted upload: real XLSX parts never contain a DTD, so DOCTYPE/ENTITY is refused."""
     if len(raw)>200*1024*1024: raise ValueError('XLSX part too large to read safely')
@@ -2229,19 +2268,19 @@ def read_xlsx(input_file):
     """Worksheets of an XLSX as [{'sheet','sheet_xml','rows':[[{'cell','value','formula'}]]}], standard library only."""
     ns={'x':'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
     with zipfile.ZipFile(input_file) as z:
-        strings=[]; names={}
+        strings=[]; names={}; budget=[0]
         try:   # map worksheet files to tab names so values can be cited as 'sheet: Balance Sheet'
             rel_ns='{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'
-            wb=safe_xml(z.read('xl/workbook.xml')); rels=safe_xml(z.read('xl/_rels/workbook.xml.rels'))
+            wb=safe_xml(zread(z,'xl/workbook.xml',budget)); rels=safe_xml(zread(z,'xl/_rels/workbook.xml.rels',budget))
             tgt={r.get('Id'):r.get('Target') for r in rels}
             for sh in wb.findall('.//x:sheets/x:sheet',ns): names['xl/'+tgt.get(sh.get(rel_ns),'').lstrip('/').replace('xl/','',1)]=sh.get('name')
         except (KeyError,ValueError,ET.ParseError): pass
         if 'xl/sharedStrings.xml' in z.namelist():
-            root=safe_xml(z.read('xl/sharedStrings.xml'))
+            root=safe_xml(zread(z,'xl/sharedStrings.xml',budget))
             strings=[''.join(t.text or '' for t in si.findall('.//x:t',ns)) for si in root.findall('x:si',ns)]
         sheets=[]
         for file in sorted(n for n in z.namelist() if re.fullmatch(r'xl/worksheets/sheet\d+\.xml',n)):
-            root=safe_xml(z.read(file)); rows=[]
+            root=safe_xml(zread(z,file,budget)); rows=[]
             for row in root.findall('.//x:sheetData/x:row',ns):
                 values=[]
                 for cell in row.findall('x:c',ns):
@@ -2285,7 +2324,7 @@ def check_sources(json_file,doc_file):
         if pno not in cache:
             t=byno[pno].get_text() if pno in byno else ''; out=set()
             for m_ in re.finditer(r'\d{1,3}(?:'+sep+r'\d{3})+(?:[.,]\d+)?|\d+(?:\.\d+)?',t):
-                try: out.add(round(float(re.sub(sep,'',m_.group(0))),2))
+                try: out.add(round(float(re.sub(sep,'',m_.group(0))),4))
                 except ValueError: pass
             cache[pno]=out
         return cache[pno]
@@ -2297,18 +2336,19 @@ def check_sources(json_file,doc_file):
             for y,v in (l.get('values') or {}).items():
                 if not isinstance(v,(int,float)) or v==0: continue
                 src=((l.get('sources') or {}).get(y) or l.get('source') or {}); loc=str(src.get('location',''))
-                if re.search(r'\bderived\b',loc,re.I): skipped+=1; continue
-                if kind=='sheet': where=[k for k in byno if str(k).lower() in loc.lower()] or list(byno)   # the cited sheet, else any sheet
+                if re.search(r'\bderived\b|[+=]',loc,re.I): skipped+=1; continue   # only an explicit "(derived ...)" location is skipped, never a label
+                if kind=='sheet': where=[k for k in byno if str(k).lower() in loc.lower()]   # the cited sheet only; an unnamed or unknown sheet is a miss
                 else:
                     mm=re.search(r'p(?:age)?\.?\s*(\d+)',loc,re.I)
                     if not mm: skipped+=1; continue
                     where=[int(mm.group(1))]
-                cands={round(abs(v),2)}
-                if l['id'] in PCT_IDS or (st=='supplementary' and l['id'].endswith(('_ratio','_pct')) and abs(v)<1): cands.add(round(abs(v)*100,2))   # 0.145 is printed as 14.5
+                cands={round(abs(v),4)}
+                if l['id'] in PCT_IDS or (st=='supplementary' and l['id'].endswith(('_ratio','_pct')) and abs(v)<1): cands.add(round(abs(v)*100,4))   # 0.145 is printed as 14.5
                 total+=1
                 if any(on(p,a) for p in where for a in cands): found+=1; continue
                 alt=[q for q in (list(byno) if kind=='sheet' else sorted(byno)) if q not in where and any(a in nums(q) for a in cands)][:4]
-                miss.append(f"  NOT ON CITED {where_word.upper()}: {l['id']}[{y}] = {v:,} cited {loc!r}"+(f" - appears on {unit}{(', '+unit).join(map(str,alt))}" if alt else ' - not found in the document'))
+                miss.append(f"  NOT ON CITED {where_word.upper()}: {l['id']}[{y}] = {v:,} cited {loc!r}"+(' (names no sheet of the workbook)' if kind=='sheet' and not where else '')
+                            +(f" - appears on {unit}{(', '+unit).join(map(str,alt))}" if alt else ' - not found in the document'))
     print(f'SOURCES: {found} of {total} values found on their cited {where_word} ({skipped} derived/unnumbered values skipped)'+('' if miss else ' - all citations verified'))
     for x in miss[:40]: print(x)
     if miss: print('Fix each citation (for spreadsheets cite the sheet name; for PDFs use the page number shown by page-text, not the one printed on the page), or mark derived values "(derived ...)" in the location, then re-run analyze.')
@@ -2485,7 +2525,8 @@ def main():
         print('DISCLOSURE:',d.get('text',''),f'[{loc}]' if loc else '')
     if a.doc:
         try: check_sources(a.input,a.doc)
-        except Exception as e: print('SOURCES: could not check citations -',e)   # the workbook is still delivered
+        except Exception as e:   # no STATUS line: an unverified mapping must not read as OK. The files above are written but not cleared for delivery.
+            raise SystemExit(f'ERROR: citations could not be checked against {a.doc}: {e}. Fix the --doc path (check-env --file shows it) and re-run analyze; do not deliver until SOURCES has run.')
     print('STATUS:',('PRELIMINARY - show the failed checks to the user before calling any conclusion final' if fails else 'OK - no failed reconciliation checks')
           +(f' | {len(hints)} HINT follow-up(s) open: act on each and re-run, or list it with the reason in the judgement calls' if hints else ' | no follow-ups open'))
 
