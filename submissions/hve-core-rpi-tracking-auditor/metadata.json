@@ -1,0 +1,11 @@
+{
+  "name": "HVE Core RPI Tracking Auditor",
+  "description": "See where every Microsoft HVE Core RPI task stands from its .copilot-tracking artifacts: the /rpi-* command and arguments to resume, a handover for a teammate, review-finding routing, and an audit of plan markers, completion evidence, critique and review gates, session state, and secrets.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["hve-core", "rpi", "github-copilot", "vs-code", "copilot-agents", "copilot-tracking", "sdlc", "governance", "handover", "python", "scripts"],
+  "author": "Arindam Choudhury",
+  "authorUrl": "https://github.com/ari20089",
+  "version": "1.0.0",
+  "createdAt": "2026-10-17",
+  "updatedAt": "2026-10-17"
+}
