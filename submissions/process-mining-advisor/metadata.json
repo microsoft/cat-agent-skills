@@ -1,0 +1,11 @@
+{
+  "name": "Process Mining Advisor",
+  "description": "Use preview Power Automate Process Mining tools or supplied evidence to produce rigorous, safe process insights and improvement decisions.",
+  "platforms": ["Copilot Studio", "Cowork"],
+  "tags": ["process-mining", "copilot-studio", "mcp", "process-improvement"],
+  "author": "Marc Pascal Solling",
+  "authorUrl": "https://github.com/MarcPmedC",
+  "version": "1.1.0",
+  "createdAt": "2026-09-03",
+  "updatedAt": "2026-09-03"
+}
