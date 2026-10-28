@@ -1,0 +1,11 @@
+{
+  "name": "Power Platform Solution Compare",
+  "description": "Compare two Power Platform solution exports and get a release-style change report across all component collections, with breaking-change flags and a deployment checklist.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["power-platform", "dataverse", "alm", "solutions", "change-review", "python", "scripts"],
+  "author": "Arindam Choudhury",
+  "authorUrl": "https://github.com/ari20089",
+  "version": "1.0.0",
+  "createdAt": "2026-10-16",
+  "updatedAt": "2026-10-16"
+}
