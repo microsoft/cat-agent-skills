@@ -1,0 +1,12 @@
+{
+  "name": "Copilot Studio Apps: Idea Finder",
+  "description": "Find and score AI-powered app ideas for any department, then get the winning idea as a ready-to-paste prompt for the Apps (Preview) experience in Copilot Studio.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["copilot-studio", "apps", "use-case", "ai", "brainstorming", "decision-making"],
+  "author": "Renato Romão",
+  "authorUrl": "https://www.linkedin.com/in/renatoromao/",
+  "authorGithub": "renatoromao",
+  "version": "1.0.0",
+  "createdAt": "2026-10-13",
+  "updatedAt": "2026-10-13"
+}
