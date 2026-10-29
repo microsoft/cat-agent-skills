@@ -1,0 +1,34 @@
+{
+  "csr": {
+    "target": "ICH E3-aligned CSR",
+    "required_sections": [
+      "Synopsis",
+      "Efficacy Evaluation",
+      "Safety Evaluation",
+      "Discussion and Overall Conclusions"
+    ],
+    "section_fields": {
+      "Synopsis": [],
+      "Efficacy Evaluation": [],
+      "Safety Evaluation": [],
+      "Discussion and Overall Conclusions": []
+    },
+    "section_fields_status": "[TO CONFIGURE: sponsor medical-writing lead - for each required section, list the config/field-dictionary.json keys that section must cite before it can be marked ready]"
+  },
+  "510k": {
+    "target": "eSTAR 510(k) module structure",
+    "required_sections": [
+      "Device Description",
+      "Substantial Equivalence",
+      "Performance Data",
+      "Labeling"
+    ],
+    "section_fields": {
+      "Device Description": [],
+      "Substantial Equivalence": [],
+      "Performance Data": [],
+      "Labeling": []
+    },
+    "section_fields_status": "[TO CONFIGURE: sponsor medical-writing lead - for each required section, list the config/field-dictionary.json keys that section must cite before it can be marked ready]"
+  }
+}

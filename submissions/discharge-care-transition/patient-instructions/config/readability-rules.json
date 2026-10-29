@@ -1,0 +1,26 @@
+{
+  "_comment": "Customer-editable. base/ is Microsoft-owned; only this folder is edited on a fork. Drives readability_check (discharge-rules.md #3). No threshold is hard-coded in the engine.",
+  "target_reading_level": "6th-8th grade",
+  "avoid_jargon": true,
+  "metric": "flesch_kincaid_grade",
+  "max_grade_level": 8.0,
+  "max_sentence_words": 22,
+  "required_sections": [
+    "Your medicines",
+    "Activity",
+    "Diet",
+    "When to call"
+  ],
+  "banned_jargon": {
+    "NPO": "nothing to eat or drink",
+    "PRN": "as needed",
+    "BID": "twice a day",
+    "q4h": "every 4 hours",
+    "titrate": "change the dose slowly",
+    "diuresis": "passing more urine",
+    "euvolemic": "your fluid level is normal",
+    "nephrotoxic": "can harm the kidneys",
+    "exacerbation": "flare-up",
+    "adherence": "taking your medicine as told"
+  }
+}

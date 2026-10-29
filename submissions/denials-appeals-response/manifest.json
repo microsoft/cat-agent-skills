@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.3",
+  "id": "4ab8f47c-9889-4054-a796-4aac67aeedc5",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Denials & Appeals Response",
+    "full": "Denials & Appeals Response for Cowork"
+  },
+  "description": {
+    "short": "Claim denials: classify the denial, track appeal deadlines, draft the appeal",
+    "full": "Denials & Appeals Response works a denied claim from the remittance to a draft appeal. It classifies the denial and its reason codes, attaches the governing payer policy and chart evidence, ranks the queue by deadline then recoverable value and drafts the appeal at the right level. It never recodes a claim the chart does not support and never submits an appeal.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#8764B8",
+  "agentSkills": [
+    {
+      "folder": "denial-classify"
+    },
+    {
+      "folder": "policy-retrieve"
+    },
+    {
+      "folder": "evidence-assemble"
+    },
+    {
+      "folder": "deadline-track"
+    },
+    {
+      "folder": "appeal-draft"
+    }
+  ]
+}

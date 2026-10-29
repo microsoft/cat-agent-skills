@@ -1,0 +1,22 @@
+{
+  "name": "Denials & Appeals Response",
+  "description": "A denied claim from the remittance to a draft appeal: classify the denial and its reason codes, attach the governing payer policy and chart evidence, rank the queue by deadline then recoverable value and draft the appeal at the right level.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "healthcare",
+    "denials",
+    "appeals",
+    "revenue-cycle",
+    "payer",
+    "claims"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SandraBcna",
+  "version": "1.0.3",
+  "createdAt": "2026-10-28",
+  "updatedAt": "2026-10-28",
+  "category": "healthcare",
+  "builtByMicrosoft": true
+}

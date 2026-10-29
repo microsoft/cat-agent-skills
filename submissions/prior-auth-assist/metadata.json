@@ -1,0 +1,22 @@
+{
+  "name": "Prior Authorization Packet",
+  "description": "A cited prior authorization packet before the request goes to the payer: find the governing coverage policy, check the chart against each criterion, cite the notes that satisfy it, draft the medical necessity narrative and list what is still missing.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "healthcare",
+    "prior-authorization",
+    "payer",
+    "utilization-management",
+    "medical-necessity",
+    "revenue-cycle"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SandraBcna",
+  "version": "1.0.3",
+  "createdAt": "2026-10-28",
+  "updatedAt": "2026-10-28",
+  "category": "healthcare",
+  "builtByMicrosoft": true
+}

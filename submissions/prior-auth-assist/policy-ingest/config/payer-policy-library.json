@@ -1,0 +1,26 @@
+{
+  "mri_lumbar_spine": {
+    "clause": "RAD-7.2",
+    "payer": "Contoso Health Plan",
+    "criteria": [
+      {
+        "id": "conservative_therapy_6wk",
+        "text": "Documented >=6 weeks conservative therapy (PT and/or NSAIDs) with no improvement",
+        "evidence_key": "conservative_therapy_6wk",
+        "required": true
+      },
+      {
+        "id": "no_red_flags",
+        "text": "No red-flag findings (cauda equina, progressive neuro deficit, suspected malignancy/infection)",
+        "evidence_key": "red_flags_absent",
+        "required": true
+      },
+      {
+        "id": "exam_findings",
+        "text": "Focal neurological exam findings consistent with radiculopathy documented",
+        "evidence_key": "exam_findings_documented",
+        "required": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Reg Submission Authoring",
+  "description": "A cited first draft of a clinical study report or 510(k) section set: plan the sections from the locked protocol, SAP and TLFs, draft each one from source facts, check every number and population against the sources and assemble the draft with its open items.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "healthcare",
+    "life-sciences",
+    "regulatory",
+    "clinical-study-report",
+    "510k",
+    "medical-writing"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SandraBcna",
+  "version": "1.0.3",
+  "createdAt": "2026-10-28",
+  "updatedAt": "2026-10-28",
+  "category": "healthcare",
+  "builtByMicrosoft": true
+}

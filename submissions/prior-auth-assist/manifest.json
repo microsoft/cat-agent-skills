@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.3",
+  "id": "b965baf3-3d2d-4b40-aea4-672fc3ea7672",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Prior Authorization Packet",
+    "full": "Prior Authorization Packet for Cowork"
+  },
+  "description": {
+    "short": "Prior auth: check payer criteria, cite chart evidence, draft necessity letter",
+    "full": "Prior Authorization Packet gets a prior authorization request ready before it goes to the payer. It finds the coverage policy for the ordered service, checks the chart against each criterion, cites the notes that satisfy it, drafts the medical necessity narrative and lists what is still missing. It never approves, denies or submits a request.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#038387",
+  "agentSkills": [
+    {
+      "folder": "policy-ingest"
+    },
+    {
+      "folder": "criteria-extract"
+    },
+    {
+      "folder": "evidence-match"
+    },
+    {
+      "folder": "necessity-draft"
+    },
+    {
+      "folder": "gap-report"
+    }
+  ]
+}

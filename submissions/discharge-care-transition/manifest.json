@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.3",
+  "id": "cea4cba5-1d46-4ac0-94c7-4640c90aa958",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Discharge Transition Packet",
+    "full": "Discharge Transition Packet for Cowork"
+  },
+  "description": {
+    "short": "Discharge packets: reconcile medications, draft summary, instructions, follow-up",
+    "full": "Discharge Transition Packet prepares the packet for a patient going home from hospital. It reconciles admission, inpatient and discharge medications, drafts the discharge summary and plain language patient instructions, and builds a dated follow-up checklist with owners, each cited to the record. It never carries a flagged medication through silently and never signs or sends anything.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#107C10",
+  "agentSkills": [
+    {
+      "folder": "admission-synthesise"
+    },
+    {
+      "folder": "med-reconcile"
+    },
+    {
+      "folder": "summary-draft"
+    },
+    {
+      "folder": "patient-instructions"
+    },
+    {
+      "folder": "followup-plan"
+    }
+  ]
+}

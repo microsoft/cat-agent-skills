@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.3",
+  "id": "a46f668d-589a-48cb-a712-e65b2c46a5ee",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Clinical Docs Companion",
+    "full": "Clinical Docs Companion for Cowork"
+  },
+  "description": {
+    "short": "Signed visit notes: draft referrals and summaries, cite codes, check quality",
+    "full": "Clinical Docs Companion turns a signed visit note into the documents that follow it. It drafts the referral letter, after-visit summary and clinician handoff, builds the coding rationale for codes already on the claim and checks quality measures, each cited to a line of the note. It never marks a measure met without documentation and never sends anything.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "note-context"
+    },
+    {
+      "folder": "document-derive"
+    },
+    {
+      "folder": "coding-rationale"
+    },
+    {
+      "folder": "quality-gap-check"
+    },
+    {
+      "folder": "handoff-draft"
+    }
+  ]
+}

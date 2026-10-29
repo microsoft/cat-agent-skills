@@ -1,0 +1,22 @@
+{
+  "name": "Clinical Docs Companion",
+  "description": "The documents that follow a signed visit note: draft the referral letter, after-visit summary and clinician handoff, build the coding rationale for codes already on the claim and check quality measures, each cited to a line of the note.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "healthcare",
+    "clinical-documentation",
+    "referral",
+    "after-visit-summary",
+    "quality-measures",
+    "coding"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SandraBcna",
+  "version": "1.0.3",
+  "createdAt": "2026-10-28",
+  "updatedAt": "2026-10-28",
+  "category": "healthcare",
+  "builtByMicrosoft": true
+}

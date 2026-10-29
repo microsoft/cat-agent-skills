@@ -1,0 +1,560 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "hls.clinical-documentation-companion.v1",
+ "title": "Clinical Documentation Companion contract v1",
+ "description": "Chains note-context -> document-derive -> coding-rationale -> quality-gap-check -> handoff-draft. Citations ride the contract: every fact, every supported claim element and every derived document carries its grounding. Plugin 1.0.1 adds additive, backward-compatible fields: messages, care_plan_update, referral_decision, halt, omission/code-change refusal logs and note_citation on gaps and unsupported flags. Plugin 1.0.2: `encounter` is optional in an unsigned-note halt record; override_attempts_refused.detected_via gains 'messages' (words from the live chat message). Plugin 1.0.3: cited_fact gains optional statements[] (one cited entry per documented medication, instruction or follow-up statement).",
+ "standards_alignment": {
+  "family": "HL7 FHIR R4 / US Core 6.1 / USCDI v3",
+  "rationale": "Clinical encounter and quality-measure data map to existing FHIR resources, so customer EHR data lands without a universal data model (Industry Templates standard section 6).",
+  "field_mappings": {
+   "encounter.patient_id": "FHIR Patient.identifier (US Core Patient)",
+   "encounter.date": "FHIR Encounter.period.start (US Core Encounter)",
+   "encounter.visit_type": "FHIR Encounter.type",
+   "note_signature": "FHIR DocumentReference.authenticator + .docStatus ('final' = signed) for the US Core Clinical Note",
+   "note_facts.*.citation.source": "FHIR DocumentReference.id of the signed note",
+   "note_facts.*.citation.locator": "line/section locator within the note narrative (DocumentReference.content)",
+   "claim.visit_level": "FHIR Claim.item.productOrService (CPT E/M level)",
+   "claim.elements[].element": "FHIR Condition.code / Claim.diagnosis.diagnosisCodeableConcept (ICD-10-CM)",
+   "quality_gap_result.measures_checked": "FHIR MeasureReport.group (quality measure evaluation)",
+   "quality_gap_result.met / gaps": "FHIR MeasureReport.group.population (numerator / care-gap)"
+  },
+  "not_mapped": [
+   "override_attempts_refused",
+   "escalations",
+   "provenance",
+   "omission_requests_refused",
+   "change_requests_refused",
+   "halt",
+   "referral_decision"
+  ],
+  "not_mapped_reason": "Refusal, escalation and provenance records are plugin governance artefacts with no honest FHIR R4 equivalent; they are deliberately left unmapped rather than forced onto a resource."
+ },
+ "type": "object",
+ "required": [
+  "contract_version",
+  "note_signature"
+ ],
+ "anyOf": [
+  {
+   "description": "Normal run: encounter is required.",
+   "required": [
+    "encounter"
+   ]
+  },
+  {
+   "description": "Unsigned-note halt (clinical-doc-rules.md #5): the halt record needs no encounter - note-context stops before extracting one.",
+   "required": [
+    "halt",
+    "note_signature"
+   ],
+   "properties": {
+    "halt": {
+     "type": "object",
+     "required": [
+      "halted"
+     ],
+     "properties": {
+      "halted": {
+       "const": "unsigned_note"
+      }
+     }
+    },
+    "note_signature": {
+     "type": "object",
+     "properties": {
+      "signed": {
+       "const": false
+      }
+     }
+    }
+   }
+  }
+ ],
+ "definitions": {
+  "citation": {
+   "type": "object",
+   "description": "Grounding for one asserted item. Rides the contract so provenance survives every hand-off (non-negotiable #4).",
+   "required": [
+    "source",
+    "locator"
+   ],
+   "properties": {
+    "source": {
+     "type": "string",
+     "description": "Signed-note document identifier (FHIR DocumentReference.id) or reference document."
+    },
+    "locator": {
+     "type": "string",
+     "description": "Line, section or span within the source."
+    },
+    "text": {
+     "type": "string",
+     "description": "Verbatim quoted evidence."
+    }
+   }
+  },
+  "cited_fact": {
+   "type": "object",
+   "required": [
+    "value",
+    "citation"
+   ],
+   "properties": {
+    "value": {
+     "type": "boolean"
+    },
+    "citation": {
+     "$ref": "#/definitions/citation"
+    },
+    "statements": {
+     "type": "array",
+     "description": "Plugin 1.0.3. Every relevant statement the note documents for a multi-statement fact (active_medications, patient_instructions, follow_up_plan, referral_indicated), each with its own citation, so downstream drafts never lose a second medication, instruction or follow-up item. When present and non-empty, `value` is true and `citation` repeats the first statement's citation.",
+     "items": {
+      "type": "object",
+      "required": [
+       "text",
+       "citation"
+      ],
+      "properties": {
+       "text": {
+        "type": "string",
+        "minLength": 1,
+        "description": "The statement as documented in the note."
+       },
+       "citation": {
+        "$ref": "#/definitions/citation"
+       }
+      }
+     }
+    }
+   }
+  },
+  "draft_document": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "required": [
+    "status",
+    "text",
+    "citations"
+   ],
+   "properties": {
+    "status": {
+     "const": "draft"
+    },
+    "action_level": {
+     "enum": [
+      "L0",
+      "L1"
+     ]
+    },
+    "text": {
+     "type": "string"
+    },
+    "citations": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/citation"
+     }
+    }
+   }
+  }
+ },
+ "properties": {
+  "contract_version": {
+   "const": "hls.clinical-documentation-companion.v1"
+  },
+  "action_level": {
+   "enum": [
+    "L0",
+    "L1"
+   ],
+   "description": "Draft-first (non-negotiable #5). L2/L3 are not permitted by this plugin."
+  },
+  "encounter": {
+   "type": "object",
+   "properties": {
+    "patient_id": {
+     "type": "string"
+    },
+    "visit_type": {
+     "type": "string"
+    },
+    "date": {
+     "type": "string"
+    }
+   },
+   "description": "Required on every payload except an unsigned-note halt record (halt.halted = 'unsigned_note' with note_signature.signed = false), where it is optional (1.0.2)."
+  },
+  "note_signature": {
+   "type": "object",
+   "description": "FHIR DocumentReference.docStatus/authenticator for the encounter note. signed must be true before any skill runs (clinical-doc-rules.md #5).",
+   "required": [
+    "signed"
+   ],
+   "properties": {
+    "signed": {
+     "type": "boolean"
+    },
+    "signed_by": {
+     "type": "string"
+    },
+    "signed_at": {
+     "type": "string"
+    },
+    "document_id": {
+     "type": "string"
+    }
+   }
+  },
+  "note_facts": {
+   "type": "object",
+   "description": "Documented findings. Every entry is a cited_fact; an uncited assertion is not documented (clinical-doc-rules.md #1).",
+   "additionalProperties": {
+    "$ref": "#/definitions/cited_fact"
+   }
+  },
+  "claim": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Visit level and diagnosis codes already on the claim; coding-rationale rationalises them, it never selects one.",
+   "properties": {
+    "visit_level": {
+     "type": "string"
+    },
+    "elements": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "required": [
+       "element",
+       "type",
+       "supported_by"
+      ],
+      "properties": {
+       "element": {
+        "type": "string"
+       },
+       "type": {
+        "enum": [
+         "visit_level",
+         "diagnosis"
+        ]
+       },
+       "description": {
+        "type": "string"
+       },
+       "supported_by": {
+        "type": "string",
+        "description": "note_facts key the coder asserts supports this element."
+       }
+      }
+     }
+    }
+   }
+  },
+  "requested_measure_status": {
+   "type": [
+    "object",
+    "null"
+   ]
+  },
+  "request_text": {
+   "type": [
+    "string",
+    "null"
+   ],
+   "description": "Verbatim requester wording; scanned deterministically for override intent (clinical-doc-rules.md #2)."
+  },
+  "quality_gap_result": {
+   "type": "object",
+   "properties": {
+    "measures_checked": {
+     "type": "integer"
+    },
+    "met": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "met_citations": {
+     "type": "object",
+     "additionalProperties": {
+      "$ref": "#/definitions/citation"
+     }
+    },
+    "gaps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "measure": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "missing_fact": {
+        "type": "string"
+       },
+       "citation": {
+        "type": "string",
+        "description": "governing rule"
+       },
+       "note_citation": {
+        "oneOf": [
+         {
+          "$ref": "#/definitions/citation"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "description": "the note's own citation for the absent/false fact, when note-context recorded one"
+       }
+      }
+     }
+    },
+    "override_attempts_refused": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "measure": {
+        "type": "string"
+       },
+       "requested": {
+        "type": "string"
+       },
+       "actual": {
+        "type": "string"
+       },
+       "detected_via": {
+        "enum": [
+         "requested_measure_status",
+         "uncited_note_fact",
+         "request_text",
+         "messages"
+        ],
+        "description": "'request_text' = wording from request_text and other configured text fields; 'messages' = wording from the live chat message(s) in `messages` (1.0.2)."
+       },
+       "evidence": {
+        "type": "string"
+       },
+       "citation": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "halted": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "source": {
+     "type": "string"
+    },
+    "omission_requests_refused": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "requested": {
+        "type": "string"
+       },
+       "evidence": {
+        "type": "string"
+       },
+       "citation": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   }
+  },
+  "coding_rationale": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "status": {
+     "enum": [
+      "draft",
+      "not_applicable"
+     ]
+    },
+    "action_level": {
+     "enum": [
+      "L0",
+      "L1"
+     ]
+    },
+    "supported": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "element": {
+        "type": "string"
+       },
+       "type": {
+        "type": "string"
+       },
+       "supported_by": {
+        "type": "string"
+       },
+       "citation": {
+        "$ref": "#/definitions/citation"
+       }
+      }
+     }
+    },
+    "unsupported_flags": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "element": {
+        "type": "string"
+       },
+       "type": {
+        "type": "string"
+       },
+       "missing_fact": {
+        "type": "string"
+       },
+       "citation": {
+        "type": "string"
+       },
+       "note_citation": {
+        "oneOf": [
+         {
+          "$ref": "#/definitions/citation"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      }
+     }
+    },
+    "source": {
+     "type": "string"
+    },
+    "change_requests_refused": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "requested": {
+        "type": "string"
+       },
+       "evidence": {
+        "type": "string"
+       },
+       "citation": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "reason": {
+     "type": "string"
+    }
+   }
+  },
+  "referral_letter": {
+   "$ref": "#/definitions/draft_document"
+  },
+  "after_visit_summary": {
+   "$ref": "#/definitions/draft_document"
+  },
+  "handoff_note": {
+   "$ref": "#/definitions/draft_document"
+  },
+  "escalations": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "provenance": {
+   "type": "object"
+  },
+  "messages": {
+   "type": [
+    "array",
+    "null"
+   ],
+   "items": {
+    "type": "string"
+   },
+   "description": "The live requester message(s) from chat, verbatim. Every skill appends the user's message here before running the engine so override, code-change and omission wording is scanned deterministically (clinical-doc-rules.md #2, #7)."
+  },
+  "care_plan_update": {
+   "$ref": "#/definitions/draft_document"
+  },
+  "referral_decision": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Set by document-derive whenever a referral is requested or considered. drafted=false with the reason and citation when the note does not indicate one (referral_letter is then null).",
+   "required": [
+    "drafted",
+    "reason"
+   ],
+   "properties": {
+    "drafted": {
+     "type": "boolean"
+    },
+    "reason": {
+     "type": "string"
+    },
+    "citation": {
+     "$ref": "#/definitions/citation"
+    }
+   }
+  },
+  "halt": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Written by any skill that stops before producing output (e.g. unsigned note). Nothing else is produced.",
+   "required": [
+    "halted",
+    "reason"
+   ],
+   "properties": {
+    "halted": {
+     "type": "string",
+     "enum": [
+      "unsigned_note",
+      "missing_input",
+      "engine_error"
+     ]
+    },
+    "reason": {
+     "type": "string"
+    },
+    "skill": {
+     "type": "string"
+    },
+    "routee": {
+     "type": "string"
+    }
+   }
+  }
+ },
+ "x-plugin-version": "1.0.2"
+}

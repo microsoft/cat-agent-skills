@@ -1,0 +1,17 @@
+{
+  "_comment": "Customer-editable. Canonical source_facts keys for hls.reg-submission-authoring.v1. source-ingest writes these exact keys; section-draft and consistency-check match on them. Descriptions say what the key holds, not what its value is.",
+  "naming_rule": "snake_case; subject/population counts end in _n; dates end in _date; one verbatim string per reported result (keep estimate, CI and p-value together - never split a result into several keys)",
+  "unlisted_fields": "Name by naming_rule, flag it as 'not in field-dictionary' in the ingest summary, and ask the sponsor to add it here",
+  "fields": {
+    "enrolled_n": "Count of subjects enrolled, verbatim from the subject-disposition TLF",
+    "randomized_n": "Count of subjects randomized, verbatim from the subject-disposition TLF",
+    "completed_n": "Count of subjects who completed the study, verbatim from the subject-disposition TLF",
+    "safety_population_n": "Count of subjects in the safety population, verbatim from the subject-disposition TLF",
+    "population_definition": "Analysis-population definition, verbatim from the SAP analysis-populations section",
+    "database_lock_date": "Database lock date, verbatim from the TLF header",
+    "primary_endpoint_result": "Primary endpoint result as one verbatim string from the primary-endpoint TLF",
+    "teae_subjects_n": "Count of subjects with >=1 treatment-emergent adverse event, verbatim from the TEAE TLF",
+    "serious_ae_subjects_n": "Count of subjects with >=1 serious adverse event, verbatim from the SAE TLF",
+    "data_cutoff_date": "Data cut-off date, verbatim from the TLF header"
+  }
+}

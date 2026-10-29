@@ -1,0 +1,14 @@
+{
+  "diabetic_foot_exam": {
+    "name": "Annual diabetic foot exam",
+    "required_fact_key": "foot_exam_documented",
+    "aliases": ["foot exam", "foot-exam", "diabetic foot", "monofilament"],
+    "standard_reference": "HL7 FHIR R4 Observation (US Core Simple Observation); USCDI Clinical Tests"
+  },
+  "statin_therapy": {
+    "name": "Statin therapy for diabetic patients",
+    "required_fact_key": "statin_prescribed_or_documented_contraindication",
+    "aliases": ["statin", "atorvastatin", "lipid therapy"],
+    "standard_reference": "HL7 FHIR R4 MedicationRequest (US Core MedicationRequest); USCDI Medications"
+  }
+}

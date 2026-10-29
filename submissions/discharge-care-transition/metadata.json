@@ -1,0 +1,22 @@
+{
+  "name": "Discharge Transition Packet",
+  "description": "The packet for a patient going home from hospital: reconcile admission, inpatient and discharge medications, draft the discharge summary and plain language patient instructions, and build a dated follow-up checklist with owners, each cited to the record.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "healthcare",
+    "discharge",
+    "care-transition",
+    "medication-reconciliation",
+    "patient-instructions",
+    "follow-up"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SandraBcna",
+  "version": "1.0.3",
+  "createdAt": "2026-10-28",
+  "updatedAt": "2026-10-28",
+  "category": "healthcare",
+  "builtByMicrosoft": true
+}

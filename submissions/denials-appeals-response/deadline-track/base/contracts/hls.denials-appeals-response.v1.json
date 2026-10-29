@@ -1,0 +1,352 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "hls.denials-appeals-response.v1",
+  "title": "Denials & Appeals Response contract v1",
+  "description": "Chains denial-classify -> policy-retrieve -> evidence-assemble -> deadline-track (coding decision + clock) -> appeal-draft -> deadline-track (final clock check). Citations ride this payload so provenance survives every hand-off. Action level L0 (draft-only); nothing on this contract is ever submitted by the plugin.",
+  "standards_alignment": {
+    "family": "X12 835/837 with CARC/RARC denial reason codes",
+    "standards": [
+      "ASC X12N 835 Health Care Claim Payment/Advice (v5010)",
+      "ASC X12N 837P/837I Health Care Claim (v5010)",
+      "CARC (Claim Adjustment Reason Codes) and RARC (Remittance Advice Remark Codes), X12/WPC code lists"
+    ],
+    "field_map": {
+      "denial.payer": "835 loop 1000A payer name (N1*PR)",
+      "denial.claim_id": "835 CLP01 patient control number / 837 CLM01",
+      "denial.claim_value": "835 CLP03 total claim charge amount / 837 CLM02 total claim charge amount",
+      "denial.paid_amount": "835 CLP04 claim payment amount",
+      "denial.reason_code": "835 CAS02 claim adjustment reason code (CARC)",
+      "denial.remark_codes": "835 loop 2100 MIA/MOA remark codes (claim level) or loop 2110 LQ*HE remark codes (service level) (RARC); record which segment was used",
+      "denial.adjustment_group_code": "835 CAS01 claim adjustment group code (CO/PR/OA/PI)",
+      "denial.adjustment_amount": "835 CAS03 adjustment amount",
+      "coding_request.requested_code": "837 SV101-2 / SV202-2 procedure code (CPT/HCPCS) proposed on a corrected claim",
+      "denial.original_code": "837 SV101-2 / SV202-2 procedure code as originally submitted"
+    },
+    "not_mapped": {
+      "denial.denial_date": "no single X12 element; the date printed on the denial letter / remittance (835: DTM*405 production date when present). When the document carries more than one candidate date and they differ, leave unset and escalate - [TO CONFIGURE: payer-specific rule for which date starts the appeal window]",
+      "denial.recoverable_value": "derived locally, typically CLP03 minus CLP04 (charge less payment); not an X12 element",
+      "deadline_result.*": "computed by deadline_engine from payer contract terms; outside the X12 transaction set",
+      "queue_ranked.*": "local worklist ordering; outside the X12 transaction set",
+      "denial.as_of": "the date the classification was performed (snapshot date); never used as 'today' for deadline arithmetic"
+    }
+  },
+  "type": "object",
+  "required": [
+    "contract_version",
+    "denial"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "hls.denials-appeals-response.v1"
+    },
+    "denial": {
+      "type": "object",
+      "properties": {
+        "payer": {
+          "type": "string"
+        },
+        "claim_id": {
+          "type": "string"
+        },
+        "denial_date": {
+          "type": "string"
+        },
+        "as_of": {
+          "type": "string",
+          "description": "Snapshot date the denial was classified. deadline_engine counts days from the real current date (or --today to reproduce a demo snapshot), never from as_of (denials-rules.md #1)."
+        },
+        "reason_code": {
+          "type": "string",
+          "description": "CARC code or local reason label (835 CAS02)."
+        },
+        "remark_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "RARC remark codes (835 MIA/MOA or LQ*HE)."
+        },
+        "claim_value": {
+          "type": "number"
+        },
+        "recoverable_value": {
+          "type": "number",
+          "description": "Amount still recoverable on appeal; the second ranking key (denials-rules.md #3)."
+        }
+      },
+      "required": [
+        "payer",
+        "denial_date"
+      ]
+    },
+    "queue": {
+      "type": "array",
+      "description": "Other denials awaiting work. Input to the deterministic ranking in denials-rules.md #3.",
+      "items": {
+        "type": "object",
+        "required": [
+          "claim_id",
+          "payer",
+          "denial_date"
+        ],
+        "properties": {
+          "claim_id": {
+            "type": "string"
+          },
+          "payer": {
+            "type": "string"
+          },
+          "denial_date": {
+            "type": "string"
+          },
+          "recoverable_value": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "queue_ranked": {
+      "type": "array",
+      "description": "Engine output: queue ordered by deadline ascending then recoverable_value descending, never by ease.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer"
+          },
+          "claim_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "payer": {
+            "type": "string"
+          },
+          "deadline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Null when the payer has no configured appeal window; such rows sort last and are escalated, never dropped."
+          },
+          "days_remaining": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "recoverable_value": {
+            "type": "number"
+          },
+          "rank_basis": {
+            "type": "string"
+          },
+          "deadline_status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "urgent",
+              "expired",
+              "unconfigured"
+            ]
+          }
+        }
+      }
+    },
+    "coding_request": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "requested_code": {
+          "type": "string"
+        },
+        "requested_by": {
+          "type": "string"
+        }
+      }
+    },
+    "chart_evidence": {
+      "type": "object",
+      "description": "Clinical evidence with its citations. supports_requested_code alone is never sufficient - denials-rules.md #2 requires a matching entry in citations[].",
+      "properties": {
+        "supports_requested_code": {
+          "type": "boolean"
+        },
+        "citations": {
+          "type": "array",
+          "description": "Citations ride the contract so provenance survives the hand-off.",
+          "items": {
+            "type": "object",
+            "required": [
+              "note",
+              "date"
+            ],
+            "properties": {
+              "note": {
+                "type": "string",
+                "description": "Specific source note, e.g. 'Cardiology progress note'."
+              },
+              "date": {
+                "type": "string",
+                "description": "Date of that note (ISO-8601)."
+              },
+              "supports_code": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The procedure code this note substantiates; must equal coding_request.requested_code for a recode to be honoured."
+              },
+              "excerpt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "policy_citations": {
+      "type": "array",
+      "description": "Payer policy / contract clauses relied on, attached by policy-retrieve and carried to every later skill.",
+      "items": {
+        "type": "object",
+        "required": [
+          "clause_id",
+          "source"
+        ],
+        "properties": {
+          "clause_id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "Document the clause was read from."
+          },
+          "section": {
+            "type": "string"
+          },
+          "retrieved_on": {
+            "type": "string"
+          },
+          "applies_to_reason_code": {
+            "type": "string",
+            "description": "CARC/reason code this clause governs."
+          }
+        }
+      }
+    },
+    "deadline_result": {
+      "type": "object",
+      "properties": {
+        "deadline": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Null only on the unconfigured-payer path, where no window may be assumed (denials-rules.md #1)."
+        },
+        "days_remaining": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Days from today (real current date, or --today) to the deadline; negative when expired. Null only on the unconfigured-payer path."
+        },
+        "deadline_status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "urgent",
+            "expired",
+            "unconfigured"
+          ],
+          "description": "open; urgent when days_remaining <= config.urgent_threshold_days (#6); expired when days_remaining < 0 (#7); unconfigured when no window exists (#1)."
+        },
+        "coding_decision": {
+          "type": "string",
+          "enum": [
+            "not_requested",
+            "supported_by_chart",
+            "refused_evidence_gap",
+            "n/a"
+          ]
+        },
+        "coding_evidence_basis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The cited note and date that let a recode be honoured; null whenever no recode was honoured."
+        },
+        "policy_basis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "clause_id values from policy_citations carried into the engine result."
+        },
+        "action_level": {
+          "type": "string",
+          "enum": [
+            "L0",
+            "L1"
+          ],
+          "description": "L0 - the engine only computes and drafts; nothing is submitted."
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "deadline",
+        "days_remaining",
+        "coding_decision",
+        "source",
+        "deadline_status"
+      ]
+    },
+    "appeal_draft": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Draft text only. There is no submitted state on this contract - submission happens outside the plugin."
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generated_at": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "x-plugin-version": "1.0.2"
+}

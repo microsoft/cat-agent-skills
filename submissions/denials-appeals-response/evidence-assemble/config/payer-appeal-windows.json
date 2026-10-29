@@ -1,0 +1,13 @@
+{
+  "urgent_threshold_days": 5,
+  "payers": {
+    "Contoso Health Plan": {
+      "appeal_window_days": 30,
+      "level": "first-level clinical appeal"
+    },
+    "Fabrikam Insurance": {
+      "appeal_window_days": 60,
+      "level": "first-level clinical appeal"
+    }
+  }
+}

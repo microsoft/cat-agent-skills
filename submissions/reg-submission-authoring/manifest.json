@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.3",
+  "id": "61510a50-db99-40cf-b983-3cba73626708",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Reg Submission Authoring",
+    "full": "Reg Submission Authoring for Cowork"
+  },
+  "description": {
+    "short": "Regulatory submissions: plan sections, draft from cited sources, check the facts",
+    "full": "Reg Submission Authoring turns a locked protocol, statistical analysis plan and tables, listings and figures into a cited first draft of a clinical study report or 510(k) section set. It plans the sections, drafts each one from source facts, checks every number and population against the sources and assembles the draft with its open items. It never files or submits anything.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#C239B3",
+  "agentSkills": [
+    {
+      "folder": "source-ingest"
+    },
+    {
+      "folder": "section-plan"
+    },
+    {
+      "folder": "section-draft"
+    },
+    {
+      "folder": "consistency-check"
+    },
+    {
+      "folder": "submission-assemble"
+    }
+  ]
+}
