@@ -1,0 +1,12 @@
+{
+  "name": "Accounting for Cowork",
+  "description": "Reconcile accounts, prepare journal entries, analyze variances, and report. Frontier only.",
+  "platforms": ["Cowork"],
+  "category": "accounting",
+  "builtByMicrosoft": true,
+  "tags": ["accounting", "reconciliation", "financial-reporting"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "version": "1.0.2",
+  "createdAt": "2026-10-31"
+}

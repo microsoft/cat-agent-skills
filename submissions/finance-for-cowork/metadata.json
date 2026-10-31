@@ -1,0 +1,12 @@
+{
+  "name": "Finance for Cowork",
+  "description": "Finance close, review prep, audits, and three-statement, DCF and LBO models.",
+  "platforms": ["Cowork"],
+  "category": "finance",
+  "builtByMicrosoft": true,
+  "tags": ["finance", "financial-modeling", "reporting"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "version": "1.0.7",
+  "createdAt": "2026-10-31"
+}

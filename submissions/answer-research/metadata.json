@@ -1,0 +1,11 @@
+{
+  "name": "Answer Research",
+  "description": "Research source-backed answers to support, policy, eligibility, and troubleshooting questions with explicit evidence gaps.",
+  "platforms": ["Cowork"],
+  "category": "service",
+  "builtByMicrosoft": true,
+  "tags": ["customer-service", "research", "troubleshooting"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

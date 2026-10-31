@@ -1,0 +1,11 @@
+{
+  "name": "Customer Engagement and Deal Risk Insights",
+  "description": "Explain customer engagement and deal momentum with evidence-backed risks, blockers, and next actions.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "customer-engagement", "deal-risk"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

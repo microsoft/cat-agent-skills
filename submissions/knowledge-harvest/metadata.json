@@ -1,0 +1,11 @@
+{
+  "name": "Knowledge Harvest",
+  "description": "Turn verified support resolutions into reviewable, reusable knowledge while removing identifying details.",
+  "platforms": ["Cowork"],
+  "category": "service",
+  "builtByMicrosoft": true,
+  "tags": ["customer-service", "knowledge-management", "case-resolution"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

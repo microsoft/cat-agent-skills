@@ -1,0 +1,57 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.0",
+  "id": "05473f50-507a-47ae-bfdd-3c9ce144ac4b",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://go.microsoft.com/fwlink/?linkid=521839",
+    "termsOfUseUrl": "https://go.microsoft.com/fwlink/?linkid=530144"
+  },
+  "name": {
+    "short": "Education for Cowork",
+    "full": "Education for Cowork"
+  },
+  "description": {
+    "short": "Helps education teams with teaching, governance, and institution workflows.",
+    "full": "Helps education teams run the work that repeats each term.\n\nThis plugin offers the following functionality:\n\n- Accessibility audits\n- Discussion patterns\n- Course retrospectives\n- Substitute packs\n- Governance reviews\n- Accreditation evidence\n- Policy rollouts\n- Staff AI adoption\n- Weekly and research briefs.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "outline": "graduation-hat-outline-white-32.png",
+    "color": "graduation-hat-color-192.png"
+  },
+  "accentColor": "#0078D4",
+  "agentSkills": [
+    {
+      "folder": "accessible-learning-materials"
+    },
+    {
+      "folder": "ai-rollout-education"
+    },
+    {
+      "folder": "discussion-insights-for-education"
+    },
+    {
+      "folder": "evidence-package-for-education"
+    },
+    {
+      "folder": "governance-review-for-education"
+    },
+    {
+      "folder": "instructional-continuity"
+    },
+    {
+      "folder": "instructional-retrospective"
+    },
+    {
+      "folder": "policy-change-pack-for-education"
+    },
+    {
+      "folder": "research-project-brief"
+    },
+    {
+      "folder": "weekly-brief-for-education"
+    }
+  ]
+}

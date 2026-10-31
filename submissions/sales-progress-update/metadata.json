@@ -1,0 +1,11 @@
+{
+  "name": "Sales Progress Update",
+  "description": "Create a sales progress update covering work completed, deal movement, forecast position, and help needed.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "reporting", "forecasting"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

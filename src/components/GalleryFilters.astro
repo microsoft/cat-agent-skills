@@ -2,6 +2,7 @@
 import { PLATFORMS } from "../lib/skills";
 import { FORMAT_LABELS } from "../lib/gallery-filters";
 import { CATEGORIES, CATEGORY_LABELS } from "../lib/categories";
+import ContributorAvatar from "./ContributorAvatar.astro";
 
 interface Props {
   tags: [string, number][];
@@ -88,6 +89,7 @@ const { tags, contributors, total } = Astro.props;
           {contributors.map((contributor) => (
             <label class="author-option" data-author-option={contributor.key} data-author-name={contributor.name} data-author-search={`${contributor.name} ${contributor.login}`.toLowerCase()}>
               <input type="checkbox" name="filter-author" value={contributor.key} class="h-4 w-4 shrink-0 accent-accent" />
+              <span class="h-8 w-8 shrink-0"><ContributorAvatar name={contributor.name} login={contributor.login} /></span>
               <span class="min-w-0 flex-1">
                 <span class="block truncate text-sm font-medium">{contributor.name}</span>
                 {contributor.login && <span class="block truncate text-xs text-muted">@{contributor.login}</span>}

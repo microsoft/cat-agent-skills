@@ -1,0 +1,11 @@
+{
+  "name": "Deal Catch-up",
+  "description": "Summarize what changed across a scoped set of deals, separating customer movement from record housekeeping.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "deal-updates", "pipeline"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

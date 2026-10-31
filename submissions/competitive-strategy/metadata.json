@@ -1,0 +1,11 @@
+{
+  "name": "Competitive Strategy",
+  "description": "Build customer-specific competitive positioning with supported differentiators, tradeoffs, and objection responses.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "competitive-strategy", "positioning"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}
