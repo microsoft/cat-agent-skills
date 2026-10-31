@@ -1,0 +1,8 @@
+{
+  "addendumVersion": "1.0",
+  "audienceRestrictions": {
+    "allowedCommonAudiences": [
+      "CopilotWW"
+    ]
+  }
+}

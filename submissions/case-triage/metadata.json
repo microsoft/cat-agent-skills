@@ -1,0 +1,11 @@
+{
+  "name": "Case Triage",
+  "description": "Prioritize support issues using impact, deadlines, commitments, and evidence-backed urgency.",
+  "platforms": ["Cowork"],
+  "category": "service",
+  "builtByMicrosoft": true,
+  "tags": ["customer-service", "triage", "prioritization"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

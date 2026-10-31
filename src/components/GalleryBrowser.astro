@@ -21,7 +21,7 @@ const microsoft = skills.filter(({ data }) => data.builtByMicrosoft);
 const microsoftPreview = microsoft.toSorted((a, b) => compareCategoryThenName(a.data, b.data));
 const community = skills.filter(({ data }) => !data.builtByMicrosoft);
 const collection = microsoftOnly ? microsoft : skills;
-const gridItems = microsoftOnly ? microsoft : community;
+const gridItems = microsoftOnly ? microsoftPreview : community;
 const tagCounts = new Map<string, number>();
 const contributorMap = new Map<string, { key: string; name: string; login: string; count: number }>();
 for (const { data } of collection) {
@@ -88,11 +88,12 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
   <section class="mx-auto max-w-8xl px-4 py-7 sm:px-6">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-xl font-bold tracking-tight text-fg">
-        {microsoftOnly ? "Microsoft submissions" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
+        {microsoftOnly ? "Built by Microsoft" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
       </h2>
       <label class="flex items-center gap-2 text-sm text-muted">
         <span class="hidden sm:inline">Sort by</span>
         <select id="sort-select" aria-label="Sort submissions" class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none">
+          {microsoftOnly && <option value="category">Category, then name (A-Z)</option>}
           <option value="featured">Featured</option>
           <option value="rating">Top rated</option>
           <option value="downloads">Most downloaded</option>

@@ -1,0 +1,11 @@
+{
+  "name": "Stakeholder & Decision Map",
+  "description": "Map a deal's buying group, engagement, and decision process, highlighting missing stakeholders and evidence.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "stakeholders", "decision-making"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

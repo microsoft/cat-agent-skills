@@ -1,0 +1,11 @@
+{
+  "name": "Post-Meeting Follow-Up",
+  "description": "Capture sales meeting decisions and commitments, propose next actions, and draft a reviewable customer follow-up.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "meetings", "follow-up"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

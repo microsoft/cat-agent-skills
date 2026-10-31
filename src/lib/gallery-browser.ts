@@ -1,4 +1,4 @@
-import { compareNewest, compareRecentlyUpdated } from "./gallery-sort";
+import { compareCategoryThenName, compareNewest, compareRecentlyUpdated, defaultGallerySort } from "./gallery-sort";
 import { GalleryHistory } from "./gallery-history";
 import { PLATFORMS } from "./skills";
 import { CATEGORIES, CATEGORY_LABELS } from "./categories";
@@ -7,13 +7,15 @@ import {
   type FilterableSubmission, type GalleryFilters,
 } from "./gallery-filters";
 
-const SORTS = ["featured", "rating", "downloads", "name", "newest", "updated"] as const;
+const SORTS = ["category", "featured", "rating", "downloads", "name", "newest", "updated"] as const;
 type SortMode = (typeof SORTS)[number];
 type Refinement = "types" | "tags" | "authors";
 const BATCH = 12;
 const categoryNames = new Map<string, string>(CATEGORIES.map((category) => [category, CATEGORY_LABELS[category]]));
 
 export function initGalleryBrowser(root: HTMLElement) {
+  const defaultSort = defaultGallerySort(root.dataset.scope);
+  const availableSorts = SORTS.filter((sort) => sort !== "category" || defaultSort === "category");
   function get<T extends Element>(selector: string): T {
     const element = root.querySelector<T>(selector);
     if (!element) throw new Error(`Missing gallery element: ${selector}`);
@@ -74,7 +76,7 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   let applied = copyGalleryFilters(parseGalleryFilters(new URLSearchParams(location.search)));
   let draft = copyGalleryFilters(applied);
-  let sortMode: SortMode = "featured";
+  let sortMode: SortMode = defaultSort;
   let shown = BATCH;
   let matched: HTMLElement[] = [];
   let microsoftMatched: HTMLElement[] = [];
@@ -85,7 +87,7 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function queryString() {
     const params = galleryFilterParams(applied);
-    if (sortMode !== "featured") params.set("sort", sortMode);
+    if (sortMode !== defaultSort) params.set("sort", sortMode);
     const query = params.toString();
     return query ? `?${query}` : "";
   }
@@ -100,7 +102,13 @@ export function initGalleryBrowser(root: HTMLElement) {
   const number = (element: HTMLElement, key: string) => Number(element.dataset[key] ?? "0") || 0;
   function sorted(list: HTMLElement[]) {
     const byName = (a: HTMLElement, b: HTMLElement) => (a.dataset.name ?? "").localeCompare(b.dataset.name ?? "");
+    const categorized = (element: HTMLElement) => {
+      const category = CATEGORIES.find((value) => value === element.dataset.category);
+      if (!category) throw new Error(`Unknown gallery category: ${element.dataset.category}`);
+      return { category, name: element.dataset.name ?? "" };
+    };
     return [...list].sort((a, b) => {
+      if (sortMode === "category") return compareCategoryThenName(categorized(a), categorized(b));
       const sampleDiff = number(a, "sample") - number(b, "sample");
       if (sampleDiff) return sampleDiff;
       switch (sortMode) {
@@ -397,7 +405,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     search.focus({ preventScroll: true });
   });
   sortSelect.addEventListener("change", () => {
-    const selected = SORTS.find((sort) => sort === sortSelect.value);
+    const selected = availableSorts.find((sort) => sort === sortSelect.value);
     if (!selected) throw new Error(`Unknown gallery sort: ${sortSelect.value}`);
     sortMode = selected;
     flushSearch();
@@ -426,7 +434,7 @@ export function initGalleryBrowser(root: HTMLElement) {
       history.replaceState(history.state, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
     }
     draft = copyGalleryFilters(applied);
-    sortMode = SORTS.find((sort) => sort === params.get("sort")) ?? "featured";
+    sortMode = availableSorts.find((sort) => sort === params.get("sort")) ?? defaultSort;
     sortSelect.value = sortMode;
     search.value = applied.query;
     refilter(false);

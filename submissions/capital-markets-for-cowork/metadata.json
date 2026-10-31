@@ -1,0 +1,12 @@
+{
+  "name": "Capital Markets for Cowork",
+  "description": "Analyst work for banking, research and private equity.",
+  "platforms": ["Cowork"],
+  "category": "capital-markets",
+  "builtByMicrosoft": true,
+  "tags": ["capital-markets", "investment-research", "due-diligence"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "version": "1.0.7",
+  "createdAt": "2026-10-31"
+}

@@ -21,9 +21,15 @@ deployed as a static site to GitHub Pages.
   arrow links. The preview uses the community grid's responsive card widths
   and the same page background. It is ordered by category, then title (A-Z),
   independently of the community sort selection.
+  The Microsoft-only collection also defaults to category (A-Z), then name
+  within each category. Its sort menu still offers alternative orders; the
+  community gallery continues to default to Featured.
   The catalog includes 20 industry plugins (10 Manufacturing and 10 Retail & CPG)
   from [industry-templates at pinned commit e4a0ab3](https://github.com/SravaniSeethi/industry-templates/tree/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682),
   with original source and license notices retained.
+  It also includes five launch plugins and 14 individual Sales and Service
+  skills from the Copilot Cowork team, attributed with the official Copilot
+  icon. Accounting for Cowork is currently Frontier-only.
 - **Infinite-scroll galleries** with compact, consistently sized cards,
   category icons and quiet category labels for Microsoft submissions, and auto-generated monograms for
   community submissions (no image assets to maintain).
@@ -36,7 +42,8 @@ deployed as a static site to GitHub Pages.
   Selected filters use the same theme-aware accent as the contribution and
   filter-apply actions, with a tinted fill, colored text, and a visible outline.
 - **Multi-select categories** alongside products: Manufacturing, Retail & CPG,
-  Productivity and Agent development. Categories match **any selected value**
+  Productivity, Agent development, Education, Legal, Sales, Service, Finance,
+  Capital Markets, and Accounting. Categories match **any selected value**
   (OR), then intersect with the product and other filters (AND). Selecting an
   active category removes it; no categories selected means all categories.
 - **Client-side search** and a **Filters dialog** for Format, Tags, and

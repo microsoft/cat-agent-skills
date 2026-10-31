@@ -1,0 +1,11 @@
+{
+  "name": "Case Preparation Brief",
+  "description": "Prepare a decision-ready support case brief with status, history, open commitments, and the recommended next step.",
+  "platforms": ["Cowork"],
+  "category": "service",
+  "builtByMicrosoft": true,
+  "tags": ["customer-service", "case-management", "handoff"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}

@@ -1,6 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compareCategoryThenName, compareNewest, compareRecentlyUpdated } from "../src/lib/gallery-sort";
+import { compareCategoryThenName, compareNewest, compareRecentlyUpdated, defaultGallerySort } from "../src/lib/gallery-sort";
+
+test("Microsoft collections default to category sorting without changing community defaults", () => {
+  assert.equal(defaultGallerySort("microsoft"), "category");
+  assert.equal(defaultGallerySort("all"), "featured");
+  assert.equal(defaultGallerySort(undefined), "featured");
+});
+
+test("Microsoft category sorting groups launch categories and orders names within each group", () => {
+  const submissions = [
+    { category: "sales", name: "Alpha sales" },
+    { category: "service", name: "Alpha service" },
+    { category: "accounting", name: "Zulu accounting" },
+    { category: "sales", name: "Zulu sales" },
+    { category: "accounting", name: "Alpha accounting" },
+  ] as const;
+  assert.deepEqual(submissions.toSorted(compareCategoryThenName).map(({ name }) => name), [
+    "Alpha accounting", "Zulu accounting", "Alpha sales", "Zulu sales", "Alpha service",
+  ]);
+});
 
 const item = (
   name: string,

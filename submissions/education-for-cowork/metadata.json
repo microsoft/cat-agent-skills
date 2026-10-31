@@ -1,0 +1,12 @@
+{
+  "name": "Education for Cowork",
+  "description": "Helps education teams with teaching, governance, and institution workflows.",
+  "platforms": ["Cowork"],
+  "category": "education",
+  "builtByMicrosoft": true,
+  "tags": ["education", "teaching", "governance"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "version": "1.0.0",
+  "createdAt": "2026-10-31"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Meeting Prep",
+  "description": "Prepare an evidence-backed brief for an upcoming customer conversation, including what to learn, say, prove, and ask.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "meeting-preparation", "customer-engagement"],
+  "author": "Copilot Cowork team",
+  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "createdAt": "2026-10-31"
+}
