@@ -1,0 +1,12 @@
+{
+  "tool_wear": {
+    "containment": [{"action": "100% sort of on-hand lot; quarantine suspect WIP"}],
+    "corrective": [{"action": "replace boring insert; first-article verify next lot", "metric": "bore Cpk >= 1.33 next 3 lots", "window_days": 45}],
+    "preventive": [{"action": "add tool-life counter to routing with forced change-out", "metric": "zero oversize-bore NCRs in 90 days", "window_days": 90}]
+  },
+  "calibration_drift": {
+    "containment": [{"action": "quarantine lots measured on the suspect gauge since last calibration"}],
+    "corrective": [{"action": "recalibrate cell gauges; re-verify held lots on CMM", "metric": "gauge R&R within limits", "window_days": 30}],
+    "preventive": [{"action": "enforce calibration recall gate at setup across all cells running affected parts", "metric": "zero out-of-cal gauges in monthly recall audit x3", "window_days": 90}]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "{{ client_name }}",
+        "Amount: {{ amount }}"
+      ],
+      "word/header1.xml": [
+        "Confidential"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p1#0-17",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": false,
+        "decision_required": false,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/document.xml#p2#8-20",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "amount"
+      }
+    ],
+    "findings": [
+      "field_codes_present"
+    ]
+  },
+  "runs": [
+    {
+      "name": "preserve field result and fill ordinary text",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p2#8-20",
+            "decision": "field",
+            "field": "amount"
+          }
+        ],
+        "fields": [
+          {
+            "name": "amount",
+            "type": "string",
+            "source": "amount"
+          }
+        ]
+      },
+      "values": {
+        "amount": "42"
+      },
+      "expect": {
+        "result": "needs_review",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "{{ client_name }}",
+            "Amount: 42"
+          ],
+          "word/header1.xml": [
+            "Confidential"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ]
+        },
+        "review_codes": [
+          "template_finding",
+          "unfillable"
+        ]
+      },
+      "rerun": false
+    }
+  ]
+}

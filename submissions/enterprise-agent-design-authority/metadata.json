@@ -1,4 +1,5 @@
 {
+  "category": "agent-development",
   "name": "Enterprise Agent Design Authority (EADA)",
   "description": "An enterprise design review framework that helps architects build secure, scalable, governable, and production-ready Microsoft Copilot Studio agents.",
   "platforms": ["Copilot Studio", "Cowork"],

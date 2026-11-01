@@ -1,0 +1,22 @@
+{
+  "name": "Supplier & Vendor Performance Review",
+  "description": "A defensible supplier review pack assembled from records instead of a week of spreadsheet work: roll up the OTIF, defect and dispute scorecard with trends, cluster recurring issues with evidence, retrieve the governing trading term, and draft the agenda, corrective action request and commitment tracker.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "retailer",
+    "merchandising",
+    "supplier",
+    "vendor",
+    "otif",
+    "scorecard"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

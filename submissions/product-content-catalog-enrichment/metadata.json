@@ -1,0 +1,22 @@
+{
+  "name": "Product Content & Catalog Enrichment",
+  "description": "Turn incomplete supplier data into channel-ready, claim-safe product records: normalise attributes against the taxonomy with GTIN validation, score completeness per channel, validate claims and regulated terms against the approved claim library, and draft the descriptions and review packet.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "retailer",
+    "merchandising",
+    "pim",
+    "gdsn",
+    "gtin",
+    "catalog"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-05",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

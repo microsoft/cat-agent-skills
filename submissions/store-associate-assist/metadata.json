@@ -1,0 +1,23 @@
+{
+  "name": "Store Associate Assist",
+  "description": "The associate's cited answer on the shop floor: takes a question with store, role and department context, retrieves the applicable policy, product attributes and current promotion, resolves the policy and compares products deterministically, and returns a cited answer or a drafted escalation.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "retailer",
+    "store-operations",
+    "associate",
+    "policy",
+    "promotion",
+    "product-compare"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-05",
+  "updatedAt": "2026-09-08",
+  "featured": true,
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}
