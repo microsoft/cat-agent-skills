@@ -1,0 +1,23 @@
+{
+  "name": "Maintenance Triage",
+  "description": "Move a fault forward: read the fault note, alarm codes and asset history, rank the likely failure modes against OEM manuals and past work orders, prioritise by asset criticality and downtime cost, and draft the work-order update with a recommended action.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "maintenance",
+    "triage",
+    "cmms",
+    "reliability",
+    "failure-mode",
+    "work-order"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-08-01",
+  "updatedAt": "2026-09-04",
+  "featured": true,
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}

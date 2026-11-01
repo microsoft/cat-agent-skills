@@ -130,6 +130,8 @@ const FIELD_ORDER = [
   "agentDescription",
   "platforms",
   "type",
+  "category",
+  "builtByMicrosoft",
   "tags",
   "author",
   "authorUrl",
@@ -238,6 +240,8 @@ function buildContent(meta: Record<string, unknown>, body: string): string {
  */
 export const CATALOG_PASSTHROUGH = [
   "platforms",
+  "category",
+  "builtByMicrosoft",
   "tags",
   "author",
   "authorUrl",
