@@ -1,0 +1,19 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "mfg.supplier-qualification.v1",
+  "title": "Supplier Qualification contract v1",
+  "description": "Chains dossier-ingest -> risk-score -> avl-compare -> qualification-memo. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "supplier", "category"],
+  "properties": {
+    "contract_version": { "const": "mfg.supplier-qualification.v1" },
+    "supplier": { "type": "object" }, "category": { "type": "string" },
+    "dossier": { "type": "object" },
+    "risk": { "type": "object", "properties": {
+        "quality": { "type": "object" }, "financial": { "type": "object" }, "geographic": { "type": "object" },
+        "overall_band": { "enum": ["low", "moderate", "high"] },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "avl": { "type": "object" },
+    "recommendation": { "type": "object", "properties": {
+        "outcome": { "enum": ["qualify", "conditional", "do_not_qualify"] },
+        "conditions": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

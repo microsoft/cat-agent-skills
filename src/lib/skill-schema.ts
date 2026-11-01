@@ -7,6 +7,7 @@
  */
 import { z } from "astro/zod";
 import { PLATFORMS } from "./skills";
+import { CATEGORIES } from "./categories";
 
 /** Zod schema for a skill's frontmatter metadata. */
 export const skillSchema = z.object({
@@ -26,6 +27,8 @@ export const skillSchema = z.object({
   // Scout automation (a scheduled `.json` of ordered prompt steps). Derived by
   // the importer, not authored; defaults keep existing skills unchanged.
   type: z.enum(["skill", "plugin", "automation"]).default("skill"),
+  category: z.enum(CATEGORIES).default("productivity"),
+  builtByMicrosoft: z.boolean().default(false),
   tags: z.array(z.string()).nonempty(),
   // Human-readable author (person or team) shown on the gallery card and detail
   // page. Required: every submission must declare who authored it. Comes from
@@ -39,8 +42,9 @@ export const skillSchema = z.object({
     })
     .trim()
     .min(1, "author must not be empty"),
-  // Optional URL to the author's website / profile, shown as a link on the
-  // skill page when an `author` is also present.
+  // Optional author website/profile URL retained as metadata. The importer
+  // derives authorGithub from a github.com/<login> URL unless explicitly set.
+  // Gallery bylines link to the contributor-filtered gallery, not this URL.
   authorUrl: z.string().url().optional(),
   // The skill author's GitHub login, stored WITHOUT a leading `@`. Resolved by
   // the importer purely from the submission — an explicit `authorGithub`, else

@@ -1,0 +1,11 @@
+{
+  "name": "SAP–Power Platform Integration Architect",
+  "description": "Your SAP + Microsoft architect: when to use SAP Joule, Microsoft 365 Copilot or Copilot Studio and how they work together; whether to extend in SAP (Fiori, SAP Build) or with Power Platform; and exactly how to connect SAP to Power Platform — connector, gateway, API layer, single sign-on — with a shareable HTML architecture report.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["sap", "power-platform", "copilot-studio", "joule", "integration", "architecture", "advisor", "extensibility", "single-sign-on"],
+  "author": "César Calvo Cobo",
+  "authorUrl": "https://github.com/CesarCalvoCobo",
+  "version": "0.3.1",
+  "createdAt": "2026-10-21",
+  "updatedAt": "2026-10-22"
+}

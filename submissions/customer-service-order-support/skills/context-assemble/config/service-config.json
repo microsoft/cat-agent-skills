@@ -1,0 +1,9 @@
+{ "intent_taxonomy": {
+    "wismo": ["where is my order", "wismo", "hasn't arrived", "track", "delivery status"],
+    "delivered_not_received": ["says delivered", "marked delivered", "never got", "not received", "dnr"],
+    "return_question": ["return", "refund", "send back"],
+    "stock_question": ["in stock", "available"],
+    "product_how_to": ["how do i", "how to", "set up", "pair"] },
+  "dnr_policy": {"investigation_days": 3, "instant_resolution": {"min_tier": "platinum", "max_value": 50.0},
+    "citation": "service policy SVC-DNR-2 (config/service-config.json)"},
+  "confidence_floor": 0.75 }

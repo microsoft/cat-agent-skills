@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Maintenance Triage contract",
+  "type": "object",
+  "required": [
+    "contract_version"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "mfg.maintenance-triage.v1"
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generated_at": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

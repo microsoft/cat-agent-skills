@@ -1,0 +1,16 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.consumer-insight-synthesis.v1",
+  "title": "Consumer & Market Insight Synthesis contract v1",
+  "description": "Chains research-retrieve -> trend-compare -> contradiction-flag -> provenance-check (Govern) -> insight-brief. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "question"],
+  "properties": {
+    "contract_version": { "const": "rtl.consumer-insight-synthesis.v1" },
+    "question": { "type": "object" },
+    "retrieved": { "type": "array", "items": { "type": "object" } },
+    "trends": { "type": "array", "items": { "type": "object" } },
+    "contradictions": { "type": "array", "items": { "type": "object" } },
+    "provenance_record": { "type": "array", "items": { "type": "object",
+      "required": ["study_id", "usable", "source", "citation"],
+      "properties": { "study_id": {"type": "string"}, "usable": {"type": "boolean"},
+        "restriction": {"type": ["string", "null"]}, "source": {"type": "string"}, "citation": {"type": "string"} } } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }
