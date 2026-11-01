@@ -1,0 +1,5 @@
+{
+  "GTIN-00012345678905": {"name": "BrewMaster 12-cup", "price": 89.99, "attributes": {"capacity_cups": 12, "carafe": "glass", "programmable": true, "warranty_months": 24}},
+  "GTIN-00098765432102": {"name": "AeroPress Go", "price": 39.99, "attributes": {"capacity_cups": 3, "carafe": null, "programmable": false, "warranty_months": 12}},
+  "GTIN-00055577788812": {"name": "PulseBeat ANC", "price": 199.0, "attributes": {"anc": true, "battery_hours": 30, "warranty_months": 12}}
+}

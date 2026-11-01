@@ -3,6 +3,7 @@ name: Copilot Studio Knowledge Readiness
 description: "Assess whether an uploaded or exported document set is ready to power a Copilot Studio agent. Produces a corpus-based readiness score, prioritized cleanup backlog, chunking and metadata guidance, and a test-prompt suite, while calling out any evidence gaps that require live system review."
 agentDescription: "Use when a Copilot Studio maker provides uploaded files, exported text, or a document set and wants to assess whether that corpus is ready for knowledge grounding. Use this before scoring chunkability, freshness signals, conflicts, or whether content belongs in knowledge versus an action or workflow. Do not use for live SharePoint or Dataverse inspection, general agent design, publishing checklists, analytics troubleshooting, or unrelated Power Platform work."
 platforms: [Copilot Studio]
+category: agent-development
 tags: [copilot-studio, knowledge, rag, sharepoint, dataverse, governance, readiness, assessment]
 author: Jay Padimiti
 version: 1.0.0

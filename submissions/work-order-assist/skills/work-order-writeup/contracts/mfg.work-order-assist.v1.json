@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mfg.work-order-assist.v1",
+  "title": "Work Order Assistant contract v1",
+  "description": "Versioned contract chaining wo-intake -> knowledge-retrieve -> similar-work-rank -> parts-readiness -> work-order-writeup. Carries data + confidence + provenance + citations on every hop so retrieval, ranking and readiness are auditable and escalation is mechanical. Bump the version only on breaking schema changes.",
+  "type": "object",
+  "required": ["contract_version", "work_order_id", "asset_id"],
+  "properties": {
+    "contract_version": { "const": "mfg.work-order-assist.v1" },
+    "work_order_id": { "type": "string" },
+    "wo_type": { "type": "string", "description": "corrective | preventive | inspection | breakdown" },
+    "wo_status": { "type": "string" },
+    "asset_id": { "type": "string" },
+    "asset_name": { "type": "string" },
+    "asset_class": { "type": "string", "description": "equipment class, e.g. gearbox, reciprocating_compressor, conveyor" },
+    "asset_criticality": { "enum": ["A", "B", "C"], "description": "A=critical, B=essential, C=non-critical (cmms-standards-excerpts.md #2)" },
+    "redundancy": { "type": "string" },
+    "location": { "type": "string" },
+    "reported_by": { "type": "string" },
+    "reported_at": { "type": "string" },
+    "problem_description": { "type": "string" },
+    "issue_keywords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "confidence", "source"],
+        "properties": {
+          "name": { "type": "string" },
+          "detail": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "sop_ref": {
+      "type": "object",
+      "properties": {
+        "doc": { "type": "string" },
+        "title": { "type": "string" },
+        "section": { "type": "string" },
+        "default_remedy": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "required_parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["part_no", "qty"],
+        "properties": {
+          "part_no": { "type": "string" },
+          "description": { "type": "string" },
+          "qty": { "type": "number" },
+          "criticality": { "type": "string" },
+          "source": { "type": "string" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "retrieved": {
+      "type": "object",
+      "properties": {
+        "sops": { "type": "array", "items": { "type": "object" } },
+        "manuals": { "type": "array", "items": { "type": "object" } },
+        "prior_fixes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fix_note_id": { "type": "string" },
+              "wo_id": { "type": "string" },
+              "summary": { "type": "string" },
+              "recommended_change": { "type": "boolean" },
+              "supersedes_part": { "type": "string" },
+              "superseding_part": { "type": "string" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "source": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "window_days": { "type": "integer" },
+        "repeat_failures": { "type": "integer" },
+        "repeat_promotion": { "type": "boolean" },
+        "prior_work_orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "wo_id": { "type": "string" },
+              "date": { "type": "string" },
+              "component": { "type": "string" },
+              "keywords": { "type": "array", "items": { "type": "string" } },
+              "action_taken": { "type": "string" },
+              "parts_used": { "type": "array", "items": { "type": "string" } },
+              "outcome": { "type": "string", "description": "resolved | recurred | reopened" },
+              "downtime_hr": { "type": "number" },
+              "citation": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "similar_work": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["wo_id", "confidence", "source", "citation"],
+        "properties": {
+          "rank": { "type": "integer" },
+          "wo_id": { "type": "string" },
+          "similarity_score": { "type": "number" },
+          "shared_signals": { "type": "array", "items": { "type": "string" } },
+          "outcome": { "type": "string" },
+          "recommended_fix": { "type": "string" },
+          "repeat_failure": { "type": "boolean" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "superseding_fix": {
+      "type": "object",
+      "properties": {
+        "active": { "type": "boolean" },
+        "from_fix_note": { "type": "string" },
+        "supersedes_part": { "type": "string" },
+        "recommended_part": { "type": "string" },
+        "rationale": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "citation": { "type": "string" }
+      }
+    },
+    "parts_readiness": {
+      "type": "object",
+      "required": ["status", "confidence", "source"],
+      "properties": {
+        "status": { "enum": ["READY", "READY_WITH_SUBSTITUTION", "PARTIAL", "BLOCKED"] },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "part_no": { "type": "string" },
+              "description": { "type": "string" },
+              "required_qty": { "type": "number" },
+              "on_hand": { "type": "number" },
+              "line_status": { "enum": ["IN_STOCK", "SHORT", "OUT", "SUPERSEDED_AVAILABLE", "BLOCKED"] },
+              "effective_part": { "type": "string" },
+              "lead_time_days": { "type": ["number", "null"] },
+              "note": { "type": "string" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "blockers": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "citation": { "type": "string" }
+      }
+    },
+    "next_best_action": { "type": "string" },
+    "writeup": {
+      "type": "object",
+      "properties": {
+        "draft": { "type": "boolean" },
+        "audience": { "type": "string", "description": "technician | planner" },
+        "summary": { "type": "string" },
+        "technician_notes": { "type": "string" },
+        "parts": { "type": "array", "items": { "type": "string" } },
+        "labor_hours_est": { "type": "number" },
+        "citation": { "type": "string" }
+      }
+    },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": { "type": "array", "items": { "type": "string" } },
+        "generated_at": { "type": "string" },
+        "demo_scenario": { "type": "string" }
+      }
+    }
+  }
+}

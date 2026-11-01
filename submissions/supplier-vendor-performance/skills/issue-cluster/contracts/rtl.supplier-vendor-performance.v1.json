@@ -1,0 +1,15 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.supplier-vendor-performance.v1",
+  "title": "Supplier & Vendor Performance contract v1",
+  "description": "Chains record-pull -> scorecard-roll -> issue-cluster -> term-retrieve -> review-pack. Data + confidence + provenance + citations on every hop.",
+  "type": "object", "required": ["contract_version", "vendor"],
+  "properties": {
+    "contract_version": { "const": "rtl.supplier-vendor-performance.v1" },
+    "vendor": { "type": "object" }, "review_period": { "type": "string" },
+    "scorecard": { "type": "object", "properties": {
+        "quarters": { "type": "array", "items": { "type": "object" } },
+        "trend_flags": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "issue_clusters": { "type": "array", "items": { "type": "object" } },
+    "governing_terms": { "type": "array", "items": { "type": "object" } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" } } }

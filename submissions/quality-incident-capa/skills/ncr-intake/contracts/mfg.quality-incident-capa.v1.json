@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mfg.quality-incident-capa.v1",
+  "title": "Quality Incident & CAPA contract v1",
+  "description": "Chains ncr-intake -> root-cause-analyze -> capa-build -> closure-check -> eightd-draft. Consumes the mfg.quality-inspection.v1 NCR payload as its entry input (handoff from plugin 01). Data + confidence + provenance + citations on every hop.",
+  "type": "object",
+  "required": ["contract_version", "capa_id", "ncr_ref"],
+  "properties": {
+    "contract_version": { "const": "mfg.quality-incident-capa.v1" },
+    "capa_id": { "type": "string" },
+    "ncr_ref": { "type": "object", "description": "identifying fields of the source NCR (from mfg.quality-inspection.v1)" },
+    "complaint_window_days": { "type": "integer" },
+    "pareto": { "type": "array", "items": { "type": "object",
+      "required": ["cause_category", "count", "share_pct", "source", "citation"],
+      "properties": { "cause_category": {"type": "string"}, "count": {"type": "integer"},
+        "share_pct": {"type": "number"}, "cumulative_pct": {"type": "number"},
+        "parts_affected": {"type": "array", "items": {"type": "string"}},
+        "source": {"type": "string"}, "citation": {"type": "string"} } } },
+    "root_cause": { "type": "object", "properties": {
+        "method": { "type": "string" }, "category": { "type": "string" },
+        "why_chain": { "type": "array", "items": { "type": "string" } },
+        "systemic": { "type": "boolean" },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "capa": { "type": "object", "properties": {
+        "containment": { "type": "array", "items": { "type": "object" } },
+        "corrective": { "type": "array", "items": { "type": "object" } },
+        "preventive": { "type": "array", "items": { "type": "object" } },
+        "effectiveness_checks": { "type": "array", "items": { "type": "object" } } } },
+    "closure": { "type": "object", "properties": {
+        "ready": { "type": "boolean" }, "blockers": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number" }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object" }
+  }
+}
