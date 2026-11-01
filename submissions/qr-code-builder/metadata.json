@@ -1,0 +1,11 @@
+{
+  "name": "QR Code Builder",
+  "description": "Make branded, scannable QR codes (PNG, SVG, PDF, JPG, WEBP) for a link, Wi-Fi, contact card, email, SMS, phone, map, or event, with optional shapes, colors, logo, caption, and outer frame.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["qr-code", "design", "productivity", "assets"],
+  "author": "Bobby Chang",
+  "authorUrl": "https://github.com/bobbyschang",
+  "version": "1.0.0",
+  "createdAt": "2026-09-29",
+  "updatedAt": "2026-09-29"
+}

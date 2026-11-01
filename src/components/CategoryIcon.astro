@@ -1,0 +1,24 @@
+---
+import { CATEGORY_ICON_PATHS, type Category } from "../lib/categories";
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+---
+
+<svg
+  data-category-icon={category}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.75"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  class="h-6 w-6"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d={CATEGORY_ICON_PATHS[category]} />
+</svg>

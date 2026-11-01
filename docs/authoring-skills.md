@@ -73,7 +73,7 @@ The catalog details, kept out of the agent file:
 | `platforms`   | yes      | string[] | One or more of `Cowork`, `Copilot Studio`, `Scout`.                     |
 | `tags`        | yes      | string[] | Lowercase tags for filtering/search. Reuse existing tags where you can. |
 | `author`      |          | string   | Person or team credited for the skill.                                  |
-| `authorUrl`   |          | string   | URL to the author's website/profile; renders the author name as a link. |
+| `authorUrl`   |          | string   | Optional author website/profile URL retained as metadata. The importer derives `authorGithub` from a `github.com/<login>` URL unless explicitly set. Gallery bylines link to the contributor-filtered gallery, not this URL. |
 | `version`     |          | string   | Semantic version, e.g. `1.0.0`.                                         |
 | `createdAt`   |          | date     | `YYYY-MM-DD` when the skill was first published.                        |
 | `updatedAt`   |          | date     | `YYYY-MM-DD` of the latest update.                                      |

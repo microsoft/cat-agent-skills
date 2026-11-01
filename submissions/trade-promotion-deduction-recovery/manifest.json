@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "fbd7c5ca-2ca6-533e-b91b-40cea543c144",
+    "developer": {
+        "name": "Microsoft Retail & CPG Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Trade Promotion Deduction",
+        "full": "Trade Promotion Deduction Recovery"
+    },
+    "description": {
+        "short": "CPG Wave 2 Cowork plugin: invalid deductions caught and disputed with evidence.",
+        "full": "CPG Wave 2 Cowork plugin: invalid deductions caught and disputed with evidence. Extracts deduction records and claim backup; matches each claim to the governing promotion, allowance or trade term (claim_match); classifies validity deterministically and quantifies the disputable amount with the calculation shown - the explicit Govern step (deduction_classify); computes promotion lift on a fixed baseline only where the account P&L foundation exists per config scoping (promo_lift); drafts the dispute packet and post-event brief. It determines and drafts: it does not post credits, write off deductions, approve trade spend or change terms."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/claim-ingest"
+        },
+        {
+            "folder": "./skills/claim-match"
+        },
+        {
+            "folder": "./skills/dispute-packet"
+        },
+        {
+            "folder": "./skills/term-retrieve"
+        },
+        {
+            "folder": "./skills/validity-classify"
+        }
+    ]
+}
