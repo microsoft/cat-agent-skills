@@ -1,0 +1,9 @@
+{ "convenience:urban": {
+    "criteria": [
+      {"id": "MS-01", "type": "must_stock", "sku": "CB-CLASSIC", "desc": "Classic bar on shelf", "par": 24},
+      {"id": "MS-02", "type": "must_stock", "sku": "CB-DARK", "desc": "Dark bar on shelf", "par": 18},
+      {"id": "MS-03", "type": "must_stock", "sku": "CB-MINIS", "desc": "Minis bag on shelf", "par": 12},
+      {"id": "SH-01", "type": "share_of_shelf", "min_facings": 6, "desc": ">= 6 facings across range"},
+      {"id": "PR-01", "type": "promo_display", "sku": "CB-CLASSIC", "desc": "Promo display up during active promo"},
+      {"id": "PP-01", "type": "price_tag", "desc": "Shelf tags present and current"} ],
+    "citation": "picture-of-success convenience:urban v4" } }

@@ -1,0 +1,22 @@
+{
+  "name": "Audit Readiness",
+  "description": "Walk into the audit prepared: map the audit scope to the standard's clauses, gather and complete the evidence register, validate each piece of evidence against what the clause actually requires, flag every gap with a severity, and draft the readiness pack with owners and actions.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "quality",
+    "audit",
+    "compliance",
+    "iso-9001",
+    "iatf-16949",
+    "readiness"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-01",
+  "updatedAt": "2026-09-04",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}
