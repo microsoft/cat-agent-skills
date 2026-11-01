@@ -3,6 +3,7 @@ name: Agent Evaluation Designer
 description: "Design a rigorous, platform-aware evaluation for an AI agent - define what good looks like, pick the right grading method, build a test set, and turn results into a defensible go/no-go decision."
 agentDescription: "Use this skill whenever the user wants to evaluate, test, or validate an AI agent, decide whether an agent is ready to ship or go live, choose how to grade an agent's answers (exact match, similarity, meaning, keywords, quality, or custom), design a test set of questions and expected answers, or interpret evaluation results into a go/no-go decision. Invoke it before the user hand-builds tests or declares an agent \"done.\""
 platforms: [Copilot Studio]
+category: agent-development
 tags: [evaluation, testing, quality-assurance, go-live, decision-making]
 author: James Papadimitriou
 authorUrl: "https://github.com/jpapadimitriou"

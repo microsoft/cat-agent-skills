@@ -1,0 +1,22 @@
+{
+  "name": "Trade Promotion & Deduction Recovery",
+  "description": "Invalid deductions caught and disputed with evidence: match each claim to the governing promotion, allowance or trade term, classify validity deterministically and quantify the disputable amount with the calculation shown, and draft the dispute packet and post-event brief.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "cpg",
+    "rgm",
+    "trade-promotion",
+    "deduction",
+    "dispute",
+    "tpm"
+  ],
+  "author": "Industry Templates",
+  "authorUrl": "https://github.com/SravaniSeethi",
+  "version": "1.0.0",
+  "createdAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
+  "category": "retail-cpg",
+  "builtByMicrosoft": true
+}

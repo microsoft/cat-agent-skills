@@ -123,6 +123,35 @@ body {
   font-family: var(--font-sans);
 }
 
+.gallery-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: fit-content;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-text);
+}
+.gallery-nav-link--back {
+  font-weight: 500;
+  color: var(--muted);
+}
+.gallery-nav-link svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+.gallery-nav-link:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.gallery-nav-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+}
+
 /* Custom scrollbar tuned to the theme. */
 ::-webkit-scrollbar {
   width: 10px;

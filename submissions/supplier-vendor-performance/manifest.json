@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
+    "manifestVersion": "devPreview",
+    "version": "1.0.0",
+    "id": "18233c2a-7a80-514a-ac8f-0a80b378e76b",
+    "developer": {
+        "name": "Microsoft Retail & CPG Skills",
+        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
+        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+    },
+    "name": {
+        "short": "Supplier Vendor Performance",
+        "full": "Supplier Vendor Performance"
+    },
+    "description": {
+        "short": "Retail Wave 2 Cowork plugin: a defensible supplier review pack assembled from",
+        "full": "Retail Wave 2 Cowork plugin: a defensible supplier review pack assembled from records instead of a week of spreadsheet work. Pulls PO, receipt, invoice, return and quality records; rolls up the OTIF / defect / dispute scorecard with trends (scorecard_roll); clusters recurring issues with evidence (issue_cluster); retrieves the governing trading term; drafts the review agenda, corrective action request and commitment tracker. Read-only: it does not change a PO, place a payment hold, amend a contract or deselect a supplier."
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "accentColor": "#4A90D9",
+    "agentSkills": [
+        {
+            "folder": "./skills/issue-cluster"
+        },
+        {
+            "folder": "./skills/record-pull"
+        },
+        {
+            "folder": "./skills/review-pack"
+        },
+        {
+            "folder": "./skills/scorecard-roll"
+        },
+        {
+            "folder": "./skills/term-retrieve"
+        }
+    ]
+}
