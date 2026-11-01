@@ -1,0 +1,294 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Normalized financial statements (v2)",
+ "description": "Ordered statement lines per statement. Values are as presented: revenue/assets positive, expenses and cash outflows NEGATIVE, so every subtotal is a plain sum of its total_of components. Legacy v1 input (flat per-period 'values') is still accepted and converted automatically.",
+ "type": "object",
+ "required": [
+  "company",
+  "currency",
+  "unit",
+  "periods",
+  "statements"
+ ],
+ "properties": {
+  "schema_version": {
+   "const": "2.0"
+  },
+  "demo": {
+   "type": "boolean",
+   "description": "true only for synthetic test data. Never set it on a user's document."
+  },
+  "company": {
+   "type": "string"
+  },
+  "currency": {
+   "type": "string",
+   "description": "ISO 4217"
+  },
+  "unit": {
+   "enum": [
+    "ones",
+    "thousands",
+    "ten_thousands",
+    "lakhs",
+    "millions",
+    "crores",
+    "billions"
+   ],
+   "description": "Unit of the figures exactly as printed (元 = ones, 千元 = thousands, 万元 = ten_thousands, 百万元 = millions; ₹ in lakhs = lakhs, ₹ in crores = crores)."
+  },
+  "display_unit": {
+   "enum": [
+    "ones",
+    "thousands",
+    "millions",
+    "billions"
+   ],
+   "description": "Optional. Workbook display unit; values stay exact. Default: millions when source figures are in ones/thousands and exceed 1bn."
+  },
+  "basis": {
+   "enum": [
+    "consolidated",
+    "standalone"
+   ]
+  },
+  "industry": {
+   "type": "string",
+   "description": "Free text; used to infer entity_type when that is not given."
+  },
+  "entity_type": {
+   "enum": [
+    "operating",
+    "conglomerate",
+    "bank",
+    "insurer",
+    "asset_manager",
+    "payment_institution",
+    "broker_dealer",
+    "other_financial"
+   ],
+   "default": "operating",
+   "description": "All entity types are in scope. conglomerate = non-financial group that owns a bank/insurance/card arm (operating metrics plus financial-services metrics). bank/insurer/broker_dealer/other_financial use the financial-institution metric set (cost-to-income, NIM, cost of risk, loan-to-deposit, equity/assets, reported capital ratios, combined ratio)."
+  },
+  "fiscal_year_end": {
+   "type": "string",
+   "description": "MM-DD, e.g. 12-31"
+  },
+  "accounting_framework": {
+   "type": "string",
+   "description": "e.g. IFRS, HKFRS, US GAAP, CAS. CAS (China Accounting Standards) sets ebit_method to pretax_plus_interest automatically."
+  },
+  "ebit_method": {
+   "enum": [
+    "operating_income",
+    "pretax_plus_interest",
+    "operating_plus_interest_income"
+   ],
+   "description": "How EBIT is derived when no 'ebit' line is supplied. Use pretax_plus_interest whenever the reported operating profit is AFTER finance costs (CAS 营业利润)."
+  },
+  "periods": {
+   "type": "array",
+   "minItems": 1,
+   "description": "One entry per column. Average-based ratios need an opening balance, so the first column shows N/A for them.",
+   "items": {
+    "type": "object",
+    "required": [
+     "year"
+    ],
+    "properties": {
+     "year": {
+      "type": "integer",
+      "description": "Column key used in line 'values'."
+     },
+     "period_type": {
+      "enum": [
+       "annual",
+       "interim"
+      ],
+      "default": "annual",
+      "description": "interim for quarterly / half-year / year-to-date reports."
+     },
+     "label": {
+      "type": "string",
+      "description": "Column header, e.g. 'FY2024', '9M 2025', 'H1 2025'."
+     },
+     "days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 731,
+      "description": "Days covered by the income and cash flow statements. Required for interim periods (e.g. Jan–Sep = 273/274) and for annual periods that are not 12 months (e.g. an 18-month period = 547/548); such periods are annualised."
+     },
+     "flow_end": {
+      "type": "string",
+      "description": "YYYY-MM-DD end date of the income/cash flow period."
+     },
+     "balance_date": {
+      "type": "string",
+      "description": "YYYY-MM-DD date of the balance sheet column. In interim reports the comparative balance sheet is usually the prior year end, not the prior interim date."
+     },
+     "audited": {
+      "type": "boolean",
+      "description": "false when the report states the statements are unaudited (e.g. 未经审计); shown as UNAUDITED in the outputs."
+     }
+    }
+   }
+  },
+  "statements": {
+   "type": "object",
+   "required": [
+    "income_statement",
+    "balance_sheet"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "income_statement": {
+     "$ref": "#/$defs/lines"
+    },
+    "balance_sheet": {
+     "$ref": "#/$defs/lines"
+    },
+    "cash_flow": {
+     "$ref": "#/$defs/lines",
+     "description": "Optional: omit when the entity presents no cash flow statement (e.g. FRS 101 / IAS 7 exemption)."
+    },
+    "supplementary": {
+     "$ref": "#/$defs/lines",
+     "description": "Non-statement inputs, e.g. shares_outstanding (same scale as unit) and share_price (in currency ones). Enables per-share and valuation ratios."
+    }
+   }
+  },
+  "going_concern_uncertainty": {
+   "type": "boolean",
+   "description": "true when the auditor reports a material uncertainty related to going concern."
+  },
+  "key_disclosures": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "text": {
+      "type": "string"
+     },
+     "source": {
+      "$ref": "#/$defs/source"
+     }
+    }
+   },
+   "description": "Up to five sourced disclosures shown on the Summary (restatements, regulatory breaches, cessation of trading, etc.)."
+  },
+  "no_cash_flow_reason": {
+   "type": "string",
+   "description": "Why there is no cash flow statement, e.g. \"exempt under FRS 101 (IAS 7)\"."
+  },
+  "draft_review": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "description": "Written by draft-map: items to check before analyze. Ignored by analyze."
+  },
+  "ebit_includes_associates": {
+   "type": "boolean",
+   "description": "Optional override: whether the EBIT used (reported ebit line or derived) already contains the post-tax share of associates/JVs. Normally detected automatically."
+  },
+  "owners_profit_excludes_perpetual": {
+   "type": "boolean",
+   "description": "true when net_income_attributable already excludes the perpetual holders' share (the income statement shows it as its own attribution line). Ordinary-shareholder ROE and EPS then use it directly without a perpetual_distributions line."
+  }
+ },
+ "$defs": {
+  "source": {
+   "type": "object",
+   "required": [
+    "document",
+    "location"
+   ],
+   "properties": {
+    "document": {
+     "type": "string"
+    },
+    "location": {
+     "type": "string",
+     "description": "Page, sheet or note reference"
+    },
+    "label": {
+     "type": "string",
+     "description": "Original line label in the source"
+    }
+   }
+  },
+  "lines": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "required": [
+     "id",
+     "label"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Unique across all statements. Use the canonical ids in metric-definitions.md so ratios can find the line; any other id is shown but not used by ratios."
+     },
+     "label": {
+      "type": "string",
+      "description": "Display label in the workbook"
+     },
+     "section": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "description": "Groups lines under a header (e.g. current_assets, operating, financing). Omit for grand totals."
+     },
+     "total_of": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "Declares a subtotal: the workbook writes a live SUM of these line ids. If a reported value is also given, a tie-out check compares them. If any component is missing for a year, the reported value is used and the check is marked not tested."
+     },
+     "tags": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "debt",
+        "debt_like",
+        "perpetual",
+        "impairment",
+        "non_recurring",
+        "attribution",
+        "fs_operating",
+        "cash_reconciling",
+        "fx_translation"
+       ]
+      },
+      "description": "\"debt\": every interest-bearing borrowing line (short- and long-term borrowings, bonds, current portion of long-term debt, lease liabilities if treated as debt). \"debt_like\": financing-like items not in reported debt (e.g. notes payable / bank acceptance bills 应付票据); shown as a separate net-debt sensitivity. \"perpetual\": perpetual securities classified as debt. \"impairment\" / \"non_recurring\": one-off income-statement items. \"attribution\": non-owner shares of profit. \"fs_operating\": financial-services balance-sheet flows inside operating cash flow (conglomerates). \"fx_translation\": French écarts de conversion."
+     },
+     "values": {
+      "type": "object",
+      "description": "Keyed by year as a string. null = not disclosed. Use 0 only when the statement itself shows a blank or dash for that line in a column whose subtotal is printed (the source shows nil).",
+      "additionalProperties": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "source": {
+      "$ref": "#/$defs/source",
+      "description": "Single source applying to every year"
+     },
+     "sources": {
+      "type": "object",
+      "description": "Per-year source keyed by year string; overrides 'source'.",
+      "additionalProperties": {
+       "$ref": "#/$defs/source"
+      }
+     }
+    }
+   }
+  }
+ }
+}
