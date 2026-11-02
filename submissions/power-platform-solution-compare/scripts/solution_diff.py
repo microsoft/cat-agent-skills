@@ -322,7 +322,8 @@ def flatten(el, noise: bool, prefix: str = "", out=None, counters=None, root: bo
 
 def digest(mapping) -> str:
     h = hashlib.sha256()
-    for k, v in mapping.items():
+    for k in sorted(mapping):  # export reordering must not change identity; meaningful order lives in explicit *-order leaves
+        v = mapping[k]
         h.update(k.encode("utf-8", "replace"))
         h.update(b"=")
         h.update(str(v).encode("utf-8", "replace"))
@@ -667,7 +668,7 @@ def json_leaves(node, prefix="", out=None):
     """Flatten JSON to {path: scalar} for old->new reporting. Callers remove designer metadata at the node
     level first; nested `metadata` keys are user data and are kept."""
     if out is None:
-        out = OrderedDict()
+        out = {}  # a plain dict keeps insertion order for reporting but compares by content, so JSON key order is not a change
     if isinstance(node, dict):
         if not node and prefix:
             out[prefix] = "{}"  # an empty object is still a value, and differs from an empty array or a missing key
@@ -1676,7 +1677,9 @@ def compare_flow(old, new, flags, key, old_hash=None, new_hash=None):
                 detail.append(f"action run condition changed: {a} ({'; '.join(conds)})")
                 flag(flags, "medium", "Cloud flows", key, f"action '{a.rsplit('/', 1)[-1]}' now runs on a different outcome of its predecessor ({'; '.join(conds[:2])})")
             else:
-                detail.append(f"action re-ordered: {a} (after {', '.join(sorted(ora)) or 'start'} -> after {', '.join(sorted(nra)) or 'start'})")
+                before, after = ", ".join(sorted(ora)) or "start", ", ".join(sorted(nra)) or "start"
+                detail.append(f"action re-ordered: {a} (after {before} -> after {after})")
+                flag(flags, "medium", "Cloud flows", key, f"action '{a.rsplit('/', 1)[-1]}' now runs after a different predecessor ({before} -> {after}); execution order changed, test the affected path")
     moved_to = set(moved.values())
     for a in na:
         if a not in oa and a not in moved_to:
