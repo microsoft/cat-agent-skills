@@ -1,6 +1,6 @@
 # Report template
 
-Choose the shape by channel first. If the host is Copilot Studio in Teams, or you cannot tell, use the chat shape: send the verdict and the five actions as the first message, then offer sections by name and send each on request; never a table wider than three columns. Use the full structure in Cowork documents, long-form replies, or when the user asks for a report. Cite finding IDs (F1, F2, …) and rule IDs (EX1, CR1, …) wherever a statement rests on one. Finding numbers are assigned per run and differ between reports; rule IDs are stable, so cross-reference by rule ID and cite the run you attach.
+Choose the shape by channel first. If the host is Copilot Studio in Teams, or you cannot tell, use the chat shape: send the verdict and the five actions as the first message, then offer sections by name and send each on request; never a table wider than three columns. Use the full structure in Cowork documents, Scout run output, long-form replies, or when the user asks for a report. Cite finding IDs (F1, F2, …) and rule IDs (EX1, CR1, …) wherever a statement rests on one. Finding numbers are assigned per run and differ between reports; rule IDs are stable, so cross-reference by rule ID and cite the run you attach.
 
 ## What the script's report looks like
 

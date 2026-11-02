@@ -37,7 +37,7 @@ python3 scripts/agent_inventory_audit.py agents.json --departing <object-id> --a
 
 > Here is the inventory export for our tenant. We are onboarding to Agent 365 next month; what should we fix first?
 
-> We are migrating legacy app-registration agents to Entra Agent IDs. From this export, list what is left, by environment and owner.
+> We are migrating legacy app-registration agents to Microsoft Entra Agent IDs. From this export, list what is left, by environment and owner.
 
 > Bob is leaving on Friday. From the inventory and this user list, which agents and shared connections depend on him?
 
@@ -49,6 +49,7 @@ python3 scripts/agent_inventory_audit.py agents.json --departing <object-id> --a
 
 - The inventory reflects each agent's **published** version. Draft changes are invisible until published, and classic chatbots (V1) are not included at all.
 - Connector detail (who provides the connection, whether consent is required, how the orchestrator may use it) is Preview data and is capped at 200 resources of each type per agent; the report flags agents above the cap.
+- The rules and the [field catalog](references/field-catalog.md) were built against the Power Platform inventory schema as Microsoft documented it in October 2026, and the catalog records each agent field's GA or Preview status at that date. Most rules rest on Preview fields: all exposure rules (EX1 to EX4), all credential rules (CR1 to CR5), four lifecycle rules (LC2 quarantined or blocked, LC3 unmanaged agent in a Production environment, LC5 published from a Developer or Trial environment, LC6 inventory truncated at 200 resources), and the model rule (MD1). Those fields can change shape or name, so the rules may need updating when they do. The identity fields behind ID1 and ID2 are GA, but their results are time-sensitive: Microsoft is migrating remaining agents to Microsoft Entra Agent ID automatically, so re-export before acting on a legacy-identity list.
 - Severity orders the work. It is this skill's heuristic, not a Microsoft rating and not a compliance verdict. Each finding says what to confirm in the live tenant before acting.
 - The report's reference date is used for age calculations; it is not the time the export was taken. Sharing, quarantine, and account state change daily, so note when the export was made.
 - The inventory API and `pac resource-query` return pages of up to 1,000 records. Pass every page file to the script together; a run on a truncated page is marked incomplete in the report header.
@@ -61,6 +62,10 @@ python3 scripts/agent_inventory_audit.py agents.json --departing <object-id> --a
 - The report names people and the agents they own, and can include connection IDs and connector names. Review it before sharing outside the governance team.
 - The script reads files and writes a report. It never calls the admin APIs and never changes an agent, a sharing setting, an owner, or an identity.
 
+## Where to run it
+
+This skill is published for Copilot Studio, Cowork, and Scout. The usual user is one administrator working through their own tenant's export in Cowork or Scout. If you host it in a Copilot Studio agent, share that agent only with a security group limited to the governance team: do not share it with everyone in the organization and do not submit it to the agent store, because its reports name owners and departing users, and a tenant-wide host would itself trigger this skill's EX2 finding.
+
 ## Compatibility and attribution
 
-This skill is published for Copilot Studio and Cowork. It consists of Markdown instructions plus one standard-library Python script. It reads the Power Platform inventory schema that Microsoft documents publicly and relies on no Microsoft tooling at runtime. It is a community contribution, not a Microsoft product, and does not replace Microsoft Agent 365, the Power Platform admin center's own governance features, or your organization's security review.
+This skill consists of Markdown instructions plus one standard-library Python script. It reads the Power Platform inventory schema that Microsoft documents publicly and relies on no Microsoft tooling at runtime. It is a community contribution, not a Microsoft product, and does not replace Microsoft Agent 365, the Power Platform admin center's own governance features, or your organization's security review.
