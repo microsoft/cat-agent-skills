@@ -2,21 +2,19 @@
   "description": "Adaptive Daily Work Plan — merges tasks from mail, chat, and calendar into one ranked daily plan.",
   "schedule": {
     "kind": "single",
-    "naturalLanguage": "every day at 8:00am",
+    "naturalLanguage": "every weekday at 9am",
     "days": [
-      0,
       1,
       2,
       3,
       4,
-      5,
-      6
+      5
     ],
     "time": {
-      "hour": 8,
+      "hour": 9,
       "minute": 0
     },
-    "hour": 8,
+    "hour": 9,
     "minute": 0
   },
   "teamsNotify": "auto",
@@ -48,7 +46,7 @@
       "prompt": "Generate today’s ranked plan with sections: Top 3 must-do items, Important tasks, Quick wins, and Waiting-on-others follow-ups. For each item include source, reason for priority, estimated effort, and suggested time block fitted around today’s meetings."
     }
   ],
-  "enabled": false,
+  "enabled": true,
   "oneShot": false,
   "triggerType": "schedule"
 }
