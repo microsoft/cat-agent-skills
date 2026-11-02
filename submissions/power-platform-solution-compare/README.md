@@ -16,7 +16,7 @@ The comparison is read from the packages themselves. Nothing is inferred from so
 
 Export both solution versions as `.zip` files (managed or unmanaged, but ideally the same type for both). Extracted export folders also work, including a zip extracted into a wrapper folder. Source unpacked with `pac solution unpack` should be repacked first with `pac solution pack`, or the agent can compare the per-component files directly.
 
-The bundled script `scripts/solution_diff.py` needs Python 3.8 or later and nothing else: no packages, no network, no Power Platform connection. If your host cannot run Python, run the script locally and paste the Markdown report, or upload the extracted `solution.xml`, `customizations.xml`, and `Workflows/*.json` files and the agent compares them directly.
+The bundled script `scripts/solution_diff.py` needs Python 3.8 or later and nothing else: no packages, no network, no Power Platform connection. On Cowork and Scout the agent runs it for you. If your host cannot run Python, run the script locally and paste the Markdown report, or upload the extracted `solution.xml`, `customizations.xml`, and `Workflows/*.json` files and the agent compares them directly.
 
 ```bash
 python3 scripts/solution_diff.py ContosoProjects_1_0_0_0.zip ContosoProjects_1_1_0_0.zip --md report.md --json report.json
@@ -52,4 +52,4 @@ The report gives package facts and warnings, a summary by component type, number
 
 ## Compatibility and attribution
 
-This skill is published for Copilot Studio. It consists of Markdown instructions plus one standard-library Python script. It reads the solution package formats documented publicly by Microsoft and relies on no Microsoft tooling at runtime. It is a community contribution, not a Microsoft product, and does not replace solution checker, environment comparison tooling, or your organization's release process.
+This skill is published for Cowork and Scout, where the agent can read both solution packages and run the script directly. It consists of Markdown instructions plus one standard-library Python script. It reads the solution package formats documented publicly by Microsoft and relies on no Microsoft tooling at runtime. It is a community contribution, not a Microsoft product, and does not replace solution checker, environment comparison tooling, or your organization's release process.

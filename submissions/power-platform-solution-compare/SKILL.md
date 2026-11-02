@@ -10,7 +10,7 @@ Turn two solution packages into a precise, reviewable account of what changed, w
 ## Workflow
 
 1. Identify the two packages, the direction, the mode, and the import the user is preparing for.
-2. Obtain the raw comparison: a report the user pasted from `scripts/solution_diff.py`, a run of that script when the host can execute Python, or a direct comparison of uploaded package files using the component catalog.
+2. Obtain the raw comparison: run `scripts/solution_diff.py` on the two packages, or fall back to a report the user pasted from that script, or a direct comparison of uploaded package files using the component catalog.
 3. Interpret the comparison: group changes into features where the packages show the link, state the consequence of each finding for the import the user will actually perform, and separate what the packages prove from what only the target environment can tell.
 4. Deliver the report in the structure for the chosen mode, with tests, open questions, and unverifiable items in their own sections.
 
@@ -40,8 +40,8 @@ Ask which import the user is preparing for: target environment, managed or unman
 
 Input the skill can work from, in order of preference:
 
-1. **A pasted script report** (Markdown or JSON). Treat it as the raw comparison. Ask for the JSON when the Markdown was truncated.
-2. **Packages the host can read with Python.** Run the script.
+1. **Packages the host can read with Python.** Run the script. This is the normal path on Cowork and Scout.
+2. **A pasted script report** (Markdown or JSON). Treat it as the raw comparison. Ask for the JSON when the Markdown was truncated.
 3. **Extracted files uploaded as text:** solution.xml, customizations.xml, and `Workflows/*.json`. Compare them directly with the catalog.
 
 On a host that cannot run Python and only has the `.zip` files, say so and ask the user to run the script locally and paste the report, or to upload the extracted XML and JSON files. Do not describe a package you cannot read. If only one package is supplied, ask for the other.
