@@ -318,7 +318,7 @@ def parse_svg(root):
             unresolved += 1
             warnings.append(f'Connection {cid}: endpoint not within 30px of a shape; skipped.')
             continue
-        edges.append(dict(id=cid, source=src, target=tgt, label=flow_labels.get(cid, ''), kind='sequence'))
+        edges.append(dict(id=cid, source=src, target=tgt, label=flow_labels.get(cid, labels.get(cid, '')), kind='sequence'))
     return dict(source_format='bpmn-js-svg', nodes=nodes, edges=edges, warnings=warnings,
                 _meta=dict(zero_positions=sum(1 for s in shapes.values() if s['xy'] is None or s['xy'] == (0.0, 0.0)),
                            shape_count=len(shapes), unresolved=unresolved))
