@@ -1,0 +1,38 @@
+---
+import { PLATFORM_COLORS, type Platform } from "../lib/skills";
+
+interface Props {
+  platform: Platform;
+}
+
+const { platform } = Astro.props;
+---
+
+<span class="platform-chip" style={`--platform-color:${PLATFORM_COLORS[platform]}`}>
+  <span class="platform-chip__dot" aria-hidden="true"></span>
+  {platform}
+</span>
+
+<style>
+  .platform-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--platform-color) 26%, var(--border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--platform-color) 8%, var(--surface));
+    color: var(--fg);
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1rem;
+    white-space: nowrap;
+  }
+  .platform-chip__dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    flex: none;
+    border-radius: 999px;
+    background: var(--platform-color);
+  }
+</style>
