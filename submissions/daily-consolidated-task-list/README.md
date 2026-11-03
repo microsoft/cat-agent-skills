@@ -15,6 +15,14 @@ mail and Teams chats, deduplicates and ranks them, and produces a plan with:
 Every item shows its source, why it was prioritized, an effort estimate, and a
 suggested time block that fits around your meetings.
 
+## Run in Scout Desktop or Scout Cloud
+
+Use the [automation JSON file](./daily-consolidated-task-list.json):
+
+- **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
+- **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
+  Scout Cloud, then run the automation.
+
 ## Before you enable it
 
 - Scout needs access to your Microsoft 365 calendar, Outlook mail, and Teams
