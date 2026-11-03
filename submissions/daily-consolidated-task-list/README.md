@@ -19,7 +19,6 @@ suggested time block that fits around your meetings.
 
 - Scout needs access to your Microsoft 365 calendar, Outlook mail, and Teams
   (for example through the WorkIQ connector).
-- The automation imports **enabled**, so it starts running on its weekday 9:00 AM
-  schedule right away. Review the schedule and steps, and disable it if you want
-  to adjust anything first.
+- After importing into Scout, review the schedule and steps, then confirm that
+  the automation is enabled when you are ready for it to run.
 - It only reads and summarizes; it does not send messages.
