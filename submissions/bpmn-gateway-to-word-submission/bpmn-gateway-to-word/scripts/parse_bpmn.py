@@ -331,6 +331,8 @@ def sanity_check(graph):
     fatal = []
     nodes, edges = graph['nodes'], graph['edges']
     meta = graph.pop('_meta', None)
+    if meta and meta['unresolved']:
+        fatal.append(f'{meta["unresolved"]} connection(s) could not be resolved; the graph is incomplete.')
     if meta and meta['shape_count'] > 3 and meta['zero_positions'] > 0.5 * meta['shape_count']:
         fatal.append('Most shapes have no usable transform: geometry matching would be meaningless.')
     if len(edges) > 3 and len({(e['source'], e['target']) for e in edges}) == 1:
