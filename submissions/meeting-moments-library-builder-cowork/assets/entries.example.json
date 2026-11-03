@@ -1,0 +1,19 @@
+[
+  {
+    "id": "configure-reusable-pattern",
+    "title": "How to configure a reusable pattern",
+    "captureType": "how-to",
+    "session": "Weekly Demo",
+    "date": "2026-01-15",
+    "presenter": "Alex Example",
+    "startSeconds": 720,
+    "endSeconds": 960,
+    "recordingUrl": "https://contoso.example/recordings/demo",
+    "outcome": "Shows the complete configuration flow and the validation step.",
+    "category": "Configuration",
+    "verification": "verified",
+    "approval": "approved",
+    "evidenceNote": "Verified against the supplied transcript at 12:00.",
+    "sourceLabel": "Weekly Demo transcript"
+  }
+]
