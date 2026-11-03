@@ -71,7 +71,7 @@ const wrapperProps = isSample
   <p class="submission-description mt-3 line-clamp-2 text-sm text-muted">{description}</p>
   <div class="submission-meta mt-auto flex items-center justify-between gap-2 pt-4 text-[11px] leading-4 text-muted">
     <span class="shrink-0"><span class="capitalize">{type}</span>{isSample && <> &middot; Sample</>}</span>
-    <span class="submission-format-platform flex flex-wrap items-center justify-end gap-1">
+    <span class="submission-format-platform flex flex-wrap items-center justify-end gap-x-2.5 gap-y-1">
       {platforms.map((platform) => <PlatformChip platform={platform} />)}
     </span>
   </div>
