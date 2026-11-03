@@ -45,13 +45,13 @@
     {
       "id": "5",
       "label": "Produce adaptive daily work plan",
-      "prompt": "Generate today’s ranked plan with sections: Top 3 must-do items, Important tasks, Quick wins, and Waiting-on-others follow-ups. For each item include source, reason for priority, estimated effort, and suggested time block fitted around today’s meetings.\n\nAfter generating the plan, send the full plan by email to Payal.Awasthi@microsoft.com using this format:\n- Subject: Daily Plan | {Day, DD Mon YYYY}\n- Body: concise, sectioned layout (not one paragraph)\n  1) Top 3 Must-Do\n  2) Important Tasks\n  3) Quick Wins\n  4) Waiting on Others\n- For each task item, use this exact multi-line structure (not inline separators):\n  - <Task line>\n    Source: <source>\n    Why priority now: <reason>\n    Effort: <S/M/L>\n    Suggested time block: <HH:MM-HH:MM>\n- Keep each field on its own line, use short plain-language text, and leave a blank line between task items.\n\nAlso send the full plan to Teams self-chat by resolving chatId with workiq_create_chat_by_email (Payal.Awasthi@microsoft.com) and posting via workiq_send_chat_message.\nDo NOT send a separate short summary message to Teams. Treat these sends as required outputs of this step."
+      "prompt": "Generate today’s ranked plan with sections: Top 3 must-do items, Important tasks, Quick wins, and Waiting-on-others follow-ups. For each item include source, reason for priority, estimated effort, and suggested time block fitted around today’s meetings.\n\nAfter generating the plan, send the full plan by email to the user who is currently running this automation.\n- First resolve the current signed-in user email using workiq_get_my_profile.\n- Send email to that resolved email address (do not use any hardcoded email).\n- Subject: Daily Plan | {Day, DD Mon YYYY}\n- Body: concise, sectioned layout (not one paragraph)\n  1) Top 3 Must-Do\n  2) Important Tasks\n  3) Quick Wins\n  4) Waiting on Others\n- For each task item, use this exact multi-line structure (not inline separators):\n  - <Task line>\n    Source: <source>\n    Why priority now: <reason>\n    Effort: <S/M/L>\n    Suggested time block: <HH:MM-HH:MM>\n- Keep each field on its own line, use short plain-language text, and leave a blank line between task items.\n\nAlso send the full plan to the same current user’s Teams self-chat:\n- Use workiq_get_my_profile to resolve the current user email.\n- Resolve chatId with workiq_create_chat_by_email using that resolved email.\n- Post via workiq_send_chat_message.\n- Do not use any hardcoded email.\n\nDo NOT send a separate short summary message to Teams. Treat these sends as required outputs of this step."
     }
   ],
   "enabled": true,
   "oneShot": false,
   "createdAt": "2026-10-23T14:43:35.118Z",
-  "updatedAt": "2026-11-03T20:21:25.993Z",
+  "updatedAt": "2026-11-03T20:54:08.674Z",
   "triggerType": "schedule",
   "lastExecutedAt": null
 }
