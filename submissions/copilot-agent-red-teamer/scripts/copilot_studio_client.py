@@ -1,11 +1,11 @@
-"""Copilot Studio client wrapper for AI Red Teaming.
+"""Copilot Studio client wrapper for the external content-safety scanner.
 
-Thin async wrapper around the preview `microsoft-agents-copilotstudio-client`
+Thin async wrapper around the published `microsoft-agents-copilotstudio-client`
 package so the red-team runner can talk to a published Copilot Studio agent with
 a simple `start_conversation_async()` / `ask_question_async()` interface.
 
-Auth uses an interactive MSAL public-client flow (device/interactive) and caches
-the token on disk so repeated scan probes reuse it. Configure the four required
+Auth uses an interactive MSAL public-client flow with encrypted OS-backed token
+persistence. There is no plaintext fallback. Configure the four required
 values as environment variables (see .env.example) or pass an
 `McsConnectionSettings` instance explicitly.
 """
@@ -13,14 +13,16 @@ values as environment variables (see .env.example) or pass an
 from __future__ import annotations
 
 import os
+import hashlib
+import warnings
 from pathlib import Path
 from typing import List, Optional
 
 # --- Auth (MSAL) -----------------------------------------------------------
 import msal
+from msal_extensions import PersistedTokenCache, build_encrypted_persistence
 
-# --- Copilot Studio client (preview) ---------------------------------------
-# Import names follow the microsoft-agents-copilotstudio-client preview package.
+# --- Published Copilot Studio client --------------------------------------
 from microsoft_agents.copilotstudio.client import (
     ConnectionSettings,
     CopilotClient,
@@ -29,33 +31,30 @@ from microsoft_agents.copilotstudio.client import (
 )
 from microsoft_agents.activity import ActivityTypes  # noqa: F401  (re-exported for callers)
 
-_TOKEN_CACHE_PATH = Path(os.path.expanduser("~")) / ".mcs_redteam_token_cache.bin"
+_CACHE_ROOT = Path.home() / ".copilot-content-safety-scan" / "token-cache"
+_LEGACY_CACHE_PATH = Path.home() / ".mcs_redteam_token_cache.bin"
 # Power Platform API scope used by the Copilot Studio Direct-to-Engine client.
 _SCOPE = ["https://api.powerplatform.com/.default"]
 
 
-def _write_token_cache(cache: "msal.SerializableTokenCache") -> None:
-    """Persist the MSAL token cache with owner-only permissions.
-
-    The cache can contain refresh tokens, so it must not be world-readable on a
-    shared machine. We create the file with 0o600 (owner read/write only) before
-    writing and re-assert the mode afterwards. On Windows, POSIX mode bits are
-    advisory; for stronger protection there, prefer msal-extensions'
-    encrypted/persisted cache (PersistedTokenCache with a DPAPI-backed store).
-    """
-    data = cache.serialize().encode("utf-8")
-    # Open with O_CREAT|O_WRONLY|O_TRUNC and a restrictive mode so the file is
-    # never briefly created world-readable.
-    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-    fd = os.open(str(_TOKEN_CACHE_PATH), flags, 0o600)
-    try:
-        os.write(fd, data)
-    finally:
-        os.close(fd)
-    try:
-        os.chmod(_TOKEN_CACHE_PATH, 0o600)
-    except OSError:
-        pass  # best-effort on platforms where chmod is a no-op
+def _encrypted_cache(settings: "McsConnectionSettings") -> PersistedTokenCache:
+    """Use DPAPI, Keychain or libsecret, scoped by tenant and application."""
+    cache_id = hashlib.sha256(
+        f"{settings.tenant_id}:{settings.app_client_id}".encode("utf-8")
+    ).hexdigest()
+    _CACHE_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
+    persistence = build_encrypted_persistence(str(_CACHE_ROOT / f"{cache_id}.bin"))
+    if not persistence.is_encrypted:
+        raise RuntimeError("Encrypted MSAL persistence is unavailable; plaintext caching is disabled.")
+    if _LEGACY_CACHE_PATH.exists():
+        warnings.warn(
+            "The old plaintext token cache still exists. It will not be read, "
+            "migrated or deleted automatically. Review/revoke old sign-in "
+            "sessions and remove that legacy cache through your approved process.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    return PersistedTokenCache(persistence)
 
 
 class McsConnectionSettings:
@@ -79,10 +78,8 @@ class McsConnectionSettings:
 
 
 def _acquire_token(settings: McsConnectionSettings) -> str:
-    """Acquire an access token via MSAL, using a persistent on-disk cache."""
-    cache = msal.SerializableTokenCache()
-    if _TOKEN_CACHE_PATH.exists():
-        cache.deserialize(_TOKEN_CACHE_PATH.read_text(encoding="utf-8"))
+    """Acquire a user token; cache writes are encrypted and managed by MSAL."""
+    cache = _encrypted_cache(settings)
 
     app = msal.PublicClientApplication(
         client_id=settings.app_client_id,
@@ -95,23 +92,18 @@ def _acquire_token(settings: McsConnectionSettings) -> str:
     if accounts:
         result = app.acquire_token_silent(_SCOPE, account=accounts[0])
 
-    if not result:
-        # Interactive fallback (opens a browser). Swap for device-code flow in
-        # headless environments: app.acquire_token_by_device_flow(...).
+    if not result or "access_token" not in result:
         result = app.acquire_token_interactive(scopes=_SCOPE)
 
-    if cache.has_state_changed:
-        _write_token_cache(cache)
-
-    if "access_token" not in result:
+    if not result or "access_token" not in result:
         raise RuntimeError(
-            f"Failed to acquire token: {result.get('error')}: {result.get('error_description')}"
+            f"Failed to acquire token: {(result or {}).get('error', 'no_token_returned')}"
         )
     return result["access_token"]
 
 
 class McsCopilotClient:
-    """Async helper that wraps the preview CopilotClient.
+    """Async helper that wraps the published CopilotClient.
 
     Usage:
         client = McsCopilotClient()                 # settings from env vars

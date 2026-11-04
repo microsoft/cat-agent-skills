@@ -1,15 +1,15 @@
-# Core red-teaming engine
+# Install only from the public production package index.
+--index-url https://pypi.org/simple
+
+# Content-safety evaluation engine
 azure-ai-evaluation[redteam]
 azure-identity
 azure-ai-projects
 python-dotenv
 
-# Auth for the Copilot Studio preview client
+# Encrypted interactive user-token persistence
 msal
 msal-extensions
 
-# Copilot Studio client (PREVIEW) — install from Test PyPI, not from this file:
-#   pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ \
-#       microsoft-agents-core \
-#       microsoft-agents-copilotstudio-client \
-#       microsoft-agents-authentication-msal
+# The client declares its activity/hosting dependencies.
+microsoft-agents-copilotstudio-client>=1.6,<2

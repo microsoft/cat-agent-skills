@@ -10,6 +10,10 @@ never the encoded surface form.
 This catalog mirrors the Azure AI Foundry AI Red Teaming Agent, which is built
 on Microsoft's open-source PyRIT framework.
 
+Here strategies transform only the four supported content-harm objectives.
+Their names do not add authentication, oversharing, tool-abuse or agentic-security
+coverage. SDK-unsupported strategies fail explicitly rather than being skipped.
+
 ## Complexity tiers
 
 - **Baseline** — raw adversarial query, no transformation. Naive but essential
@@ -73,12 +77,12 @@ Compositions support chaining only two strategies.
 
 ## Choosing strategies
 
-- **Fast gate:** `BASELINE` only.
-- **Standard pre-ship:** `BASELINE`, `EASY`, `MODERATE`.
-- **Deep assurance:** add `DIFFICULT`, `Jailbreak`, `IndirectJailbreak`, and one or
+- **Fast content-safety check:** `BASELINE` only.
+- **Extended content-safety check:** `BASELINE`, `EASY`, `MODERATE`.
+- **Additional transformations:** add `DIFFICULT`, `Jailbreak`, `IndirectJailbreak`, and one or
   two compositions.
-- **Agentic targets:** always include `Jailbreak` and `IndirectJailbreak`, and use
-  `MultiTurn` / `Crescendo` to test tool-abuse and data-leak resilience.
+- **Multi-turn content outcomes:** `MultiTurn` / `Crescendo` require additional
+  request/cost review. They do not test tool-abuse or data-leak resilience here.
 
 ## Execution notes
 

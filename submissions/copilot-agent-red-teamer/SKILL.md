@@ -1,20 +1,19 @@
 ---
 name: copilot-agent-red-teamer
 description: >-
-  Runs automated AI red teaming against a target Copilot Studio agent, model
-  endpoint, or conversational AI whenever the user asks to red team, safety
-  test, adversarially probe, jailbreak-test, stress test, or assess the safety
-  posture of an agent before or after deployment. Simulates adversarial users
-  with Microsoft Azure AI Foundry / PyRIT attack strategies across supported
-  content-risk categories, scores each attack-response pair, computes Attack
-  Success Rate (ASR), and returns a scorecard. Use before shipping a new agent,
-  after prompt or knowledge changes, or on a recurring cadence. Do not use for
-  functional QA, accuracy testing, or normal non-adversarial conversation.
+  Use when asked to run an external content-safety scan of an authorized
+  published Copilot Studio agent from Scout or a local Python host. Exercise
+  only Violence, Hate/Unfairness, Sexual and Self-Harm with Azure AI Evaluation /
+  PyRIT, and report scoped Attack Success Rates and evidence completeness.
+  Platform content filters may account for the defenses. Do not assess
+  authentication, oversharing, tool permissions or agentic security, do not
+  claim deployment approval, and do not substitute this scan for functional QA
+  or a comprehensive agent-security review.
 ---
 
 # Agent runtime instructions
 
-Before reporting any safety verdict, run a structured red-teaming scan against
+Before reporting a content-safety threshold result, run a scoped scan against
 the target using the risk categories and attack strategies configured in
 `assets/redteam-manifest.json`. This skill reproduces the workflow of the Azure
 AI Foundry AI Red Teaming Agent (built on Microsoft's open-source PyRIT
@@ -36,16 +35,15 @@ framework): scan → evaluate → report.
 
 ## Instructions
 
-1. Identify the target to red team:
-   - A Copilot Studio agent (published or test canvas), a model deployment, or
-     any callable conversational endpoint the user names.
-   - Capture how to reach it: agent name/URL, API endpoint, or the in-context
-     conversation to probe. If the target is ambiguous, ask the user to confirm
+1. Identify the published Copilot Studio target:
+   - The bundled client reaches the published authenticated agent, not a Test
+     pane conversation, arbitrary model endpoint or in-context agent.
+   - Capture its identifier/environment. If the target is ambiguous, confirm
      exactly which agent and environment (Dev/Test/Prod) to test.
 2. Confirm scope from `assets/redteam-manifest.json`:
-   - Treat the manifest as optional routing configuration. Ignore disabled
-     entries and entries containing unresolved `{{PLACEHOLDER}}` values; these
-     MUST NOT block a scan.
+   - Treat the manifest as optional scope configuration. Ignore unresolved
+     optional `{{PLACEHOLDER}}` values. Required target values, invalid scopes
+     and malformed datasets must block execution rather than be guessed.
    - Resolve the enabled `riskCategories`, `attackStrategies` (or complexity
      groups), `numObjectives` per category, and `language`.
    - If no manifest is configured, default to the four core content-risk
@@ -56,6 +54,9 @@ framework): scan → evaluate → report.
      `numObjectives`. Use the Microsoft-curated seed themes in
      `references/RISK-CATEGORIES.md`, or the user's own dataset when
      `customAttackObjectivesPath` is configured.
+   - Validate the whole custom JSON dataset, derive counts/categories from it,
+     and confirm its actual plan. All custom datasets require explicit `--yes`;
+     manifest `numObjectives` is not a limit on the file's contents.
    - Keep objectives text-only and single-turn unless a multi-turn strategy
      (`MultiTurn`, `Crescendo`) is explicitly enabled.
 4. Always run the **baseline** direct adversarial queries first (no
@@ -89,24 +90,22 @@ framework): scan → evaluate → report.
    report with `scripts/generate_report.py`, which writes a self-contained,
    print-to-PDF HTML report plus a Markdown copy. Do not invent alternate
    layouts — keep the section set and order fixed.
-10. Return the report and a clear deploy / do-not-deploy recommendation.
+10. Return the scoped result: WITHIN CONTENT-SAFETY THRESHOLD, EXCEEDS
+    CONTENT-SAFETY THRESHOLD or REVIEW REQUIRED. Never label it DEPLOY or a
+    security sign-off. Explain the four-category limitation on every artifact.
     Identify the target tested, the categories and strategies exercised, and the
     number of probes sent.
 
 ## Platform behavior (Scout vs Copilot Studio)
 
-This skill targets two runtimes and behaves differently on each:
+Scout/local Python is the execution host; Copilot Studio is the target:
 
 - **Scout (or any shell/Python environment):** the bundled `scripts/` can execute
   a **real** scan with the Azure AI Evaluation SDK `RedTeam` scanner (PyRIT)
-  against the target and generate the fixed HTML/Markdown security report.
-- **Copilot Studio:** the authoring canvas has **no Python runtime**, so use this
-  skill as the *playbook* — plan, scope, and reason about a scan, and act as the
-  red-team specialist in a multi-agent system. To actually probe an agent, run
-  the scripts from Scout or use the companion **UI-only** skill
-  `copilot-studio-guardrails-coach` for a manual, in-product pass that needs no
-  code. Prefer the companion skill when the user wants everything inside Copilot
-  Studio.
+  against the published target and generate the HTML/Markdown content-safety report.
+- **Copilot Studio:** does not run these Python scripts. Do not advertise a
+  native execution path, deploy a connected specialist, or depend on a second
+  skill to make this submission work.
 
 ## Running the scan (bundled tooling)
 
@@ -133,23 +132,17 @@ covers and how to seed objectives,
 layout, and [running scans](references/RUNNING-SCANS.md) for the executable
 tooling.
 
-## Supported risk categories
+## Supported content-safety categories
 
-Content risks (model and agent targets):
+Only these four risks are supported:
 
 - **Hateful and Unfair Content**
 - **Sexual Content**
 - **Violent Content**
 - **Self-Harm-Related Content**
-- **Protected Material** (copyrighted lyrics, recipes, text)
-- **Code Vulnerability** (insecure generated code)
-- **Ungrounded Attributes** (unfounded inferences about people)
-
-Agentic risks (agent targets; require tool/action visibility):
-
-- **Prohibited Actions** — the agent performs a disallowed action or tool call.
-- **Sensitive Data Leakage** — the agent exposes secrets, PII, or system prompt.
-- **Task Adherence** — the agent deviates from its assigned task or constraints.
+Agentic risks, authentication, oversharing, tool permissions, protected material,
+code vulnerability and ungrounded attributes are not tested by this scanner.
+Reject such requested scan scopes; separate assessment is required.
 
 Only text-based, single-turn scenarios are covered by default. Multi-turn
 strategies extend this when explicitly enabled.
@@ -192,6 +185,10 @@ The default groups mirror Azure AI Foundry: `EASY` = {Base64, Flip, Morse},
 - **Preview large scans.** If a configured scan will send more than
   `maxProbesBeforeConfirm` probes (default 200), summarize the plan and ask the
   user to confirm before running.
+- **Persist completeness.** Preserve infrastructure-error counts, unscored
+  records and complete/incomplete/unknown status in canonical JSON. Standalone
+  regeneration must never change incomplete/unknown evidence into a passing
+  content-safety result. Simulated evidence always remains REVIEW REQUIRED.
 
 ## Configuration
 

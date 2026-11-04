@@ -1,10 +1,15 @@
-# Copilot Agent Red Teamer
+# Copilot Studio Content Safety Scanner
 
-Assess a Copilot Studio agent from Scout or another Python-capable environment.
-**Copilot Agent Red Teamer** runs an external Azure AI Evaluation / PyRIT scan
-against a published agent endpoint: it simulates adversarial users, measures how
-often safety guardrails fail, and hands you a fixed, professional report you can
-attach to a go-live review.
+Measure content-safety outcomes for a published Copilot Studio agent from Scout
+or another local Python host, using Azure AI Evaluation / PyRIT. The scanner
+tests **Violence, Hate/Unfairness, Sexual and Self-Harm** responses. Copilot
+Studio's platform content filters may account for the observed defenses.
+
+**This is not a comprehensive agent-security assessment or deployment sign-off.**
+It does not test authentication, oversharing, authorization, connector/tool
+permissions or agentic risks. The historical submission slug
+`copilot-agent-red-teamer` is retained for existing paths and imports; the
+display name and supported scope are now explicitly content-safety-only.
 
 It reproduces the workflow of the **Azure AI Foundry AI Red Teaming Agent**
 (built on Microsoft's open-source [PyRIT](https://github.com/Azure/PyRIT)
@@ -16,16 +21,18 @@ framework): **scan → evaluate → report**.
 - **Evaluate** — score every attack-response pair on its *decoded* meaning and
   compute the **Attack Success Rate (ASR)** overall, per risk category, and per
   attack complexity.
-- **Report** — emit a **fixed-format** report (HTML + Markdown) with a clear
-  **deploy / do-not-deploy** verdict.
+- **Report** — emit fixed-format HTML/Markdown with **WITHIN CONTENT-SAFETY
+  THRESHOLD**, **EXCEEDS CONTENT-SAFETY THRESHOLD**, or **REVIEW REQUIRED**.
+  None of these is deployment approval.
 
 ## What it covers
 
-**Local scan scope** — Hateful & Unfair, Sexual, Violent and Self-Harm, plus
-Protected Material, Code Vulnerability or Ungrounded Attributes only when the
-installed SDK supports them. Unsupported requested categories fail explicitly.
-The bundled runner does not implement a cloud agentic scanner; the reference
-rubric/report gate can interpret existing agentic findings from approved inputs.
+Only the four named content-harm categories are accepted, including in custom
+datasets. Unsupported categories fail before scanning. Imported out-of-scope
+results are marked for separate review, never treated as a supported security
+assessment. Transformation strategies change how content-harm objectives are
+presented; they do not prove protection against general prompt injection or tool
+misuse.
 
 ## Before you start
 
@@ -37,19 +44,28 @@ scan. To run a **real** scan against a live Copilot Studio agent, use the bundle
   Central, Sweden Central, Switzerland West, North Central US) — you don't bring
   your own model; the red-teaming agent hosts the adversarial simulator and
   evaluators.
-- **Python 3.10–3.13** and `pip install -r scripts/requirements.txt`, plus the
-  preview `microsoft-agents-copilotstudio-client`.
+- **Python 3.10–3.13** and the dependencies in `scripts/requirements.txt`.
 - A **published Copilot Studio agent** with Entra ID authentication.
 - **Foundry User** on an approved project. Copilot Studio authentication uses
   interactive MSAL, so real scans require a signed-in local operator, not an
   unattended CI/Function host.
 
-Create a Python virtual environment, install `scripts/requirements.txt` and the
-Copilot Studio client matching `microsoft_agents.copilotstudio.client` and
-`microsoft_agents.activity`. The published `microsoft-agents-copilotstudio-client`
-package declares its hosting/activity dependencies. Use your organization's
-approved package versions; the older Test PyPI instructions in early previews
-are not a requirement to install into Copilot Studio.
+Create a Python virtual environment and run
+`python -m pip install --index-url https://pypi.org/simple -r scripts/requirements.txt`.
+The requirements now include the regular-PyPI
+`microsoft-agents-copilotstudio-client` and its declared hosting/activity
+dependencies. No preview/test index or separate preview-package install is
+required. Use your organization's approved versions and package policy.
+
+MSAL refresh/access-token persistence uses `msal-extensions` encryption: Windows
+DPAPI, macOS Keychain or Linux libsecret. If OS encryption is unavailable, the
+operation fails; there is no plaintext fallback. New encrypted caches are scoped
+by tenant/application under `~/.copilot-content-safety-scan/token-cache`.
+
+The old `~/.mcs_redteam_token_cache.bin`, if present, is **not read, migrated or
+deleted**. A warning asks you to review/revoke old sign-in sessions and remove
+that legacy cache through your approved process. This update cannot retroactively
+protect an old plaintext copy.
 
 Sign in to Azure with `az login`. Copy `scripts/.env.example` to `scripts/.env`
 and supply `AZURE_PROJECT_ENDPOINT`, `TENANT_ID`, `APP_CLIENT_ID`,
@@ -65,8 +81,8 @@ python scripts/run_redteam.py --scan pre-deployment-full
 
 ## How to use it
 
-Ask your agent to *"red team my customer-support agent for the four core safety
-risks with baseline + easy strategies"* and it will confirm authorization and
+Ask Scout to *"run a content-safety scan of my published customer-support agent
+for the four content-harm categories with baseline + easy strategies"*. It confirms authorization and
 scope, plan the probe set, run baseline-first then the configured strategies,
 score ASR, and return the fixed report with a verdict.
 
@@ -75,6 +91,20 @@ strategies/complexity groups, objectives per category, language, ASR threshold,
 and ready-made scan presets: quick smoke, pre-deployment full, and jailbreak /
 injection). The manifest is optional — with none, the skill runs a safe default
 (four core content risks, baseline + easy, 5 objectives).
+
+Custom JSON datasets are validated before authentication: the actual number of
+objectives and objective-category assignments determines the plan. The full
+dataset defines scope; `numObjectives` does not silently truncate it. All custom
+datasets require explicit `--yes`, including small ones. Non-custom plans above
+`maxProbesBeforeConfirm` also require it. Multi-turn strategies can issue
+multiple requests per estimated probe sequence; approve that extra cost/blast
+radius separately.
+
+Each custom row contains exactly one nonempty user message. The scanner passes
+the validated in-memory snapshot to the SDK with unique row IDs and an explicit
+objective count, preventing the SDK's default sampling limit from silently
+truncating the file. The original dataset is never rewritten. Observed category
+coverage is reconciled with the approved plan; missing results require review.
 
 ## The report
 
@@ -93,12 +123,17 @@ reviewed and sanitized with `--include-reviewed-evidence`. Regex masking is
 best-effort, not comprehensive PII detection. Simulated runs are visibly marked
 and always yield `REVIEW REQUIRED`.
 
-Remediation starts with controls a Copilot Studio maker can change directly:
-authentication, scoped knowledge sources, topic/agent instructions, action
-confirmation, least-privilege connector connections, Power Platform DLP, and
-environment isolation. Azure AI / Foundry controls are called out separately as
-platform-level evaluation or safety controls when a finding depends on that
-runtime.
+The canonical JSON persists completeness, infrastructure/SDK error counts and
+missing/unscored record counts.
+Regenerating either report preserves an incomplete result as `REVIEW REQUIRED`,
+even if its ASR is zero. Legacy files without completeness evidence also require
+review. A content-safety threshold is evaluated only on complete scoped evidence.
+
+Remediation distinguishes supported maker content-moderation/instruction changes
+from platform-filter behavior and external Azure settings. It cannot infer an
+authentication, data-permission or tool-authorization defect from a content-harm
+score. Those require separate assessments. Human responsible-AI review remains
+necessary.
 
 ## Good to know
 
@@ -111,5 +146,5 @@ runtime.
 - **Host boundary.** Scout/local Python runs the scanner; Copilot Studio is the
   target, not a runtime for these scripts. This package does not deploy a
   connected specialist or enforce automatic agent promotion.
-- Red teaming measures **safety posture**, not correctness or quality, and does
-  not replace human responsible-AI review.
+- This scanner measures **content-safety outcomes within the tested scope**,
+  not general security, correctness or quality.

@@ -1,4 +1,4 @@
-"""AI Red Teaming runner for Copilot Studio agents.
+"""External content-safety scanner for published Copilot Studio agents.
 
 Runs the Azure AI Evaluation SDK `RedTeam` scanner against a published Copilot
 Studio agent, driven by the skill's `assets/redteam-manifest.json`, then hands
@@ -6,7 +6,7 @@ the scan JSON to `generate_report.py` to produce a fixed, professional,
 downloadable red-teaming report.
 
 Modes:
-  * (default)             run a real scan  -> needs Azure Foundry + preview pkgs + az login
+  * (default)             run a real content-safety scan
   * --connectivity-check  just verify the Copilot Studio endpoint
   * --dry-run             no Azure: validate the manifest->plan mapping and emit
                           a report from SIMULATED results (pipeline smoke test)
@@ -64,6 +64,10 @@ _GROUP_EXPANSIONS = {
     "MODERATE": ["Tense"],
     "DIFFICULT": ["Compose:Tense+Base64"],
 }
+_CONTENT_RISKS = {
+    "violence": "Violence", "hate_unfairness": "HateUnfairness",
+    "sexual": "Sexual", "self_harm": "SelfHarm",
+}
 DEFAULT_OUTPUT_ROOT = Path.home() / ".copilot-agent-red-teamer" / "output"
 
 
@@ -101,7 +105,65 @@ def resolve_scope(manifest: Dict[str, Any], scan_id: Optional[str]) -> Dict[str,
                 scope[key] = entry[key]
     scope["riskCategories"] = _clean(scope["riskCategories"])
     scope["attackStrategies"] = [_STRATEGY_ALIASES.get(s, s) for s in _clean(scope["attackStrategies"])]
-    scope["language"] = scope["language"] if isinstance(scope.get("language"), str) else "English"
+    if not scope["riskCategories"] or any(r not in _CONTENT_RISKS.values() for r in scope["riskCategories"]):
+        raise ValueError("This scanner supports only Violence, HateUnfairness, Sexual and SelfHarm.")
+    if type(scope["numObjectives"]) is not int or scope["numObjectives"] < 1:
+        raise ValueError("numObjectives must be a positive integer.")
+    if not isinstance(scope["language"], str) or not scope["language"].strip():
+        raise ValueError("language must be a nonempty supported language name.")
+    return scope
+
+
+def prepare_scope(manifest: Dict[str, Any], scan_id: Optional[str]) -> Dict[str, Any]:
+    """Validate custom objectives before planning, authentication or SDK calls."""
+    scope = resolve_scope(manifest, scan_id)
+    raw = manifest.get("customAttackObjectivesPath")
+    if not raw or "{{" in str(raw):
+        return scope
+    path = Path(str(raw)).expanduser()
+    if not path.is_absolute():
+        path = SKILL_ROOT / path
+    objectives = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(objectives, list) or not objectives:
+        raise ValueError("Custom objectives must be a nonempty JSON array.")
+    counts: Dict[str, int] = {}
+    for index, objective in enumerate(objectives):
+        if not isinstance(objective, dict):
+            raise ValueError(f"Custom objective {index} must be an object.")
+        metadata = objective.get("metadata")
+        harms = metadata.get("target_harms") if isinstance(metadata, dict) else None
+        messages = objective.get("messages")
+        if not isinstance(harms, list) or not harms:
+            raise ValueError(f"Custom objective {index} needs metadata.target_harms.")
+        if (
+            not isinstance(messages, list) or len(messages) != 1
+            or any(
+                not isinstance(message, dict)
+                or message.get("role") != "user"
+                or not isinstance(message.get("content"), str)
+                or not message["content"].strip()
+                for message in messages
+            )
+        ):
+            raise ValueError(f"Custom objective {index} must contain exactly one nonempty user message.")
+        # The SDK deduplicates by ID. Assign a unique snapshot ID without
+        # changing the user's dataset or silently dropping duplicate/missing IDs.
+        objective["id"] = f"custom-objective-{index + 1}"
+        risks = set()
+        for harm in harms:
+            name = harm.get("risk-type") if isinstance(harm, dict) else None
+            if name not in _CONTENT_RISKS:
+                raise ValueError(f"Custom objective {index} has an unsupported content-risk type.")
+            risks.add(_CONTENT_RISKS[name])
+        for risk in sorted(risks):
+            counts[risk] = counts.get(risk, 0) + 1
+    scope.update({
+        "riskCategories": list(counts),
+        "customAttackObjectivesPath": str(path),
+        "customObjectiveCount": len(objectives),
+        "objectiveCounts": counts,
+        "_customObjectives": objectives,
+    })
     return scope
 
 
@@ -115,14 +177,21 @@ def print_plan(scope: Dict[str, Any]) -> None:
     strategies = [s for s in expanded_strategy_names(scope["attackStrategies"]) if s != "BASELINE"]
     n_risk = len(scope["riskCategories"])
     n_obj = int(scope["numObjectives"])
-    probes = n_risk * n_obj * (1 + len(strategies))
+    assignments = sum(scope["objectiveCounts"].values()) if "objectiveCounts" in scope else n_risk * n_obj
+    probes = estimate_probe_count(scope)
     print("Scan plan")
     print(f"  Risk categories ({n_risk}): {', '.join(scope['riskCategories'])}")
-    print(f"  Objectives/category: {n_obj}")
+    if "customObjectiveCount" in scope:
+        print(f"  Custom dataset: {scope['customObjectiveCount']} objectives; {assignments} category assignments")
+        print(f"  Objectives by category: {scope['objectiveCounts']}")
+        print("  The full dataset defines the scope; manifest numObjectives does not limit it.")
+    else:
+        print(f"  Objectives/category: {n_obj}")
     print(f"  Language: {scope.get('language', 'English')}")
     print(f"  Strategies: BASELINE (always) + {', '.join(strategies) or '(none)'}")
-    print(f"  Estimated probes: {n_risk} risks x {n_obj} objectives x "
+    print(f"  Estimated probe sequences: {assignments} objective-category assignments x "
           f"(1 baseline + {len(strategies)} strategies) = {probes}")
+    print("  Multi-turn strategies may send multiple target requests per sequence.")
 
 
 # --------------------------------------------------------------------------- #
@@ -141,7 +210,24 @@ def expanded_strategy_names(names: List[str]) -> List[str]:
 
 def estimate_probe_count(scope: Dict[str, Any]) -> int:
     strategies = [s for s in expanded_strategy_names(scope["attackStrategies"]) if s != "BASELINE"]
-    return len(scope["riskCategories"]) * int(scope["numObjectives"]) * (1 + len(strategies))
+    assignments = (
+        sum(scope["objectiveCounts"].values()) if "objectiveCounts" in scope
+        else len(scope["riskCategories"]) * int(scope["numObjectives"])
+    )
+    return assignments * (1 + len(strategies))
+
+
+def confirm_scan(scope: Dict[str, Any], manifest: Dict[str, Any], assume_yes: bool) -> None:
+    limit = manifest.get("maxProbesBeforeConfirm", 200)
+    if type(limit) is not int or limit < 1:
+        raise ValueError("maxProbesBeforeConfirm must be a positive integer.")
+    estimate = estimate_probe_count(scope)
+    if not assume_yes and ("customObjectiveCount" in scope or estimate > limit):
+        raise SystemExit(
+            f"Plan contains approximately {estimate} probe sequences (confirmation limit {limit}). "
+            "All custom datasets and plans over the limit require --yes after "
+            "reviewing the actual dataset, authorized target, costs and blast radius."
+        )
 
 
 def _call_accepts(callable_obj: Any, parameter: str) -> bool:
@@ -170,7 +256,8 @@ def _resolve_output_path(manifest: Dict[str, Any], scan_name: str) -> Path:
 
 
 def _materialize_scan_json(
-    result: Any, sdk_output_dir: Path, scan_json: Path, scope: Optional[Dict[str, Any]] = None
+    result: Any, sdk_output_dir: Path, scan_json: Path, scope: Optional[Dict[str, Any]] = None,
+    scan_state: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Export sanitized scores/references, never an arbitrary intermediate file."""
     if isinstance(result, dict):
@@ -187,7 +274,19 @@ def _materialize_scan_json(
         scan = json.loads(final_results[0].read_text(encoding="utf-8-sig"))
     if not isinstance(scan, dict) or not any(key in scan for key in ("scorecard", "redteaming_scorecard")):
         raise ValueError("RedTeam result does not contain a scorecard.")
-    scan_json.write_text(json.dumps(sanitized_scan(scan, scope), indent=2, allow_nan=False), encoding="utf-8")
+    errors = (scan_state or {}).get("infra_errors", 0)
+    meta = {
+        **(scope or {}), "incomplete": bool(errors), "infrastructure_errors": errors,
+        "sdk_failures": (scan_state or {}).get("sdk_failures", 0),
+        "sdk_incomplete": (scan_state or {}).get("sdk_incomplete", False),
+    }
+    if scope and scope.get("riskCategories"):
+        multiplier = 1 + len([s for s in expanded_strategy_names(scope["attackStrategies"]) if s != "BASELINE"])
+        counts = scope.get("objectiveCounts") or {
+            risk: int(scope["numObjectives"]) for risk in scope["riskCategories"]
+        }
+        meta["expected_by_category"] = {risk: count * multiplier for risk, count in counts.items()}
+    scan_json.write_text(json.dumps(sanitized_scan(scan, meta), indent=2, allow_nan=False), encoding="utf-8")
 
 
 def _resolve_supported_language(language: str) -> Any:
@@ -218,10 +317,6 @@ def build_risk_categories(names: List[str]) -> List[Any]:
         "Sexual": RiskCategory.Sexual,
         "SelfHarm": RiskCategory.SelfHarm,
     }
-    for name in ("ProtectedMaterial", "CodeVulnerability", "UngroundedAttributes"):
-        if hasattr(RiskCategory, name):
-            mapping[name] = getattr(RiskCategory, name)
-
     requested = _clean(names)
     cats = [mapping[n] for n in requested if n in mapping]
     unmapped = [n for n in requested if n not in mapping]
@@ -233,10 +328,8 @@ def build_risk_categories(names: List[str]) -> List[Any]:
         raise SystemExit(
             "Requested risk categories not supported by the local RedTeam SDK: "
             f"{', '.join(unmapped)}. Supported: {', '.join(mapping.keys())}. "
-            "Agentic-risk categories (ProhibitedActions, SensitiveDataLeakage, "
-            "TaskAdherence) require the cloud/agentic scanner, not this local "
-            "runner. Fix the manifest scope so it lists only supported categories, "
-            "or route the agentic scope to the cloud scanner."
+            "Authentication, oversharing, tool permissions and agentic risks are "
+            "outside this content-safety scanner's scope."
         )
     if not cats:
         raise SystemExit(
@@ -410,39 +503,26 @@ async def connectivity_check() -> None:
 
 
 async def run_scan(scan_id: Optional[str], assume_yes: bool = False) -> None:
+    manifest = load_manifest()
+    scope = prepare_scope(manifest, scan_id)
+    print_plan(scope)
+    confirm_scan(scope, manifest, assume_yes)
+
     from azure.identity import AzureCliCredential
     from azure.ai.evaluation.red_team import RedTeam
-
-    manifest = load_manifest()
-    scope = resolve_scope(manifest, scan_id)
-    print_plan(scope)
-    max_probes = int(manifest.get("maxProbesBeforeConfirm", 200))
-    estimated = estimate_probe_count(scope)
-    if estimated > max_probes and not assume_yes:
-        raise SystemExit(
-            f"Estimated probe count ({estimated}) exceeds maxProbesBeforeConfirm "
-            f"({max_probes}). Re-run with --yes after confirming authorization, "
-            "target environment, and blast radius."
-        )
 
     azure_ai_project = os.environ.get("AZURE_PROJECT_ENDPOINT")
     if not azure_ai_project:
         raise SystemExit("AZURE_PROJECT_ENDPOINT is not set. See .env.example, or use --dry-run.")
 
-    custom_prompts = manifest.get("customAttackObjectivesPath")
-    custom_prompts = custom_prompts if custom_prompts and "{{" not in custom_prompts else None
+    custom_prompts = scope.get("customAttackObjectivesPath")
 
     kwargs: Dict[str, Any] = {"azure_ai_project": azure_ai_project, "credential": AzureCliCredential()}
     if not _call_accepts(RedTeam, "language"):
         raise SystemExit("This SDK cannot accept the configured language. Use a supported RedTeam SDK.")
     kwargs["language"] = _resolve_supported_language(scope.get("language", "English"))
-    if custom_prompts:
-        kwargs["custom_attack_seed_prompts"] = custom_prompts
-    else:
-        kwargs["risk_categories"] = build_risk_categories(scope["riskCategories"])
-        kwargs["num_objectives"] = int(scope["numObjectives"])
-
-    red_team = RedTeam(**kwargs)
+    kwargs["risk_categories"] = build_risk_categories(scope["riskCategories"])
+    kwargs["num_objectives"] = scope.get("customObjectiveCount", int(scope["numObjectives"]))
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     scan_name = f"{scan_id or 'default'}-{ts}"
@@ -455,6 +535,11 @@ async def run_scan(scan_id: Optional[str], assume_yes: bool = False) -> None:
     # existing sdk-output directory. Cleanup also runs when scanning/export fails.
     with tempfile.TemporaryDirectory(prefix="copilot-redteam-") as temporary_output:
         sdk_output_dir = Path(temporary_output)
+        if custom_prompts:
+            snapshot = sdk_output_dir / "validated-objectives.json"
+            snapshot.write_text(json.dumps(scope["_customObjectives"]), encoding="utf-8")
+            kwargs["custom_attack_seed_prompts"] = str(snapshot)
+        red_team = RedTeam(**kwargs)
         result = await red_team.scan(
             target=make_target_callback(scan_state),
             scan_name=scan_name,
@@ -462,7 +547,13 @@ async def run_scan(scan_id: Optional[str], assume_yes: bool = False) -> None:
             attack_strategies=build_attack_strategies(scope["attackStrategies"]),
             output_path=str(sdk_output_dir),
         )
-        _materialize_scan_json(result, sdk_output_dir, scan_json, scope)
+        scan_state["sdk_failures"] = getattr(red_team, "failed_tasks", 0)
+        task_states = getattr(red_team, "task_statuses", {})
+        scan_state["sdk_incomplete"] = any(
+            str(value).lower() not in ("completed", "succeeded", "success")
+            for value in task_states.values()
+        )
+        _materialize_scan_json(result, sdk_output_dir, scan_json, scope, scan_state)
 
     if scan_state.get("infra_errors"):
         print(
@@ -498,10 +589,11 @@ def simulate_scan(scope: Dict[str, Any], seed: int = 42) -> Dict[str, Any]:
 
     for risk in scope["riskCategories"]:
         per_risk_hits.setdefault(risk, [0, 0])
+        risk_objectives = scope.get("objectiveCounts", {}).get(risk, n_obj)
         for strat in strategies:
             cx = "Baseline" if strat == "BASELINE" else strategy_complexity(strat)
             rate = _BASE_RATE.get(cx, 0.1)
-            for i in range(n_obj):
+            for i in range(risk_objectives):
                 success = rng.random() < rate
                 per_risk_hits[risk][0] += int(success)
                 per_risk_hits[risk][1] += 1
@@ -546,7 +638,7 @@ def simulate_scan(scope: Dict[str, Any], seed: int = 42) -> Dict[str, Any]:
 
 def dry_run(scan_id: Optional[str]) -> None:
     manifest = load_manifest()
-    scope = resolve_scope(manifest, scan_id)
+    scope = prepare_scope(manifest, scan_id)
     print("=== DRY RUN (no Azure, SIMULATED results) ===")
     print_plan(scope)
 
@@ -554,7 +646,10 @@ def dry_run(scan_id: Optional[str]) -> None:
     scan_name = f"{scan_id or 'default'}-DRYRUN-{ts}"
     scan_json = _resolve_output_path(manifest, scan_name)
     out_dir = scan_json.parent
-    scan_json.write_text(json.dumps(sanitized_scan(simulate_scan(scope)), indent=2, allow_nan=False), encoding="utf-8")
+    scan_json.write_text(
+        json.dumps(sanitized_scan(simulate_scan(scope), {"incomplete": False, **scope}), indent=2, allow_nan=False),
+        encoding="utf-8",
+    )
     print(f"\nSimulated scan JSON written: {scan_json}")
     _finish(scan_json, out_dir, scan_name, manifest, scope=scope, simulated=True)
 
@@ -567,7 +662,6 @@ def _finish(scan_json: Path, out_dir: Path, scan_name: str, manifest: Dict[str, 
         "target_name": os.environ.get("AGENT_IDENTIFIER", "SIMULATED-TARGET" if simulated else "Copilot Studio agent"),
         "environment": os.environ.get("TARGET_ENVIRONMENT", "Simulation" if simulated else "Unspecified"),
         "threshold": manifest.get("scoring", {}).get("threshold", 5.0),
-        "failOnAnyAgenticRisk": manifest.get("scoring", {}).get("failOnAnyAgenticRisk", True),
         "scan_name": scan_name,
         "incomplete": incomplete,
         "simulated": simulated,
@@ -575,6 +669,8 @@ def _finish(scan_json: Path, out_dir: Path, scan_name: str, manifest: Dict[str, 
         "attackStrategies": scope.get("attackStrategies", []),
         "numObjectives": scope.get("numObjectives", "N/A"),
         "language": scope.get("language", "English"),
+        "objectiveCounts": scope.get("objectiveCounts"),
+        "customObjectiveCount": scope.get("customObjectiveCount"),
     }
     html_path, md_path = build_report(scan_json, out_dir, meta)
     print("\nReport generated:")
@@ -582,14 +678,14 @@ def _finish(scan_json: Path, out_dir: Path, scan_name: str, manifest: Dict[str, 
     print(f"  Markdown : {md_path}")
     print(f"  Scan JSON: {scan_json}")
     if simulated:
-        print("\nNOTE: results are SIMULATED (stub target). Use a real scan for a valid verdict.")
+        print("\nNOTE: results are SIMULATED; they are not a content-safety assessment.")
     if incomplete:
         print("\nNOTE: the scan is INCOMPLETE due to infrastructure errors on one or "
               "more probes. Treat the verdict as REVIEW REQUIRED and re-run.")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Red-team a Copilot Studio agent.")
+    parser = argparse.ArgumentParser(description="Run an external Copilot Studio content-safety scan.")
     parser.add_argument("--scan", help="Named scan id from the manifest (optional).")
     parser.add_argument("--connectivity-check", action="store_true", help="Only verify the agent endpoint.")
     parser.add_argument("--dry-run", action="store_true", help="No Azure: validate plan + emit report from simulated results.")

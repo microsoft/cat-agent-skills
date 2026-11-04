@@ -1,6 +1,6 @@
 # Running Scans
 
-The bundled `scripts/` folder runs a real red-team scan against a published
+The bundled `scripts/` folder runs a scoped content-safety scan against a published
 Copilot Studio agent using the Azure AI Evaluation SDK `RedTeam` scanner (built
 on PyRIT) and emits the fixed report. This mirrors Microsoft's official
 "AI Red Teaming Agent for Copilot Studio agents" sample.
@@ -10,7 +10,7 @@ on PyRIT) and emits the fixed report. This mirrors Microsoft's official
 | File | Purpose |
 | --- | --- |
 | `scripts/run_redteam.py` | Orchestrates a scan from `assets/redteam-manifest.json`, then builds the report. |
-| `scripts/copilot_studio_client.py` | Async wrapper around the preview Copilot Studio client + MSAL auth. |
+| `scripts/copilot_studio_client.py` | Published Copilot Studio client + encrypted MSAL persistence. |
 | `scripts/generate_report.py` | Turns the scan JSON into the fixed HTML + Markdown report. |
 | `scripts/data/prompts.json` | Sample bring-your-own attack objectives (custom seed prompts). |
 | `scripts/requirements.txt` | Python dependencies. |
@@ -53,7 +53,8 @@ Outputs are written outside the submission by default, under
 `REDTEAM_OUTPUT_PATH`, or a concrete manifest `outputPath` overrides it:
 
 - `<scan-name>.json` — numeric scorecard, scan parameters and attack-record
-  references; raw conversations, assessment text and seed content are omitted.
+  references plus durable `_scan_status`; raw conversations, assessment text
+  and seed content are omitted.
 - `<scan-name>_RedTeam_Report.html` — the fixed, downloadable report.
 - `<scan-name>_RedTeam_Report.md` — Markdown copy.
 
@@ -67,20 +68,37 @@ project's own access/retention policy; only use an approved trusted project.
 
 - **Baseline runs first**, then each configured strategy is applied on top of the
   baseline objective set.
-- **Some probes will error or be refused** — Copilot Studio's content-management
-  and threat-detection policies block many adversarial prompts. This is
-  **expected** and is scored as a *defended* result, not a tooling failure.
+- **Policy refusals are distinct from errors** — recognized policy refusals are
+  content-safety outcomes. Authentication/network/throttling and unknown
+  failures are infrastructure errors; canonical JSON and both reports remain
+  incomplete/REVIEW REQUIRED, including after standalone regeneration.
 - A scan of a few risk categories with several strategies typically takes
   **30–45 minutes**; time scales with categories × expanded strategies ×
-  objectives. Scans over `maxProbesBeforeConfirm` require `--yes`.
+  objectives. Scans over `maxProbesBeforeConfirm` and **all custom datasets**
+  require `--yes` after plan review. Counts are probe sequences, not a hard cap
+  on individual multi-turn target requests.
 
 ## Bring your own objectives
 
 Set `customAttackObjectivesPath` in the manifest (or edit
 `scripts/data/prompts.json`) to use your own seed prompts. When bringing your
 own prompts, the safety-evaluable `risk-type`s are `violence`, `sexual`,
-`hate_unfairness`, and `self_harm`. The number of prompts becomes
-`num_objectives` for the scan.
+`hate_unfairness`, and `self_harm`. Relative paths are resolved from the skill
+root. The file must contain a nonempty JSON array; every row needs valid
+`metadata.target_harms` and exactly one nonempty user message.
+Validate the file before authentication/SDK calls.
+
+The actual dataset size/category assignments determine the plan and simulated
+report, not manifest `numObjectives`. Estimate sequences as the sum of
+objective-category assignments × (baseline + expanded strategies). No custom
+file may bypass confirmation by using a smaller manifest count. The full file
+is used; it is not silently filtered or truncated.
+
+The SDK receives a validated temporary snapshot with unique objective IDs and an
+explicit `num_objectives` matching the dataset size, not its default sampling
+limit. Original files are not changed. Before declaring completeness, reconcile
+returned category-record counts with the plan and inspect SDK run/task status;
+zero records, SDK failures or missing coverage remain REVIEW REQUIRED.
 
 ## Safety and authorization
 
@@ -91,3 +109,6 @@ own prompts, the safety-evaluable `risk-type`s are `violence`, `sexual`,
   target may echo injected commands.
 - Handle the raw scan JSON and report as **confidential**; they contain
   adversarial test data.
+- This tests only the four named content-harm categories. Platform content
+  filters may explain results; do not infer general security or deployment
+  approval from within-threshold ASR.
