@@ -8,9 +8,7 @@ interface Props {
   type?: SkillType;
   tags?: string[];
   coverColor?: string;
-  hasBundle?: boolean;
-  /** True when an automation ships as an installer `.zip` (vs an importable `.json`). */
-  isInstaller?: boolean;
+  builtByMicrosoft?: boolean;
   /** "card" for grid thumbnails, "hero" for the detail header. */
   variant?: "card" | "hero";
   class?: string;
@@ -23,8 +21,7 @@ const {
   type = "skill",
   tags = [],
   coverColor,
-  hasBundle = false,
-  isInstaller = false,
+  builtByMicrosoft = false,
   variant = "card",
   class: className = "",
 } = Astro.props;
@@ -36,6 +33,7 @@ const isSample = tags.includes("sample");
 const shownTags = tags.filter((t) => t !== "sample");
 const shownPlatforms = isHero ? platforms : platforms.slice(0, 2);
 const extraPlatforms = platforms.length - shownPlatforms.length;
+const chip = "flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm ring-1 ring-inset ring-black/5";
 ---
 
 <div
@@ -64,112 +62,54 @@ const extraPlatforms = platforms.length - shownPlatforms.length;
     class="relative flex h-full flex-col justify-between p-4"
     class:list={[isHero && "p-6 sm:p-8"]}
   >
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex flex-wrap items-center gap-1.5">
-        {
-          isSample && (
-            <span
-              class="flex items-center gap-1 rounded-md bg-amber-400 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-900 shadow-sm"
-              title="A sample / demo skill — placeholder content, not a real submission"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="h-3 w-3"
-              >
-                <path d="M12 2 3 7v10l9 5 9-5V7l-9-5zm0 2.3L18 8v.02l-6 3.33-6-3.33V8l6-3.7zM5 9.7l6 3.33v6.64l-6-3.33V9.7zm14 0v6.64l-6 3.33v-6.64l6-3.33z" />
-              </svg>
-              Sample
-            </span>
-          )
-        }
-        {
-          type === "plugin" && (
-            <span
-              class="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent-fg backdrop-blur-sm"
-              title="A Cowork plugin (M365 app package)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="h-3 w-3"
-              >
-                <path d="M10 3v4a1 1 0 0 1-1 1H5m14 0h-4a1 1 0 0 1-1-1V3m0 18v-4a1 1 0 0 1 1-1h4M5 16h4a1 1 0 0 1 1 1v4M4 8h16v8H4z" />
-              </svg>
-              Plugin
-            </span>
-          )
-        }
-        {
-          type === "automation" && (
-            <span
-              class="flex items-center gap-1 rounded-md bg-accent px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-accent-fg backdrop-blur-sm"
-              title="A Scout automation (scheduled .json)"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="h-3 w-3"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7v5l3 2" />
-              </svg>
-              Automation
-            </span>
-          )
-        }
-        {
-          shownPlatforms.map((platform) => (
-            <span
-              class="flex items-center gap-1.5 rounded-md bg-black/30 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm"
-            >
-              <span
-                class="h-1.5 w-1.5 rounded-full"
-                style={`background:${PLATFORM_COLORS[platform]}`}
-              />
-              {platform}
-            </span>
-          ))
-        }
-        {
-          extraPlatforms > 0 && (
-            <span class="rounded-md bg-black/30 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
-              +{extraPlatforms}
-            </span>
-          )
-        }
-      </div>
+    <div class="flex flex-wrap items-center gap-1.5">
       {
-        hasBundle && (
+        isSample && (
           <span
-            class="flex items-center gap-1 rounded-md bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-sm"
-            title={
-              isInstaller
-                ? "Includes a downloadable automation installer"
-                : type === "automation"
-                ? "Includes a downloadable automation file"
-                : "Includes a downloadable script bundle"
-            }
+            class="flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-neutral-900 shadow-sm"
+            title="A sample / demo skill — placeholder content, not a real submission"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              class="h-3 w-3"
-            >
-              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
-            </svg>
-            {type === "automation" && !isInstaller ? ".json" : ".zip"}
+            Sample
           </span>
         )
       }
+      {
+        builtByMicrosoft && (
+          <span class={chip} title="Built by Microsoft" aria-label="Built by Microsoft" role="img">
+            <svg viewBox="0 0 23 23" class="h-3.5 w-3.5" aria-hidden="true">
+              <path fill="#f25022" d="M1 1h10v10H1z" />
+              <path fill="#7fba00" d="M12 1h10v10H12z" />
+              <path fill="#00a4ef" d="M1 12h10v10H1z" />
+              <path fill="#ffb900" d="M12 12h10v10H12z" />
+            </svg>
+          </span>
+        )
+      }
+      {
+        type === "plugin" && (
+          <span class={chip} title="A Cowork plugin (M365 app package)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-neutral-500" aria-hidden="true"><path d="m21 8-9-5-9 5v8l9 5 9-5z" /><path d="m3 8 9 5 9-5" /><path d="M12 13v8" /></svg>
+            Plugin
+          </span>
+        )
+      }
+      {
+        type === "automation" && (
+          <span class={chip} title="A Scout automation (scheduled .json)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 text-neutral-500" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            Automation
+          </span>
+        )
+      }
+      {
+        shownPlatforms.map((platform) => (
+          <span class={chip}>
+            <span class="h-2 w-2 rounded-full" style={`background:${PLATFORM_COLORS[platform]}`} />
+            {platform}
+          </span>
+        ))
+      }
+      {extraPlatforms > 0 && <span class={chip}>+{extraPlatforms}</span>}
     </div>
 
     <div>
