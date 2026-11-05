@@ -58,8 +58,10 @@ Outputs are written outside the submission by default, under
 - `<scan-name>_RedTeam_Report.html` — the fixed, downloadable report.
 - `<scan-name>_RedTeam_Report.md` — Markdown copy.
 
-The SDK writes into a new isolated temporary directory, not a reused output
-folder. Only files created for that run are cleaned up on success or failure;
+The SDK constructor's `output_dir` and scan's `output_path` both point into the
+same new isolated temporary directory, not the current directory or a reused
+output folder. SDK log handles for that directory are released before cleanup.
+Only files created for that run are cleaned up on success or failure;
 pre-existing evidence folders are not removed. The canonical JSON is sanitized
 in memory before writing. Remote Foundry evidence remains subject to the
 project's own access/retention policy; only use an approved trusted project.
@@ -67,7 +69,9 @@ project's own access/retention policy; only use an approved trusted project.
 ## Expected behavior
 
 - **Baseline runs first**, then each configured strategy is applied on top of the
-  baseline objective set.
+  baseline objective set. Overlapping group/explicit strategy selections are
+  expanded and deduplicated before planning, simulation and coverage checks,
+  matching the SDK's effective selection.
 - **Policy refusals are distinct from errors** — recognized policy refusals are
   content-safety outcomes. Authentication/network/throttling and unknown
   failures are infrastructure errors; canonical JSON and both reports remain

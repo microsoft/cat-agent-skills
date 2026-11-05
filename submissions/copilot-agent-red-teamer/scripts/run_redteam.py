@@ -28,6 +28,7 @@ import argparse
 import asyncio
 import inspect
 import json
+import logging
 import os
 import random
 import tempfile
@@ -205,7 +206,7 @@ def expanded_strategy_names(names: List[str]) -> List[str]:
             expanded.extend(_GROUP_EXPANSIONS[normalized])
         else:
             expanded.append(normalized)
-    return expanded
+    return list(dict.fromkeys(expanded))
 
 
 def estimate_probe_count(scope: Dict[str, Any]) -> int:
@@ -238,6 +239,20 @@ def _call_accepts(callable_obj: Any, parameter: str) -> bool:
     return parameter in sig.parameters or any(
         p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
     )
+
+
+def _close_sdk_file_handlers(red_team: Any, output_dir: Path) -> None:
+    """Release this run's SDK log files before Windows temporary cleanup."""
+    logger = getattr(red_team, "logger", None)
+    if not isinstance(logger, logging.Logger):
+        return
+    for handler in list(logger.handlers):
+        if (
+            isinstance(handler, logging.FileHandler)
+            and Path(handler.baseFilename).resolve().is_relative_to(output_dir.resolve())
+        ):
+            logger.removeHandler(handler)
+            handler.close()
 
 
 def _resolve_output_path(manifest: Dict[str, Any], scan_name: str) -> Path:
@@ -520,6 +535,8 @@ async def run_scan(scan_id: Optional[str], assume_yes: bool = False) -> None:
     kwargs: Dict[str, Any] = {"azure_ai_project": azure_ai_project, "credential": AzureCliCredential()}
     if not _call_accepts(RedTeam, "language"):
         raise SystemExit("This SDK cannot accept the configured language. Use a supported RedTeam SDK.")
+    if not _call_accepts(RedTeam, "output_dir"):
+        raise SystemExit("This SDK cannot isolate its output directory. Use a supported RedTeam SDK.")
     kwargs["language"] = _resolve_supported_language(scope.get("language", "English"))
     kwargs["risk_categories"] = build_risk_categories(scope["riskCategories"])
     kwargs["num_objectives"] = scope.get("customObjectiveCount", int(scope["numObjectives"]))
@@ -535,25 +552,29 @@ async def run_scan(scan_id: Optional[str], assume_yes: bool = False) -> None:
     # existing sdk-output directory. Cleanup also runs when scanning/export fails.
     with tempfile.TemporaryDirectory(prefix="copilot-redteam-") as temporary_output:
         sdk_output_dir = Path(temporary_output)
+        kwargs["output_dir"] = str(sdk_output_dir)
         if custom_prompts:
             snapshot = sdk_output_dir / "validated-objectives.json"
             snapshot.write_text(json.dumps(scope["_customObjectives"]), encoding="utf-8")
             kwargs["custom_attack_seed_prompts"] = str(snapshot)
         red_team = RedTeam(**kwargs)
-        result = await red_team.scan(
-            target=make_target_callback(scan_state),
-            scan_name=scan_name,
-            application_scenario="Copilot Studio agent red-team",
-            attack_strategies=build_attack_strategies(scope["attackStrategies"]),
-            output_path=str(sdk_output_dir),
-        )
-        scan_state["sdk_failures"] = getattr(red_team, "failed_tasks", 0)
-        task_states = getattr(red_team, "task_statuses", {})
-        scan_state["sdk_incomplete"] = any(
-            str(value).lower() not in ("completed", "succeeded", "success")
-            for value in task_states.values()
-        )
-        _materialize_scan_json(result, sdk_output_dir, scan_json, scope, scan_state)
+        try:
+            result = await red_team.scan(
+                target=make_target_callback(scan_state),
+                scan_name=scan_name,
+                application_scenario="Copilot Studio content-safety scan",
+                attack_strategies=build_attack_strategies(scope["attackStrategies"]),
+                output_path=str(sdk_output_dir),
+            )
+            scan_state["sdk_failures"] = getattr(red_team, "failed_tasks", 0)
+            task_states = getattr(red_team, "task_statuses", {})
+            scan_state["sdk_incomplete"] = any(
+                str(value).lower() not in ("completed", "succeeded", "success")
+                for value in task_states.values()
+            )
+            _materialize_scan_json(result, sdk_output_dir, scan_json, scope, scan_state)
+        finally:
+            _close_sdk_file_handlers(red_team, sdk_output_dir)
 
     if scan_state.get("infra_errors"):
         print(
