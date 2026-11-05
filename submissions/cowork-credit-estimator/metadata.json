@@ -1,0 +1,18 @@
+{
+  "name": "cowork-credit-estimator",
+  "displayName": "Cowork Credit Estimator",
+  "description": "Estimate Cowork task credits before work runs and track a user-maintained month-to-date ledger without claiming access to a live meter.",
+  "version": "1.0.0",
+  "author": "jrolfe79",
+  "license": "MIT",
+  "platforms": [
+    "cowork"
+  ],
+  "tags": [
+    "cowork",
+    "credit-estimation",
+    "usage-tracking",
+    "recurring-tasks",
+    "productivity"
+  ]
+}
