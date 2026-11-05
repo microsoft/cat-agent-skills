@@ -1,0 +1,53 @@
+{
+  "description": "Pulls transcript/recap for a meeting you skipped and extracts your action items.",
+  "schedule": {
+    "kind": "single",
+    "naturalLanguage": "",
+    "days": [],
+    "time": {
+      "hour": 0,
+      "minute": 0
+    },
+    "hour": 0,
+    "minute": 0
+  },
+  "condition": "I miss or decline a calendar meeting",
+  "conditionCheckInterval": 60,
+  "browserHeadless": false,
+  "teamsNotify": "always",
+  "id": "mc0h5bd2mvl64k1k",
+  "name": "Missed-Meeting Recovery",
+  "steps": [
+    {
+      "id": "1",
+      "label": "Find missed meetings",
+      "prompt": "Find candidate meetings in the last 24 hours and sort most recent first. For each candidate, include event id, subject, start/end time, organizer, attendee response status, and attendance evidence signals.\n\nApply this strict precedence rule:\n- attendance evidence is the primary decision signal and always overrides invite response status.\n- If there is medium or high evidence I joined/participated (for example: my chat messages in the meeting thread, transcript speaker/activity evidence, or other direct participation signals), classify as attended_evidence regardless of whether I accepted, tentatively accepted, declined, or never responded.\n- Classify as missed_meeting only when there is no medium/high attendance evidence.\n\nOutput two lists:\n- missed_meetings\n- attended_evidence_followups (include confidence and why it was considered attendance evidence)\n\nDo not place attended_evidence meetings in missed_meetings."
+    },
+    {
+      "id": "2",
+      "label": "Collect recap sources",
+      "prompt": "For each meeting in missed_meetings, collect recap material in this priority order: (1) transcript segments, (2) meeting chat messages, (3) calendar event details/body/attachments metadata. Record which source(s) were available and chosen.\n\nFor attended_evidence_followups, collect only minimal context needed to identify relevant follow-ups (if any), without labeling the meeting as missed."
+    },
+    {
+      "id": "3",
+      "label": "Summarize outcomes",
+      "prompt": "Produce concise outputs in two separate sections:\n\nA) Missed meetings recap:\nUsing the best available source for each meeting in missed_meetings, produce concise bullets for key decisions, outcomes, and unresolved questions. Keep each meeting summary separate and labeled with meeting title and time.\n\nB) Attended-evidence follow-ups:\nFor meetings in attended_evidence_followups, list only relevant follow-up context/items (if any) in a separate section. Do not describe these meetings as missed."
+    },
+    {
+      "id": "4",
+      "label": "Extract my action items",
+      "prompt": "Extract action items assigned to me from both sections:\n- missed_meetings recap\n- attended_evidence_followups context\n\nFor each item include: action, owner (must be me), due date if present, confidence (high/medium/low), and exact supporting quote/snippet.\n\nIf no items are assigned to me in a section, state that explicitly for that section."
+    },
+    {
+      "id": "5",
+      "label": "Produce and distribute recovery outputs",
+      "prompt": "Create two outputs from prior steps, in this order:\n(A) a concise 'Missed-Meeting Recovery Summary' (5-10 bullets max) that includes ONLY missed_meetings content.\n(B) the full 'Missed-Meeting Recovery Brief' prioritized by recency, with:\n   1) per-meeting sections for missed_meetings (source used, summary bullets, my action items)\n   2) a separate section titled 'Other Follow-Ups (Attendance Evidence)' for attended_evidence_followups items\n   3) a consolidated checklist at the end.\n\nImportant policy:\n- Never include attended_evidence meetings inside any missed-meeting list/wording.\n- If a meeting has medium/high evidence I joined, it must appear only in the separate follow-up section (or be omitted if no follow-up exists).\n\nThen deliver BOTH outputs to BOTH channels:\n1) Email: get my primary email address and send an email to me containing both sections (Summary first, then Full Brief). Subject: 'Missed-Meeting Recovery | <date>'.\n2) Teams chat: send me a Teams chat message containing both sections (Summary first, then Full Brief). If message length is a concern, include full summary and as much of the full brief as possible, and state that full version is in email.\n\nDo not send to anyone except me. Return final status with email recipient used, Teams chat target used, and delivery success/failure for each channel."
+    }
+  ],
+  "enabled": true,
+  "oneShot": true,
+  "createdAt": "2026-10-23T16:12:22.520Z",
+  "updatedAt": "2026-11-05T11:18:30.326Z",
+  "triggerType": "condition",
+  "lastExecutedAt": null
+}
