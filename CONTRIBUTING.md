@@ -123,7 +123,8 @@ on the first comment of the skill's discussion. Set it explicitly only when your
 only link isn't a GitHub profile, e.g. LinkedIn.)
 
 `category` is `manufacturing`, `retail-cpg`, `financial-services`, `productivity`
-(the default), or `agent-development`. Visitors can select multiple categories; a submission
+(the default), `agent-development`, `education`, `legal`, `sales`, `service`,
+`finance`, `capital-markets`, or `accounting`. Visitors can select multiple categories; a submission
 matches any selected category and must also match the product and other filters.
 
 `builtByMicrosoft` defaults to `false`. Set it to `true` only for verified
