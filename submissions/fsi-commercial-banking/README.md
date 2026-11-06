@@ -36,3 +36,7 @@ examples the skills recognize; any connector carrying the same data works.
 | covenant-compliance-check | Covenant tracking or LOS (nCino); core/GL | Uploaded credit agreement and certificates, then EDGAR exhibits |
 | borrower-prospect-research | Business credit (D&B, Experian, Equifax); company data (S&P Capital IQ, PitchBook); CRM (Salesforce, DealCloud) | Public registries and EDGAR via web or browser, then uploads/M365 |
 | rm-call-prep-followup | CRM (Dynamics 365, Salesforce); core/treasury | Microsoft 365 mail, Teams, and meetings, then company site, registry, and EDGAR |
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

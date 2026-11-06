@@ -4,10 +4,10 @@
   "version": "1.0.1",
   "id": "bfa3bc4b-dddc-4e29-8948-2c1c09c5dc88",
   "developer": {
-    "name": "Microsoft FSI Industry Skills",
-    "websiteUrl": "https://www.microsoft.com/microsoft-365/copilot",
-    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
-    "termsOfUseUrl": "https://www.microsoft.com/legal/terms-of-use"
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
   },
   "name": {
     "short": "FSI Asset Management",
