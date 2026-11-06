@@ -8,7 +8,7 @@ It extracts and normalises the order lines, validates them against customer, pri
 and credit master data, queues exceptions with reason codes and a recommended correction for
 each, and drafts the customer response.
 
-## How it works
+## What's included
 
 1. Extracts lines from email, PDF and portal submissions.
 2. Normalises products, units of measure and quantities.
@@ -16,7 +16,12 @@ each, and drafts the customer response.
 4. Queues exceptions with reason codes and a recommended correction.
 5. Drafts the customer or internal response.
 
-## Example scenario
+## Before you start
+
+Customer and pricing master, product master and unit-of-measure rules, trading terms, credit
+rules, order history, and carrier and delivery rules.
+
+## Try it
 
 *"Just key it, truck at 2."* Four traps in a single line:
 
@@ -31,12 +36,11 @@ each, and drafts the customer response.
 Four exceptions routed with corrections, one clarification drafted, and the order held. A
 naive clerk rekeys it as-is and ships 500 eaches of the wrong product below cost.
 
-## What you bring
-
-Customer and pricing master, product master and unit-of-measure rules, trading terms, credit
-rules, order history, and carrier and delivery rules.
-
-## Boundaries
+## Limitations
 
 Order creation and release stay human-approved; the plugin prepares the checks, exception
 queue and response drafts.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

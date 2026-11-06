@@ -6,9 +6,9 @@ type: plugin
 category: manufacturing
 builtByMicrosoft: true
 tags: [quality, audit, compliance, iso-9001, iatf-16949, readiness]
-author: Industry Templates
-authorUrl: "https://github.com/SravaniSeethi"
-authorGithub: SravaniSeethi
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 version: 1.0.0
 createdAt: 2026-09-01
 updatedAt: 2026-09-04

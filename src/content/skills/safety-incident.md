@@ -6,9 +6,9 @@ type: plugin
 category: manufacturing
 builtByMicrosoft: true
 tags: [ehs, safety, incident, osha, recordable, iso-45001]
-author: Industry Templates
-authorUrl: "https://github.com/SravaniSeethi"
-authorGithub: SravaniSeethi
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 version: 1.0.0
 createdAt: 2026-08-01
 updatedAt: 2026-09-04

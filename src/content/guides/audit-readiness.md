@@ -7,7 +7,7 @@ It maps the audit scope to the standard's clauses, gathers the evidence register
 for completeness, validates each piece of evidence against what the clause actually requires,
 flags every gap with a severity, and drafts the readiness pack with owners and actions.
 
-## How it works
+## What's included
 
 1. Maps the audit scope to the standard's clauses (deterministic).
 2. Gathers the evidence register and checks completeness.
@@ -16,7 +16,12 @@ flags every gap with a severity, and drafts the readiness pack with owners and a
 
 The gap check is the core of this plugin, not a wrapper around a document count.
 
-## Example scenario
+## Before you start
+
+The audit scope and standard, your evidence register, and the underlying records — management
+review minutes, internal audit reports, training records, calibration records.
+
+## Try it
 
 "We passed last year and the folder is full." Three majors are hiding in the full folder:
 
@@ -30,12 +35,11 @@ returns *not ready* with three majors, each with an owner and a produce-the-evid
 
 Gaps close with evidence, not with wording. The plugin will not let a gap be written away.
 
-## What you bring
-
-The audit scope and standard, your evidence register, and the underlying records — management
-review minutes, internal audit reports, training records, calibration records.
-
-## Boundaries
+## Limitations
 
 Draft-first: the output is a readiness pack. Producing the missing evidence is human work, and
 the plugin says so rather than papering over it.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

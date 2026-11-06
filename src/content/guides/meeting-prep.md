@@ -27,7 +27,7 @@ A concise summary and one complete editable internal preparation brief.
 Useful talking points, pitch outlines, demo guidance, and research are kept
 in that brief rather than scattered across extra files.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Confirmed participants, expected
 participants, and suggested additions remain distinct. Internal seller

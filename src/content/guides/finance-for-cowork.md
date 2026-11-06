@@ -1,4 +1,4 @@
-# Finance for Cowork
+# Finance
 
 A Microsoft-built Cowork plugin with thirteen skills for finance close,
 planning, review preparation, evidence gathering, and financial modeling.
@@ -36,6 +36,13 @@ you want used.
 > Complete this existing three-statement model using the supplied inputs.
 > Explain the sources and assumptions.
 
+## Limitations
+
+The skills show sources and mark missing information rather than guessing.
+They do not send email or calendar invitations without your confirmation.
+Review calculations, assumptions, and source dates before using the outputs
+in financial decisions.
+
 ## Install
 
 1. Download the plugin ZIP from this page.
@@ -46,13 +53,6 @@ you want used.
 
 See [Get started with Cowork](https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork)
 and [Build plugins for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development).
-
-## Review and control
-
-The skills show sources and mark missing information rather than guessing.
-They do not send email or calendar invitations without your confirmation.
-Review calculations, assumptions, and source dates before using the outputs
-in financial decisions.
 
 ## Contributors
 

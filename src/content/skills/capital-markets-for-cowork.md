@@ -1,5 +1,5 @@
 ---
-name: Capital Markets for Cowork
+name: Capital Markets
 description: "Analyst work for banking, research and private equity."
 platforms: [Cowork]
 type: plugin

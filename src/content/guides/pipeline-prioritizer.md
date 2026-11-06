@@ -26,7 +26,7 @@ but unsupported facts should remain unknown.
 A concise summary and one editable worklist with ranked or tied opportunities,
 supporting evidence, proposed next moves, and uncertainty.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Deal value, staleness, and risk are
 inputs, not automatic rankings. The skill does not make CRM changes or

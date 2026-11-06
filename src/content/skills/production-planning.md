@@ -6,9 +6,9 @@ type: plugin
 category: manufacturing
 builtByMicrosoft: true
 tags: [operations, scheduling, production-planning, changeover, capacity]
-author: Industry Templates
-authorUrl: "https://github.com/SravaniSeethi"
-authorGithub: SravaniSeethi
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 version: 1.0.0
 createdAt: 2026-09-01
 updatedAt: 2026-09-04

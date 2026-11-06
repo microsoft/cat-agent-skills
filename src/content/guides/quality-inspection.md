@@ -8,7 +8,7 @@ This plugin reads all of it, compares every actual against its tolerance, grades
 defect by severity and disposition, and hands back a drafted nonconformance report where
 every call is cited to the clause or drawing note it came from.
 
-## How it works
+## What's included
 
 1. Reads part specs, drawings, inspection plans, CoC and measurement exports.
 2. Compares actuals against tolerance, computes per-characteristic stats, flags out-of-tolerance and *marginal* results, cross-checks the certificate against measured reality.
@@ -18,7 +18,12 @@ every call is cited to the clause or drawing note it came from.
 Tolerance checks and severity grading are rule-based. The model extracts the source data and
 drafts the cited prose; severity and disposition come from those rules.
 
-## Example scenario
+## Before you start
+
+The part spec or drawing, the inspection plan, the measurement export (CMM CSV or similar),
+and the certificate of conformance if you have one.
+
+## Try it
 
 Everything invites a release. Dimensions all pass. The finish
 miss looks cosmetic. The certificate explicitly certifies the finishing process. The supplier
@@ -35,12 +40,11 @@ Three traps are sitting in the documents:
 
 A naive review releases the lot on the certificate. The rules engine holds it.
 
-## What you bring
-
-The part spec or drawing, the inspection plan, the measurement export (CMM CSV or similar),
-and the certificate of conformance if you have one.
-
-## Boundaries
+## Limitations
 
 Draft-first: nothing is filed, sent, or written back to a quality system. The plugin ends at
 NCR creation and hands off to **Quality Incident & CAPA** for root cause and corrective action.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

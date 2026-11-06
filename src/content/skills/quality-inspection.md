@@ -6,9 +6,9 @@ type: plugin
 category: manufacturing
 builtByMicrosoft: true
 tags: [quality, inspection, ncr, nonconformance, tolerance, mrb]
-author: Industry Templates
-authorUrl: "https://github.com/SravaniSeethi"
-authorGithub: SravaniSeethi
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 version: 2.0.0
 createdAt: 2026-08-01
 updatedAt: 2026-09-04

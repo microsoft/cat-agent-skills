@@ -1,5 +1,5 @@
 ---
-name: Education for Cowork
+name: Education
 description: "Helps education teams with teaching, governance, and institution workflows."
 platforms: [Cowork]
 type: plugin

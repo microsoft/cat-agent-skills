@@ -1,4 +1,4 @@
-# Capital Markets for Cowork
+# Capital Markets
 
 A Microsoft-built Cowork plugin with ten skills supporting analyst work in
 banking, investment research, and private equity.
@@ -32,6 +32,13 @@ assumptions. Use only material you are authorized to access.
 > Draft an investment committee memo using the supplied diligence materials.
 > Separate supported findings from assumptions.
 
+## Limitations
+
+The skills provide analytical support, not advice. Outputs state their sources
+and dates and mark assumptions rather than inventing missing facts. Nothing is
+sent or shared without your confirmation. Review all analysis and calculations
+before relying on them.
+
 ## Install
 
 1. Download the plugin ZIP from this page.
@@ -42,13 +49,6 @@ assumptions. Use only material you are authorized to access.
 
 See [Get started with Cowork](https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork)
 and [Build plugins for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development).
-
-## Limitations
-
-The skills provide analytical support, not advice. Outputs state their sources
-and dates and mark assumptions rather than inventing missing facts. Nothing is
-sent or shared without your confirmation. Review all analysis and calculations
-before relying on them.
 
 ## Contributors
 

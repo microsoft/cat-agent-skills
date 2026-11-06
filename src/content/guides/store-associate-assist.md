@@ -8,7 +8,7 @@ policy, product attributes and current promotion, resolves the policy and compar
 deterministically, and returns a cited answer — or a drafted escalation when the answer is
 not in scope.
 
-## How it works
+## What's included
 
 1. Takes the question with store, role and department context.
 2. Retrieves the applicable policy, SOP and product sources.
@@ -19,7 +19,12 @@ not in scope.
 The policy resolution and product comparison come from deterministic engines; the model
 retrieves, orchestrates and writes the cited prose.
 
-## Example scenario
+## Before you start
+
+Store SOPs and the employee handbook, returns and price-match policy, a PIM or catalog
+extract, promotion packs, and planogram notes.
+
+## Try it
 
 Price-match pressure, with the customer standing there. Three things the documents settle:
 
@@ -32,12 +37,11 @@ Price-match pressure, with the customer standing there. Three things the documen
 
 A naive assistant matches the price because "the old manager did". This one cites why not.
 
-## What you bring
-
-Store SOPs and the employee handbook, returns and price-match policy, a PIM or catalog
-extract, promotion packs, and planogram notes.
-
-## Boundaries
+## Limitations
 
 Answers and drafts only. It never overrides a price, authorises a refund, reserves inventory
 or changes a schedule.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

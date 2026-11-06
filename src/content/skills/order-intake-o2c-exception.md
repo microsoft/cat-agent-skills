@@ -6,9 +6,9 @@ type: plugin
 category: retail-cpg
 builtByMicrosoft: true
 tags: [retailer, order-management, o2c, exception, validation, edi]
-author: Industry Templates
-authorUrl: "https://github.com/SravaniSeethi"
-authorGithub: SravaniSeethi
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 version: 1.0.0
 createdAt: 2026-09-07
 updatedAt: 2026-09-08

@@ -8,14 +8,19 @@ risk across quality, financial and geographic dimensions, compares the supplier 
 approved vendor list and the category requirements, and drafts the qualification memo with its
 conditions.
 
-## How it works
+## What's included
 
 1. Gathers certs, financials, audit results and PPAP elements.
 2. Scores risk across quality, financial and geographic dimensions (deterministic).
 3. Compares against the approved vendor list and category requirements (deterministic).
 4. Drafts the qualification memo with named conditions.
 
-## Example scenario
+## Before you start
+
+The supplier dossier — certificates, financial statements, audit reports, PPAP elements — plus
+your approved vendor list and category requirements.
+
+## Try it
 
 "22% cheaper, big logos, sign it this week." The dossier says otherwise:
 
@@ -31,12 +36,11 @@ business still wants to proceed.
 
 A naive memo approves on brand and price. This one lists what would have to be true first.
 
-## What you bring
-
-The supplier dossier — certificates, financial statements, audit reports, PPAP elements — plus
-your approved vendor list and category requirements.
-
-## Boundaries
+## Limitations
 
 Draft-first: the memo is a recommendation for the sourcing council. Nothing is added to the AVL
 by the plugin.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)
