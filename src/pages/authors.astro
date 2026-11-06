@@ -2,7 +2,8 @@
 import Layout from "../layouts/Layout.astro";
 import { withBase } from "../lib/url";
 import { formatDate } from "../lib/skills";
-import { allAuthors } from "../lib/badges";
+import { directoryAuthors } from "../lib/badges";
+import ContributorAvatar from "../components/ContributorAvatar.astro";
 import { loadBadgeSkills } from "../lib/badge-data";
 
 // Build the public contribution ledger from the baked skills. Everything here is
@@ -10,7 +11,7 @@ import { loadBadgeSkills } from "../lib/badge-data";
 // client-side when a visitor looks up their own handle. The same loader feeds the
 // poster page + OG image, so the directory and the shared posters never disagree.
 const badgeSkills = await loadBadgeSkills();
-const authors = allAuthors(badgeSkills);
+const authors = directoryAuthors(badgeSkills);
 const totalSkills = badgeSkills.length;
 const featuredTotal = badgeSkills.filter((s) => s.featured).length;
 
@@ -90,22 +91,15 @@ const MAX_CHIPS = 8;
               <div class="author-top">
                 <a
                   class="author-avatar-link"
-                  href={withBase(`/?author=${a.login}`)}
+                  href={withBase(`/?author=${encodeURIComponent(a.key)}`)}
                   aria-label={`Browse ${a.displayName}'s skills`}
                 >
-                  <img
-                    src={`https://github.com/${a.login}.png?size=96`}
-                    alt=""
-                    width="44"
-                    height="44"
-                    loading="lazy"
-                    class="author-avatar"
-                  />
+                  <span class="block h-11 w-11"><ContributorAvatar name={a.displayName} login={a.login} /></span>
                 </a>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-2">
                     <a
-                      href={withBase(`/?author=${a.login}`)}
+                      href={withBase(`/?author=${encodeURIComponent(a.key)}`)}
                       class="truncate font-medium hover:text-accent-text"
                       title={`Browse ${a.displayName}'s skills`}
                     >
@@ -113,17 +107,17 @@ const MAX_CHIPS = 8;
                     </a>
                     <span class="you-flag hidden">you</span>
                   </div>
-                  <a
+                  {a.login && <a
                     href={`https://github.com/${a.login}`}
                     target="_blank"
                     rel="noopener"
                     class="block truncate text-sm text-muted hover:text-accent-text"
                     title={`@${a.login} on GitHub`}
-                  >@{a.login}</a>
+                  >@{a.login}</a>}
                 </div>
                 <a
                   class="author-count"
-                  href={withBase(`/?author=${a.login}`)}
+                  href={withBase(`/?author=${encodeURIComponent(a.key)}`)}
                   title={`Browse all ${a.skillCount} skill${a.skillCount === 1 ? "" : "s"} by ${a.displayName}`}
                 >
                   <span class="author-count-num">{a.skillCount}</span>
@@ -815,7 +809,7 @@ const MAX_CHIPS = 8;
 
     function highlight(login: string) {
       document.querySelectorAll<HTMLElement>(".author-card").forEach((el) => {
-        el.classList.toggle("is-you", el.dataset.login === login);
+        el.classList.toggle("is-you", Boolean(login) && el.dataset.login === login);
       });
     }
 

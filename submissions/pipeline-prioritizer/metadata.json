@@ -1,0 +1,11 @@
+{
+  "name": "Pipeline Prioritizer",
+  "description": "Rank open opportunities into an evidence-backed worklist explaining what to work on next and why.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "pipeline", "prioritization"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "createdAt": "2026-10-31"
+}

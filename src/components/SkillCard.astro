@@ -4,6 +4,7 @@ import { coverGradient, initials } from "../lib/skills";
 import type { Platform, SkillType } from "../lib/skills";
 import { CATEGORY_COLORS, CATEGORY_LABELS, type Category } from "../lib/categories";
 import CategoryIcon from "./CategoryIcon.astro";
+import PlatformChip from "./PlatformChip.astro";
 
 interface Props {
   slug: string;
@@ -68,11 +69,10 @@ const wrapperProps = isSample
     </div>
   </div>
   <p class="submission-description mt-3 line-clamp-2 text-sm text-muted">{description}</p>
-  <div class="submission-meta mt-auto flex items-end justify-between gap-2 pt-4 text-[11px] leading-4 text-muted">
-    {isSample && <span>Sample</span>}
-    <span class="submission-format-platform ml-auto flex flex-wrap items-center justify-end gap-x-1.5">
-      <span class="capitalize">{type}</span>
-      {platforms.map((platform) => <><span aria-hidden="true">&middot;</span><span class="whitespace-nowrap">{platform}</span></>)}
+  <div class="submission-meta mt-auto flex items-center justify-between gap-2 pt-4 text-[11px] leading-4 text-muted">
+    <span class="shrink-0"><span class="capitalize">{type}</span>{isSample && <> &middot; Sample</>}</span>
+    <span class="submission-format-platform flex flex-wrap items-center justify-end gap-x-2.5 gap-y-1">
+      {platforms.map((platform) => <PlatformChip platform={platform} />)}
     </span>
   </div>
 </Wrapper>

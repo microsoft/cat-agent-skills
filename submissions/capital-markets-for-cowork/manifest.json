@@ -1,0 +1,57 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.7",
+  "id": "9922c21e-0330-4e41-be5e-7035fa575d55",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  },
+  "name": {
+    "short": "Capital Markets for Cowork",
+    "full": "Capital Markets for Cowork"
+  },
+  "description": {
+    "short": "Analyst work for banking, research and private equity.",
+    "full": "Analyst work for banking, research and private equity. Helps with company profiles, comparable company analysis, merger models, CIM teardowns, document diligence, diligence tracking, earnings notes, coverage meeting prep and debriefs, pitch deck skeletons and investment committee memos. Every output states its source and date, marks assumptions rather than inventing them, stays analytical support rather than advice, and never sends or shares anything without your confirmation.\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#2563EB",
+  "agentSkills": [
+    {
+      "folder": "skills/cim-teardown"
+    },
+    {
+      "folder": "skills/company-profile-pack"
+    },
+    {
+      "folder": "skills/comps-analysis"
+    },
+    {
+      "folder": "skills/coverage-meeting-prep-debrief"
+    },
+    {
+      "folder": "skills/dd-checklist"
+    },
+    {
+      "folder": "skills/document-diligence"
+    },
+    {
+      "folder": "skills/earnings-note"
+    },
+    {
+      "folder": "skills/ic-memo"
+    },
+    {
+      "folder": "skills/merger-model"
+    },
+    {
+      "folder": "skills/pitch-deck-skeleton"
+    }
+  ]
+}

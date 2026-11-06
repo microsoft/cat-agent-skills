@@ -36,6 +36,14 @@ test("gallery classification preserves existing defaults without changing plugin
   assert.equal(plugin.type, "plugin");
   assert.deepEqual(plugin.platforms, ["Cowork"]);
   assert.equal(plugin.bundle, "bundles/example.zip");
+  const financialServices = skillSchema.parse(buildMeta(
+    { ...required, type: "plugin", platforms: ["Cowork"], bundle: "bundles/fsi.zip" },
+    { category: "financial-services", builtByMicrosoft: true },
+  ));
+  assert.equal(financialServices.category, "financial-services");
+  assert.equal(financialServices.builtByMicrosoft, true);
+  assert.equal(financialServices.type, "plugin");
+  assert.deepEqual(financialServices.platforms, ["Cowork"]);
   for (const invalid of [{ category: "unknown" }, { builtByMicrosoft: "true" }]) {
     assert.equal(skillSchema.safeParse({ ...plugin, ...invalid }).success, false);
   }
