@@ -26,7 +26,7 @@ For several issues, a concise summary and one editable triage result.
 For a single issue, an urgency assessment in chat by default; a saved artifact
 is created only when requested.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Age or emotional tone alone is not a
 confirmed response-time breach. The skill does not claim work, change

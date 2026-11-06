@@ -9,7 +9,7 @@ dispute scorecard with trends, clusters recurring issues with evidence, retrieve
 governing trading term, and drafts the review agenda, corrective action request and commitment
 tracker.
 
-## How it works
+## What's included
 
 1. Pulls PO, receipt, invoice, return and quality records.
 2. Rolls up OTIF, defect, return and dispute rates with trends (deterministic).
@@ -17,7 +17,12 @@ tracker.
 4. Retrieves and quotes the governing contract or trading term.
 5. Drafts the agenda, corrective action request and commitment tracker.
 
-## Example scenario
+## Before you start
+
+ERP purchase orders, receipts and invoices, supplier portals and correspondence, quality and
+return records, contracts and trading terms, and the vendor master.
+
+## Try it
 
 *"Great partner, keep it friendly, skip the scorecard."* The records disagree:
 
@@ -30,12 +35,7 @@ tracker.
 
 A naive prep writes the friendly deck the buyer asked for. Hospitality is not a metric.
 
-## What you bring
-
-ERP purchase orders, receipts and invoices, supplier portals and correspondence, quality and
-return records, contracts and trading terms, and the vendor master.
-
-## Boundaries
+## Limitations
 
 Read-only scorecarding and drafting. It does not change a PO, place a payment hold, amend a
 contract or deselect a supplier.

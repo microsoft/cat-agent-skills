@@ -25,7 +25,7 @@ sources, with dates or versions where available.
 A concise summary and one editable internal research brief containing the
 answer, source-backed reasoning, applicability checks, and evidence gaps.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. A missing or inaccessible source is not
 proof that something is absent or ineligible. Review the findings before

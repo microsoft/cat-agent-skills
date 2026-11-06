@@ -3,7 +3,7 @@
 Six Cowork skills for institutional asset managers: RFP and DDQ teams, investment writers, research
 analysts, product specialists, client service, and consultant relations.
 
-## Skills
+## What's included
 
 - **rfp-ddq-response-draft** — first-pass RFP and DDQ answers from your approved library, cited per answer.
 - **investment-commentary-draft** — fund, portfolio, or strategy commentary from approved narrative and performance sources.
@@ -12,7 +12,7 @@ analysts, product specialists, client service, and consultant relations.
 - **institutional-client-review-prep** — mandate review prep with IPS/guidelines and relationship commitments.
 - **consultant-database-refresh** — consultant questionnaire refresh with a redline.
 
-## Boundaries
+## Limitations
 
 Runs on Microsoft 365 content, supplied documents, SEC EDGAR, and public web, with no paid data
 dependency. Current firm performance, AUM, attribution, and fees come verbatim from a system of record

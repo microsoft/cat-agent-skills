@@ -27,7 +27,7 @@ When you request an email or CRM draft, that native draft is the primary
 review artifact rather than an extra Word file. Saving depends on the
 available authorized tools and destination.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Review facts, promises, recipients, and
 policy applicability before sending. A saved draft is not a delivered

@@ -29,7 +29,7 @@ authorized CRM review record is preferred; Word or Markdown can be used when
 CRM saving is unavailable. The skill reports the actual save destination and
 any fallback.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Customer-identifying details should be
 removed. A draft article or case note is not published guidance. Publication,

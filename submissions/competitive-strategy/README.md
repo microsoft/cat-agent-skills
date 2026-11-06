@@ -26,7 +26,7 @@ visible rather than becoming an unsupported claim.
 A concise summary and one editable positioning artifact with supporting
 evidence, relevant objections, and gaps or questions to investigate.
 
-## Review and control
+## Limitations
 
 This is an individual skill for Cowork. Check the currency and applicability
 of competitive claims before using them with a customer. Preparing a strategy

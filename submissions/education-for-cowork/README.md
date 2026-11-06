@@ -1,4 +1,4 @@
-# Education for Cowork
+# Education
 
 A Microsoft-built Cowork plugin with ten skills for the work that repeats each
 term: teaching support, institutional governance, evidence gathering, and
@@ -34,6 +34,12 @@ needed for the task.
 > Prepare a policy rollout pack using the attached policy and implementation
 > notes. Flag missing information.
 
+## Limitations
+
+Outputs depend on the materials and tools available to Cowork. Review generated
+content before using it for teaching, governance, or institutional decisions.
+This plugin runs in Cowork; it is not a standalone Copilot Studio skill.
+
 ## Install
 
 1. Download the plugin ZIP from this page.
@@ -44,12 +50,6 @@ needed for the task.
 
 See [Get started with Cowork](https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork)
 and [Build plugins for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development).
-
-## Review before use
-
-Outputs depend on the materials and tools available to Cowork. Review generated
-content before using it for teaching, governance, or institutional decisions.
-This plugin runs in Cowork; it is not a standalone Copilot Studio skill.
 
 ## Contributors
 

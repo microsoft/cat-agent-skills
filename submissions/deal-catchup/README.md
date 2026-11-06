@@ -27,7 +27,7 @@ as unknown.
 A concise chat summary and one editable change digest showing current state,
 supported movement, reasons, and missing or unconfirmed evidence.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. A record-modification timestamp alone is
 not proof of a deal change. The digest is read-only apart from saving the
