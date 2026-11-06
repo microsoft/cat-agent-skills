@@ -24,7 +24,7 @@ const local = avatar?.startsWith("/");
       alt=""
       loading="lazy"
       onerror="this.remove()"
-      class:list={["absolute inset-0 h-full w-full", local ? "object-contain p-1" : "object-cover"]}
+      class:list={["absolute inset-0 h-full w-full", local ? "object-contain" : "object-cover"]}
     />
   )}
 </span>
