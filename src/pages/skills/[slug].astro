@@ -121,9 +121,8 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
         platforms={d.platforms}
         tags={d.tags}
         coverColor={d.coverColor}
-        hasBundle={Boolean(d.bundle)}
         type={d.type}
-        isInstaller={isInstaller}
+        builtByMicrosoft={d.builtByMicrosoft}
         variant="hero"
       />
     </div>
@@ -254,7 +253,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
 
         {
           GuideContent ? (
-            <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+            <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-headings:tracking-tight prose-h1:text-3xl prose-h1:font-bold prose-h1:leading-tight prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
               <GuideContent />
             </article>
           ) : isAutomation && automation ? (
@@ -331,7 +330,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
               <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent-text">
                 Instructions
               </h2>
-              <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+              <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-headings:tracking-tight prose-h1:text-3xl prose-h1:font-bold prose-h1:leading-tight prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
                 <Content />
               </article>
             </>

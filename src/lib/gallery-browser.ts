@@ -136,7 +136,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     microsoft.count.textContent = String(microsoftMatched.length);
     microsoft.empty.hidden = microsoftMatched.length > 0;
     microsoft.viewAll.hidden = microsoftMatched.length <= columns;
-    microsoft.viewAll.setAttribute("aria-label", `View all ${microsoftMatched.length} Microsoft submissions`);
+    microsoft.viewAll.setAttribute("aria-label", `View all ${microsoftMatched.length} Microsoft skills & plugins`);
   }
 
   function fill() {
@@ -231,7 +231,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     renderGrid();
     if (fillViewport) fill();
     status.textContent = microsoft
-      ? `${microsoftMatched.length} Microsoft and ${matched.length} community submissions match.`
+      ? `${microsoftMatched.length} Microsoft skills & plugins and ${matched.length} community submissions match.`
       : `${matched.length} submissions match.`;
     collectionLinks.forEach(({ link, destination }) => { link.href = `${destination}${queryString()}`; });
     paintApplied();
