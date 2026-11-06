@@ -35,3 +35,7 @@ Microsoft 365 documents, and asks for an upload when a source cannot be reached.
 | enforcement-action-review | GRC control library, policy repository, DMS, legal matter system | SEC, FinCEN, OCC, FRB, and CFPB sites, then uploaded orders and M365 controls |
 | vendor-risk-review | TPRM, GRC, DMS, contract system, screening provider | Supplied SOC reports and DDQs, plus labelled public research |
 | kyc-research-pack | Screening or registry provider (World-Check, Dow Jones, LexisNexis) | Public registries, courts, regulator releases, and adverse media, then supplied onboarding files |
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

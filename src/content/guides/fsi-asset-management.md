@@ -37,3 +37,7 @@ the skills recognize; any connector carrying the same data works.
 | peer-product-intelligence | Morningstar Direct or eVestment (percentiles, ratings, flows, holdings); internal product master | Uploaded fact sheets, then public summary prospectuses (497K) |
 | institutional-client-review-prep | CRM (Salesforce, Dynamics); performance/attribution system | Uploaded deck or IPS, then Microsoft 365 mail, Teams, and SharePoint |
 | consultant-database-refresh | eVestment or consultant database (read-only); performance system; HR/org system | Uploaded questionnaire and prior submission, then SharePoint |
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

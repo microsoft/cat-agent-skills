@@ -3,9 +3,9 @@ name: Capital Markets for Cowork
 description: "Analyst work for banking, research and private equity."
 platforms: [Cowork]
 type: plugin
-category: capital-markets
+category: financial-services
 builtByMicrosoft: true
-tags: [capital-markets, investment-research, due-diligence]
+tags: [financial-services, capital-markets, investment-research, due-diligence]
 author: Microsoft
 authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
