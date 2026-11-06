@@ -1,0 +1,66 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.7",
+  "id": "4947e32c-c96a-5143-bcc4-d0cdb37643a8",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/legal/terms-of-use"
+  },
+  "name": {
+    "short": "Finance for Cowork",
+    "full": "Finance for Cowork"
+  },
+  "description": {
+    "short": "Finance close, review prep, audits, and three-statement, DCF and LBO models.",
+    "full": "Helps you run your finance calendar and the evidence work around it: close status, work-back plans, budget consolidation, variance narrative, review prep and stakeholder Q&A, executive updates, dataset analysis, audit packages, expense reconciliation, completing existing three-statement (income statement, balance sheet, cash flow) model templates, DCF valuation, and LBO returns models. Every skill shows its sources, marks what is missing instead of guessing, and never sends email or calendar invites without your confirmation. \nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6B78",
+  "agentSkills": [
+    {
+      "folder": "skills/3-statements"
+    },
+    {
+      "folder": "skills/audit-evidence-package"
+    },
+    {
+      "folder": "skills/budget-consolidation"
+    },
+    {
+      "folder": "skills/close-status-digest"
+    },
+    {
+      "folder": "skills/dataset-analysis-report"
+    },
+    {
+      "folder": "skills/dcf-valuation"
+    },
+    {
+      "folder": "skills/expense-itemization"
+    },
+    {
+      "folder": "skills/exec-update"
+    },
+    {
+      "folder": "skills/forecast-review-prep"
+    },
+    {
+      "folder": "skills/lbo-model"
+    },
+    {
+      "folder": "skills/quarterly-workback"
+    },
+    {
+      "folder": "skills/stakeholder-qa-prep"
+    },
+    {
+      "folder": "skills/variance-commentary"
+    }
+  ]
+}

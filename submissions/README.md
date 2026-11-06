@@ -120,7 +120,7 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 | `updatedAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
 | `coverColor`  | `metadata.json` |          | CSS color to override the auto-generated cover.              |
 | `featured`    | `metadata.json` |          | `true` to sort the skill to the top.                         |
-| `category`    | `metadata.json` |          | `manufacturing`, `retail-cpg`, `productivity` (default), or `agent-development`. Visitors can match any of several selected categories. |
+| `category`    | `metadata.json` |          | `manufacturing`, `retail-cpg`, `productivity` (default), `agent-development`, `education`, `legal`, `sales`, `service`, `finance`, `capital-markets`, or `accounting`. Visitors can match any of several selected categories. |
 | `builtByMicrosoft` | `metadata.json` |     | Defaults to `false`. Set only for verified Microsoft-built content, shown in the Microsoft collection rather than the community grid. Author attribution is unchanged. |
 | `bundle`      | —               |          | Set automatically when your skill ships files beyond `SKILL.md` — don't add it.|
 

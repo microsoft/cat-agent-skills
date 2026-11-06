@@ -1,0 +1,30 @@
+---
+import { contributorAvatar } from "../lib/contributor-avatar";
+import { coverGradient, initials } from "../lib/skills";
+import { withBase } from "../lib/url";
+
+interface Props {
+  name: string;
+  login?: string | null;
+}
+
+const { name, login } = Astro.props;
+const avatar = contributorAvatar(login, name);
+const local = avatar?.startsWith("/");
+---
+
+<span
+  class:list={["relative grid h-full w-full place-items-center overflow-hidden rounded-full text-[11px] font-bold ring-1 ring-border", local ? "text-slate-600" : "text-white"]}
+  style={local ? "background:white" : `background-image:${coverGradient(name)}`}
+>
+  {!local && initials(name)}
+  {avatar && (
+    <img
+      src={local ? withBase(avatar) : avatar}
+      alt=""
+      loading="lazy"
+      onerror="this.remove()"
+      class:list={["absolute inset-0 h-full w-full", local ? "object-contain p-1" : "object-cover"]}
+    />
+  )}
+</span>
