@@ -1,0 +1,309 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "hls.prior-auth-assist.v1",
+  "title": "Prior Authorisation & Medical-Necessity Packet contract v1",
+  "description": "Chains policy-ingest -> criteria-extract -> evidence-match -> necessity-draft -> gap-report. Draft-first: action-level ceiling L1; the packet is never submitted and no determination is ever rendered (base/references/prior-auth-rules.md #2, #5, #6). Contract schema id stays v1 (backward-compatible additions only since plugin 1.0.1).",
+  "action_levels": {
+    "ceiling": "L1",
+    "L0": [
+      "policy-ingest",
+      "criteria-extract",
+      "evidence-match"
+    ],
+    "L1": [
+      "necessity-draft",
+      "gap-report"
+    ],
+    "withheld": "L2 (send/file/submit a 278 or a determination) and L3 (autonomous) are not available in this package"
+  },
+  "standards_alignment": {
+    "families": [
+      "X12 278 (Health Care Services Review - Request for Review and Response, 005010X217)",
+      "HL7 FHIR R4 (Coverage, ServiceRequest, DocumentReference)",
+      "HL7 Da Vinci Prior Authorization Support (PAS) IG"
+    ],
+    "field_map": {
+      "request.service": {
+        "x12_278": "2000F SV1/SV2 service line - procedure code identifying the requested service",
+        "fhir_r4": "ServiceRequest.code",
+        "da_vinci_pas": "Claim.item.productOrService"
+      },
+      "request.payer": {
+        "x12_278": "2010A UMO name (NM1*X3) / payer identification",
+        "fhir_r4": "Coverage.payor",
+        "da_vinci_pas": "Claim.insurer"
+      },
+      "request.member_id": {
+        "x12_278": "2010C subscriber identification (NM1*IL member identifier)",
+        "fhir_r4": "Coverage.subscriberId",
+        "da_vinci_pas": "Claim.patient / Coverage reference"
+      },
+      "criteria_result.criteria_met[].citation": {
+        "x12_278": "no native element; attachment/supporting documentation is referenced out of band (275/PWK)",
+        "fhir_r4": "DocumentReference (source_note) with DocumentReference.date (note_date)",
+        "da_vinci_pas": "Claim.supportingInfo.valueReference -> DocumentReference"
+      },
+      "necessity_narrative": {
+        "x12_278": "not mapped - narrative is not carried in a 278 request",
+        "fhir_r4": "not mapped",
+        "da_vinci_pas": "Claim.supportingInfo.valueString (medical-necessity narrative attachment)"
+      },
+      "criteria_result.gaps": {
+        "x12_278": "not mapped - no 278 element represents a pre-submission evidence gap",
+        "fhir_r4": "not mapped",
+        "da_vinci_pas": "not mapped"
+      },
+      "criteria_result.determination": {
+        "x12_278": "deliberately NOT mapped to the 278 response HCR01 certification action code - this plugin never emits a 278 response or any certification action",
+        "fhir_r4": "not mapped",
+        "da_vinci_pas": "deliberately NOT mapped to ClaimResponse.disposition / .outcome"
+      },
+      "packet.status": {
+        "x12_278": "not mapped - 'draft' has no 278 equivalent because nothing is transmitted",
+        "fhir_r4": "not mapped",
+        "da_vinci_pas": "not mapped"
+      }
+    }
+  },
+  "type": "object",
+  "required": [
+    "contract_version",
+    "request"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "hls.prior-auth-assist.v1"
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "service",
+        "payer"
+      ],
+      "properties": {
+        "service": {
+          "type": "string"
+        },
+        "payer": {
+          "type": "string"
+        },
+        "member_id": {
+          "type": "string"
+        },
+        "clause": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Exact clause key from config/payer-policy-library.json, written by policy-ingest. null when the service has no library entry (out_of_scope). If set and different from the library clause, the engine escalates the mismatch (rules #1)."
+        },
+        "order_clause": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The policy clause written on the order, copied verbatim by policy-ingest; absent when the order names none. Never overwritten with the library clause. If set and different from the library clause, the engine escalates the mismatch (rules #1)."
+        },
+        "request_mode": {
+          "type": "string",
+          "description": "Free-text or literal mode. Any value asking for an approval OR a denial is refused and logged (prior-auth-rules.md #2/#2a)."
+        },
+        "request_text": {
+          "type": "string"
+        },
+        "request_note": {
+          "type": "string"
+        }
+      }
+    },
+    "patient_evidence": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "description": "evidence_key -> boolean flag. Only a JSON true counts, and only when evidence_citations carries its complete citation (rules #4). Leave an ambiguous flag false with no citation."
+    },
+    "evidence_citations": {
+      "type": "object",
+      "description": "evidence_key -> citation {source_note, note_date, quote}. All three are required before a flag can count as met (rules #4: citations ride the contract).",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "source_note",
+          "note_date",
+          "quote"
+        ],
+        "properties": {
+          "source_note": {
+            "type": "string"
+          },
+          "note_date": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string",
+            "description": "Verbatim excerpt from the source note (rules #4)."
+          }
+        }
+      }
+    },
+    "criteria_result": {
+      "type": "object",
+      "properties": {
+        "clause": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "criteria_checked": {
+          "type": "integer"
+        },
+        "criteria_met": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "evidence_key",
+              "citation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "evidence_key": {
+                "type": "string"
+              },
+              "citation": {
+                "type": "object",
+                "required": [
+                  "source_note",
+                  "note_date",
+                  "quote"
+                ]
+              }
+            }
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "text",
+              "evidence_key",
+              "reason",
+              "citation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "evidence_key": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "no_evidence",
+                  "evidence_uncited"
+                ]
+              },
+              "citation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "determination": {
+          "type": "string",
+          "enum": [
+            "packet_assembled_clean",
+            "packet_assembled_gaps",
+            "out_of_scope"
+          ],
+          "description": "The only three states. There is no approve/deny state in either direction (rules #2). out_of_scope is emitted by criteria_engine when the service has no policy in config/payer-policy-library.json, or its entry belongs to a different payer than request.payer (rules #1)."
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "packet": {
+      "type": "object",
+      "description": "The assembled submission-ready packet produced by gap-report. Always a draft (rules #5).",
+      "required": [
+        "status",
+        "submitted"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft"
+          ]
+        },
+        "submitted": {
+          "type": "boolean",
+          "enum": [
+            false
+          ]
+        },
+        "action_level": {
+          "type": "string",
+          "enum": [
+            "L0",
+            "L1"
+          ],
+          "description": "Action level of the packet artefact itself: an L1 draft for human review (the plugin ceiling). It is not the level of the skill that ran the engine - criteria-extract computes at L0 (rules #6)."
+        },
+        "determination": {
+          "type": "string"
+        },
+        "clause": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "criteria_met_count": {
+          "type": "integer"
+        },
+        "open_gaps": {
+          "type": "integer"
+        },
+        "refusal_logged": {
+          "type": "string",
+          "description": "none | approval | denial | approval_and_denial - symmetric refusal trace (rules #2)."
+        },
+        "contents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "necessity_narrative": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object"
+    }
+  },
+  "plugin_version": "1.0.3"
+}

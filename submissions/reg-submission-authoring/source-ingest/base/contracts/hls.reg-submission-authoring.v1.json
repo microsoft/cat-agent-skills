@@ -1,0 +1,247 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "hls.reg-submission-authoring.v1",
+  "title": "Regulatory Submission Authoring contract v1",
+  "description": "Chains source-ingest -> section-plan -> section-draft -> consistency-check -> submission-assemble. Data + confidence + provenance + citations on every hop; citations are required, not optional, so grounding survives every hand-off.",
+  "standards_alignment": {
+    "note": "Named per Industry Templates standard section 6 - only genuine correspondences are mapped.",
+    "primary": [
+      {
+        "standard": "ICH E3 (Structure and Content of Clinical Study Reports)",
+        "maps": "submission.target_doc and config/submission-templates.json csr.required_sections (Synopsis, Efficacy Evaluation, Safety Evaluation, Discussion and Overall Conclusions) follow the ICH E3 CSR section order; draft_sections[].section names are ICH E3 section titles."
+      },
+      {
+        "standard": "eCTD (ICH M4 / CTD module structure)",
+        "maps": "submission.submission_type selects the target module structure; assembly_status is deliberately constrained to draft states so no eCTD lifecycle/sequence state (submitted, filed) is representable."
+      },
+      {
+        "standard": "CDISC SDTM / ADaM",
+        "maps": "source_facts keys are the analysis-level counts and dates produced by ADaM-derived TLFs (ADSL disposition counts: enrolled/randomized/completed/safety population; ADaM efficacy results); source_facts[].citation names the TLF table or SAP section carrying the value, which is the SDTM/ADaM traceability anchor."
+      }
+    ],
+    "not_mapped": [
+      "HL7 FHIR / C-CDA - no clinical exchange payload is produced by this plugin.",
+      "eSTAR 510(k) is a template structure only (config/submission-templates.json), not a data-standard mapping."
+    ]
+  },
+  "type": "object",
+  "required": [
+    "contract_version",
+    "submission"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "hls.reg-submission-authoring.v1"
+    },
+    "action_level": {
+      "description": "Staged autonomy. L0 = read/analyse, L1 = draft for human approval. This plugin never exceeds L1: nothing is filed, sent or submitted.",
+      "enum": [
+        "L0",
+        "L1"
+      ]
+    },
+    "submission": {
+      "type": "object",
+      "required": [
+        "submission_type"
+      ],
+      "properties": {
+        "product": {
+          "type": "string"
+        },
+        "submission_type": {
+          "description": "Key into config/submission-templates.json.",
+          "type": "string"
+        },
+        "target_doc": {
+          "type": "string"
+        }
+      }
+    },
+    "source_facts": {
+      "description": "Authoritative fact map from source-ingest. Every fact cites its grounding (submission-rules.md #5).",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/cited_value"
+      }
+    },
+    "draft_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "section",
+          "asserted"
+        ],
+        "properties": {
+          "section": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "blocked-on-missing-fact",
+              "drafted"
+            ]
+          },
+          "narrative": {
+            "type": "string"
+          },
+          "asserted": {
+            "description": "Structured facts asserted by the drafted prose. Each carries the citation it was drafted from; it must match the source fact's citation.",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/definitions/cited_value"
+            }
+          }
+        }
+      }
+    },
+    "consistency_report": {
+      "type": "object",
+      "required": [
+        "checked",
+        "mismatches",
+        "clean",
+        "coverage",
+        "source"
+      ],
+      "properties": {
+        "checked": {
+          "type": "integer"
+        },
+        "mismatches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "rule",
+              "type",
+              "detail"
+            ],
+            "properties": {
+              "rule": {
+                "type": "string",
+                "description": "Verbatim numbered rule from base/references/submission-rules.md."
+              },
+              "type": {
+                "enum": [
+                  "value_mismatch",
+                  "type_mismatch",
+                  "population_substitution",
+                  "rounding_violation",
+                  "unsourced_assertion",
+                  "uncited_assertion",
+                  "missing_citation",
+                  "citation_mismatch",
+                  "uncited_source_fact",
+                  "section_not_drafted",
+                  "unknown_submission_type"
+                ]
+              },
+              "section": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "detail": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "clean": {
+          "type": "boolean"
+        },
+        "coverage": {
+          "type": "object",
+          "required": [
+            "required",
+            "drafted",
+            "missing"
+          ],
+          "properties": {
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "drafted": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "missing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "rules": {
+          "type": "string"
+        },
+        "action_level": {
+          "enum": [
+            "L0",
+            "L1"
+          ]
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "assembly_status": {
+      "description": "submission-rules.md #3 - draft states only. 'submitted'/'filed' is unrepresentable by schema, not merely by convention.",
+      "enum": [
+        "draft_clean",
+        "draft_open_items"
+      ]
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "cited_value": {
+      "type": "object",
+      "required": [
+        "value",
+        "citation"
+      ],
+      "properties": {
+        "value": {
+          "description": "The verbatim source value - number, date or population definition. Never re-derived.",
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        "citation": {
+          "description": "Source document plus table/section reference, e.g. 'TLF Table 14.1.1 - Subject disposition' or 'SAP v2.0 s4.2'.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

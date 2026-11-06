@@ -1,0 +1,7 @@
+{
+  "_comment": "Customer-editable. Drives followup_check (discharge-rules.md #10-#11).",
+  "required_item_fields": ["item", "owner", "due_date", "source_note"],
+  "required_pending_result_fields": ["result", "owner", "due_date", "source_note"],
+  "allowed_owners": ["patient", "receiving clinician", "care coordinator"],
+  "max_days_to_first_followup": 14
+}
