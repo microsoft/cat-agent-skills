@@ -40,3 +40,7 @@ your approved vendor list and category requirements.
 
 Draft-first: the memo is a recommendation for the sourcing council. Nothing is added to the AVL
 by the plugin.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

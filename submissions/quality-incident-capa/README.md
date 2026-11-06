@@ -39,3 +39,7 @@ and inspection results.
 
 Draft-first: the plugin takes an open NCR to *closure readiness*. Nothing is filed and nothing
 is closed by the plugin — a quality engineer signs off.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

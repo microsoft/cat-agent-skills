@@ -41,3 +41,7 @@ reason-code taxonomy, carrier and RMA rules, and your fraud rule set.
 
 Draft-first. It never authorises a refund, releases funds, adjudicates fraud, disposes
 inventory or books a carrier.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

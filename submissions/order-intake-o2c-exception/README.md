@@ -40,3 +40,7 @@ rules, order history, and carrier and delivery rules.
 
 Order creation and release stay human-approved; the plugin prepares the checks, exception
 queue and response drafts.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

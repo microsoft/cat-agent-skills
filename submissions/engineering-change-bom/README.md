@@ -34,3 +34,7 @@ The ECR, the BOM, the affected drawings or specs, inventory status, and your doc
 ## Boundaries
 
 Draft-first: the ECN is a draft for the change board. No PLM write-back.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -43,3 +43,7 @@ history. OEM manual excerpts help. Historian data is optional.
 Draft-first: the recommended action is a recommendation pending planner or supervisor approval,
 and there is no CMMS write-back. This triages the fault in front of you — it does not forecast
 future failures or optimise PM intervals.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

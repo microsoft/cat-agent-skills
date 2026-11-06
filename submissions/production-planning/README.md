@@ -36,3 +36,7 @@ availability. JSON or spreadsheet exports both work.
 
 The shift plan is a draft for the planner to review and publish. Sequencing uses a campaign
 heuristic rather than an optimisation solver.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

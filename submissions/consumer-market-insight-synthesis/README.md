@@ -42,3 +42,7 @@ social-listening exports, claim libraries and campaign performance reports.
 
 Synthesis and citation. It does not produce a demand forecast, approve a claim or assert
 causal attribution — and it is not a tool for analysing large tabular datasets.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

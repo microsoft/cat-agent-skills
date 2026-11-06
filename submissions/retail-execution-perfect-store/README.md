@@ -40,3 +40,7 @@ master with channel and cluster, visit history and audit forms, and syndicated s
 Prepares and reports. It does not place the order, change the planogram or issue trade credit
 — and it does not score shelf photos by computer vision. Photos attach as evidence, never as
 the basis of a score.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -43,3 +43,7 @@ change a term or authorise a payment.
 
 Promotion-lift analysis requires account-level financial data and consistent definitions.
 Without that foundation, the plugin assesses deduction validity without lift analysis.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -39,3 +39,7 @@ return records, contracts and trading terms, and the vendor master.
 
 Read-only scorecarding and drafting. It does not change a PO, place a payment hold, amend a
 contract or deselect a supplier.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

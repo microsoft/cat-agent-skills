@@ -44,3 +44,7 @@ and the certificate of conformance if you have one.
 
 Draft-first: nothing is filed, sent, or written back to a quality system. The plugin ends at
 NCR creation and hands off to **Quality Incident & CAPA** for root cause and corrective action.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -39,3 +39,7 @@ lists, launch calendars, store task lists, and the store master with cluster def
 
 It does not change POS prices, planograms, labour schedules or campaign funding. It produces
 the readiness pack and the exception list; the store and HQ act on them.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -41,3 +41,7 @@ supplier master and on-time history. CSV exports from ERP/MRP are fine.
 
 Draft-first: nothing is auto-sent, and no PO or ERP record is written. It works from supplied PO,
 shipment and supplier communication records.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

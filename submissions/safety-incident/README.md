@@ -41,3 +41,7 @@ your EHS policy and JHA excerpts.
 Draft-first. The plugin does **not** file OSHA reports and does **not** send notifications — a
 human signs off on both. It keeps the reporting checklist and audit trail intact so that sign-off
 is quick.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

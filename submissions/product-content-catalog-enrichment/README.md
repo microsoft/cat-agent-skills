@@ -38,3 +38,7 @@ regulated-term lists.
 
 Ends at an approval-ready draft record. It does not publish to channel, approve a regulated
 claim or change the taxonomy.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

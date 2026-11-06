@@ -41,3 +41,7 @@ status, product documentation, approved scripts and service policy.
 
 Resolution drafts and escalation packets. It does not issue goodwill credit, change payment
 details or grant an unsupported policy exception.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

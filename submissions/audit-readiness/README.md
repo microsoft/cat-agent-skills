@@ -39,3 +39,7 @@ review minutes, internal audit reports, training records, calibration records.
 
 Draft-first: the output is a readiness pack. Producing the missing evidence is human work, and
 the plugin says so rather than papering over it.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -40,3 +40,7 @@ whatever SOPs and OEM manual excerpts you have.
 
 Draft-first and document-grounded. No auto-scheduling and no CMMS write-back — a planner still
 owns the schedule.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

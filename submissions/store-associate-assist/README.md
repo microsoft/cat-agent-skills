@@ -41,3 +41,7 @@ extract, promotion packs, and planogram notes.
 
 Answers and drafts only. It never overrides a price, authorises a refund, reserves inventory
 or changes a schedule.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)
