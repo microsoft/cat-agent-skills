@@ -1,0 +1,12 @@
+{
+  "name": "Asset Management",
+  "description": "RFP and DDQ drafting, investment commentary, research briefs, peer product comparisons, client review prep, and consultant database refreshes for institutional asset managers.",
+  "platforms": ["Cowork"],
+  "tags": ["financial-services", "asset-management", "rfp", "ddq", "investment-commentary"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.1",
+  "createdAt": "2026-10-28",
+  "category": "financial-services",
+  "builtByMicrosoft": true
+}

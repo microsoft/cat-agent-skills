@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.1",
+  "id": "03fefef8-1e34-4e09-a456-9914fcddc814",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  },
+  "name": {
+    "short": "FSI Commercial Banking",
+    "full": "FSI Commercial Banking for Copilot Cowork"
+  },
+  "description": {
+    "short": "Spreads, credit memos, covenant checks, and call prep for commercial banking",
+    "full": "Six skills for commercial banking credit and coverage teams. Build a standalone historical borrower-credit spread with source assurance/basis, visible normalization, five-check extraction verification, and live credit ratios in Input, Normalized, and Ratios tabs. Draft descriptive credit-memo sections. Assemble annual credit-monitoring packets with explicit comparison limits. Perform separate governing-agreement/amendment-led covenant and borrowing-base reviews with verified inputs, states, and flags. Research borrower/prospect public records. Prepare named external borrower/prospect relationship calls and write up supplied call notes. Integrated three-statement model completion, including historical population and embedded covenant schedules, internal operating/forecast review prep, and standalone stakeholder Q&A are outside this plugin. Runs without a paid subscription or Finance-plugin dependency, using supplied documents, Microsoft 365, public registries, SEC EDGAR, and public web. Scanned and photographed statements are read directly; unreadable figures are marked, never estimated. Loan origination, core banking, CRM, business credit, and benchmark connectors enrich sources without expanding scope; templates change the credit schema or layout, not workflow ownership. Every figure carries its source and page. The skills never rate a credit, approve or decline, set pricing, draft adverse-action reasons, or characterise creditworthiness."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F4C81",
+  "agentSkills": [
+    { "folder": "./skills/financial-statement-spread" },
+    { "folder": "./skills/credit-memo-narrative" },
+    { "folder": "./skills/credit-annual-review-packet" },
+    { "folder": "./skills/covenant-compliance-check" },
+    { "folder": "./skills/borrower-prospect-research" },
+    { "folder": "./skills/rm-call-prep-followup" }
+  ]
+}

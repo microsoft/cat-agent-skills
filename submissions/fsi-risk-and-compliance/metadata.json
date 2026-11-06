@@ -1,0 +1,12 @@
+{
+  "name": "Risk and Compliance",
+  "description": "Cited working papers for compliance, risk, and audit teams: regulatory change triage, policy gap tables, exam request trackers, enforcement read-across, vendor SOC 2 reviews, and KYC research records.",
+  "platforms": ["Cowork"],
+  "tags": ["financial-services", "compliance", "regulatory-change", "kyc", "vendor-risk"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.29",
+  "createdAt": "2026-10-28",
+  "category": "financial-services",
+  "builtByMicrosoft": true
+}
