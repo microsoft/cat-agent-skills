@@ -21,3 +21,8 @@ You are solely responsible for verifying any output before acting on it.
 
 See [Get started with Cowork](https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork)
 and [Build plugins for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development).
+
+## Contributors
+
+- Copilot Cowork team
+- Microsoft Excel

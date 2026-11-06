@@ -31,3 +31,7 @@ be included in the same artifact instead of becoming a separate document.
 This is an individual Cowork skill. It does not convert suggestions into
 commitments or discussions into decisions. Sending updates, changing CRM
 records, and establishing recurring work require explicit user intent.
+
+## Contributors
+
+- Copilot Cowork team

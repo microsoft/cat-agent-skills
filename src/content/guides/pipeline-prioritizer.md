@@ -31,3 +31,7 @@ supporting evidence, proposed next moves, and uncertainty.
 This is an individual Cowork skill. Deal value, staleness, and risk are
 inputs, not automatic rankings. The skill does not make CRM changes or
 contact customers merely because it recommends a next action.
+
+## Contributors
+
+- Copilot Cowork team

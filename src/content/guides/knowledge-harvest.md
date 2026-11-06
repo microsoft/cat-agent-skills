@@ -34,3 +34,7 @@ any fallback.
 This is an individual Cowork skill. Customer-identifying details should be
 removed. A draft article or case note is not published guidance. Publication,
 sharing, and changes to underlying records require separate authorization.
+
+## Contributors
+
+- Copilot Cowork team

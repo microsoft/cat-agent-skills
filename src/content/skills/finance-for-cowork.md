@@ -6,8 +6,9 @@ type: plugin
 category: finance
 builtByMicrosoft: true
 tags: [finance, financial-modeling, reporting]
-author: Copilot Cowork team
-authorUrl: "https://www.microsoft.com/en-us/copilot/features/cowork"
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 version: 1.0.7
 createdAt: 2026-10-31
 bundle: bundles/finance-for-cowork.zip

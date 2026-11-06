@@ -32,3 +32,7 @@ This is an individual Cowork skill. It does not predict win or close
 probability, infer risk from low activity alone, or invent CRM facts.
 Recommendations are not completed actions; external changes need separate
 authorization.
+
+## Contributors
+
+- Copilot Cowork team

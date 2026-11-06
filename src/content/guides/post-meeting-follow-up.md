@@ -31,3 +31,7 @@ unconfirmed commitments remain explicit.
 This is an individual Cowork skill. Internal strategy stays out of
 customer-ready drafts. Saving a draft does not send it, update CRM records,
 or turn a proposed next step into a confirmed action.
+
+## Contributors
+
+- Copilot Cowork team

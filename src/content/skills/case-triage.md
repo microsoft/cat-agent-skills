@@ -6,8 +6,9 @@ platforms: [Cowork]
 category: service
 builtByMicrosoft: true
 tags: [customer-service, triage, prioritization]
-author: Copilot Cowork team
-authorUrl: "https://www.microsoft.com/en-us/copilot/features/cowork"
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 createdAt: 2026-10-31
 ---
 # Case Triage

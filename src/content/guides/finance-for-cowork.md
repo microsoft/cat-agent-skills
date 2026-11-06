@@ -53,3 +53,8 @@ The skills show sources and mark missing information rather than guessing.
 They do not send email or calendar invitations without your confirmation.
 Review calculations, assumptions, and source dates before using the outputs
 in financial decisions.
+
+## Contributors
+
+- Copilot Cowork team
+- Microsoft Excel

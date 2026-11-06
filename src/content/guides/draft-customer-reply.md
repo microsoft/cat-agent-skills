@@ -32,3 +32,7 @@ available authorized tools and destination.
 This is an individual Cowork skill. Review facts, promises, recipients, and
 policy applicability before sending. A saved draft is not a delivered
 message; the skill does not send automatically.
+
+## Contributors
+
+- Copilot Cowork team

@@ -6,8 +6,9 @@ platforms: [Cowork]
 category: sales
 builtByMicrosoft: true
 tags: [sales, customer-engagement, deal-risk]
-author: Copilot Cowork team
-authorUrl: "https://www.microsoft.com/en-us/copilot/features/cowork"
+author: Microsoft
+authorUrl: "https://github.com/microsoft"
+authorGithub: microsoft
 createdAt: 2026-10-31
 ---
 # Customer Engagement and Deal Risk Insights

@@ -33,3 +33,7 @@ table instead of inventing numbers.
 This is an individual skill, not a plugin ZIP. Review evidence, units,
 currencies, time horizons, and assumptions before using the case. External
 actions require separate authorization; creating a draft does not send it.
+
+## Contributors
+
+- Copilot Cowork team

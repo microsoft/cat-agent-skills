@@ -31,3 +31,7 @@ This is an individual Cowork skill. A missing or inaccessible source is not
 proof that something is absent or ineligible. Review the findings before
 using them in a customer response or decision; research does not send a reply
 or change the case.
+
+## Contributors
+
+- Copilot Cowork team
