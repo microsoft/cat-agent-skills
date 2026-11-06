@@ -33,3 +33,7 @@ This is an individual Cowork skill. Confirmed participants, expected
 participants, and suggested additions remain distinct. Internal seller
 strategy is separate from customer-ready language. Preparation does not
 authorize invitations, outreach, or record changes.
+
+## Contributors
+
+- Copilot Cowork team

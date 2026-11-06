@@ -32,3 +32,7 @@ This is an individual Cowork skill. Age or emotional tone alone is not a
 confirmed response-time breach. The skill does not claim work, change
 priority fields, reassign issues, or close cases merely by recommending
 an order.
+
+## Contributors
+
+- Copilot Cowork team

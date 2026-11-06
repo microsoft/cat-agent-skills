@@ -32,3 +32,7 @@ It is not a customer-facing reply by default.
 This is an individual Cowork skill. Proposed fixes and follow-ups are not
 reported as completed without evidence. Preparing a brief does not close,
 reassign, or otherwise change the case.
+
+## Contributors
+
+- Copilot Cowork team

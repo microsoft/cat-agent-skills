@@ -28,8 +28,7 @@ deployed as a static site to GitHub Pages.
   from [industry-templates at pinned commit e4a0ab3](https://github.com/SravaniSeethi/industry-templates/tree/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682),
   with original source and license notices retained.
   It also includes five launch plugins and 14 individual Sales and Service
-  skills from the Copilot Cowork team, attributed with the official Copilot
-  icon. Accounting for Cowork is currently Frontier-only.
+  skills built by Microsoft. Accounting for Cowork is currently Frontier-only.
 - **Infinite-scroll galleries** with compact, consistently sized cards,
   category icons and quiet category labels for Microsoft submissions, and auto-generated monograms for
   community submissions (no image assets to maintain).

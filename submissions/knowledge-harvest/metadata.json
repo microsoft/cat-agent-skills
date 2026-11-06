@@ -5,7 +5,7 @@
   "category": "service",
   "builtByMicrosoft": true,
   "tags": ["customer-service", "knowledge-management", "case-resolution"],
-  "author": "Copilot Cowork team",
-  "authorUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
   "createdAt": "2026-10-31"
 }

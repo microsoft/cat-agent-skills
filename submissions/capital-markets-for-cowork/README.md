@@ -49,3 +49,9 @@ The skills provide analytical support, not advice. Outputs state their sources
 and dates and mark assumptions rather than inventing missing facts. Nothing is
 sent or shared without your confirmation. Review all analysis and calculations
 before relying on them.
+
+## Contributors
+
+- Copilot Cowork team
+- Microsoft Excel
+- Copilot Acceleration Team (CAT)

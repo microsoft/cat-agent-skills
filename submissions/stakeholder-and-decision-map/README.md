@@ -31,3 +31,7 @@ decision process, evidence gaps, and proposed next moves.
 This is an individual Cowork skill. Inferred roles and engagement need
 review. Recommendations do not authorize contacting people, scheduling
 meetings, or changing records.
+
+## Contributors
+
+- Copilot Cowork team

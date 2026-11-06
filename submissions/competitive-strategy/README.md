@@ -31,3 +31,7 @@ evidence, relevant objections, and gaps or questions to investigate.
 This is an individual skill for Cowork. Check the currency and applicability
 of competitive claims before using them with a customer. Preparing a strategy
 does not authorize outreach or business-record changes.
+
+## Contributors
+
+- Copilot Cowork team

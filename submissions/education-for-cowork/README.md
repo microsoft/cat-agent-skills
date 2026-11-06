@@ -50,3 +50,7 @@ and [Build plugins for Copilot Cowork](https://learn.microsoft.com/en-us/microso
 Outputs depend on the materials and tools available to Cowork. Review generated
 content before using it for teaching, governance, or institutional decisions.
 This plugin runs in Cowork; it is not a standalone Copilot Studio skill.
+
+## Contributors
+
+- Copilot Cowork team

@@ -8,7 +8,7 @@ import { skillSchema } from "../src/lib/skill-schema";
 import { loadSubmission } from "./import-submissions";
 import { validatePluginFiles } from "./validate-plugin";
 
-const team = "Copilot Cowork team";
+const team = "Microsoft";
 const plugins = [
   ["education-for-cowork", "education", 10],
   ["legal-for-cowork", "legal", 20],
@@ -56,9 +56,10 @@ test("launch submissions are five complete plugins and fourteen individual Cowor
     assert.equal(meta.category, category);
     assert.equal(meta.builtByMicrosoft, true);
     assert.equal(meta.author, team);
+    assert.equal(meta.authorUrl, "https://github.com/microsoft");
     assert.deepEqual(meta.platforms, ["Cowork"]);
     assert.equal(meta.authorGithub, undefined);
-    assert.equal(authorKey(meta.authorGithub, meta.author), "copilot-cowork-team");
+    assert.equal(authorKey(meta.authorGithub, meta.author), "microsoft");
     if (kind === "plugin") {
       const validated = validatePluginFiles(sub.pluginFiles ?? [], slug);
       assert.deepEqual(validated.problems, []);
@@ -76,24 +77,20 @@ test("team directory entry aggregates all nineteen submissions without fabricati
   skills.push({ slug: "ada", name: "Ada's skill", author: "Ada", authorGithub: "ADA" });
   const authors = directoryAuthors(skills);
   assert.equal(authors.length, 2);
-  assert.equal(authors[0].key, "copilot-cowork-team");
+  assert.equal(authors[0].key, "microsoft");
   assert.equal(authors[0].login, "");
   assert.equal(authors[0].displayName, team);
   assert.equal(authors[0].skillCount, 19);
   assert.equal(authors[0].skills.length, 19);
   assert.equal(authors[1].key, "ada");
   assert.equal(computeStats("ada", skills).skillCount, 1);
-  assert.equal(computeStats("copilot-cowork-team", skills).skillCount, 0);
-  assert.deepEqual(resolveBadges("copilot-cowork-team", skills), []);
+  assert.equal(computeStats("microsoft", skills).skillCount, 0);
+  assert.deepEqual(resolveBadges("microsoft", skills), []);
 });
 
-test("avatars use the official local team logo without changing GitHub or initials fallbacks", () => {
-  assert.equal(contributorAvatar(null, team), "/copilot.svg");
-  assert.equal(contributorAvatar("", " COPILOT COWORK TEAM "), "/copilot.svg");
+test("avatars come from GitHub logins and otherwise fall back to initials", () => {
+  assert.equal(contributorAvatar(null, team), null);
+  assert.equal(contributorAvatar("microsoft", team), "https://github.com/microsoft.png?size=96");
   assert.equal(contributorAvatar("@Ada", "Ada"), "https://github.com/ada.png?size=96");
-  assert.equal(contributorAvatar("ada", team), "https://github.com/ada.png?size=96");
   assert.equal(contributorAvatar(undefined, "Another team"), null);
-  const logo = readFileSync("public/copilot.svg", "utf8");
-  assert.match(logo, /<svg/);
-  assert.match(logo, /linearGradient/);
 });

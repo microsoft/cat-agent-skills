@@ -32,3 +32,7 @@ supported movement, reasons, and missing or unconfirmed evidence.
 This is an individual Cowork skill. A record-modification timestamp alone is
 not proof of a deal change. The digest is read-only apart from saving the
 requested artifact; it does not update deals or contact customers.
+
+## Contributors
+
+- Copilot Cowork team
