@@ -90,7 +90,8 @@ test("team directory entry aggregates all nineteen submissions without fabricati
 
 test("avatars come from GitHub logins and otherwise fall back to initials", () => {
   assert.equal(contributorAvatar(null, team), null);
-  assert.equal(contributorAvatar("microsoft", team), "https://github.com/microsoft.png?size=96");
+  assert.equal(contributorAvatar("microsoft", team), "/microsoft.svg");
+  assert.equal(contributorAvatar("@Microsoft", team), "/microsoft.svg");
   assert.equal(contributorAvatar("@Ada", "Ada"), "https://github.com/ada.png?size=96");
   assert.equal(contributorAvatar(undefined, "Another team"), null);
 });
