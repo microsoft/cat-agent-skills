@@ -8,7 +8,8 @@ import {
   validateAutomationData,
   type AutomationDigest,
 } from "../../../scripts/validate-automation";
-import { formatDate, PLATFORM_COLORS, initials, coverGradient } from "../../lib/skills";
+import { formatDate, PLATFORM_COLORS } from "../../lib/skills";
+import ContributorAvatar from "../../components/ContributorAvatar.astro";
 import { withBase } from "../../lib/url";
 import { authorKey, normalizeLogin } from "../../lib/badges";
 import { getRating } from "../../lib/ratings";
@@ -120,9 +121,8 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
         platforms={d.platforms}
         tags={d.tags}
         coverColor={d.coverColor}
-        hasBundle={Boolean(d.bundle)}
         type={d.type}
-        isInstaller={isInstaller}
+        builtByMicrosoft={d.builtByMicrosoft}
         variant="hero"
       />
     </div>
@@ -157,24 +157,10 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
             <div class="mt-5 flex items-center gap-3">
               <a
                 href={authorGalleryUrl}
-                class="shrink-0"
+                class="h-10 w-10 shrink-0"
                 aria-label={`Browse ${d.author}'s submissions`}
               >
-                <span
-                  class="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full text-[11px] font-bold text-white ring-1 ring-border"
-                  style={`background-image:${coverGradient(d.author)}`}
-                >
-                  {initials(d.author)}
-                  {authorLogin && (
-                    <img
-                      src={`https://github.com/${authorLogin}.png?size=80`}
-                      alt=""
-                      loading="lazy"
-                      onerror="this.remove()"
-                      class="absolute inset-0 h-full w-full object-cover"
-                    />
-                  )}
-                </span>
+                <ContributorAvatar name={d.author} login={authorLogin} />
               </a>
               <div class="min-w-0 leading-snug">
                 <div class="truncate text-sm">
@@ -267,7 +253,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
 
         {
           GuideContent ? (
-            <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+            <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-headings:tracking-tight prose-h1:text-3xl prose-h1:font-bold prose-h1:leading-tight prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
               <GuideContent />
             </article>
           ) : isAutomation && automation ? (
@@ -344,7 +330,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
               <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent-text">
                 Instructions
               </h2>
-              <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+              <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-headings:tracking-tight prose-h1:text-3xl prose-h1:font-bold prose-h1:leading-tight prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
                 <Content />
               </article>
             </>

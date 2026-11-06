@@ -21,7 +21,7 @@ const microsoft = skills.filter(({ data }) => data.builtByMicrosoft);
 const microsoftPreview = microsoft.toSorted((a, b) => compareCategoryThenName(a.data, b.data));
 const community = skills.filter(({ data }) => !data.builtByMicrosoft);
 const collection = microsoftOnly ? microsoft : skills;
-const gridItems = microsoftOnly ? microsoft : community;
+const gridItems = microsoftOnly ? microsoftPreview : community;
 const tagCounts = new Map<string, number>();
 const contributorMap = new Map<string, { key: string; name: string; login: string; count: number }>();
 for (const { data } of collection) {
@@ -55,7 +55,7 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
           </p>
         </div>
         <div class="relative">
-          <label for="skill-search" class="sr-only">{microsoftOnly ? "Search Microsoft submissions" : "Search all submissions"}</label>
+          <label for="skill-search" class="sr-only">{microsoftOnly ? "Search Microsoft skills & plugins" : "Search all submissions"}</label>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true">
             <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" stroke-linecap="round" />
           </svg>
@@ -73,14 +73,14 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
       <div class="mx-auto max-w-8xl px-4 py-6 sm:px-6">
         <div class="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
           <h2 id="microsoft-heading" class="text-xl font-bold tracking-tight text-fg">Built by Microsoft</h2>
-          <a id="microsoft-view-all" data-gallery-link data-destination={withBase("/built-by-microsoft/")} href={withBase("/built-by-microsoft/")} hidden={microsoft.length <= 1} aria-label={`View all ${microsoft.length} Microsoft submissions`} class="gallery-nav-link whitespace-nowrap">
+          <a id="microsoft-view-all" data-gallery-link data-destination={withBase("/built-by-microsoft/")} href={withBase("/built-by-microsoft/")} hidden={microsoft.length <= 1} aria-label={`View all ${microsoft.length} Microsoft skills & plugins`} class="gallery-nav-link whitespace-nowrap">
             View all <span id="microsoft-count">{microsoft.length}</span>
           </a>
         </div>
         <div id="microsoft-preview-grid" class="submission-grid" hidden={microsoft.length === 0}>
           {microsoftPreview.map((submission, index) => <SubmissionItem submission={submission} hidden={index > 0} />)}
         </div>
-        <p id="microsoft-empty" hidden={microsoft.length > 0} class="text-sm text-muted">No Microsoft submissions match these filters.</p>
+        <p id="microsoft-empty" hidden={microsoft.length > 0} class="text-sm text-muted">No Microsoft skills or plugins match these filters.</p>
       </div>
     </section>
   )}
@@ -88,11 +88,12 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
   <section class="mx-auto max-w-8xl px-4 py-7 sm:px-6">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
       <h2 class="text-xl font-bold tracking-tight text-fg">
-        {microsoftOnly ? "Microsoft submissions" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
+        {microsoftOnly ? "Microsoft skills & plugins" : "Built by the community"} <span id="result-count" class="text-base font-normal text-muted">({gridItems.length})</span>
       </h2>
       <label class="flex items-center gap-2 text-sm text-muted">
         <span class="hidden sm:inline">Sort by</span>
         <select id="sort-select" aria-label="Sort submissions" class="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none">
+          {microsoftOnly && <option value="category">Category, then name (A-Z)</option>}
           <option value="featured">Featured</option>
           <option value="rating">Top rated</option>
           <option value="downloads">Most downloaded</option>
@@ -106,9 +107,9 @@ const contributors = [...contributorMap.values()].sort((a, b) => b.count - a.cou
       {gridItems.map((submission) => <SubmissionItem submission={submission} />)}
     </div>
     <p id="empty-state" hidden={gridItems.length > 0} class="text-sm text-muted">
-      No {microsoftOnly ? "Microsoft" : "community"} submissions match these filters.{" "}
+      {microsoftOnly ? "No Microsoft skills or plugins match these filters." : "No community submissions match these filters."}{" "}
       <button type="button" data-clear-filters class="font-semibold text-accent-text underline underline-offset-4">Clear filters</button>
-      {" "}to browse all submissions.
+      {" "}to see {microsoftOnly ? "all Microsoft skills & plugins" : "all submissions"}.
     </p>
     <div id="scroll-sentinel" class="h-10"></div>
   </section>

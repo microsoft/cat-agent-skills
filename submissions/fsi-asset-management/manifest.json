@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.1",
+  "id": "bfa3bc4b-dddc-4e29-8948-2c1c09c5dc88",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  },
+  "name": {
+    "short": "FSI Asset Management",
+    "full": "FSI Asset Management for Copilot Cowork"
+  },
+  "description": {
+    "short": "RFP/DDQ drafting, commentary, research briefs, and client review prep",
+    "full": "Six skills for institutional asset managers: RFP and DDQ response teams, investment writers, research analysts, product specialists, client service, and consultant relations. Draft first-pass RFP and DDQ answers from your approved SharePoint library with a citation on every answer; write named fund, portfolio, or investment-strategy commentary from approved narrative and current performance/attribution sources; compare two issuer filings' risk-factor, MD&A, and guidance language with metrics as supporting context; compare funds from public summary prospectuses; prepare named institutional investment-client mandate reviews with IPS/guidelines and relationship commitments; and refresh consultant questionnaires with a redline. Corporate operating-variance commentary, executive business updates, the manager's own board/forecast reviews, and standalone stakeholder Q&A are outside this plugin. Runs without a paid subscription or Finance-plugin dependency, using Microsoft 365 content, supplied documents, SEC EDGAR, and public web. No connectors are bundled. Customer connectors enrich sources, and templates change layout without expanding workflow ownership. Current firm performance, AUM, attribution, and fees come verbatim from a system-of-record connector or uploaded export; peer-product facts may come from authoritative public filings. Gaps stay visible. Applicable performance-presentation policy gates remain mandatory. Outputs cite every claim and carry marketing-material labelling where appropriate for compliance review."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#1B6B54",
+  "agentSkills": [
+    { "folder": "./skills/rfp-ddq-response-draft" },
+    { "folder": "./skills/investment-commentary-draft" },
+    { "folder": "./skills/security-research-brief" },
+    { "folder": "./skills/peer-product-intelligence" },
+    { "folder": "./skills/institutional-client-review-prep" },
+    { "folder": "./skills/consultant-database-refresh" }
+  ]
+}
