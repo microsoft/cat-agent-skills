@@ -38,3 +38,7 @@ Each skill has a `config/` folder with settings marked `[TO CONFIGURE]`. Fill th
 Drafts and rationales for clinician review. It never marks a measure met without documentation, never changes or upgrades a code and never sends anything.
 
 Outputs are drafts that support, not replace, clinical and professional judgement. Use synthetic or de-identified data when trying it out.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

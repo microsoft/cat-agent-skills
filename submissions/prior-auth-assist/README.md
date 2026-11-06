@@ -38,3 +38,7 @@ Each skill has a `config/` folder with settings marked `[TO CONFIGURE]`. Fill th
 Draft packets and gap reports for human review. It never approves, denies or submits a prior authorization request.
 
 Outputs are drafts that support, not replace, clinical and professional judgement. Use synthetic or de-identified data when trying it out.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

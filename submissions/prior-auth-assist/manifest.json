@@ -6,8 +6,8 @@
   "developer": {
     "name": "Microsoft Corporation",
     "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
-    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+    "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
   },
   "name": {
     "short": "Prior Authorization Packet",

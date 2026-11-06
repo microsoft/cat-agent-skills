@@ -38,3 +38,7 @@ Each skill has a `config/` folder with settings marked `[TO CONFIGURE]`. Fill th
 Draft packets for clinician review. It never carries a flagged medication through silently and never signs or sends anything.
 
 Outputs are drafts that support, not replace, clinical and professional judgement. Use synthetic or de-identified data when trying it out.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

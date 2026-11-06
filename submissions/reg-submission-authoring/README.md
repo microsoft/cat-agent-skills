@@ -39,3 +39,7 @@ Each skill has a `config/` folder with settings marked `[TO CONFIGURE]`. Fill th
 A cited draft for regulatory review. It never files or submits anything.
 
 Outputs are drafts that support, not replace, clinical and professional judgement. Use synthetic or de-identified data when trying it out.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)
