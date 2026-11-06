@@ -24,7 +24,7 @@ const sales = [
 const service = ["answer-research", "case-preparation-brief", "case-triage", "draft-customer-reply", "knowledge-harvest"];
 
 test("every category has a label, color, icon, and schema support", () => {
-  assert.equal(new Set(CATEGORIES).size, 11);
+  assert.equal(new Set(CATEGORIES).size, 12);
   for (const category of CATEGORIES) {
     assert.ok(CATEGORY_LABELS[category]);
     assert.match(CATEGORY_COLORS[category], /^#[0-9a-f]{6}$/i);

@@ -39,11 +39,13 @@ test("Microsoft previews sort by category label and then title, regardless of fe
     { category: "productivity", name: "Zulu productivity", featured: false },
     { category: "agent-development", name: "Zulu agents", featured: false },
     { category: "financial-services", name: "Asset management", featured: false },
+    { category: "healthcare", name: "Alpha healthcare", featured: false },
   ] as const;
 
   assert.deepEqual(submissions.toSorted(compareCategoryThenName).map(({ name }) => name), [
     "Zulu agents",
     "Asset management",
+    "Alpha healthcare",
     "Beta manufacturing",
     "Zulu manufacturing",
     "Zulu productivity",
