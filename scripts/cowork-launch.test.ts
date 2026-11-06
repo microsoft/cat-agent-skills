@@ -13,7 +13,7 @@ const plugins = [
   ["education-for-cowork", "education", 10],
   ["legal-for-cowork", "legal", 20],
   ["finance-for-cowork", "finance", 13],
-  ["capital-markets-for-cowork", "capital-markets", 10],
+  ["capital-markets-for-cowork", "financial-services", 10],
   ["accounting-for-cowork", "accounting", 7],
 ] as const;
 const sales = [

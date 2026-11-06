@@ -9,7 +9,6 @@ export const CATEGORIES = [
   "sales",
   "service",
   "finance",
-  "capital-markets",
   "accounting",
 ] as const;
 
@@ -26,7 +25,6 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   sales: "Sales",
   service: "Service",
   finance: "Finance",
-  "capital-markets": "Capital Markets",
   accounting: "Accounting",
 };
 
@@ -41,7 +39,6 @@ export const CATEGORY_COLORS: Record<Category, string> = {
   sales: "#b45309",
   service: "#0f766e",
   finance: "#047857",
-  "capital-markets": "#4338ca",
   accounting: "#0369a1",
 };
 
@@ -56,6 +53,5 @@ export const CATEGORY_ICON_PATHS: Record<Category, string> = {
   sales: "M3 21V3m0 18h18M7 16l5-5 4 3 5-7m-5 0h5v5",
   service: "M4 14v-3a8 8 0 0 1 16 0v3M4 11H2v7h4v-7H4Zm16 0h2v7h-4v-7h2Zm0 7c0 3-3 3-6 3h-2",
   finance: "M12 3v18m5-14c-1-3-10-3-10 1s10 4 10 8-9 4-10 1",
-  "capital-markets": "m3 10 9-7 9 7H3Zm2 3v5m5-5v5m4-5v5m5-5v5M3 21h18",
   accounting: "M6 3h12v18H6V3Zm3 3h6v4H9V6Zm0 8h1m4 0h1m-6 3h1m4 0h1",
 };
