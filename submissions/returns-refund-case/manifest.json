@@ -1,42 +1,42 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
-    "version": "1.0.0",
-    "id": "4e34d725-5a50-5fff-a8b1-ac68968bbabd",
-    "developer": {
-        "name": "Microsoft Corporation",
-        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
-        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.4",
+  "id": "af02d002-f5fa-433f-b9b3-f42d53e7e471",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Returns Refund Case",
+    "full": "Returns Refund Case for Cowork"
+  },
+  "description": {
+    "short": "Retail returns: code the reason, check eligibility, draft the case packet",
+    "full": "Returns Refund Case builds a return case from desk notes, customer emails and order exports. It attaches the policy clauses, codes the return reason, determines eligibility with the clause cited, lists fraud signals as facts and drafts the case packet and customer response. It never authorises a refund, releases funds or adjudicates fraud.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#CA5010",
+  "agentSkills": [
+    {
+      "folder": "return-intake"
     },
-    "name": {
-        "short": "Returns Refund Case",
-        "full": "Returns Refund Case"
+    {
+      "folder": "policy-retrieve"
     },
-    "description": {
-        "short": "Retail Wave 1 Cowork plugin: consistent, policy-cited return decisions with a",
-        "full": "Retail Wave 1 Cowork plugin: consistent, policy-cited return decisions with a complete case packet on first touch. Retrieves order, receipt, SKU attributes and warranty; classifies the return reason against the taxonomy (reason_classify); validates eligibility deterministically with the policy clause cited (eligibility_check - the explicit Govern step); surfaces fraud signals from a deterministic rule set without adjudicating them (fraud_signal); drafts the recommendation and case packet. Draft-first: it never authorises a refund, releases funds, adjudicates fraud, disposes inventory or books a carrier."
+    {
+      "folder": "reason-classify"
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
+    {
+      "folder": "eligibility-check"
     },
-    "accentColor": "#4A90D9",
-    "agentSkills": [
-        {
-            "folder": "./skills/case-packet"
-        },
-        {
-            "folder": "./skills/eligibility-check"
-        },
-        {
-            "folder": "./skills/policy-retrieve"
-        },
-        {
-            "folder": "./skills/reason-classify"
-        },
-        {
-            "folder": "./skills/return-intake"
-        }
-    ]
+    {
+      "folder": "case-packet"
+    }
+  ]
 }
