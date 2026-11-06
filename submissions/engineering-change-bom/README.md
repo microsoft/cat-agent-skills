@@ -7,14 +7,18 @@ It reads the ECR, the spec or drawing delta and the BOM, traces impact across th
 where-used, classifies form/fit/function impact, flags interface violations, rolls up document
 and inventory dispositions, and drafts the ECN with the affected-item list.
 
-## How it works
+## What's included
 
 1. Reads the ECR, spec/drawing delta and BOM.
 2. Traces where-used across the BOM and classifies form/fit/function impact (deterministic).
 3. Checks the change against drawing standards and design rules.
 4. Drafts the ECN with the affected-item list.
 
-## Example scenario
+## Before you start
+
+The ECR, the BOM, the affected drawings or specs, inventory status, and your document register.
+
+## Try it
 
 "Minor tolerance relax, savings already booked, push it through this week." The requester
 checked the obvious assembly and it was fine.
@@ -27,10 +31,10 @@ press-fit band breaks a documented design rule.
 
 A naive reviewer approves the minor change. The engines block it, and say exactly why.
 
-## What you bring
-
-The ECR, the BOM, the affected drawings or specs, inventory status, and your document register.
-
-## Boundaries
+## Limitations
 
 Draft-first: the ECN is a draft for the change board. No PLM write-back.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

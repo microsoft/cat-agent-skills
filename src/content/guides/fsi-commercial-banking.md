@@ -2,7 +2,7 @@
 
 Six Cowork skills for commercial banking credit and coverage teams.
 
-## Skills
+## What's included
 
 - **financial-statement-spread** — historical borrower-credit spread with Input, Normalized, and Ratios tabs.
 - **credit-memo-narrative** — descriptive credit-memo sections.
@@ -11,7 +11,7 @@ Six Cowork skills for commercial banking credit and coverage teams.
 - **borrower-prospect-research** — borrower and prospect public-records research.
 - **rm-call-prep-followup** — relationship call prep and call-note write-ups.
 
-## Boundaries
+## Limitations
 
 Runs on supplied documents, Microsoft 365, public registries, SEC EDGAR, and public web, with no paid
 data dependency. Every figure carries its source and page. The skills never rate a credit, approve or

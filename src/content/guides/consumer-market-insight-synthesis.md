@@ -11,7 +11,7 @@ and claim provenance, and drafts a cited insight brief with a provenance record.
 Governance is explicit here because rights and provenance decide whether a finding can be used
 at all — not just whether it is interesting.
 
-## How it works
+## What's included
 
 1. Retrieves and ranks prior research and panel extracts.
 2. Compares trends across markets and periods (deterministic).
@@ -19,7 +19,12 @@ at all — not just whether it is interesting.
 4. Checks usage rights, geography and provenance.
 5. Drafts the cited brief and the provenance record.
 
-## Example scenario
+## Before you start
+
+Internal research repositories in PDF, PPTX and XLSX, syndicated panel extracts, approved
+social-listening exports, claim libraries and campaign performance reports.
+
+## Try it
 
 *"Board deck tomorrow, killer stat, don't overthink the fine print."* The fine print:
 
@@ -33,12 +38,11 @@ at all — not just whether it is interesting.
 The brief is built on cleared evidence, and the exclusions are named rather than quietly
 dropped.
 
-## What you bring
-
-Internal research repositories in PDF, PPTX and XLSX, syndicated panel extracts, approved
-social-listening exports, claim libraries and campaign performance reports.
-
-## Boundaries
+## Limitations
 
 Synthesis and citation. It does not produce a demand forecast, approve a claim or assert
 causal attribution — and it is not a tool for analysing large tabular datasets.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

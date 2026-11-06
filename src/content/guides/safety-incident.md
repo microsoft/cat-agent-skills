@@ -7,7 +7,7 @@ It takes the report, classifies severity, near-miss status and OSHA recordabilit
 reportability, routes it to the right investigator with the regulatory clocks attached, and
 drafts the incident summary and root-cause template.
 
-## How it works
+## What's included
 
 1. Receives the report from a form, email or voice note.
 2. Pulls the applicable policy, JHA and recordability guidance.
@@ -15,7 +15,12 @@ drafts the incident summary and root-cause template.
 4. Routes to the right investigator and builds the notification list with regulatory clocks (deterministic).
 5. Drafts the incident summary and RCA template.
 
-## Example scenario
+## Before you start
+
+The incident report in whatever form it arrived, witness statements, the prior-incident log, and
+your EHS policy and JHA excerpts.
+
+## Try it
 
 A hand was caught in stamping press M-14 on night shift. The night-shift lead left a voice note
 that downplays it: *looked minor, bit of a cut, we bandaged it up and sent him home — can we
@@ -31,13 +36,12 @@ Two documents change the answer:
 
 The downgrade is the most expensive mistake available here, and it is the easiest one to make.
 
-## What you bring
-
-The incident report in whatever form it arrived, witness statements, the prior-incident log, and
-your EHS policy and JHA excerpts.
-
-## Boundaries
+## Limitations
 
 Draft-first. The plugin does **not** file OSHA reports and does **not** send notifications — a
 human signs off on both. It keeps the reporting checklist and audit trail intact so that sign-off
 is quick.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

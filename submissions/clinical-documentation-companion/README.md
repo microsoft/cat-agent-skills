@@ -6,7 +6,7 @@ It drafts the referral letter, after-visit summary and clinician handoff, builds
 
 The design bet is evidence over completeness: a measure is only met, and a code only supported, when the note says so.
 
-## How it works
+## What's included
 
 1. **note-context** reads the signed encounter note into structured, cited clinical facts, and halts if the note is unsigned.
 2. **document-derive** drafts the referral letter, after-visit summary and care plan update, each cited and marked draft.
@@ -14,26 +14,24 @@ The design bet is evidence over completeness: a measure is only met, and a code 
 4. **quality-gap-check** scores the encounter against your configured quality measures from documented facts only.
 5. **handoff-draft** drafts the clinician handoff with every open gap and unsupported claim element listed.
 
-## Try it
-
-- **Draft the referral and visit summary:** "Draft the referral letter and after-visit summary from signed note [note id] in [folder]."
-- **Check quality measures:** "Which quality measures are still open for the visit in note [note id]? The measure status request is in [file]."
-- **Back the codes on the claim:** "Show the documentation behind the codes on the claim for note [note id] and flag anything the note does not support. The claim export is [file]."
-
-## What you bring
+## Before you start
 
 Signed encounter notes, problem and medication lists, orders and results, the claim export and your quality measure definitions.
 
 Suggested connectors: Salesforce, Box, Oracle Database, Snowflake, Azure Databricks and Adobe PDF Services.
-
-## Before you use it
 
 Each skill has a `config/` folder with settings marked `[TO CONFIGURE]`. Fill these in for your organisation; until you do, the skills report the item as not routed rather than guessing.
 
 - `quality-measures.json`: the quality measures you track and what documents them.
 - `escalation-policy.json`: who to route coding compliance and quality questions to.
 
-## Boundaries
+## Try it
+
+- **Draft the referral and visit summary:** "Draft the referral letter and after-visit summary from signed note [note id] in [folder]."
+- **Check quality measures:** "Which quality measures are still open for the visit in note [note id]? The measure status request is in [file]."
+- **Back the codes on the claim:** "Show the documentation behind the codes on the claim for note [note id] and flag anything the note does not support. The claim export is [file]."
+
+## Limitations
 
 Drafts and rationales for clinician review. It never marks a measure met without documentation, never changes or upgrades a code and never sends anything.
 

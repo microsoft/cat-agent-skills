@@ -26,7 +26,7 @@ A concise summary and one editable meeting-capture artifact or customer-only
 follow-up draft, depending on the request. Missing owners, dates, and
 unconfirmed commitments remain explicit.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Internal strategy stays out of
 customer-ready drafts. Saving a draft does not send it, update CRM records,

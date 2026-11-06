@@ -26,7 +26,7 @@ filled in from a job title alone.
 A concise summary and one editable artifact containing the stakeholder map,
 decision process, evidence gaps, and proposed next moves.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Inferred roles and engagement need
 review. Recommendations do not authorize contacting people, scheduling

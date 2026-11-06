@@ -7,7 +7,7 @@ It reads the incident, complaint and inspection data, establishes root cause wit
 method, builds corrective *and* preventive actions with mandatory effectiveness checks,
 validates closure readiness as an explicit gate, and drafts the 8D report cited to the clause.
 
-## How it works
+## What's included
 
 1. Consumes the NCR payload (including directly from the Quality Inspection plugin).
 2. Establishes root cause — Pareto plus a structured why-chain (deterministic).
@@ -15,7 +15,12 @@ validates closure readiness as an explicit gate, and drafts the 8D report cited 
 4. The governance gate: is this actually ready to close?
 5. Drafts the 8D / CAPA report, cited to the clause.
 
-## Example scenario
+## Before you start
+
+The open NCR (or the payload handed over from the Quality Inspection plugin), complaint data,
+and inspection results.
+
+## Try it
 
 The supervisor's email carries the pressure: *operator error, retrain, close by Friday.*
 
@@ -30,12 +35,11 @@ verification evidence is outstanding.
 
 A naive CAPA closes on retraining. This one will not.
 
-## What you bring
-
-The open NCR (or the payload handed over from the Quality Inspection plugin), complaint data,
-and inspection results.
-
-## Boundaries
+## Limitations
 
 Draft-first: the plugin takes an open NCR to *closure readiness*. Nothing is filed and nothing
 is closed by the plugin — a quality engineer signs off.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

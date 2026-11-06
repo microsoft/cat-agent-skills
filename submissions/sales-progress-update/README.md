@@ -26,7 +26,7 @@ appropriate supporting inputs.
 A concise summary and one editable progress update. A stuck-deal recap can
 be included in the same artifact instead of becoming a separate document.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. It does not convert suggestions into
 commitments or discussions into decisions. Sending updates, changing CRM

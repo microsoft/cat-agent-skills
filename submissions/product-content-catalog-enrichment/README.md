@@ -10,7 +10,7 @@ claim library, and drafts the descriptions and review packet.
 This is the one plugin both sides of the trading relationship use, from opposite ends of the
 same feed.
 
-## How it works
+## What's included
 
 1. Reads supplier sheets, specs and portal exports.
 2. Normalises to the taxonomy, validates GTIN check digits (deterministic).
@@ -18,7 +18,13 @@ same feed.
 4. Validates claims against the approved library — the Govern step.
 5. Drafts descriptions, comparison copy and the review packet.
 
-## Example scenario
+## Before you start
+
+PIM and GDSN records, supplier spreadsheets and portals, product manuals and specifications,
+your approved claim library, brand and taxonomy guidelines, channel templates, and
+regulated-term lists.
+
+## Try it
 
 *"Use the copy as written, launch Friday, their legal reviewed it."*
 
@@ -28,13 +34,11 @@ same feed.
   not your substantiation.
 - The draft ships with approved attributes only. Blocked claims never appear in the output.
 
-## What you bring
-
-PIM and GDSN records, supplier spreadsheets and portals, product manuals and specifications,
-your approved claim library, brand and taxonomy guidelines, channel templates, and
-regulated-term lists.
-
-## Boundaries
+## Limitations
 
 Ends at an approval-ready draft record. It does not publish to channel, approve a regulated
 claim or change the taxonomy.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

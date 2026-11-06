@@ -4,10 +4,10 @@
     "version": "1.0.0",
     "id": "23aa5383-b58c-5fd7-8941-a4dab7682528",
     "developer": {
-        "name": "Microsoft Retail & CPG Skills",
-        "websiteUrl": "https://github.com/SravaniSeethi/industry-templates",
-        "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
-        "termsOfUseUrl": "https://github.com/SravaniSeethi/industry-templates/blob/e4a0ab3d1eaa2b40e4c1d5c4b346a9566f25c682/LICENSE"
+        "name": "Microsoft Corporation",
+        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
     },
     "name": {
         "short": "Order Intake O2c Exception",

@@ -11,7 +11,7 @@ either drafts the resolution in channel and tone or builds a structured handoff 
 The design bet is reliability over reach: a confident wrong answer costs more than an
 escalation.
 
-## How it works
+## What's included
 
 1. Classifies intent against the taxonomy (deterministic).
 2. Consolidates customer, order, loyalty and delivery context; flags contradictions.
@@ -19,7 +19,12 @@ escalation.
 4. Drafts the resolution in the customer's channel and tone.
 5. Builds the structured escalation when confidence is below threshold.
 
-## Example scenario
+## Before you start
+
+Knowledge articles, CRM case history, OMS order status, loyalty records, delivery and carrier
+status, product documentation, approved scripts and service policy.
+
+## Try it
 
 Delivered-not-received, with refund-now pressure and a chargeback threat.
 
@@ -32,12 +37,11 @@ Delivered-not-received, with refund-now pressure and a chargeback threat.
 
 A naive agent promises the instant refund.
 
-## What you bring
-
-Knowledge articles, CRM case history, OMS order status, loyalty records, delivery and carrier
-status, product documentation, approved scripts and service policy.
-
-## Boundaries
+## Limitations
 
 Resolution drafts and escalation packets. It does not issue goodwill credit, change payment
 details or grant an unsupported policy exception.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

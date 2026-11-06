@@ -27,7 +27,7 @@ A concise summary and one editable internal case-preparation brief covering
 status, material history, open commitments, alternatives, and evidence gaps.
 It is not a customer-facing reply by default.
 
-## Review and control
+## Limitations
 
 This is an individual Cowork skill. Proposed fixes and follow-ups are not
 reported as completed without evidence. Preparing a brief does not close,

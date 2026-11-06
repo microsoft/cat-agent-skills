@@ -28,7 +28,7 @@ support quantification, the skill also calls for an inspectable Excel model.
 Without those inputs, it can produce a qualitative case and a missing-input
 table instead of inventing numbers.
 
-## Review and control
+## Limitations
 
 This is an individual skill, not a plugin ZIP. Review evidence, units,
 currencies, time horizons, and assumptions before using the case. External

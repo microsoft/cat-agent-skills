@@ -7,14 +7,19 @@ It pulls the demand forecast and open orders, checks capacity, constraints and m
 availability, sequences the week to minimise changeovers with a deterministic campaign
 heuristic, and drafts the shift plan for the planner to publish.
 
-## How it works
+## What's included
 
 1. Pulls the demand forecast and open orders.
 2. Checks work-centre capacity, constraints and material availability (deterministic).
 3. Sequences for changeovers with a campaign heuristic (deterministic).
 4. Drafts the shift plan for the planner to publish.
 
-## Example scenario
+## Before you start
+
+The demand plan and open orders, work-centre capacity, the changeover matrix and material
+availability. JSON or spreadsheet exports both work.
+
+## Try it
 
 "84% loaded, run it by due date." Three things that number hides:
 
@@ -27,12 +32,11 @@ heuristic, and drafts the shift plan for the planner to publish.
 The engine reports the naive miss, produces a campaign sequence that protects both committed
 orders, drops the changeover hours, and names the material gate in the escalation.
 
-## What you bring
-
-The demand plan and open orders, work-centre capacity, the changeover matrix and material
-availability. JSON or spreadsheet exports both work.
-
-## Boundaries
+## Limitations
 
 The shift plan is a draft for the planner to review and publish. Sequencing uses a campaign
 heuristic rather than an optimisation solver.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -8,7 +8,7 @@ BOM where-used to the affected products, production lines, open orders and at-ri
 quantities, recommends a mitigation, computes an escalation tier, and drafts both the supplier
 follow-up and the internal escalation brief.
 
-## How it works
+## What's included
 
 1. Reads the supplier notice, PO record and shipment data.
 2. Pulls supplier master, on-time history and sourcing standards.
@@ -16,7 +16,12 @@ follow-up and the internal escalation brief.
 4. Recommends expedite / substitute / reschedule and computes the escalation tier (deterministic).
 5. Drafts the supplier follow-up and internal escalation brief.
 
-## Example scenario
+## Before you start
+
+The supplier notice or email, the PO record, open orders, inventory status, BOM where-used, the
+supplier master and on-time history. CSV exports from ERP/MRP are fine.
+
+## Try it
 
 A supplier emails the buyer a reassuring note about 30 precision servo drives: *a small
 scheduling adjustment… think about a week or so… nothing major.* Taken at face value, this is a
@@ -32,12 +37,11 @@ Two things change the answer:
 
 The email and the data tell different stories. The plugin reads both and believes the data.
 
-## What you bring
-
-The supplier notice or email, the PO record, open orders, inventory status, BOM where-used, the
-supplier master and on-time history. CSV exports from ERP/MRP are fine.
-
-## Boundaries
+## Limitations
 
 Draft-first: nothing is auto-sent, and no PO or ERP record is written. It works from supplied PO,
 shipment and supplier communication records.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

@@ -1,4 +1,4 @@
-# Accounting for Cowork
+# Accounting
 
 **Availability: Frontier only for now.**
 

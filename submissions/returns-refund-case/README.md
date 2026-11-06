@@ -11,7 +11,7 @@ recommendation and case packet.
 Governance is an explicit step here, not a platform guardrail: the refusal has to be
 defensible.
 
-## How it works
+## What's included
 
 1. Reads the order, receipt, SKU attributes and warranty.
 2. Retrieves the applicable return and warranty policy.
@@ -19,7 +19,12 @@ defensible.
 4. Validates eligibility with the clause cited — the Govern step.
 5. Drafts the recommendation and the case packet.
 
-## Example scenario
+## Before you start
+
+Return and warranty policy, receipts and order records, SKU attributes and serial data, your
+reason-code taxonomy, carrier and RMA rules, and your fraud rule set.
+
+## Try it
 
 Loud, sympathetic, urgent — and every record says hold:
 
@@ -32,12 +37,11 @@ The determination is ineligible, the recommendation is hold-for-review, the pack
 asset protection, and the manager exception is *drafted as a request* — the plugin never
 grants it. A naive agent processes the goodwill refund to end the scene.
 
-## What you bring
-
-Return and warranty policy, receipts and order records, SKU attributes and serial data, your
-reason-code taxonomy, carrier and RMA rules, and your fraud rule set.
-
-## Boundaries
+## Limitations
 
 Draft-first. It never authorises a refund, releases funds, adjudicates fraud, disposes
 inventory or books a carrier.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

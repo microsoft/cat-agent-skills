@@ -9,7 +9,7 @@ format and cluster, tests completeness, flags pricing and signage conflicts dete
 ranks exceptions by revenue impact, and drafts the readiness checklist, shift brief and
 exception list.
 
-## How it works
+## What's included
 
 1. Reads the campaign pack, price file, planogram and task list.
 2. Maps requirements to this store's format and cluster.
@@ -17,7 +17,12 @@ exception list.
 4. Ranks what the store cannot fix, by revenue at stake.
 5. Drafts the readiness checklist and shift brief in store language.
 
-## Example scenario
+## Before you start
+
+Promotion briefs and campaign packs, price and price-change files, planograms and signage
+lists, launch calendars, store task lists, and the store master with cluster definitions.
+
+## Try it
 
 *"Everything shipped, reporting READY Monday."* The check finds what the confidence hides:
 
@@ -30,12 +35,11 @@ exception list.
 
 Ranking by revenue rather than by count is what puts the pricing trap at the top.
 
-## What you bring
-
-Promotion briefs and campaign packs, price and price-change files, planograms and signage
-lists, launch calendars, store task lists, and the store master with cluster definitions.
-
-## Boundaries
+## Limitations
 
 It does not change POS prices, planograms, labour schedules or campaign funding. It produces
 the readiness pack and the exception list; the store and HQ act on them.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)

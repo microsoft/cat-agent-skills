@@ -12,7 +12,7 @@ promotion, allowance or trade term, classifies validity deterministically and qu
 disputable amount with the calculation shown, and drafts the dispute packet and post-event
 brief.
 
-## How it works
+## What's included
 
 1. Extracts and normalises the deduction records and claim backup.
 2. Retrieves the governing promotion, allowance or trade term.
@@ -20,7 +20,12 @@ brief.
 4. Classifies validity and quantifies the disputable amount.
 5. Drafts the dispute packet and post-event brief.
 
-## Example scenario
+## Before you start
+
+ERP deduction and AR records, customer claim backup and portal exports, trade terms and
+customer agreements, the promotion calendar, and TPM system records.
+
+## Try it
 
 *"$25.9k, write it off, the account manager wants no friction."* The arithmetic disagrees:
 
@@ -31,15 +36,14 @@ brief.
 - Total disputable: **$11,300**. The write-off decision now happens with the number in front
   of a human, which is the entire point.
 
-## What you bring
-
-ERP deduction and AR records, customer claim backup and portal exports, trade terms and
-customer agreements, the promotion calendar, and TPM system records.
-
-## Boundaries
+## Limitations
 
 It determines and drafts. It does not post credits, write off deductions, approve trade spend,
 change a term or authorise a payment.
 
 Promotion-lift analysis requires account-level financial data and consistent definitions.
 Without that foundation, the plugin assesses deduction validity without lift analysis.
+
+## Contributors
+
+- Copilot Acceleration Team (CAT)
