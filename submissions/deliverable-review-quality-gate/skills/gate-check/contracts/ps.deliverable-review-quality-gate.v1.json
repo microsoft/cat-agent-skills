@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ps.deliverable-review-quality-gate.v1",
+  "title": "Deliverable Review & Quality Gate contract v1",
+  "description": "Chains deliverable-ingest -> criteria-retrieve -> assertion-map -> gate-check -> review-packet. Carries data plus confidence, provenance and citations on every hop so review-status escalation is mechanical. Engines treat deliverable and evidence text as untrusted data. JSON nested deeper than 64 levels anywhere in an engine input is an input error. Every engine validates its whole input against this contract at entry (required fields, JSON types, closed enums, ranges and provenance prefixes) and fails with a clean input error, writing no output, on any violation. Beyond the required list below, assertion_map also requires criteria and evidence_set, gate_check requires assertion_mappings, and severity_rank requires assertion_mappings, gate_results, findings and escalations. x-unrecognised: hold marks an enum the gates judge themselves (any string or null is accepted here and an unrecognised value holds); x-normalise: provenance means the value is compared after trimming, lower-casing and turning internal whitespace runs into -. Every member name must be spelled exactly as below: a name that differs only in case, Unicode form or -/_/. separators is a variant spelling and an input error. Any *_id value (or *_ids entry) longer than 512 characters is an input error. Every ID in the review input (engagement_id, scenario_id, deliverable_id, criteria_set_id, assertion_id, evidence_ids entries, evidence_id, check_id, content_id, finding_id and the optional subject IDs of linked records) must be 1 to 80 ASCII letters, digits, '.', '_' or '-', with no spaces or other characters (for example A-001 or EV-B2); every engine refuses any other ID with an input error that names the field, not the value (quality-gate-criteria.md #8.11). Every JSON integer must lie within +/-(2^53 - 1) and every number must be finite (1e400 and NaN are input errors); locations count from 1 and counts from 0 (quality-gate-criteria.md #8.12). IDs and names are compared in one canonical form (NFKC, format characters removed, look-alike letters folded, case-folded, whitespace collapsed, and for IDs separators folded), while outputs keep the original values (quality-gate-criteria.md #8.11).",
+  "type": "object",
+  "required": ["contract_version", "engagement_id", "deliverable", "assertions"],
+  "properties": {
+    "contract_version": { "const": "ps.deliverable-review-quality-gate.v1" },
+    "engagement_id": { "type": "string", "minLength": 1 },
+    "scenario_id": { "type": "string" },
+    "deliverable": {
+      "type": "object",
+      "required": ["deliverable_id", "title", "version", "confidentiality_marking", "third_party_recipient_named", "source", "citation", "confidence"],
+      "properties": {
+        "deliverable_id": { "type": "string", "minLength": 1, "description": "Required non-blank string at every stage; absent, null or blank is an input error." },
+        "title": { "type": "string" },
+        "version": { "type": "string" },
+        "type": { "type": "string" },
+        "client_name": { "type": "string", "description": "Client entity name from the deliverable cover. A recipient is client-only only when it positively contains client_name or a client_aliases entry plus client role words (board, management, CFO, general counsel, internal audit, audit committee and similar). Absent or blank means no recipient can be confirmed client-only. A client_name containing external-party vocabulary (counsel, lender, bank, investor, regulator, auditor, buyer, outside, third party and similar) is never trusted for matching and is a G2 must-fix with a confirm-client-aliases escalation (quality-gate-criteria.md #2.5)." },
+        "client_aliases": { "type": "array", "items": { "type": "string" }, "description": "Other names for the client entity (for example an abbreviation); every entry must be a string. An alias never neutralises external-party vocabulary in a recipient: recipients are scanned for that vocabulary on their full text before any client matching. An alias containing external-party vocabulary is never trusted and is a G2 must-fix with a confirm-client-aliases escalation (quality-gate-criteria.md #2.5)." },
+        "intended_recipients": { "type": ["array", "null"], "items": { "type": "string" }, "description": "Every entry must be a JSON string; any other entry type is an input error. Absent or null, empty, blank-entry or ambiguous lists hold under G2 (quality-gate-criteria.md #2.4). Each recipient is classified per #2.5: a recipient naming external-party vocabulary (counsel, lender, investor, regulator, auditor, buyer, outside, third party and similar) while third_party_recipient_named is false is a G2 release blocker; a recipient that is not positively matched to the client or the engagement team is a G2 must-fix with a confirm-recipients escalation." },
+        "third_party_recipient_named": { "type": "boolean", "description": "Required JSON true/false; absent, null, text or numbers are input errors. Set true whenever any recipient is outside the client entity." },
+        "confidentiality_marking": { "type": "string" },
+        "client_data_handling": { "enum": ["ok", "attention", "breach", "unknown"], "x-unrecognised": "hold", "default": "unknown", "description": "Set by deliverable-ingest from the source/client-data register; use unknown when the register cannot confirm safe handling. Missing is not equivalent to ok. Only ok is clean; attention is a G4 must-fix; breach, unknown, blank, null or any unrecognised value is a G4 release blocker; every non-ok value is escalated." },
+        "required_disclaimer_type": { "enum": ["general_advice", "reliance_restriction"], "x-unrecognised": "hold", "description": "Absent, null, blank or any other value is a G2 release blocker with an escalation (quality-gate-criteria.md #2.4); a non-string is an input error. The declared type must also appear in present_disclaimer_types: a missing reliance_restriction is a G2 release blocker and a missing general_advice is a G2 must-fix, both escalated." },
+        "present_disclaimer_types": { "type": ["array", "null"], "items": { "type": "string" }, "description": "Disclaimer types actually found in the draft. Absent, null or empty means none present, so the declared required type is treated as absent; a non-string entry is an input error." },
+        "required_language": { "type": ["array", "null"], "items": { "type": "string" }, "description": "Absent or null means the register was not loaded: gate-check holds with the register-missing finding and an escalation. An explicit empty array means checked with no entries. Any other type is an input error." },
+        "present_language": { "type": ["array", "null"], "items": { "type": "string" } },
+        "brand_checks": {
+          "type": ["array", "null"],
+          "description": "Absent or null means the register was not loaded: gate-check holds with the register-missing finding and an escalation. An explicit empty array means checked with no entries. Any other type is an input error.",
+          "items": {
+            "type": "object",
+            "required": ["check_id", "legal_or_release_control"],
+            "properties": {
+              "check_id": { "type": "string", "minLength": 1 },
+              "engagement_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the engagement this record belongs to. When present it must equal the review's engagement_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+              "deliverable_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the deliverable this record belongs to. When present it must equal deliverable.deliverable_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+              "status": { "enum": ["pass", "fail"], "x-unrecognised": "hold", "description": "Only pass and fail are recognised. Absent, null, blank or any other string means not verified: a G5 release blocker when legal_or_release_control is true, otherwise a must-fix, always escalated (quality-gate-criteria.md #5.3). A non-string is an input error." },
+              "legal_or_release_control": { "type": "boolean", "description": "Required JSON true/false; text, numbers or null are input errors." },
+              "title": { "type": "string" },
+              "detail": { "type": "string" },
+              "location": { "$ref": "#/definitions/location" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "source": { "type": "string" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "licensed_content": {
+          "type": ["array", "null"],
+          "description": "Absent or null means the register was not loaded: gate-check holds with the register-missing finding and an escalation. An explicit empty array means checked with no entries. Any other type is an input error.",
+          "items": {
+            "type": "object",
+            "required": ["content_id", "attribution_present"],
+            "properties": {
+              "content_id": { "type": "string", "minLength": 1 },
+              "engagement_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the engagement this record belongs to. When present it must equal the review's engagement_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+              "deliverable_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the deliverable this record belongs to. When present it must equal deliverable.deliverable_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+              "attribution_present": { "type": "boolean", "description": "Required JSON true/false; text, numbers or null are input errors." },
+              "license_status": { "enum": ["known", "unknown"], "x-unrecognised": "hold", "description": "Closed enum. Absent, null, blank or any other string is treated as unknown, so unattributed content is a G6 release blocker with an escalation (quality-gate-criteria.md #6.3). A non-string is an input error." },
+              "title": { "type": "string" },
+              "detail": { "type": "string" },
+              "location": { "$ref": "#/definitions/location" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "source": { "type": "string" },
+              "citation": { "type": "string" }
+            }
+          }
+        },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):[a-z0-9][a-z0-9._-]*$", "x-normalise": "provenance" },
+        "citation": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "criteria": {
+      "type": ["object", "null"],
+      "description": "Required by assertion_map (with criteria_sections). For gate_check, absent or null means the criteria register was not loaded and holds with the register-missing finding. criteria_sections is a gated register, so it is deliberately not contract-required: absent or null holds under G1 instead of refusing the run (quality-gate-criteria.md #8.14).",
+      "required": [],
+      "properties": {
+        "criteria_set_id": { "type": "string" },
+        "criteria_sections": { "type": ["array", "null"], "items": { "type": "string", "minLength": 1 } },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "Boolean flags (hedging_present, limitation_present, stated_basis, scope_aligned) must be JSON true/false when present; null, text such as \"false\" or numbers are input errors, never coerced. scope_aligned is required on every assertion (G3 reads it for every class); an omitted hedging_present is read as not hedged. Recommendations must carry sample_size (null when not sample-based). Every evidence_ids entry must exist in evidence_set; a dangling reference makes the assertion unsupported (quality-gate-criteria.md #1.1).",
+        "required": ["assertion_id", "class", "text", "location", "scope_aligned", "confidence", "source", "citation"],
+        "properties": {
+          "assertion_id": { "type": "string", "minLength": 1 },
+          "class": { "enum": ["factual", "quantified", "forward_looking", "recommendation"] },
+          "text": { "type": "string", "minLength": 1 },
+          "location": { "$ref": "#/definitions/location" },
+          "evidence_ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Each entry names an evidence item: non-blank, and not blank after Unicode, case and separator folding (a blank key never matches another)." },
+          "hedging_present": { "type": "boolean" },
+          "limitation_present": { "type": "boolean" },
+          "stated_basis": { "type": "boolean" },
+          "sample_size": { "type": ["integer", "null"], "minimum": 0 },
+          "population_size": { "type": ["integer", "null"], "minimum": 0 },
+          "scope_aligned": { "type": "boolean" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):[a-z0-9][a-z0-9._-]*$", "x-normalise": "provenance", "description": "Required provenance prefix engine:, skill: or connector: plus a slug (normally skill:deliverable-ingest). Absent, blank, free-text or self-declared sources are input errors." },
+          "citation": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "evidence_set": {
+      "type": ["array", "null"],
+      "description": "Absent or null means the register was not loaded: gate-check holds with the register-missing finding and an escalation. An explicit empty array means checked with no entries. Any other type is an input error. Every string, including citation, is scanned by the G8 tripwire.",
+      "items": {
+        "type": "object",
+        "required": ["evidence_id"],
+        "properties": {
+          "evidence_id": { "type": "string", "minLength": 1 },
+          "engagement_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the engagement this record belongs to. When present it must equal the review's engagement_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+          "deliverable_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the deliverable this record belongs to. When present it must equal deliverable.deliverable_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+          "type": { "enum": ["analysis_model", "financial_model", "system_export", "signed_client_data", "licensed_content_register", "internal_benchmark", "statement_of_work", "disclaimer_extract", "interview_summary", "workshop_note", "stakeholder_verbal"], "x-unrecognised": "hold", "description": "Closed list. Each assertion class accepts only an allowlist of types as support (quality-gate-criteria.md #1.1-#1.4): quantified claims accept analysis_model, financial_model, system_export and signed_client_data; factual claims accept analysis_model, financial_model, system_export, signed_client_data, licensed_content_register, internal_benchmark, statement_of_work and disclaimer_extract; forward-looking claims accept every type except stakeholder_verbal; recommendations accept every type except stakeholder_verbal, disclaimer_extract and licensed_content_register. An absent, blank or unrecognised type never supports any claim." },
+          "title": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "description": "Ingest provenance: connector:<slug> (letters, digits, -, _ or .) or skill:deliverable-ingest / skill:criteria-retrieve, compared after trimming, lower-casing and turning internal whitespace runs into - (Connector:Engagement Workspace reads as connector:engagement-workspace). An item with an absent, blank, unrecognised or self-declared source never supports an assertion, whatever its type or confidence (quality-gate-criteria.md #1.5)." },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "prior_findings": {
+      "type": ["array", "null"],
+      "description": "Absent or null means the register was not loaded: gate-check holds with the register-missing finding and an escalation. An explicit empty array means checked with no entries. Any other type is an input error.",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "claimed_closed", "document_fix_present"],
+        "properties": {
+          "finding_id": { "type": "string", "minLength": 1 },
+          "engagement_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the engagement this record belongs to. When present it must equal the review's engagement_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+          "deliverable_id": { "type": ["string", "null"], "minLength": 1, "description": "Optional subject: the deliverable this record belongs to. When present it must equal deliverable.deliverable_id in canonical form (quality-gate-criteria.md #8.11); a different or withheld value holds as a release blocker and the record is never used as evidence, a match or a basis for a decision (quality-gate-criteria.md #8.15). Absent or null means the record is the review's own." },
+          "claimed_closed": { "type": "boolean", "description": "Required JSON true/false; text, numbers or null are input errors (quality-gate-criteria.md #7.3)." },
+          "document_fix_present": { "type": "boolean", "description": "Required JSON true/false; text, numbers or null are input errors (quality-gate-criteria.md #7.3)." },
+          "detail": { "type": "string" },
+          "location": { "$ref": "#/definitions/location" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string" },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "assertion_mappings": {
+      "type": "array",
+      "description": "Required by gate-check (run assertion_map first). gate-check recomputes the mappings and AM- findings from assertions and evidence_set; any mapping or AM- finding that does not match recomputation is restored and raises a G8 spoof hold (quality-gate-criteria.md #8.4). Every field assertion_map emits is required, because gate-check and the review packet read or render them (quality-gate-criteria.md #8.14).",
+      "items": {
+        "type": "object",
+        "required": ["assertion_id", "class", "text", "location", "evidence_ids", "best_evidence_id", "support_status", "support_score", "rationale", "criteria_section", "confidence", "source", "citation"],
+        "properties": {
+          "assertion_id": { "type": "string", "minLength": 1 },
+          "class": { "enum": ["factual", "quantified", "forward_looking", "recommendation"] },
+          "text": { "type": "string", "minLength": 1 },
+          "location": { "$ref": "#/definitions/location" },
+          "evidence_ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Each entry names an evidence item: non-blank, and not blank after Unicode, case and separator folding (a blank key never matches another)." },
+          "best_evidence_id": { "type": ["string", "null"], "minLength": 1, "description": "The linked evidence item judged best, which may still be inadequate (support_status says whether it supports the claim). Null when no usable item is linked: none linked, or every reference missing, withheld or naming another engagement or deliverable. Never names an excluded item; otherwise a non-blank evidence ID." },
+          "support_status": { "enum": ["supported", "limited", "unsupported"] },
+          "support_score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "rationale": { "type": "string", "minLength": 1 },
+          "criteria_section": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):[a-z0-9][a-z0-9._-]*$", "x-normalise": "provenance" },
+          "citation": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "gate_results": {
+      "type": "array",
+      "description": "Required by severity_rank: exactly one entry per gate G1-G8, in gate order, each with exactly the members gate_check emits. severity_rank reconciles every entry against findings[] (status, highest_severity and finding_count) and against gate_check re-derivation (order, members, name, confidence, source and citation) and refuses the input on any mismatch, so a gate reported blocked can never reach a lower verdict (severity-rules.md #3.5, #3.7).",
+      "items": {
+        "type": "object",
+        "required": ["gate_id", "name", "status", "highest_severity", "finding_count", "confidence", "source", "citation"],
+        "properties": {
+          "gate_id": { "enum": ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"] },
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["blocked", "attention_required", "no_engine_findings"] },
+          "highest_severity": { "enum": ["release_blocker", "must_fix", "advisory", "none"] },
+          "finding_count": { "type": "integer", "minimum": 0 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "citation": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "Required by severity_rank (gate_check always emits it, empty when nothing was found); absent or non-array is an input error.",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "gate_id", "severity", "title", "detail", "location", "criteria_section", "confidence", "source", "citation"],
+        "properties": {
+          "finding_id": { "type": "string", "minLength": 1, "description": "Prefixes GC- (gate_check), AM- (assertion_map) and SR- (severity_rank) are engine-owned. A GC- or SR- finding, or an AM- finding that does not exactly match gate-check's recomputation of assertion_map output, is ignored and raises a G8 spoof hold; the source tag is never trusted. A duplicate finding_id never lowers severity: severity_rank keeps one finding per ID at the highest severity and escalates the collapse (severity-rules.md #3.4)." },
+          "gate_id": { "enum": ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"] },
+          "severity": { "enum": ["release_blocker", "must_fix", "advisory"] },
+          "title": { "type": "string", "minLength": 1 },
+          "detail": { "type": "string", "minLength": 1 },
+          "location": { "$ref": "#/definitions/location" },
+          "criteria_section": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):[a-z0-9][a-z0-9._-]*$", "x-normalise": "provenance" },
+          "citation": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "ranked_findings": {
+      "type": "array",
+      "description": "severity_rank output: every findings[] entry plus rank and ranking_basis. All fields are required because the review packet renders them.",
+      "items": {
+        "type": "object",
+        "required": ["finding_id", "gate_id", "severity", "title", "detail", "location", "criteria_section", "confidence", "source", "citation", "rank", "ranking_basis"],
+        "properties": {
+          "finding_id": { "type": "string", "minLength": 1 },
+          "gate_id": { "enum": ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"] },
+          "severity": { "enum": ["release_blocker", "must_fix", "advisory"] },
+          "title": { "type": "string", "minLength": 1 },
+          "detail": { "type": "string", "minLength": 1 },
+          "location": { "$ref": "#/definitions/location" },
+          "criteria_section": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "source": { "type": "string", "pattern": "^(engine|skill|connector):[a-z0-9][a-z0-9._-]*$", "x-normalise": "provenance" },
+          "citation": { "type": "string", "minLength": 1 },
+          "rank": { "type": "integer", "minimum": 1 },
+          "ranking_basis": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "release_readiness": {
+      "type": "object",
+      "description": "severity_rank output; every field is required because the review packet renders the status and summary.",
+      "required": ["status", "release_blockers", "must_fix", "advisories", "summary", "confidence", "source", "citation"],
+      "properties": {
+        "status": { "enum": ["not_ready_for_release", "partner_review_required_must_fix", "partner_review_required_advisories_only", "partner_review_required_no_engine_findings"] },
+        "release_blockers": { "type": "integer", "minimum": 0 },
+        "must_fix": { "type": "integer", "minimum": 0 },
+        "advisories": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "string", "minLength": 1 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "citation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "escalations": {
+      "type": "array",
+      "description": "Required by severity_rank; absent or non-array is an input error. Escalations without any finding give not_ready_for_release, never partner_review_required_no_engine_findings. With findings, the verdict follows the highest finding severity, each escalation still needs partner/QRM confirmation before release, and the summary states the escalation count (severity-rules.md #3.3). An escalation is a non-blank string or an object with a gate_id and a non-blank note, which is what the review packet renders.",
+      "items": {
+        "oneOf": [
+          { "type": "string", "minLength": 1 },
+          {
+            "type": "object",
+            "required": ["gate_id", "note"],
+            "properties": {
+              "gate_id": { "enum": ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"] },
+              "note": { "type": "string", "minLength": 1 }
+            }
+          }
+        ]
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Optional on the review input; every engine output carries it. Each engine appends its tag to engines and stamps generated_at (from --generated-at, else the value already present, else the current UTC time), so the review packet never renders a missing value. generated_at is an RFC 3339 date-time (for example 2026-10-01T00:00:00Z) at every stage, including a value carried in the input and the --generated-at flag. When supplied, both members are required.",
+      "required": ["engines", "generated_at"],
+      "properties": {
+        "engines": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "generated_at": { "type": "string", "minLength": 1, "format": "date-time" }
+      }
+    }
+  },
+  "definitions": {
+    "location": {
+      "type": "object",
+      "required": ["section", "page", "paragraph", "label"],
+      "properties": {
+        "section": { "type": "string", "minLength": 1 },
+        "page": { "type": ["integer", "null"], "minimum": 1, "description": "Physical page number, counted from 1; 0 and negative numbers are input errors. Null only for register-level findings with no page (for example a register that was not supplied). Printed labels such as roman numerals go in label; any other type is an input error." },
+        "paragraph": { "type": ["integer", "null"], "minimum": 1, "description": "Paragraph number on the page, counted from 1; 0 and negative numbers are input errors. Null only for register-level findings." },
+        "label": { "type": "string", "minLength": 1, "description": "Required and non-blank: the review packet renders it, and for a register-level finding (null page) it is the only locator." }
+      }
+    }
+  }
+}

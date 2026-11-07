@@ -41,7 +41,7 @@ deployed as a static site to GitHub Pages.
   Selected filters use the same theme-aware accent as the contribution and
   filter-apply actions, with a tinted fill, colored text, and a visible outline.
 - **Multi-select categories** alongside products: Manufacturing, Retail & CPG,
-  Financial Services, Healthcare, Productivity, Agent development, Education,
+  Financial Services, Healthcare, Professional Services, Productivity, Agent development, Education,
   Legal, Sales, Service, Finance, and Accounting. Categories match **any selected value**
   (OR), then intersect with the product and other filters (AND). Selecting an
   active category removes it; no categories selected means all categories.

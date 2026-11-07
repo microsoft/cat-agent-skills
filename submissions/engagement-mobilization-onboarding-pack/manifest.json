@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.7",
+  "id": "d8823884-316f-473a-a404-a50c898c20cd",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Engagement Mobilization Pack",
+    "full": "Engagement Mobilization & Onboarding Pack"
+  },
+  "description": {
+    "short": "Joiner mobilization packs: SOW scope, cleared knowledge, wall and access checks",
+    "full": "Drafts an internal mobilization and onboarding pack for a Professional Services engagement joiner. Deterministic engines digest SOW scope, separate confirmed from proposed staff, match only released prior knowledge, apply the ethical-wall register and draft least-privilege access requests, with every decision cited. Output is a draft for human review: it does not provision access, grant wall exceptions, assign staff, send messages or approve anything.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#B8431E",
+  "agentSkills": [
+    {
+      "folder": "./skills/engagement-retrieve"
+    },
+    {
+      "folder": "./skills/roster-pull"
+    },
+    {
+      "folder": "./skills/knowledge-match"
+    },
+    {
+      "folder": "./skills/wall-check"
+    },
+    {
+      "folder": "./skills/pack-draft"
+    }
+  ]
+}

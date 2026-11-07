@@ -1,0 +1,22 @@
+{
+  "name": "Closeout Knowledge Harvest",
+  "description": "Reusable knowledge from a finished engagement without leaking client confidences: assemble the final deliverables, decision log and retrospective, score reusable assets, cluster lessons learned, hold anything that fails the confidentiality gate and draft a sanitised knowledge record for practice review.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "professional-services",
+    "closeout",
+    "knowledge-management",
+    "lessons-learned",
+    "reuse",
+    "confidentiality"
+  ],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.5",
+  "createdAt": "2026-11-06",
+  "updatedAt": "2026-11-06",
+  "category": "professional-services",
+  "builtByMicrosoft": true
+}
