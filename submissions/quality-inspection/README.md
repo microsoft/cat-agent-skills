@@ -43,7 +43,7 @@ A naive review releases the lot on the certificate. The rules engine holds it.
 ## Limitations
 
 Draft-first: nothing is filed, sent, or written back to a quality system. The plugin ends at
-NCR creation and hands off to **Quality Incident & CAPA** for root cause and corrective action.
+NCR creation; root cause and corrective action stay with your quality team.
 
 ## Contributors
 

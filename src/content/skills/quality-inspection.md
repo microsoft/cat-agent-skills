@@ -9,22 +9,27 @@ tags: [quality, inspection, ncr, nonconformance, tolerance, mrb]
 author: Microsoft
 authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
-version: 2.0.0
+version: 3.1.1
 createdAt: 2026-08-01
-updatedAt: 2026-09-04
+updatedAt: 2026-11-06
 featured: true
 bundle: bundles/quality-inspection.zip
 ---
-Manufacturing Wave 1 Cowork plugin: clear an inspection lot. Reads part specs, drawings, inspection plans, CoC and measurement exports; compares actual measurements against tolerances (deterministic tolerance_check, with CoC-vs-measurement cross-check); grades each defect by severity and disposition (deterministic defect_grade rules engine); drafts the nonconformance report with every call cited to the spec. Draft-first; document-grounded. Ends at NCR creation and hands off to Quality Incident & CAPA (Wave 2).
+Quality Inspection organizes supplied inspection evidence, computes tolerances, grades deviations and drafts cited nonconformance reports. Local source replay supports deterministic checks. No release authorization, QMS filing, supplier sending, stock movement or CAPA execution. Quality engineer review is required.
+
+Sign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise
+Get started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork
+Help: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork
+Contact us: https://support.microsoft.com/home/contact
 
 > **Cowork plugin.** This is a Microsoft 365 Copilot **Cowork** app package (a `.zip` bundling the skills and connectors below). It installs on Cowork only.
 
 ## Skills in this plugin
 
-- **defect-grade** — Grades each out-of-tolerance characteristic by severity and recommends a disposition (use-as-is / rework / scrap / return-to-vendor / hold-for-review) using the deterministic disposition rules engine. Use when the user says "grade the defects", "what disposition?", "how bad is it?", "can we ship it?", or after tolerance-check finds any out-of-tolerance characteristic.
-- **ncr-draft** — Drafts the nonconformance report (NCR) and inspection summary from the graded contract payload, with every determination cited to the spec and rules. Use when the user says "draft the NCR", "write up the nonconformance", "inspection summary please", or after defect-grade completes with defects.
-- **spec-ingest** — Reads part specs, drawings, inspection plans, certificates of conformance and measurement exports for an inspection lot, and normalizes them into the mfg.quality-inspection.v1 contract inputs. Use when the user says "clear this inspection lot", "load the inspection results", "read the spec for part <PN>", "review lot <LOT-ID>", or when an inspection lot review begins.
-- **tolerance-check** — Compares actual measurements against spec tolerances for an inspection lot, computes per-characteristic statistics, flags out-of-tolerance and marginal characteristics, and cross-checks certificate claims against measured reality - deterministically. Use when the user says "check tolerances", "compare against spec", "any out-of-spec?", or after spec-ingest completes in a lot review.
+- **defect-grade** — Recommends manufacturing defect severity and disposition from validated engine deviations. Use for "grade the defects", "what disposition?", "how bad is it?", "can we ship it?", or "certificate says pass". Do NOT use for document intake — use spec-ingest; tolerance math — use tolerance-check; NCR writing — use ncr-draft. No release approval or operational actions.
+- **ncr-draft** — Writes a cited draft nonconformance report and inspection summary in Markdown (.md) from graded engine evidence. Use for "draft the NCR", "write up the nonconformance", "inspection summary please", "prepare the review report", or "draft supplier notification text". Do NOT use for intake — use spec-ingest; tolerance math — use tolerance-check; grading — use defect-grade; CAPA plans and DOCX/PDF conversion are outside this release. Never sends, files or executes actions.
+- **spec-ingest** — Organizes cited inspection documents into engine-ready inputs without grading. Use for "load the inspection results", "read the part spec", "structure the lot documents", "intake inspection evidence", or "review lot documents". Do NOT use for deviation math — use tolerance-check; grading — use defect-grade; NCR writing — use ncr-draft. Never authorizes release or operational actions.
+- **tolerance-check** — Computes inspection deviation statistics using a local deterministic engine. Use for "check tolerances", "compare against spec", "any out-of-spec?", "bore exceedance", or "measurement band consumption". Do NOT use for document intake — use spec-ingest; grading — use defect-grade; NCR or review-report Markdown — use ncr-draft. This release does not produce DOCX/PDF or other report formats. No release decisions or operational actions.
 
 ## Install
 

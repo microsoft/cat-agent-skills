@@ -1,39 +1,39 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
-    "version": "2.0.0",
-    "id": "61731de5-e9bc-5dfa-bc8d-a60f16e346f2",
-    "developer": {
-        "name": "Microsoft Corporation",
-        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
-        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "3.1.1",
+  "id": "e86bd8de-8337-4a2a-83f5-1ab6516be3f3",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Quality Inspection",
+    "full": "Quality Inspection for Cowork"
+  },
+  "description": {
+    "short": "Check inspection tolerances and draft cited nonconformance reports.",
+    "full": "Quality Inspection organizes supplied inspection evidence, computes tolerances, grades deviations and drafts cited nonconformance reports. Local source replay supports deterministic checks. No release authorization, QMS filing, supplier sending, stock movement or CAPA execution. Quality engineer review is required.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "defect-grade"
     },
-    "name": {
-        "short": "Quality Inspection",
-        "full": "Quality Inspection Nonconformance"
+    {
+      "folder": "ncr-draft"
     },
-    "description": {
-        "short": "Manufacturing Wave 1 Cowork plugin: clear an inspection lot. Reads part specs,",
-        "full": "Manufacturing Wave 1 Cowork plugin: clear an inspection lot. Reads part specs, drawings, inspection plans, CoC and measurement exports; compares actual measurements against tolerances (deterministic tolerance_check, with CoC-vs-measurement cross-check); grades each defect by severity and disposition (deterministic defect_grade rules engine); drafts the nonconformance report with every call cited to the spec. Draft-first; document-grounded. Ends at NCR creation and hands off to Quality Incident & CAPA (Wave 2)."
+    {
+      "folder": "spec-ingest"
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
-    },
-    "accentColor": "#4A90D9",
-    "agentSkills": [
-        {
-            "folder": "./skills/defect-grade"
-        },
-        {
-            "folder": "./skills/ncr-draft"
-        },
-        {
-            "folder": "./skills/spec-ingest"
-        },
-        {
-            "folder": "./skills/tolerance-check"
-        }
-    ]
+    {
+      "folder": "tolerance-check"
+    }
+  ]
 }
