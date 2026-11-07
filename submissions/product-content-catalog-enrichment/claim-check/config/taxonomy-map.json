@@ -1,0 +1,12 @@
+{ "mapping": {
+    "Product Name": "name", "Item Name": "name",
+    "Weight (g)": "net_weight_g", "Net Wt": "net_weight_g",
+    "Weight (oz)": {"target": "net_weight_g", "uom": "oz"},
+    "Weight (lb)": {"target": "net_weight_g", "uom": "lb"},
+    "Volume (ml)": "net_volume_ml",
+    "Volume (fl oz)": {"target": "net_volume_ml", "uom": "fl oz"},
+    "Color": "color", "Colour": "color", "Material": "material", "Country": "country_of_origin",
+    "Batteries?": "batteries_required", "Warranty (mo)": "warranty_months", "Description": "supplier_copy" },
+  "required_by_channel": { "marketplace": ["name", "net_weight_g", "color", "material", "country_of_origin"],
+                           "own-site": ["name", "color", "material"] },
+  "completeness_floor_pct": { "default": 80, "marketplace": 80, "own-site": 60 } }

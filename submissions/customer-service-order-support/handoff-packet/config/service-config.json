@@ -1,0 +1,10 @@
+{ "intent_taxonomy": {
+    "wismo": ["where is my order", "where's my order", "wismo", "hasn't arrived", "hasn't turned up", "track", "tracking", "delivery status", "still waiting", "when will it arrive"],
+    "delivered_not_received": ["says delivered", "marked delivered", "shows delivered", "tracking says delivered", "never got", "not received", "never received", "never showed up", "nothing at my door", "didn't arrive", "not here", "dnr"],
+    "return_question": ["return", "returns", "returning", "refund", "send back", "send it back"],
+    "stock_question": ["in stock", "available", "availability", "back in stock"],
+    "product_how_to": ["how do i", "how to", "set up", "setup", "pair", "pairing"] },
+  "matching": {"mode": "word-boundary", "normalise": ["lowercase", "curly-apostrophes", "whitespace"]},
+  "dnr_policy": {"investigation_days": 3, "instant_resolution": {"min_tier": "platinum", "max_value": 50.0},
+    "citation": "service policy SVC-DNR-2 (config/service-config.json)"},
+  "confidence_floor": 0.75 }

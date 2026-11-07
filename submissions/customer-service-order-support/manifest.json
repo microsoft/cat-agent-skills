@@ -1,42 +1,42 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
-    "version": "1.0.1",
-    "id": "a7d668c1-6378-5bc3-8fcd-fe615fd647fc",
-    "developer": {
-        "name": "Microsoft Corporation",
-        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
-        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.4",
+  "id": "ec4ad0e8-0d46-45a1-a491-834be4b6de98",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Customer Service Order Support",
+    "full": "Customer Service Order Support for Cowork"
+  },
+  "description": {
+    "short": "Retail order service: classify inquiries, assemble order records, draft replies",
+    "full": "Customer Service Order Support works retail order inquiries such as where is my order and delivered but not received. It classifies the inquiry, assembles order, carrier and loyalty records, flags contradictions and drafts a grounded reply or a tier 2 escalation packet. It never issues goodwill credit, changes payment details or sends replies.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "inquiry-intake"
     },
-    "name": {
-        "short": "Customer Service Order Support",
-        "full": "Customer Service Order Support"
+    {
+      "folder": "context-assemble"
     },
-    "description": {
-        "short": "Retail Wave 1 Cowork plugin: a grounded first response, and a clean escalation",
-        "full": "Retail Wave 1 Cowork plugin: a grounded first response, and a clean escalation packet when it cannot resolve. Classifies intent against the taxonomy (intent_classify); assembles customer, order, loyalty and delivery context and detects contradictions (context_assemble); retrieves the approved answer; drafts the resolution in channel and tone or builds the structured handoff packet. Reliability beats reach: it does not issue goodwill credit, change payment details or grant unsupported policy exceptions."
+    {
+      "folder": "knowledge-retrieve"
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
+    {
+      "folder": "resolution-draft"
     },
-    "accentColor": "#4A90D9",
-    "agentSkills": [
-        {
-            "folder": "./skills/context-assemble"
-        },
-        {
-            "folder": "./skills/handoff-packet"
-        },
-        {
-            "folder": "./skills/inquiry-intake"
-        },
-        {
-            "folder": "./skills/knowledge-retrieve"
-        },
-        {
-            "folder": "./skills/resolution-draft"
-        }
-    ]
+    {
+      "folder": "handoff-packet"
+    }
+  ]
 }

@@ -1,42 +1,42 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
-    "version": "1.0.0",
-    "id": "e6009cd5-65f9-56b7-8126-3c43ddb786bf",
-    "developer": {
-        "name": "Microsoft Corporation",
-        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
-        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.9",
+  "id": "63674b06-d62d-4bc8-9566-8ce4e163bdff",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Store Associate Assist",
+    "full": "Store Associate Assist for Cowork"
+  },
+  "description": {
+    "short": "Store floor questions: resolve policy, check promotions, compare products",
+    "full": "Store Associate Assist answers an associate's floor question with the source cited. It resolves the return, price match or raincheck clause, tests promotion eligibility by window, cluster and SKU, compares two products from your PIM export and drafts the answer or a shift lead escalation. It never overrides a price, authorises a refund or reserves stock.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#038387",
+  "agentSkills": [
+    {
+      "folder": "question-intake"
     },
-    "name": {
-        "short": "Store Associate Assist",
-        "full": "Store Associate Assist"
+    {
+      "folder": "policy-retrieve"
     },
-    "description": {
-        "short": "Retail Wave 1 Cowork plugin: the associate's cited answer on the floor. Takes",
-        "full": "Retail Wave 1 Cowork plugin: the associate's cited answer on the floor. Takes the question with store, role and department context; retrieves the applicable policy, product attributes and current promotion; resolves the policy and compares products deterministically (policy_resolve + product_compare engines); returns a cited answer or a drafted escalation. Answers and drafts only - it never overrides a price, authorises a refund, reserves inventory or changes a schedule."
+    {
+      "folder": "promo-check"
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
+    {
+      "folder": "product-compare"
     },
-    "accentColor": "#4A90D9",
-    "agentSkills": [
-        {
-            "folder": "./skills/answer-draft"
-        },
-        {
-            "folder": "./skills/policy-retrieve"
-        },
-        {
-            "folder": "./skills/product-compare"
-        },
-        {
-            "folder": "./skills/promo-check"
-        },
-        {
-            "folder": "./skills/question-intake"
-        }
-    ]
+    {
+      "folder": "answer-draft"
+    }
+  ]
 }

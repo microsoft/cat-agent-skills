@@ -1,42 +1,42 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
-    "version": "1.0.0",
-    "id": "6d86cd72-bbd1-5835-b1f0-166cd4be51e0",
-    "developer": {
-        "name": "Microsoft Corporation",
-        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
-        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.5",
+  "id": "ed3c20cc-770a-463f-9696-be3803743d6c",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Product Content Enrichment",
+    "full": "Product Content Enrichment for Cowork"
+  },
+  "description": {
+    "short": "Product content: normalise supplier data, score completeness, check claims",
+    "full": "Product Content Enrichment turns supplier item sheets into draft product records for a channel. It maps fields to your taxonomy, validates GTIN check digits, scores completeness, checks marketing claims against your approved claim library and drafts copy with a review packet. It never publishes, approves a claim or changes the taxonomy.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#8764B8",
+  "agentSkills": [
+    {
+      "folder": "source-ingest"
     },
-    "name": {
-        "short": "Product Content Catalog",
-        "full": "Product Content Catalog Enrichment"
+    {
+      "folder": "attribute-normalize"
     },
-    "description": {
-        "short": "Retail Wave 1 Cowork plugin (retailer-side, CPG-enabled): turn incomplete",
-        "full": "Retail Wave 1 Cowork plugin (retailer-side, CPG-enabled): turn incomplete supplier data into channel-ready, claim-safe product records. Ingests supplier sheets and specs; normalises attributes against the taxonomy with GTIN validation (attribute_normalize); scores completeness per channel (completeness_score); validates claims and regulated terms against the approved claim library - the explicit Govern step (claim_check); drafts descriptions and the review packet. Ends at an approval-ready draft record: it does not publish to channel, approve a regulated claim or change the taxonomy."
+    {
+      "folder": "completeness-score"
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
+    {
+      "folder": "claim-check"
     },
-    "accentColor": "#4A90D9",
-    "agentSkills": [
-        {
-            "folder": "./skills/attribute-normalize"
-        },
-        {
-            "folder": "./skills/claim-check"
-        },
-        {
-            "folder": "./skills/content-draft"
-        },
-        {
-            "folder": "./skills/gap-score"
-        },
-        {
-            "folder": "./skills/source-ingest"
-        }
-    ]
+    {
+      "folder": "content-draft"
+    }
+  ]
 }
