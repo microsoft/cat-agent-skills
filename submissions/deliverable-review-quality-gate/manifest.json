@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.9",
+  "id": "b01fbf45-ce86-43d2-a12b-19645b736396",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Deliverable Quality Gate",
+    "full": "Deliverable Review & Quality Gate for Professional Services"
+  },
+  "description": {
+    "short": "Map deliverable claims to evidence, run quality gates, draft a review packet",
+    "full": "Checks a client deliverable against your firm's quality-gate criteria. It maps each assertion to supporting evidence, runs the release gates, ranks issues by severity and drafts a partner review packet that cites every finding. Outputs are drafts for a human reviewer: it never signs off, approves client issue, authorizes reliance or sends anything.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#2E7D32",
+  "agentSkills": [
+    {
+      "folder": "./skills/deliverable-ingest"
+    },
+    {
+      "folder": "./skills/criteria-retrieve"
+    },
+    {
+      "folder": "./skills/assertion-map"
+    },
+    {
+      "folder": "./skills/gate-check"
+    },
+    {
+      "folder": "./skills/review-packet"
+    }
+  ]
+}

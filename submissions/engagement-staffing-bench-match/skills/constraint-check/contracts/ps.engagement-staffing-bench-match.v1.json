@@ -1,0 +1,351 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ps.engagement-staffing-bench-match.v1",
+  "title": "Engagement Staffing & Bench Match contract v1",
+  "description": "Chains role-intake -> bench-query -> fit-score -> constraint-check -> slate-draft. Carries data, confidence, provenance and citations so fit scores, ranks, utilisation figures and eligibility refusals are auditable.",
+  "type": "object",
+  "required": ["contract_version", "engagement", "roles"],
+  "if": { "not": { "required": ["constraints"] } },
+  "then": { "required": ["provenance"] },
+  "properties": {
+    "contract_version": { "const": "ps.engagement-staffing-bench-match.v1" },
+    "engagement": {
+      "type": "object",
+      "required": ["engagement_id", "client_name", "affiliates", "source", "confidence", "citation"],
+      "properties": {
+        "engagement_id": { "type": "string" },
+        "client_name": { "type": "string" },
+        "affiliates": {
+          "type": "array",
+          "description": "Known parent companies, subsidiaries and affiliates whose conflict records apply to this engagement.",
+          "items": { "type": "string" }
+        },
+        "practice": { "type": "string" },
+        "stage": { "type": "string" },
+        "source": {
+          "type": "string",
+          "enum": ["skill:role-intake", "connector:resource-management-system", "connector:conflicts-register"],
+          "description": "role-intake writes skill:role-intake; bench-query copies the block unchanged. The engines refuse any other value."
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role_id", "title", "start_date", "allocation_pct", "required_skills", "source", "confidence", "citation"],
+        "properties": {
+          "role_id": { "type": "string" },
+          "title": { "type": "string" },
+          "seniority": { "type": "string" },
+          "start_date": { "type": "string" },
+          "duration_weeks": { "type": "integer", "minimum": 1 },
+          "allocation_pct": { "type": "number", "minimum": 1, "maximum": 100 },
+          "location": { "type": "string" },
+          "remote_ok": { "type": "boolean" },
+          "required_languages": { "type": "array", "items": { "type": "string" } },
+          "industry_context": { "type": "string" },
+          "required_skills": { "type": "array", "items": { "type": "string" } },
+          "preferred_skills": { "type": "array", "items": { "type": "string" } },
+          "required_certifications": { "type": "array", "items": { "type": "string" } },
+          "rate_band": {
+            "type": "object",
+            "properties": {
+              "currency": { "type": "string" },
+              "min": { "type": "number" },
+              "max": { "type": "number" }
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": ["skill:role-intake", "connector:resource-management-system", "connector:conflicts-register"],
+            "description": "role-intake writes skill:role-intake. The engines refuse any other value."
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "bench_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["candidate_id", "name", "skills", "source", "confidence", "citation"],
+        "properties": {
+          "candidate_id": { "type": "string" },
+          "name": { "type": "string" },
+          "seniority": { "type": "string" },
+          "skills": { "type": "array", "items": { "type": "string" } },
+          "certifications": { "type": "array", "items": { "type": "string" } },
+          "industry_experience": { "type": "array", "items": { "type": "string" } },
+          "location": { "type": "string" },
+          "languages": { "type": "array", "items": { "type": "string" } },
+          "rate": { "type": "number" },
+          "current_allocation_pct": { "type": "number" },
+          "target_utilization_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "The firm's planning target for the candidate's billable utilisation. It is context only and does not change effective available capacity."
+          },
+          "approved_leave": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["start", "allocation_pct"],
+              "properties": {
+                "start": { "type": "string" },
+                "end": {
+                  "type": "string",
+                  "description": "Optional. Missing end dates are treated as open-ended and force review."
+                },
+                "allocation_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                "citation": { "type": "string" }
+              }
+            }
+          },
+          "soft_bookings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["start", "allocation_pct"],
+              "properties": {
+                "start": { "type": "string" },
+                "end": {
+                  "type": "string",
+                  "description": "Optional. Missing end dates are treated as open-ended and force review."
+                },
+                "allocation_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+                "citation": { "type": "string" }
+              }
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": ["skill:role-intake", "connector:resource-management-system", "connector:conflicts-register"],
+            "description": "bench-query writes connector:resource-management-system. The engines refuse any other value."
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Normalized conflicts-register records owned by bench-query and evaluated only by constraint-check.",
+      "items": {
+        "type": "object",
+        "required": ["candidate_id", "type", "source", "confidence", "citation"],
+        "properties": {
+          "candidate_id": { "type": "string" },
+          "type": { "type": "string" },
+          "client_name": { "type": "string" },
+          "status": { "type": "string" },
+          "material": { "type": ["boolean", "null"] },
+          "role_type": { "type": "string" },
+          "process": { "type": "string" },
+          "end_date": { "type": "string" },
+          "resolved_date": { "type": "string" },
+          "source": {
+            "type": "string",
+            "pattern": "^(engine|skill|connector):",
+            "description": "bench-query writes connector:conflicts-register."
+          },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "citation": { "type": "string" }
+        }
+      }
+    },
+    "scored_roles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scored_role" }
+    },
+    "ranked_roles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ranked_role" }
+    },
+    "governed_roles": {
+      "type": "array",
+      "description": "Governed candidate slates. Each candidate includes constraints_considered[] so slate-draft can independently refuse unexplained conflict records.",
+      "items": { "$ref": "#/$defs/governed_role" }
+    },
+    "gaps": { "type": "array", "items": { "$ref": "#/$defs/gap" } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": {
+      "type": "object",
+      "description": "Required in every document except constraints.json; role-intake and bench-query always write generated_at, and the engines refuse a run where neither roles.json nor bench.json carries it.",
+      "required": ["generated_at"],
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?Z$",
+          "description": "ISO 8601 UTC time the payload was built (YYYY-MM-DDTHH:MM:SSZ)."
+        },
+        "demo_scenario": { "type": "string" },
+        "engines": { "type": "array", "items": { "type": "string" } },
+        "policies": {
+          "type": "object",
+          "description": "Optional. Policy reference applied by the engines, keyed by reference file (for example fit-scoring-rubric.md or independence-eligibility-rules.md) with a version or digest string as the value.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "availability_context": {
+      "type": "object",
+      "required": ["effective_available_pct", "requested_allocation_pct", "utilization_after_staffing_pct", "evidence_complete", "calculation_warnings"],
+      "properties": {
+        "component_score": { "type": "number" },
+        "current_allocation_pct": { "type": "number" },
+        "requested_allocation_pct": { "type": "number" },
+        "approved_leave_overlap_pct": { "type": "number" },
+        "soft_booking_overlap_pct": { "type": "number" },
+        "effective_available_pct": { "type": "number" },
+        "utilization_after_staffing_pct": { "type": "number" },
+        "duration_weeks_used": { "type": "integer" },
+        "duration_assumed": { "type": "boolean" },
+        "evidence_complete": { "type": "boolean" },
+        "calculation_warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "candidate_score": {
+      "type": "object",
+      "description": "One candidate-role fit score from fit_score. Ranked and governed slate entries extend this shape.",
+      "required": ["candidate_id", "candidate_name", "fit_score", "component_scores", "component_citations", "availability_context", "source", "confidence", "citation"],
+      "properties": {
+        "candidate_id": { "type": "string" },
+        "candidate_name": { "type": "string" },
+        "fit_score": { "type": "number" },
+        "component_scores": { "type": "object" },
+        "component_citations": { "type": "object" },
+        "matched_required_skills": { "type": "array", "items": { "type": "string" } },
+        "matched_preferred_skills": { "type": "array", "items": { "type": "string" } },
+        "availability_context": { "$ref": "#/$defs/availability_context" },
+        "provisional_rank": { "type": "integer" },
+        "rank_source": { "type": "string" },
+        "rank_citation": { "type": "string" },
+        "source": { "type": "string", "pattern": "^(engine|skill|connector):" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    },
+    "ranked_candidate": {
+      "description": "A provisional (pre-governance) slate entry from slate_rank.",
+      "allOf": [
+        { "$ref": "#/$defs/candidate_score" },
+        { "type": "object", "required": ["provisional_rank", "rank_source", "rank_citation"] }
+      ]
+    },
+    "governed_candidate": {
+      "description": "A governed slate or recommended entry from constraint_check, optionally re-checked by slate_validate.",
+      "allOf": [
+        { "$ref": "#/$defs/ranked_candidate" },
+        {
+          "type": "object",
+          "required": ["constraints_considered", "eligibility"],
+          "properties": {
+            "constraints_considered": { "type": "array", "items": { "$ref": "#/$defs/constraint_considered" } },
+            "eligibility": { "$ref": "#/$defs/eligibility" },
+            "final_eligible_rank": { "type": "integer" },
+            "secondary_validation": { "$ref": "#/$defs/secondary_validation" }
+          }
+        }
+      ]
+    },
+    "constraint_considered": {
+      "type": "object",
+      "required": ["type", "applies_to_engagement", "disposition", "reason", "citation"],
+      "properties": {
+        "type": { "type": "string" },
+        "client_name": { "type": "string" },
+        "status": { "type": "string" },
+        "material": { "type": ["boolean", "null"] },
+        "role_type": { "type": "string" },
+        "process": { "type": "string" },
+        "end_date": { "type": "string" },
+        "resolved_date": { "type": "string" },
+        "applies_to_engagement": { "type": "boolean" },
+        "disposition": { "type": "string" },
+        "reason": { "type": "string" },
+        "source": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    },
+    "eligibility": {
+      "type": "object",
+      "required": ["verdict", "recommendation_status", "blocking_rule", "reasons", "source", "confidence", "citation"],
+      "properties": {
+        "verdict": { "type": "string" },
+        "recommendation_status": { "type": "string" },
+        "blocking_rule": { "type": ["string", "null"] },
+        "reasons": { "type": "array", "items": { "type": "string" } },
+        "source": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    },
+    "secondary_validation": {
+      "type": "object",
+      "required": ["status", "source", "citation"],
+      "properties": {
+        "status": { "type": "string" },
+        "source": { "type": "string" },
+        "citation": { "type": "string" }
+      }
+    },
+    "scored_role": {
+      "type": "object",
+      "required": ["role_id", "role_title", "candidate_scores", "source", "confidence", "citation"],
+      "properties": {
+        "role_id": { "type": "string" },
+        "role_title": { "type": "string" },
+        "candidate_scores": { "type": "array", "items": { "$ref": "#/$defs/candidate_score" } },
+        "source": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    },
+    "ranked_role": {
+      "type": "object",
+      "required": ["role_id", "role_title", "candidate_slate", "source", "confidence", "citation"],
+      "properties": {
+        "role_id": { "type": "string" },
+        "role_title": { "type": "string" },
+        "candidate_slate": { "type": "array", "items": { "$ref": "#/$defs/ranked_candidate" } },
+        "source": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    },
+    "governed_role": {
+      "type": "object",
+      "required": ["role_id", "role_title", "candidate_slate", "recommended_candidates", "top_provisional_candidate_refused", "source", "confidence", "citation"],
+      "properties": {
+        "role_id": { "type": "string" },
+        "role_title": { "type": "string" },
+        "candidate_slate": { "type": "array", "items": { "$ref": "#/$defs/governed_candidate" } },
+        "recommended_candidates": { "type": "array", "items": { "$ref": "#/$defs/governed_candidate" } },
+        "top_provisional_candidate_refused": { "type": "boolean" },
+        "source": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    },
+    "gap": {
+      "type": "object",
+      "required": ["role_id", "role_title", "gap_statement", "source", "confidence", "citation"],
+      "properties": {
+        "role_id": { "type": "string" },
+        "role_title": { "type": "string" },
+        "gap_statement": { "type": "string" },
+        "source": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "citation": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.1.14",
+  "id": "2daf60c8-e275-4f95-901b-b01b54defd72",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Staffing & Bench Match",
+    "full": "Engagement Staffing & Bench Match"
+  },
+  "description": {
+    "short": "Engagement staffing: bench fit scores, independence checks and slate drafts",
+    "full": "Builds a ranked staffing slate for a signed engagement from the SOW, bench roster, availability, rates and conflicts register. Engines score fit and refuse conflicted or unavailable candidates, citing the rule. Draft-first: it drafts a partner recommendation and never approves, allocates or assigns staff, changes rates or overrides independence.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#3949AB",
+  "agentSkills": [
+    {
+      "folder": "./skills/role-intake"
+    },
+    {
+      "folder": "./skills/bench-query"
+    },
+    {
+      "folder": "./skills/fit-score"
+    },
+    {
+      "folder": "./skills/constraint-check"
+    },
+    {
+      "folder": "./skills/slate-draft"
+    }
+  ]
+}
