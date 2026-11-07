@@ -9,22 +9,27 @@ tags: [maintenance, work-order, cmms, sop, parts, storeroom]
 author: Microsoft
 authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
-version: 1.0.0
+version: 4.0.1
 createdAt: 2026-08-01
-updatedAt: 2026-09-04
+updatedAt: 2026-11-06
 bundle: bundles/work-order-assist.zip
 ---
-Manufacturing Wave 1 Cowork plugin: everything for a work order in one place. Pulls the current work order and asset context, retrieves the relevant SOPs, OEM manuals, prior fixes and parts history, ranks the most similar past work (deterministic similar_work) and checks parts readiness against the storeroom and supersession table (deterministic parts_readiness), then drafts clean technician notes or a planner summary with the next-best action. Draft-first; document-grounded. NOT auto-scheduling or CMMS write-back (that is Wave 3).
+Work Order Assist assembles cited work-order evidence, ranks similar prior work, checks parts snapshots and drafts technician/planner notes. Offline drafting only; no scheduling, assignment, reservations, purchasing, closure or CMMS writes. Human maintenance and safety review is required.
+
+Sign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise
+Get started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork
+Help: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork
+Contact us: https://support.microsoft.com/home/contact
 
 > **Cowork plugin.** This is a Microsoft 365 Copilot **Cowork** app package (a `.zip` bundling the skills and connectors below). It installs on Cowork only.
 
 ## Skills in this plugin
 
-- **knowledge-retrieve** — Retrieves the SOPs, OEM manuals, prior fixes and parts history relevant to a work order and attaches them to the mfg.work-order-assist.v1 contract. Use when the user says "find the SOP and manual", "pull prior fixes for <asset>", "get the parts history", "what did we do last time", or after wo-intake completes.
-- **parts-readiness** — Checks whether a work order's parts are ready — storeroom stock, shortages, and part supersession — and computes a READY/PARTIAL/BLOCKED status, deterministically. Use when the user says "are the parts in stock", "check parts readiness", "can we schedule this", "is that part still current", or after similar-work-rank completes.
-- **similar-work-rank** — Ranks the most similar past work orders for the current job and surfaces recurring failures and superseding fixes, deterministically. Use when the user says "find similar past work", "have we done this before", "what's the closest prior fix", "is this a repeat failure", or after knowledge-retrieve completes.
-- **wo-intake** — Pulls the current work order and its asset context into the mfg.work-order-assist.v1 contract inputs. Use when the user says "assemble the work order packet", "pull up WO <id>", "get me everything for this work order", "work order for <asset>", or when a Work Order Assistant run begins.
-- **work-order-writeup** — Drafts the technician notes or planner summary for a work order from the assembled contract payload, with every determination cited to the SOP, manual, history and parts data. Use when the user says "draft the technician notes", "write up the work order", "give me the planner summary", "what's the next best action", or after parts-readiness completes.
+- **knowledge-retrieve** — Attaches cited SOPs, manuals, prior fixes and usage evidence to draft inputs. Use for "retrieve the SOP", "find the manual section", "pull prior fixes", or "get parts history". Do NOT use for intake — use wo-intake instead; ranking — use similar-work-rank instead; stock checks — use parts-readiness instead; terminal notes — use work-order-writeup instead. No scheduling, orders or live write-back.
+- **parts-readiness** — Computes cited stock sufficiency and replacement-part availability from supplied extracts. Use for "check parts readiness", "are the parts in stock", "is this part current", or "show stock shortages". Do NOT use for intake — use wo-intake instead; retrieval — use knowledge-retrieve instead; ranking — use similar-work-rank instead; terminal notes — use work-order-writeup instead. Never reserves, orders or schedules.
+- **similar-work-rank** — Computes deterministic similarity and recurring-failure evidence from supplied history. Use for "rank similar past work", "have we repaired this before", "find the closest prior fix", or "explain similarity scores". Do NOT use for intake — use wo-intake instead; retrieval — use knowledge-retrieve instead; stock checks — use parts-readiness instead; terminal notes — use work-order-writeup instead. Local draft evidence only.
+- **wo-intake** — Extracts cited work-order identity and asset context into draft inputs. Use for "intake this work order", "pull WO-4507", "extract the asset context", or "start the work-order packet". Do NOT use for evidence retrieval — use knowledge-retrieve instead; ranking — use similar-work-rank instead; stock checks — use parts-readiness instead; terminal notes — use work-order-writeup instead. Offline synthetic evidence only; no operational actions.
+- **work-order-writeup** — Renders one fixed-layout cited Markdown work-order draft for technician/planner review. Use for "draft technician notes", "write up this work order", "give the planner summary", or "show the proposed next action". No audience-switching or document-conversion feature. Do NOT use for intake — use wo-intake; retrieval — use knowledge-retrieve; ranking — use similar-work-rank; stock checks — use parts-readiness. No CMMS write-back, closure, scheduling or purchasing, even when approved.
 
 ## Install
 

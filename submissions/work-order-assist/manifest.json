@@ -1,42 +1,42 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
-    "version": "1.0.0",
-    "id": "3eab5c58-bdb8-5b93-903a-60e1bfccf29a",
-    "developer": {
-        "name": "Microsoft Corporation",
-        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
-        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "4.0.1",
+  "id": "0dd98ca9-bce2-43a9-be28-ebd3026e7ac7",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Work Order Assist",
+    "full": "Work Order Assist for Cowork"
+  },
+  "description": {
+    "short": "Draft work-order evidence, similar-work rankings and parts readiness.",
+    "full": "Work Order Assist assembles cited work-order evidence, ranks similar prior work, checks parts snapshots and drafts technician/planner notes. Offline drafting only; no scheduling, assignment, reservations, purchasing, closure or CMMS writes. Human maintenance and safety review is required.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "knowledge-retrieve"
     },
-    "name": {
-        "short": "Work Order Assist",
-        "full": "Work Order Assist"
+    {
+      "folder": "parts-readiness"
     },
-    "description": {
-        "short": "Manufacturing Wave 1 Cowork plugin: everything for a work order in one place.",
-        "full": "Manufacturing Wave 1 Cowork plugin: everything for a work order in one place. Pulls the current work order and asset context, retrieves the relevant SOPs, OEM manuals, prior fixes and parts history, ranks the most similar past work (deterministic similar_work) and checks parts readiness against the storeroom and supersession table (deterministic parts_readiness), then drafts clean technician notes or a planner summary with the next-best action. Draft-first; document-grounded. NOT auto-scheduling or CMMS write-back (that is Wave 3)."
+    {
+      "folder": "similar-work-rank"
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
+    {
+      "folder": "wo-intake"
     },
-    "accentColor": "#4A90D9",
-    "agentSkills": [
-        {
-            "folder": "./skills/knowledge-retrieve"
-        },
-        {
-            "folder": "./skills/parts-readiness"
-        },
-        {
-            "folder": "./skills/similar-work-rank"
-        },
-        {
-            "folder": "./skills/wo-intake"
-        },
-        {
-            "folder": "./skills/work-order-writeup"
-        }
-    ]
+    {
+      "folder": "work-order-writeup"
+    }
+  ]
 }

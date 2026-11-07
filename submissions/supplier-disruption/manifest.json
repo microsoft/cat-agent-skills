@@ -1,42 +1,42 @@
 {
-    "$schema": "https://developer.microsoft.com/json-schemas/teams/vDevPreview/MicrosoftTeams.schema.json",
-    "manifestVersion": "devPreview",
-    "version": "1.0.0",
-    "id": "0b8293c6-7c97-544d-bbe5-2d499d445c81",
-    "developer": {
-        "name": "Microsoft Corporation",
-        "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
-        "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
-        "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.4.3",
+  "id": "0fcd34ab-ae48-4711-b07e-2c646f42fd12",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Supplier Disruption Assist",
+    "full": "Supplier Disruption Assist for Cowork"
+  },
+  "description": {
+    "short": "Map supplied shortage evidence and draft unsent supplier follow-ups.",
+    "full": "Supplier Disruption Assist organizes supplied supplier notices and planning evidence, maps shortage impact, recommends draft mitigation and prepares unsent follow-ups. Single-component, single-receipt local planning only; freshness, units, usable stock and demand attestations are mandatory. No live ERP, supplier contact, purchasing, spending or schedule writes.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "disruption-intake"
     },
-    "name": {
-        "short": "Supplier Disruption Assist",
-        "full": "Supplier Disruption Assist"
+    {
+      "folder": "disruption-writeup"
     },
-    "description": {
-        "short": "Manufacturing Wave 1 Cowork plugin: get ahead of a supply problem. Picks up a",
-        "full": "Manufacturing Wave 1 Cowork plugin: get ahead of a supply problem. Picks up a late PO, shipment delay, shortage or supplier notice, maps the shortage through BOM/where-used to the affected products, production lines, open orders and at-risk dates/quantities (deterministic shortage_impact_map), recommends a mitigation (expedite / substitute / reschedule) and computes an escalation tier (deterministic mitigation_recommend), then drafts the supplier follow-up and the internal escalation brief. Draft-first; nothing is auto-sent and no PO/ERP record is written. Starts from PO and email data; graduates to live monitoring when portal and ERP alerts are connected. Grounded in ERP/MRP (D365 SCM, SAP), PO & shipment data, supplier master and BOM/where-used."
+    {
+      "folder": "mitigation-recommend"
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
+    {
+      "folder": "shortage-impact-map"
     },
-    "accentColor": "#4A90D9",
-    "agentSkills": [
-        {
-            "folder": "./skills/disruption-intake"
-        },
-        {
-            "folder": "./skills/disruption-writeup"
-        },
-        {
-            "folder": "./skills/mitigation-recommend"
-        },
-        {
-            "folder": "./skills/shortage-impact-map"
-        },
-        {
-            "folder": "./skills/supply-knowledge-retrieve"
-        }
-    ]
+    {
+      "folder": "supply-knowledge-retrieve"
+    }
+  ]
 }

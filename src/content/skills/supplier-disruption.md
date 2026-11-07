@@ -9,22 +9,27 @@ tags: [supply-chain, procurement, shortage, po, erp, mrp]
 author: Microsoft
 authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
-version: 1.0.0
+version: 1.4.3
 createdAt: 2026-08-01
-updatedAt: 2026-09-04
+updatedAt: 2026-11-06
 bundle: bundles/supplier-disruption.zip
 ---
-Manufacturing Wave 1 Cowork plugin: get ahead of a supply problem. Picks up a late PO, shipment delay, shortage or supplier notice, maps the shortage through BOM/where-used to the affected products, production lines, open orders and at-risk dates/quantities (deterministic shortage_impact_map), recommends a mitigation (expedite / substitute / reschedule) and computes an escalation tier (deterministic mitigation_recommend), then drafts the supplier follow-up and the internal escalation brief. Draft-first; nothing is auto-sent and no PO/ERP record is written. Starts from PO and email data; graduates to live monitoring when portal and ERP alerts are connected. Grounded in ERP/MRP (D365 SCM, SAP), PO & shipment data, supplier master and BOM/where-used.
+Supplier Disruption Assist organizes supplied supplier notices and planning evidence, maps shortage impact, recommends draft mitigation and prepares unsent follow-ups. Single-component, single-receipt local planning only; freshness, units, usable stock and demand attestations are mandatory. No live ERP, supplier contact, purchasing, spending or schedule writes.
+
+Sign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise
+Get started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork
+Help: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork
+Contact us: https://support.microsoft.com/home/contact
 
 > **Cowork plugin.** This is a Microsoft 365 Copilot **Cowork** app package (a `.zip` bundling the skills and connectors below). It installs on Cowork only.
 
 ## Skills in this plugin
 
-- **disruption-intake** — Picks up a supply disruption from a PO record, shipment feed, supplier email or portal notice and pulls it into the mfg.supplier-disruption.v1 contract inputs. Use when the user says "a PO is late", "our supplier is delayed", "we're short on a part", "process this supplier notice", "shipment is going to slip", or when a Supplier Disruption Agent run begins.
-- **disruption-writeup** — Drafts the supplier follow-up and the internal escalation brief from the assembled contract payload, with the impact and mitigation cited to the ERP/MRP, supplier master and rules. Use when the user says "draft the supplier email", "write the escalation brief", "draft the follow-up", "give me the escalation", "write it up", or after mitigation-recommend completes.
-- **mitigation-recommend** — Chooses the mitigation (expedite, substitute or reschedule) for a mapped shortage and computes the escalation tier and owner-notification list, deterministically. Use when the user says "what do we do about it", "should we expedite or substitute", "recommend a mitigation", "who do we escalate to", "who do we notify", or after shortage-impact-map completes.
-- **shortage-impact-map** — Maps a part shortage through BOM/where-used to the affected products, production lines and open orders, with the quantity and date at risk per order, deterministically. Use when the user says "what does this shortage affect", "which lines and orders are hit", "when does this bite", "map the impact", "what's at risk", or after supply-knowledge-retrieve completes.
-- **supply-knowledge-retrieve** — Retrieves the ERP/MRP supply position, supplier master, BOM/where-used and open orders relevant to a disruption and attaches them plus the supplier's delivery history to the mfg.supplier-disruption.v1 contract. Use when the user says "what does this part go into", "where is this used", "what's our on-hand and lead time", "is this single-source", "has this supplier been late before", or after disruption-intake completes.
+- **disruption-intake** — Extracts cited local supplier delay notices into draft contract inputs. Use for "a PO is late", "process this supplier notice", "intake this disruption", "extract the delay facts", or "our supplier is delayed". Do NOT use for impact mapping, retrieval, mitigation or terminal drafts — use shortage-impact-map, supply-knowledge-retrieve, mitigation-recommend or disruption-writeup instead. Offline only; no supplier or ERP actions.
+- **disruption-writeup** — Renders one fixed Markdown draft containing a cited supplier follow-up and internal escalation brief from a local packet. Use for "draft the supplier follow-up", "write the escalation brief", "draft the supplier email", "write it up", or "prepare the internal brief". No audience-switching or document conversion. Do NOT use for intake, retrieval, mapping or mitigation — use disruption-intake, supply-knowledge-retrieve, shortage-impact-map or mitigation-recommend. No sending, ERP writes or spending, even after approval.
+- **mitigation-recommend** — Runs the local deterministic draft mitigation and unsent owner-notification engine. Use for "recommend a mitigation", "should we expedite or substitute", "who do we notify", "who do we escalate to", or "what do we do about it". Do NOT use for intake, retrieval, mapping or terminal drafts — use disruption-intake, supply-knowledge-retrieve, shortage-impact-map or disruption-writeup instead. No procurement, supplier or ERP actions.
+- **shortage-impact-map** — Runs the local deterministic shortage impact engine. Use for "map the impact", "which lines and orders are hit", "what is at risk", "when does this bite", or "what does this shortage affect". Do NOT use for intake, source retrieval, mitigation or terminal drafts — use disruption-intake, supply-knowledge-retrieve, mitigation-recommend or disruption-writeup instead. Offline draft assessment; missing evidence blocks mapping.
+- **supply-knowledge-retrieve** — Attaches cited supplied inventory, supplier master, BOM, open orders and delivery history to a local draft. Use for "where is this used", "what is our on-hand", "is this single-source", "has this supplier been late before", or "retrieve supply evidence". Do NOT use for intake, impact mapping, mitigation or drafts — use disruption-intake, shortage-impact-map, mitigation-recommend or disruption-writeup instead. No live ERP access.
 
 ## Install
 
