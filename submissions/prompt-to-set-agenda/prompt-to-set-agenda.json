@@ -1,5 +1,5 @@
 {
-  "description": "Flags newly set up upcoming meetings without agenda, creates organizer draft emails, and sends Teams/email run summaries.",
+  "description": "Flags newly set up upcoming meetings without agenda, creates organizer draft emails, and sends Teams/email run summaries. NOTE : If JSON upload isn't supported, copy the JSON content and paste it into the Scout Cloud prompt to set up the automation.",
   "schedule": {
     "kind": "single",
     "naturalLanguage": "every weekday at 9:00am",
