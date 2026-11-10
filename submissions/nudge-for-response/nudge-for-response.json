@@ -1,5 +1,5 @@
 {
-  "description": "Multi-step follow-through: find unanswered sent asks (3+ business days), draft polite nudges only, and summarize results using recurring permissions to create and edit nudge drafts.",
+  "description": "Multi-step follow-through: find unanswered sent asks (3+ business days), draft polite nudges only, and summarize results using recurring permissions to create and edit nudge drafts. NOTE : If JSON upload isn't supported, copy the JSON content and paste it into the Scout Cloud prompt to set up the automation.",
   "schedule": {
     "kind": "single",
     "naturalLanguage": "every weekday at 9am",
