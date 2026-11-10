@@ -28,7 +28,7 @@ hardcoded.
 
 ## Run in Scout Desktop or Scout Cloud
 
-Use the [automation JSON file](./daily-consolidated-task-list.json):
+Use the [automation JSON file](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/daily-consolidated-task-list/daily-consolidated-task-list.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
 - **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
