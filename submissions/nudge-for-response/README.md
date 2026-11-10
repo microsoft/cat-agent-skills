@@ -36,8 +36,9 @@ Each run has five steps:
 Use the [automation JSON file](https://microsoft.github.io/cat-agent-skills/bundles/nudge-for-response.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
-- **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
-  Scout Cloud, then run the automation.
+- **Scout Cloud:** If JSON upload isn't supported, open the JSON file, copy its
+  full contents, and paste them into the Scout Cloud prompt to set up the
+  automation, then run it.
 
 ## Before you enable it
 
