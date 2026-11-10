@@ -1,5 +1,5 @@
 {
-  "description": "Meeting recovery workflow for declined one-on-one meetings that identifies candidates, proposes slots, creates Outlook drafts, and delivers results via Teams/email.",
+  "description": "Meeting recovery workflow for declined one-on-one meetings that identifies candidates, proposes slots, creates Outlook drafts, and delivers results via Teams/email. NOTE : If JSON upload isn't supported, copy the JSON content and paste it into the Scout Cloud prompt to set up the automation.",
   "schedule": {
     "kind": "single",
     "naturalLanguage": "",
