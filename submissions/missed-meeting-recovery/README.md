@@ -28,7 +28,7 @@ For each candidate meeting in the last 24 hours it:
 
 ## Run in Scout Desktop or Scout Cloud
 
-Use the [automation JSON file](./missed-meeting-recovery.json):
+Use the [automation JSON file](https://microsoft.github.io/cat-agent-skills/bundles/missed-meeting-recovery.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
 - **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
