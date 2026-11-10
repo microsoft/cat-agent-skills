@@ -36,7 +36,7 @@ send it yourself from Outlook Drafts.
 
 ## Run in Scout Desktop or Scout Cloud
 
-Use the [automation JSON file](./reschedule-declined-1-1.json):
+Use the [automation JSON file](https://microsoft.github.io/cat-agent-skills/bundles/reschedule-declined-1-1.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
 - **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
