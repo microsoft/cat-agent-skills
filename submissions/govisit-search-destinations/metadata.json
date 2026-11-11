@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: Search Destinations",
+  "description": "Search GoVisit destinations by name or traveler intent and return canonical destination codes and URLs.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}
