@@ -7,21 +7,15 @@ from, what is still unknown, and who could review it next.
 For safety coordinators, shift supervisors, and environmental, health and safety
 (EHS) reviewers preparing an incident handoff in Copilot Cowork.
 
-**Preview: human review required.** This candidate helps prepare drafts; it does
-not send notifications, file reports, or approve operational actions.
-
 ## Picture this
 
 You have an incident report and two witness accounts. One witness mentions a
-loose cable in a walkway; another says the walkway was clear. You need a useful
-handoff, not a polished story that quietly chooses one account.
+loose cable in a walkway; another says the walkway was clear. You need a balanced
+handoff that gives your reviewer both perspectives.
 
 The plugin is designed to keep both accounts linked to their sources, flag the
-disagreement, and leave unanswered questions visible. It should not decide which
-witness is right or turn the cable into a proven cause.
-
-This is a fictional illustration, not a captured plugin result or supplied
-sample-data pack.
+disagreement, and leave unanswered questions visible. Both accounts remain
+available for your reviewer to assess.
 
 ## What you get
 
@@ -32,15 +26,14 @@ lists, prepared from the completed workflow. It brings together:
 - **Gaps and disagreements:** unknown details and conflicting accounts for review.
 - **Draft assessments:** suggested severity and recording classification, or
   "undetermined" where the evidence does not support a conclusion.
-- **Proposed routing:** a suggested investigator and recipient list. Nobody is
-  assigned or notified by the plugin.
-- **An investigation worksheet:** a blank root-cause-analysis template to help
-  a reviewer investigate why the incident happened, without inventing a cause.
+- **Proposed routing:** a suggested investigator and recipient list. Your team
+  reviews the proposed investigator and recipients before taking action.
+- **An investigation worksheet:** a blank root-cause-analysis template, ready
+  for your reviewer to explore contributing factors.
 
 Severity is the draft assessment of how serious the incident is. *Recordability*
 is the plugin's term for whether the supplied facts support recording an incident
-in a safety log. It is not the same as notifying an authority, and neither is an
-official decision here.
+in a safety log.
 
 ## Your first run
 
@@ -59,9 +52,8 @@ official decision here.
    in your organization's process.
 
 You can describe the task in ordinary language; the skills create structured
-working files between stages. Missing inputs can prevent later stages from
-running. The plugin should ask for them rather than invent a complete report.
-Missing information is not evidence that something did not happen.
+working files between stages. When more information is needed, the plugin
+highlights the questions and identifies what to supply next.
 
 ### Copy and paste
 
@@ -79,35 +71,25 @@ Missing information is not evidence that something did not happen.
 | 1 | Incident intake | Organizes the supplied incident facts and preserves conflicting accounts. |
 | 2 | EHS knowledge retrieval | Uses policies and evidence you supply; looks for related incidents in a supplied log. |
 | 3 | Severity and recordability | Runs bundled rules to prepare draft assessments, keeping unsupported conclusions undetermined. |
-| 4 | Routing | Suggests an investigator and recipients for review, without assigning or sending. |
+| 4 | Routing | Proposes an investigator and recipients for your team to review. |
 | 5 | Incident write-up | Checks and recomputes the preceding outputs, then creates the draft and blank investigation worksheet. |
 
-The workflow uses supplied local files, not live searches or connected business
-systems. "Knowledge retrieval" does not mean it can search your organization's
-policies unless you provide them.
+The workflow works from the incident files, policies, and history you provide.
 
 ## What stays with your safety team
 
-The plugin does not make official regulatory or clinical determinations,
-establish reporting deadlines, issue equipment instructions, send notifications,
-file reports, or authorize closure or operational actions. It has no authenticated
-approval workflow. Bundled references do not replace your organization's
-applicable requirements or qualified human review.
+Your safety team owns final assessments, reporting deadlines, equipment decisions,
+notifications, filings, approvals, and incident closure. The plugin prepares the
+supporting draft for their review.
 
-Keep identifying and medical details to the minimum needed, including in working
-files and handoffs. Structured working files (JSON) and free text are **not
-automatically de-identified**. A complete draft is not approval to act.
+Working files can retain identifying and medical details from your inputs. Review
+and minimize these details before retaining or sharing outputs.
 
-## Release and technical details
-
-This is source candidate **2.0.0-rc.7**, not a stable or certified release. The
-Microsoft 365 app manifest uses numeric version `2.0.0` for packaging
-compatibility only; it does not promote the candidate to a stable release.
-Native Cowork routing and model extraction still require independent evaluation.
+## Technical details
 
 Each skill includes its required contracts, references, and Python runtime
-dependencies. The helper scripts use the Python standard library; they do not
-install packages or use network connectors.
+dependencies. The bundled helper scripts run locally using the Python standard
+library.
 
 ## Contributors
 
