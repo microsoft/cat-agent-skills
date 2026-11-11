@@ -9,3 +9,9 @@ This Agent Skill teaches an agent to call GoVisit's public, read-only travel dat
 - [Canonical source for this skill](https://github.com/inhotel-io/govisit-toolkit/tree/main/skills/govisit-get-destination-section)
 
 The skill files are copied from the GoVisit toolkit's v0.2.0 release and licensed under MIT. Hosted service access and returned GoVisit data are governed separately by the [GoVisit Data Use License](https://govisit.ai/en/docs/general/data-use-license).
+
+## Updating this skill
+
+For updates, refresh this whole skill directory from the canonical source using
+your installer's update mechanism. If this is a directory submission, replace it
+with the freshly generated package; do not edit the copied contract independently.

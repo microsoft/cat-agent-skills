@@ -56,7 +56,7 @@ An agent supporting browser WebMCP can invoke `get_destination_overview` on a pa
 can inherit page language and geographic scope; the HTTP call uses the explicit
 defaults above. Browser WebMCP uses `document.modelContext`, not an SSE server.
 
-## Source and updates
+## Source and API compatibility
 
 Canonical skill: https://raw.githubusercontent.com/inhotel-io/govisit-toolkit/v0.2.0/skills/govisit-get-destination-overview/SKILL.md
 
@@ -67,9 +67,6 @@ Discovery index: https://govisit.ai/.well-known/agent-skills/index.json
 This package was generated from GoVisit's reviewed tool catalog, shared template,
 and implementation sources. Its version is `1-c49af023b65d166a`; its source digest is
 `sha256:c49af023b65d166a756510a83fe95de27f16b096bfc488f5ceb92ad5355bdceb`. The index publishes the downloadable package's SHA-256 digest.
-For updates, refresh this whole skill directory from the canonical source using
-your installer's update mechanism. If this is a directory submission, replace it
-with the freshly generated package; do not edit the copied contract independently.
 The versioned endpoint above defines API compatibility. An old installed copy does
 not automatically update just because GoVisit publishes a newer release.
 
