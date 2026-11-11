@@ -63,4 +63,4 @@ or qualified human review.
 
 ## Contributors
 
-- Microsoft
+- Copilot Acceleration Team (CAT)
