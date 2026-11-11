@@ -5,6 +5,7 @@ No network, clock reads, notification, filing, approval, persistence or closure.
 """
 import copy
 import html
+import re
 import sys
 from pathlib import Path
 from safety_common import ROOT, RELEASE, validate
@@ -122,8 +123,10 @@ def render_markdown(packet):
               'next_best_action': text(packet['next_best_action']), 'evidence': '\n'.join(citations),
               'rca': '\n'.join(rca)}
     template = (ROOT / 'skills/incident-writeup/templates/incident-writeup-template.md').read_text(encoding='utf-8')
-    for key, value in values.items():
-        template = template.replace('{{' + key + '}}', value)
-    if '{{' in template:
-        raise ValueError('Unfilled template placeholder')
-    return template
+    def substitute(match):
+        key = match.group(1)
+        if key not in values:
+            raise ValueError('Unfilled template placeholder')
+        return values[key]
+    # Match incomplete openings too, without rescanning inserted evidence.
+    return re.sub(r'\{\{([^{}]*)\}\}|\{\{', substitute, template)

@@ -64,8 +64,9 @@ the area's prior similar incidents (to reveal a repeat pattern).
    Identical IDs are deduplicated; conflicting IDs require review. Two prior matches trigger repeat.
    Never author aggregate counts or flags manually.
 3. Attach retrieved OSHA criteria, ISO 45001 clauses, JHA/HIRA and policy excerpts into
-   `retrieved{}`, each with a citation.
-4. Write the enriched payload back onto the contract.
+   `retrieved{}` in `enriched-intake.json`, each with a citation.
+4. Save the complete enriched payload as `enriched-intake.json` and pass that file to
+   severity-recordability. Keep the original `incident-intake.json` unchanged.
 
 Use `contracts/mfg.safety-incident-assist.v2.json`; retain `runtime/safety_common.py` at plugin root.
 The classification engine recomputes history as a tamper/staleness safeguard.

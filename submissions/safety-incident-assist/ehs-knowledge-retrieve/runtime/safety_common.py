@@ -152,8 +152,11 @@ def history_match(payload):
             continue
         if query.get("types") and record["type"] not in query["types"]:
             continue
-        if query.get("body_parts") and record.get("body_part") not in query["body_parts"]:
-            continue
+        if query.get("body_parts"):
+            if not record.get("body_part", "").strip():
+                return {**failed, "reason": "Eligible history row missing body_part required by the active filter."}
+            if record["body_part"] not in query["body_parts"]:
+                continue
         matches.append(record)
     matches.sort(key=lambda r: (r["date"], r["incident_id"]))
     return {"status": "computed", "as_of": query["as_of"], "window_days": query["window_days"],

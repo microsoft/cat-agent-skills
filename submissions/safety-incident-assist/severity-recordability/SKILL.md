@@ -49,12 +49,13 @@ All results are draft recommendations; this candidate never asserts a 1904.39 de
 - "Is this recordable?" / "do we have to report this?" / "what severity is this?".
 
 ## Inputs
-- The contract payload with `injury{}`, `incident_type`, `occurred_at` and `history{}`
+- `enriched-intake.json` from ehs-knowledge-retrieve, with `injury{}`, `incident_type`,
+  `occurred_at`, `history{}` and supplied `retrieved{}` evidence
   (contract `contracts/mfg.safety-incident-assist.v2.json`).
 
 ## Steps
 1. Validate the payload against the contract.
-2. Run `python -B runtime/skills/severity-recordability/scripts/recordability_classify.py --intake incident-intake.json --out classification.json` from the complete root.
+2. Run `python -B runtime/skills/severity-recordability/scripts/recordability_classify.py --intake enriched-intake.json --out classification.json` from the complete root.
 3. Do not restate or re-derive the determination in prose; quote the engine output verbatim.
 4. Emit the `{classification}` contract payload and the preliminary `next_best_action`.
 5. Preserve null as UNDETERMINED, never false. Surface review_reasons, governance hold and missing
