@@ -1,0 +1,1158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mfg.safety-incident-assist.v2",
+  "title": "Safety Incident Assist v2 draft candidate contract",
+  "description": "rc.3 draft-only prerelease: rc.2 fields retained; exact integer transport bound and optional cited source_conflicts added. No automatic migration. NOT FOR OPERATIONAL USE.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "incident_id",
+    "asset_or_area"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "mfg.safety-incident-assist.v2",
+      "type": "string"
+    },
+    "incident_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "report_channel": {
+      "enum": [
+        "form",
+        "email",
+        "voice"
+      ]
+    },
+    "incident_type": {
+      "enum": [
+        "injury",
+        "illness",
+        "near_miss",
+        "property",
+        "environmental"
+      ]
+    },
+    "asset_or_area": {
+      "type": "string",
+      "minLength": 1
+    },
+    "location": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reported_by": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "injury": {
+      "type": "object",
+      "description": "Injury/illness detail used by the recordability engine (osha-recordability-rules.md).",
+      "properties": {
+        "employee": {
+          "type": "string"
+        },
+        "body_part": {
+          "type": "string"
+        },
+        "nature": {
+          "type": "string",
+          "description": "e.g. laceration, fracture, crush, strain, burn"
+        },
+        "treatment_given": {
+          "enum": [
+            "none",
+            "first_aid",
+            "medical_treatment",
+            "hospitalization",
+            null
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "none",
+            "days_away",
+            "restricted_duty",
+            "job_transfer",
+            "in_patient_hospitalization",
+            "amputation",
+            "loss_of_eye",
+            "fatality",
+            null
+          ]
+        },
+        "days_away": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Exact supplied integer only, 0..2^53-1 portable transport bound, NOT an OSHA cap. Qualitative counts remain null with cited wording."
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "loss_of_consciousness": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "significant_diagnosis": {
+          "enum": [
+            "none",
+            "fracture",
+            "cracked_bone",
+            "punctured_eardrum",
+            "cancer",
+            "chronic_irreversible_disease",
+            "other",
+            "unknown",
+            null
+          ]
+        },
+        "diagnosed_by": {
+          "enum": [
+            "physician_or_plhcp",
+            "unknown",
+            null
+          ]
+        },
+        "diagnosis_citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "other_recording_criteria_reviewed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "absence_confirmed": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Explicit cited absence of injury/illness, never inferred from missing fields."
+        },
+        "days_away_evidence": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Preserved qualitative or conflicting estimate; never coerced to an exact integer."
+        }
+      },
+      "additionalProperties": false
+    },
+    "witnesses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "citation": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "citation"
+        ]
+      }
+    },
+    "immediate_actions": {
+      "type": "string"
+    },
+    "incident_factors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "null"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(engine|skill|connector):"
+          },
+          "citation": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "confidence_basis": {
+            "type": "string",
+            "const": "not_estimated"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "retrieved": {
+      "type": "object",
+      "properties": {
+        "osha_criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "note",
+              "citation",
+              "evidence_kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "doc": {
+                "type": "string",
+                "minLength": 1
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "evidence_kind": {
+                "enum": [
+                  "local_reference_summary",
+                  "synthetic_excerpt",
+                  "supplied_excerpt_unverified"
+                ]
+              }
+            }
+          }
+        },
+        "iso_clauses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "note",
+              "citation",
+              "evidence_kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "doc": {
+                "type": "string",
+                "minLength": 1
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "evidence_kind": {
+                "enum": [
+                  "local_reference_summary",
+                  "synthetic_excerpt",
+                  "supplied_excerpt_unverified"
+                ]
+              }
+            }
+          }
+        },
+        "jha": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "note",
+              "citation",
+              "evidence_kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "doc": {
+                "type": "string",
+                "minLength": 1
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "evidence_kind": {
+                "enum": [
+                  "local_reference_summary",
+                  "synthetic_excerpt",
+                  "supplied_excerpt_unverified"
+                ]
+              }
+            }
+          }
+        },
+        "prior_incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "incident_id": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "area": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "recordable": {
+                "type": "boolean"
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "incident_id",
+              "citation"
+            ]
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "note",
+              "citation",
+              "evidence_kind"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "doc": {
+                "type": "string",
+                "minLength": 1
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "evidence_kind": {
+                "enum": [
+                  "local_reference_summary",
+                  "synthetic_excerpt",
+                  "supplied_excerpt_unverified"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "citation"
+      ]
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "computed",
+            "review_required"
+          ]
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date"
+        },
+        "window_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "window_start_inclusive": {
+          "type": "string",
+          "format": "date"
+        },
+        "window_end_exclusive": {
+          "type": "string",
+          "format": "date"
+        },
+        "repeat_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "repeat_pattern": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "prior_incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "incident_id": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "area": {
+                "type": "string"
+              },
+              "asset_or_area": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "body_part": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string"
+              },
+              "recordable": {
+                "type": "boolean"
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "match_criteria": {
+          "type": "object",
+          "properties": {
+            "area": {
+              "type": "string",
+              "minLength": 1
+            },
+            "asset_or_area": {
+              "type": "string",
+              "minLength": 1
+            },
+            "types": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "body_parts": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "query_citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "source_sha256": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "classification": {
+      "type": "object",
+      "required": [
+        "severity",
+        "near_miss",
+        "recordable",
+        "reportable",
+        "confidence",
+        "confidence_basis",
+        "review_reasons",
+        "status",
+        "source",
+        "citation"
+      ],
+      "properties": {
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical",
+            "review_required"
+          ]
+        },
+        "near_miss": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "recordable": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "osha_300_column": {
+              "enum": [
+                "",
+                "G",
+                "H",
+                "I",
+                "J"
+              ],
+              "description": "G death; H days away; I restriction/transfer; J other. Blank if unknown/negative."
+            },
+            "citation": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "status": {
+              "enum": [
+                "draft_determination",
+                "review_required"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "status",
+            "reason",
+            "citation",
+            "osha_300_column"
+          ]
+        },
+        "reportable": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "null"
+            },
+            "type": {
+              "enum": [
+                "undetermined",
+                "fatality",
+                "in_patient_hospitalization",
+                "amputation",
+                "loss_of_eye"
+              ]
+            },
+            "deadline_hours": {
+              "type": "null"
+            },
+            "authority": {
+              "type": "string"
+            },
+            "citation": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "status": {
+              "const": "review_required"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "status",
+            "reason",
+            "citation",
+            "type",
+            "deadline_hours",
+            "authority"
+          ]
+        },
+        "confidence": {
+          "type": "null"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^(engine|skill|connector):"
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "confidence_basis": {
+          "const": "not_estimated",
+          "type": "string"
+        },
+        "review_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "status": {
+          "const": "draft_review_required",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "routing": {
+      "type": "object",
+      "required": [
+        "investigator",
+        "source"
+      ],
+      "properties": {
+        "investigator": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "type": "string"
+            },
+            "assignee": {
+              "type": "string"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "citation": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "additionalProperties": false
+        },
+        "notifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "regulatory_clocks": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "maxItems": 0
+        },
+        "confidence": {
+          "type": "null"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^(engine|skill|connector):"
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "status": {
+          "const": "draft_review_required"
+        },
+        "clock_status": {
+          "const": "review_required"
+        },
+        "notifications_status": {
+          "const": "draft_not_sent"
+        }
+      },
+      "additionalProperties": false
+    },
+    "next_best_action": {
+      "type": "string"
+    },
+    "writeup": {
+      "type": "object",
+      "properties": {
+        "draft": {
+          "const": true,
+          "type": "boolean"
+        },
+        "audience": {
+          "type": "string",
+          "description": "ehs_manager | supervisor | plant_manager"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "rca_method": {
+          "enum": [
+            "5-Why",
+            "5-Why + fishbone"
+          ]
+        },
+        "rca_template": {
+          "type": "string"
+        },
+        "reporting_checklist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "draft",
+        "citation"
+      ],
+      "additionalProperties": false
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generated_at": {
+          "type": "string"
+        },
+        "demo_scenario": {
+          "type": "string"
+        },
+        "determinism": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "applicability": {
+      "type": "object",
+      "properties": {
+        "work_related": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "new_case": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "recordkeeping_covered": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "jurisdiction": {
+          "enum": [
+            "federal_osha",
+            "state_plan",
+            "other",
+            "unknown"
+          ]
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "reporting_facts": {
+      "type": "object",
+      "properties": {
+        "event_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "employer_learned_event_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "employer_learned_work_related_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "admission_for_care": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "transport_exception": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "downgrade_request": {
+      "type": "object",
+      "properties": {
+        "present": {
+          "type": "boolean"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "present"
+      ],
+      "additionalProperties": false
+    },
+    "prior_determination": {
+      "type": "object",
+      "properties": {
+        "recordable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "reportable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "recordable",
+        "reportable",
+        "citation"
+      ],
+      "additionalProperties": false
+    },
+    "history_query": {
+      "type": "object",
+      "properties": {
+        "as_of": {
+          "type": "string",
+          "format": "date"
+        },
+        "window_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3650
+        },
+        "area": {
+          "type": "string",
+          "minLength": 1
+        },
+        "asset_or_area": {
+          "type": "string",
+          "minLength": 1
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "body_parts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "history_input": {
+      "type": "object",
+      "properties": {
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "incident_id": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "area": {
+                "type": "string"
+              },
+              "asset_or_area": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "body_part": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string"
+              },
+              "recordable": {
+                "type": "boolean"
+              },
+              "citation": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "draft_review_required"
+        },
+        "downgrade_hold": {
+          "type": "boolean"
+        },
+        "ehs_approval_verified": {
+          "const": false,
+          "type": "boolean"
+        },
+        "filing_confirmation_verified": {
+          "const": false,
+          "type": "boolean"
+        },
+        "closure_allowed": {
+          "const": false,
+          "type": "boolean"
+        },
+        "action_execution_allowed": {
+          "const": false,
+          "type": "boolean"
+        },
+        "reporting_review_required": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "downgrade_hold",
+        "ehs_approval_verified",
+        "filing_confirmation_verified",
+        "closure_allowed",
+        "action_execution_allowed",
+        "reporting_review_required",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "source_conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "field",
+          "detail",
+          "citation"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "citation": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        }
+      },
+      "description": "Unresolved source discrepancies captured by intake. Any item forces recording and near-miss review. Absence of items is NOT proof of reconciliation."
+    }
+  },
+  "additionalProperties": false
+}

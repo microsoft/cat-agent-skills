@@ -1,0 +1,21 @@
+{
+  "name": "Safety Incident Assist",
+  "description": "Prepare cited incident drafts from supplied local evidence, with draft classification, proposed unsent routing, and a write-up for qualified EHS review.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "safety",
+    "ehs",
+    "incident",
+    "manufacturing",
+    "drafting"
+  ],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "2.0.0-rc.7",
+  "createdAt": "2026-11-10",
+  "updatedAt": "2026-11-10",
+  "category": "manufacturing",
+  "builtByMicrosoft": true
+}
