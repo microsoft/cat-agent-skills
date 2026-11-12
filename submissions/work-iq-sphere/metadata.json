@@ -1,0 +1,10 @@
+{
+  "name": "Work IQ Sphere",
+  "description": "Turn your Microsoft 365 work into an interactive 3D Work IQ sphere, a customer-safe view, and a matching PowerPoint slide.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["productivity", "work-iq", "microsoft-365", "data-visualization", "powerpoint"],
+  "author": "raemone",
+  "authorUrl": "https://github.com/raemone",
+  "version": "2.0.0",
+  "category": "productivity"
+}
