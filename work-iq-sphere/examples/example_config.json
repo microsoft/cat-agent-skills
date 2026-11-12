@@ -1,0 +1,1576 @@
+{
+ "owner": "Sam Taylor",
+ "title": "My Work IQ, 20 Jul to 21 Oct 2026 (fictional sample)",
+ "source": "Source: Sam Taylor's Outlook mail (junk and duplicate copies removed), calendar, Teams group and 1:1 chats and the OneDrive and SharePoint files Sam worked on, 20 Jul to 21 Oct 2026. Fictional sample data.",
+ "meta": {
+  "ownerUpn": "sam.taylor@example.com",
+  "skillVersion": "1.8.0",
+  "generatedAt": "2026-10-21T11:40:00Z",
+  "sample": "fictional",
+  "choices": {
+   "window": "quarter",
+   "focus": {
+    "type": "all"
+   }
+  }
+ },
+ "weeks": [
+  "20 Jul",
+  "27 Jul",
+  "3 Aug",
+  "10 Aug",
+  "17 Aug",
+  "24 Aug",
+  "31 Aug",
+  "7 Sep",
+  "14 Sep",
+  "21 Sep",
+  "28 Sep",
+  "5 Oct",
+  "12 Oct",
+  "19 Oct"
+ ],
+ "signals": {
+  "grid": {
+   "c_northwind": [
+    32,
+    44,
+    23,
+    27,
+    21,
+    30,
+    32,
+    16,
+    57,
+    33,
+    21,
+    31,
+    42,
+    33
+   ],
+   "c_wwi": [
+    11,
+    18,
+    15,
+    17,
+    5,
+    25,
+    22,
+    29,
+    32,
+    23,
+    16,
+    13,
+    19,
+    15
+   ],
+   "c_tailspin": [
+    26,
+    24,
+    26,
+    17,
+    13,
+    18,
+    18,
+    34,
+    13,
+    15,
+    30,
+    23,
+    24,
+    13
+   ],
+   "c_alpine": [
+    13,
+    10,
+    12,
+    4,
+    5,
+    15,
+    18,
+    19,
+    7,
+    5,
+    19,
+    12,
+    11,
+    9
+   ],
+   "c_fourthcoffee": [
+    13,
+    14,
+    23,
+    4,
+    8,
+    4,
+    18,
+    23,
+    6,
+    13,
+    5,
+    32,
+    13,
+    0
+   ],
+   "c_wingtip": [
+    11,
+    12,
+    10,
+    6,
+    3,
+    19,
+    16,
+    4,
+    10,
+    12,
+    8,
+    4,
+    8,
+    6
+   ],
+   "c_coho": [
+    8,
+    3,
+    10,
+    6,
+    14,
+    6,
+    2,
+    11,
+    20,
+    12,
+    3,
+    3,
+    14,
+    12
+   ],
+   "c_proseware": [
+    5,
+    5,
+    0,
+    2,
+    0,
+    3,
+    15,
+    7,
+    9,
+    22,
+    3,
+    18,
+    9,
+    4
+   ],
+   "c_vanarsdel": [
+    11,
+    9,
+    9,
+    0,
+    8,
+    0,
+    6,
+    16,
+    17,
+    18,
+    4,
+    7,
+    17,
+    8
+   ],
+   "c_adventure": [
+    13,
+    6,
+    6,
+    5,
+    5,
+    2,
+    1,
+    16,
+    6,
+    15,
+    15,
+    0,
+    1,
+    0
+   ],
+   "c_margies": [
+    15,
+    5,
+    0,
+    3,
+    0,
+    0,
+    0,
+    9,
+    0,
+    14,
+    13,
+    11,
+    2,
+    5
+   ],
+   "c_relecloud": [
+    10,
+    3,
+    0,
+    0,
+    2,
+    1,
+    0,
+    4,
+    10,
+    4,
+    4,
+    11,
+    11,
+    3
+   ],
+   "t_storepilot": [
+    16,
+    14,
+    16,
+    10,
+    15,
+    10,
+    15,
+    18,
+    15,
+    14,
+    19,
+    12,
+    20,
+    10
+   ],
+   "t_merch": [
+    6,
+    5,
+    5,
+    3,
+    3,
+    4,
+    6,
+    6,
+    6,
+    5,
+    3,
+    7,
+    3,
+    8
+   ],
+   "t_holiday": [
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    12,
+    12,
+    12,
+    14,
+    12,
+    13,
+    15,
+    13
+   ],
+   "t_cost": [
+    5,
+    4,
+    5,
+    3,
+    3,
+    4,
+    5,
+    5,
+    4,
+    6,
+    5,
+    8,
+    9,
+    3
+   ],
+   "t_frontline": [
+    5,
+    7,
+    14,
+    17,
+    15,
+    13,
+    5,
+    4,
+    3,
+    3,
+    2,
+    2,
+    2,
+    1
+   ],
+   "t_dlp": [
+    1,
+    2,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2,
+    17,
+    5,
+    2,
+    1,
+    2,
+    1
+   ],
+   "t_supplier": [
+    4,
+    4,
+    3,
+    3,
+    3,
+    4,
+    4,
+    5,
+    4,
+    5,
+    5,
+    4,
+    4,
+    3
+   ],
+   "t_studio": [
+    39,
+    15,
+    18,
+    12,
+    2,
+    11,
+    11,
+    15,
+    16,
+    23,
+    32,
+    29,
+    16,
+    21
+   ],
+   "p_m365copilot": [
+    21,
+    18,
+    4,
+    7,
+    4,
+    3,
+    21,
+    15,
+    7,
+    23,
+    15,
+    17,
+    17,
+    10
+   ],
+   "p_copilotchat": [
+    12,
+    6,
+    9,
+    8,
+    6,
+    4,
+    15,
+    16,
+    11,
+    16,
+    7,
+    13,
+    10,
+    5
+   ],
+   "p_purview": [
+    0,
+    5,
+    3,
+    2,
+    9,
+    11,
+    5,
+    3,
+    11,
+    2,
+    6,
+    9,
+    10,
+    3
+   ],
+   "p_commerce": [
+    2,
+    7,
+    3,
+    4,
+    1,
+    3,
+    3,
+    1,
+    2,
+    4,
+    5,
+    17,
+    16,
+    10
+   ]
+  },
+  "vol": {
+   "mail_in": [
+    167,
+    167,
+    142,
+    100,
+    92,
+    126,
+    159,
+    176,
+    184,
+    176,
+    167,
+    184,
+    192,
+    100
+   ],
+   "mail_out": [
+    37,
+    37,
+    31,
+    22,
+    24,
+    27,
+    35,
+    39,
+    40,
+    39,
+    37,
+    40,
+    42,
+    22
+   ],
+   "meet": [
+    25,
+    22,
+    22,
+    14,
+    11,
+    22,
+    24,
+    28,
+    28,
+    28,
+    25,
+    28,
+    29,
+    25
+   ],
+   "files": [
+    4,
+    4,
+    2,
+    4,
+    5,
+    5,
+    3,
+    6,
+    6,
+    6,
+    4,
+    4,
+    10,
+    6
+   ]
+  },
+  "senders": 49,
+  "orgs": 14,
+  "pub_orgs": 0,
+  "chats": 260,
+  "weeks": [
+   "20 Jul",
+   "27 Jul",
+   "3 Aug",
+   "10 Aug",
+   "17 Aug",
+   "24 Aug",
+   "31 Aug",
+   "7 Sep",
+   "14 Sep",
+   "21 Sep",
+   "28 Sep",
+   "5 Oct",
+   "12 Oct",
+   "19 Oct"
+  ],
+  "meta": {
+   "tool": "work-iq-sphere count_signals",
+   "version": "1.8.0",
+   "self": [
+    "sam.taylor@example.com",
+    "Sam Taylor"
+   ],
+   "owner": "sam.taylor@example.com",
+   "start": "2026-07-20",
+   "weeks": 14,
+   "end": "2026-10-26",
+   "fingerprint": "9e804e76954b1f5c",
+   "generatedAt": "2026-10-21T11:40:00Z",
+   "keywords": {
+    "c_northwind": "northwind",
+    "c_wwi": "wide world importers|wideworldimporters",
+    "c_tailspin": "tailspin",
+    "c_alpine": "alpine ski",
+    "c_fourthcoffee": "fourth coffee",
+    "c_wingtip": "wingtip",
+    "c_coho": "coho winery",
+    "c_proseware": "proseware",
+    "c_vanarsdel": "vanarsdel",
+    "c_adventure": "adventure works",
+    "c_margies": "margie'?s travel",
+    "c_relecloud": "relecloud",
+    "t_storepilot": "store manager copilot pilot|pilot scorecard|weekly pilot digest",
+    "t_merch": "merchandising agent",
+    "t_holiday": "holiday readiness",
+    "t_cost": "agent cost|cost control|cost spike",
+    "t_frontline": "frontline",
+    "t_dlp": "data loss prevention|\\bdlp\\b",
+    "t_supplier": "supplier data",
+    "t_studio": "copilot studio",
+    "p_m365copilot": "microsoft 365 copilot",
+    "p_copilotchat": "copilot chat",
+    "p_purview": "purview",
+    "p_commerce": "dynamics 365 commerce"
+   },
+   "files": {
+    "read": 72,
+    "inWindow": 69,
+    "skipped": 0
+   },
+   "source": "08afe6bfb9297f25",
+   "digest": "6666e4ad1e7f4d3799d87968"
+  },
+  "files": {
+   "worked_on": 69,
+   "edited": 54,
+   "created": 50,
+   "opened": 15,
+   "sites": 9,
+   "byContainer": {
+    "OneDrive": 37,
+    "SharePoint": 26,
+    "Teams": 6
+   }
+  }
+ },
+ "text": {
+  "kicker": "My Work IQ · 20 Jul to 21 Oct 2026",
+  "headline": "Three months of my work, understood.",
+  "period": "three months (20 Jul to 21 Oct)",
+  "windowLabel": "20 Jul to 21 Oct 2026",
+  "sparkRange": "20 Jul to 21 Oct",
+  "chatLabel": "Teams chats (group and 1:1)",
+  "orgLabel": "external organisations emailing me",
+  "orgMetric": "orgs",
+  "memoryNote": "Week of 19 Oct is partial (to 21 Oct).",
+  "exampleChain": "{cust_wwi} raises data loss prevention, escalated as {esc_415906}, answered by {person_pradeep}, reported in the {asset_digest}."
+ },
+ "portals": [
+  {
+   "name": "Microsoft 365 Copilot"
+  },
+  {
+   "name": "Copilot Chat"
+  },
+  {
+   "name": "Copilot Studio agents"
+  }
+ ],
+ "lanes": [
+  {
+   "key": "t_storepilot",
+   "name": "Store manager pilot",
+   "color": "#19c3ff"
+  },
+  {
+   "key": "t_holiday",
+   "name": "Holiday readiness",
+   "color": "#ff8c42"
+  },
+  {
+   "key": "t_cost",
+   "name": "Agent cost control",
+   "color": "#3ddc97"
+  },
+  {
+   "key": "t_frontline",
+   "name": "Frontline licensing",
+   "color": "#ffd166"
+  },
+  {
+   "key": "t_dlp",
+   "name": "Data loss prevention",
+   "color": "#ff4d6d"
+  },
+  {
+   "key": "t_supplier",
+   "name": "Supplier data sharing",
+   "color": "#c77dff"
+  },
+  {
+   "key": "t_merch",
+   "name": "Merchandising agent",
+   "color": "#4aa3ff"
+  },
+  {
+   "key": "t_studio",
+   "name": "Copilot Studio",
+   "color": "#7ee8fa"
+  }
+ ],
+ "memory": [
+  {
+   "text": "<b>Frontline licensing</b> peaked in August (17 in the week of 10 Aug), then eased to about 2 a week in October.",
+   "lane": 3,
+   "week": 3
+  },
+  {
+   "text": "<b>Holiday readiness</b> rose about 4x from the week of 31 Aug (3 to 13 a week).",
+   "lane": 1,
+   "week": 6
+  },
+  {
+   "text": "<b>The store manager pilot</b> was live every week: 204 signals, at least 10 a week.",
+   "lane": 0,
+   "week": 6
+  },
+  {
+   "text": "<b>Data loss prevention</b> spiked in the week of 14 Sep (17 signals, against a usual 2).",
+   "lane": 4,
+   "week": 8
+  },
+  {
+   "text": "<b>Agent cost control</b> came up every week: 69 signals, never below 3 a week.",
+   "lane": 2,
+   "week": 12
+  }
+ ],
+ "entities": [
+  {
+   "id": "me",
+   "cls": "hub",
+   "real": "Sam Taylor",
+   "safe": "Me",
+   "weight": 10,
+   "detail": "Copilot specialist for retail and consumer goods (fictional sample).",
+   "from": []
+  },
+  {
+   "id": "cust_northwind",
+   "cls": "customer",
+   "real": "Northwind Traders",
+   "safe": "Retail Customer A",
+   "sector": "Retail",
+   "signal": "c_northwind",
+   "detail": "{#org:northwindtraders.example.mails|email|emails} and {#org:northwindtraders.example.meetings|calendar event|calendar events} with {#org:northwindtraders.example.people|person|people} there. I edited {#site:northwind-traders-copilot-pilot.edited|file|files} in our shared site.",
+   "from": [
+    "org:northwindtraders.example",
+    "site:northwind-traders-copilot-pilot"
+   ]
+  },
+  {
+   "id": "cust_wwi",
+   "cls": "customer",
+   "real": "Wide World Importers",
+   "safe": "Wholesale Customer B",
+   "sector": "Wholesale",
+   "signal": "c_wwi",
+   "detail": "{#org:wideworldimporters.example.mails|email|emails} and {#org:wideworldimporters.example.meetings|calendar event|calendar events} with {#org:wideworldimporters.example.people|person|people} there. I edited {#site:wide-world-importers-merchandising-agent.edited|file|files} in our shared site.",
+   "from": [
+    "org:wideworldimporters.example",
+    "site:wide-world-importers-merchandising-agent"
+   ]
+  },
+  {
+   "id": "cust_tailspin",
+   "cls": "customer",
+   "real": "Tailspin Toys",
+   "safe": "Retail Customer C",
+   "sector": "Retail",
+   "signal": "c_tailspin",
+   "detail": "{#org:tailspintoys.example.mails|email|emails} and {#org:tailspintoys.example.meetings|calendar event|calendar events} with {#org:tailspintoys.example.people|person|people} there. I edited {#site:tailspin-toys-store-pilot.edited|file|files} in our shared site.",
+   "from": [
+    "org:tailspintoys.example",
+    "site:tailspin-toys-store-pilot"
+   ]
+  },
+  {
+   "id": "cust_alpine",
+   "cls": "customer",
+   "real": "Alpine Ski House",
+   "safe": "Leisure Customer D",
+   "sector": "Leisure",
+   "signal": "c_alpine",
+   "detail": "{#org:alpineskihouse.example.mails|email|emails} and {#org:alpineskihouse.example.meetings|calendar event|calendar events} with {#org:alpineskihouse.example.people|person|people} there.",
+   "from": [
+    "org:alpineskihouse.example"
+   ]
+  },
+  {
+   "id": "cust_fourth",
+   "cls": "customer",
+   "real": "Fourth Coffee",
+   "safe": "Hospitality Customer E",
+   "sector": "Hospitality",
+   "signal": "c_fourthcoffee",
+   "detail": "{#org:fourthcoffee.example.mails|email|emails} and {#org:fourthcoffee.example.meetings|calendar event|calendar events} with {#org:fourthcoffee.example.people|person|people} there. I edited {#site:fourth-coffee-copilot-chat-rollout.edited|file|files} in our shared site.",
+   "from": [
+    "org:fourthcoffee.example",
+    "site:fourth-coffee-copilot-chat-rollout"
+   ]
+  },
+  {
+   "id": "cust_wingtip",
+   "cls": "customer",
+   "real": "Wingtip Toys",
+   "safe": "Retail Customer F",
+   "sector": "Retail",
+   "signal": "c_wingtip",
+   "detail": "{#org:wingtiptoys.example.mails|email|emails} and {#org:wingtiptoys.example.meetings|calendar event|calendar events} with {#org:wingtiptoys.example.people|person|people} there.",
+   "from": [
+    "org:wingtiptoys.example"
+   ]
+  },
+  {
+   "id": "cust_coho",
+   "cls": "customer",
+   "real": "Coho Winery",
+   "safe": "Consumer Goods Customer G",
+   "sector": "Consumer goods",
+   "signal": "c_coho",
+   "detail": "{#org:cohowinery.example.mails|email|emails} and {#org:cohowinery.example.meetings|calendar event|calendar events} with {#org:cohowinery.example.people|person|people} there.",
+   "from": [
+    "org:cohowinery.example"
+   ]
+  },
+  {
+   "id": "cust_proseware",
+   "cls": "customer",
+   "real": "Proseware",
+   "safe": "Supplier Partner H",
+   "sector": "Technology",
+   "signal": "c_proseware",
+   "detail": "{#org:proseware.example.mails|email|emails} and {#org:proseware.example.meetings|calendar event|calendar events} with {#org:proseware.example.people|person|people} there.",
+   "from": [
+    "org:proseware.example"
+   ]
+  },
+  {
+   "id": "cust_vanarsdel",
+   "cls": "customer",
+   "real": "VanArsdel",
+   "safe": "Consumer Goods Customer I",
+   "sector": "Consumer goods",
+   "signal": "c_vanarsdel",
+   "detail": "{#org:vanarsdel.example.mails|email|emails} and {#org:vanarsdel.example.meetings|calendar event|calendar events} with {#org:vanarsdel.example.people|person|people} there.",
+   "from": [
+    "org:vanarsdel.example"
+   ]
+  },
+  {
+   "id": "cust_adventure",
+   "cls": "customer",
+   "real": "Adventure Works Cycles",
+   "safe": "Retail Customer J",
+   "sector": "Retail",
+   "signal": "c_adventure",
+   "detail": "{#org:adventureworkscycles.example.mails|email|emails} and {#org:adventureworkscycles.example.meetings|calendar event|calendar events} with {#org:adventureworkscycles.example.people|person|people} there.",
+   "from": [
+    "org:adventureworkscycles.example"
+   ]
+  },
+  {
+   "id": "cust_margies",
+   "cls": "customer",
+   "real": "Margie's Travel",
+   "safe": "Travel Customer K",
+   "sector": "Travel",
+   "signal": "c_margies",
+   "detail": "{#org:margiestravel.example.mails|email|emails} and {#org:margiestravel.example.meetings|calendar event|calendar events} with {#org:margiestravel.example.people|person|people} there.",
+   "from": [
+    "org:margiestravel.example"
+   ]
+  },
+  {
+   "id": "cust_relecloud",
+   "cls": "customer",
+   "real": "Relecloud",
+   "safe": "Technology Customer L",
+   "sector": "Technology",
+   "signal": "c_relecloud",
+   "detail": "{#org:relecloud.example.mails|email|emails} and {#org:relecloud.example.meetings|calendar event|calendar events} with {#org:relecloud.example.people|person|people} there.",
+   "from": [
+    "org:relecloud.example"
+   ]
+  },
+  {
+   "id": "cust_bellows",
+   "cls": "customer",
+   "real": "Bellows College",
+   "safe": "Education Customer M",
+   "sector": "Education",
+   "weight": 1.5,
+   "detail": "{#org:bellowscollege.example.mails|email|emails} and {#org:bellowscollege.example.meetings|calendar event|calendar events} with {#org:bellowscollege.example.people|person|people} there.",
+   "from": [
+    "org:bellowscollege.example"
+   ]
+  },
+  {
+   "id": "prod_m365",
+   "cls": "product",
+   "real": "Microsoft 365 Copilot",
+   "signal": "p_m365copilot",
+   "detail": "The licence the store manager pilot runs on.",
+   "from": []
+  },
+  {
+   "id": "prod_studio",
+   "cls": "product",
+   "real": "Copilot Studio",
+   "signal": "t_studio",
+   "detail": "Where the merchandising agent is built; also the source of agent cost questions.",
+   "from": []
+  },
+  {
+   "id": "prod_chat",
+   "cls": "product",
+   "real": "Copilot Chat",
+   "signal": "p_copilotchat",
+   "detail": "Rolled out to store tablets; one sign-in escalation.",
+   "from": [
+    "meeting:fourth-coffee-copilot-chat-rollout-check-in"
+   ]
+  },
+  {
+   "id": "prod_purview",
+   "cls": "product",
+   "real": "Microsoft Purview",
+   "signal": "p_purview",
+   "detail": "Data loss prevention policies for supplier files.",
+   "from": [
+    "term:purview"
+   ]
+  },
+  {
+   "id": "prod_commerce",
+   "cls": "product",
+   "real": "Dynamics 365 Commerce",
+   "signal": "p_commerce",
+   "detail": "Copilot in the checkout and store operations flow.",
+   "from": [
+    "term:365-commerce"
+   ]
+  },
+  {
+   "id": "prog_store",
+   "cls": "programme",
+   "real": "Store manager Copilot pilot",
+   "signal": "t_storepilot",
+   "detail": "Weekly pilot calls with {cust_northwind} ({#meeting:store-manager-copilot-pilot-northwind-traders-weekly.count}) and {cust_tailspin} ({#meeting:store-manager-copilot-pilot-tailspin-toys-weekly.count}).",
+   "from": [
+    "meeting:store-manager-copilot-pilot-northwind-traders-weekly",
+    "meeting:store-manager-copilot-pilot-tailspin-toys-weekly",
+    "file:store-manager-copilot-pilot-scorecard"
+   ]
+  },
+  {
+   "id": "prog_merch",
+   "cls": "programme",
+   "real": "Merchandising agent build",
+   "signal": "t_merch",
+   "detail": "Agent for {cust_wwi} buyers: {#meeting:merchandising-agent-build-weekly-sync.count|weekly sync|weekly syncs} and {#meeting:merchandising-agent-build-sprint-demo.count|sprint demo|sprint demos}.",
+   "from": [
+    "meeting:merchandising-agent-build-weekly-sync",
+    "meeting:merchandising-agent-build-sprint-demo",
+    "site:wide-world-importers-merchandising-agent"
+   ]
+  },
+  {
+   "id": "prog_holiday",
+   "cls": "programme",
+   "real": "Holiday readiness reviews",
+   "safe": "Holiday season programme",
+   "weight": 5,
+   "detail": "Weekly triage: {#meeting:holiday-readiness-reviews-weekly-triage.count|call|calls} in {#period}, tracked in a shared tracker.",
+   "from": [
+    "meeting:holiday-readiness-reviews-weekly-triage",
+    "file:holiday-readiness-triage-tracker"
+   ]
+  },
+  {
+   "id": "prog_sprint",
+   "cls": "programme",
+   "real": "Copilot adoption sprint",
+   "safe": "Internal adoption sprint",
+   "weight": 5,
+   "detail": "Internal sprint: {#meeting:copilot-adoption-sprint-stand-up.count|stand-up|stand-ups} and {#meeting:copilot-adoption-sprint-retro.count|retro|retros}.",
+   "from": [
+    "meeting:copilot-adoption-sprint-stand-up",
+    "meeting:copilot-adoption-sprint-retro",
+    "file:copilot-adoption-sprint-retro-notes"
+   ]
+  },
+  {
+   "id": "theme_frontline",
+   "cls": "theme",
+   "real": "Frontline worker licensing",
+   "signal": "t_frontline",
+   "detail": "Which store roles get which licence.",
+   "from": [
+    "term:frontline-worker"
+   ]
+  },
+  {
+   "id": "theme_supplier",
+   "cls": "theme",
+   "real": "Supplier data sharing",
+   "signal": "t_supplier",
+   "detail": "Sharing product data with suppliers safely.",
+   "from": [
+    "meeting:proseware-supplier-data-sharing-working-session"
+   ]
+  },
+  {
+   "id": "theme_dlp",
+   "cls": "theme",
+   "real": "Data loss prevention",
+   "signal": "t_dlp",
+   "detail": "Policies that blocked supplier files.",
+   "from": []
+  },
+  {
+   "id": "theme_cost",
+   "cls": "theme",
+   "real": "Agent cost control",
+   "signal": "t_cost",
+   "detail": "Keeping agent consumption predictable: {#meeting:agent-cost-control-office-hours.count|office hours session|office hours sessions}.",
+   "from": [
+    "meeting:agent-cost-control-office-hours"
+   ]
+  },
+  {
+   "id": "theme_holiday",
+   "cls": "theme",
+   "real": "Holiday readiness",
+   "signal": "t_holiday",
+   "detail": "Peak-season preparation across stores.",
+   "from": [
+    "term:holiday-readiness"
+   ]
+  },
+  {
+   "id": "esc_408127",
+   "cls": "uat",
+   "real": "Action 408127",
+   "safe": "Escalation 1",
+   "weight": 2,
+   "detail": "{cust_tailspin}: Copilot Chat sign-in loop on store tablets. {#esc:408127.count|mention|mentions} in {#period}.",
+   "from": [
+    "esc:408127"
+   ]
+  },
+  {
+   "id": "esc_412233",
+   "cls": "uat",
+   "real": "Action 412233",
+   "safe": "Escalation 2",
+   "weight": 2,
+   "detail": "{cust_northwind}: Microsoft 365 Copilot licences not assigning to store managers. {#esc:412233.count|mention|mentions} in {#period}.",
+   "from": [
+    "esc:412233"
+   ]
+  },
+  {
+   "id": "esc_415906",
+   "cls": "uat",
+   "real": "Action 415906",
+   "safe": "Escalation 3",
+   "weight": 2,
+   "detail": "{cust_wwi}: Purview DLP policy blocking supplier files. {#esc:415906.count|mention|mentions} in {#period}.",
+   "from": [
+    "esc:415906"
+   ]
+  },
+  {
+   "id": "esc_419342",
+   "cls": "uat",
+   "real": "Action 419342",
+   "safe": "Escalation 4",
+   "weight": 2,
+   "detail": "{cust_fourth}: agent cost spike after the Copilot Studio rollout. {#esc:419342.count|mention|mentions} in {#period}.",
+   "from": [
+    "esc:419342"
+   ]
+  },
+  {
+   "id": "esc_420518",
+   "cls": "uat",
+   "real": "Action 420518",
+   "safe": "Escalation 5",
+   "weight": 2,
+   "detail": "{cust_alpine}: Dynamics 365 Commerce Copilot errors at checkout. {#esc:420518.count|mention|mentions} in {#period}.",
+   "from": [
+    "esc:420518"
+   ]
+  },
+  {
+   "id": "esc_421764",
+   "cls": "uat",
+   "real": "Action 421764",
+   "safe": "Escalation 6",
+   "weight": 2,
+   "detail": "{cust_northwind}: holiday readiness blocker on store devices. {#esc:421764.count|mention|mentions} in {#period}.",
+   "from": [
+    "esc:421764"
+   ]
+  },
+  {
+   "id": "asset_scorecard",
+   "cls": "asset",
+   "real": "Pilot scorecard",
+   "weight": 5.5,
+   "detail": "Sent {#sent:pilot-scorecard-store-manager-copilot-pilot.count|time|times} in {#period}. I last edited the file on {#file:store-manager-copilot-pilot-scorecard.last}.",
+   "from": [
+    "sent:pilot-scorecard-store-manager-copilot-pilot",
+    "file:store-manager-copilot-pilot-scorecard"
+   ]
+  },
+  {
+   "id": "asset_digest",
+   "cls": "asset",
+   "real": "Weekly pilot digest",
+   "weight": 5.25,
+   "detail": "Sent {#sent:weekly-pilot-digest.count|time|times} in {#period}. I last edited the file on {#file:weekly-pilot-digest-16-oct.last}.",
+   "from": [
+    "sent:weekly-pilot-digest",
+    "file:weekly-pilot-digest-16-oct"
+   ]
+  },
+  {
+   "id": "asset_prompts",
+   "cls": "asset",
+   "real": "Store manager prompt pack",
+   "weight": 3.0,
+   "detail": "Sent {#sent:store-manager-prompt-pack.count|time|times} in {#period}. I last edited the file on {#file:store-manager-prompt-pack-v4.last}.",
+   "from": [
+    "sent:store-manager-prompt-pack",
+    "file:store-manager-prompt-pack-v4"
+   ]
+  },
+  {
+   "id": "asset_calc",
+   "cls": "asset",
+   "real": "Licensing options calculator",
+   "safe": "Licence options tool",
+   "weight": 2.75,
+   "detail": "Sent {#sent:licensing-options-calculator.count|time|times} in {#period}. I last edited the file on {#file:licensing-options-calculator.last}.",
+   "from": [
+    "sent:licensing-options-calculator",
+    "file:licensing-options-calculator"
+   ]
+  },
+  {
+   "id": "person_megan",
+   "cls": "person",
+   "real": "Megan Bowen",
+   "safe": "My manager",
+   "weight": 3.7666666666666666,
+   "detail": "{#person:megan.bowen@example.com.meetings|calendar event|calendar events} together and {#person:megan.bowen@example.com.mails|email|emails} from them.",
+   "from": [
+    "person:megan.bowen@example.com"
+   ]
+  },
+  {
+   "id": "person_lee",
+   "cls": "person",
+   "real": "Lee Gu",
+   "safe": "Account colleague",
+   "weight": 4.466666666666667,
+   "detail": "{#person:lee.gu@example.com.meetings|calendar event|calendar events} together and {#person:lee.gu@example.com.mails|email|emails} from them.",
+   "from": [
+    "person:lee.gu@example.com"
+   ]
+  },
+  {
+   "id": "person_alex",
+   "cls": "person",
+   "real": "Alex Wilber",
+   "safe": "Technical specialist",
+   "weight": 4.1,
+   "detail": "{#person:alex.wilber@example.com.meetings|calendar event|calendar events} together and {#person:alex.wilber@example.com.mails|email|emails} from them.",
+   "from": [
+    "person:alex.wilber@example.com"
+   ]
+  },
+  {
+   "id": "person_pradeep",
+   "cls": "person",
+   "real": "Pradeep Gupta",
+   "safe": "Solution architect",
+   "weight": 4.366666666666667,
+   "detail": "{#person:pradeep.gupta@example.com.meetings|calendar event|calendar events} together and {#person:pradeep.gupta@example.com.mails|email|emails} from them.",
+   "from": [
+    "person:pradeep.gupta@example.com"
+   ]
+  },
+  {
+   "id": "person_nestor",
+   "cls": "person",
+   "real": "Nestor Wilke",
+   "safe": "Agent engineer",
+   "weight": 4.133333333333333,
+   "detail": "{#person:nestor.wilke@example.com.meetings|calendar event|calendar events} together and {#person:nestor.wilke@example.com.mails|email|emails} from them.",
+   "from": [
+    "person:nestor.wilke@example.com"
+   ]
+  },
+  {
+   "id": "person_elena",
+   "cls": "person",
+   "real": "Elena Marsh",
+   "safe": "Customer sponsor 1",
+   "weight": 2.5,
+   "detail": "{#person:elena.marsh@northwindtraders.example.meetings|calendar event|calendar events} together and {#person:elena.marsh@northwindtraders.example.mails|email|emails} from them.",
+   "from": [
+    "person:elena.marsh@northwindtraders.example"
+   ]
+  },
+  {
+   "id": "person_nora",
+   "cls": "person",
+   "real": "Nora Fielding",
+   "safe": "Customer sponsor 2",
+   "weight": 2.4,
+   "detail": "{#person:nora.fielding@tailspintoys.example.meetings|calendar event|calendar events} together and {#person:nora.fielding@tailspintoys.example.mails|email|emails} from them.",
+   "from": [
+    "person:nora.fielding@tailspintoys.example"
+   ]
+  },
+  {
+   "id": "person_ines",
+   "cls": "person",
+   "real": "Ines Duarte",
+   "safe": "Customer lead 3",
+   "weight": 2.5666666666666664,
+   "detail": "{#person:ines.duarte@wideworldimporters.example.meetings|calendar event|calendar events} together and {#person:ines.duarte@wideworldimporters.example.mails|email|emails} from them.",
+   "from": [
+    "person:ines.duarte@wideworldimporters.example"
+   ]
+  }
+ ],
+ "relations": [
+  [
+   "me",
+   "prog_store",
+   "leads"
+  ],
+  [
+   "prog_store",
+   "cust_northwind",
+   "runs at"
+  ],
+  [
+   "prog_store",
+   "cust_tailspin",
+   "runs at"
+  ],
+  [
+   "me",
+   "prog_merch",
+   "leads"
+  ],
+  [
+   "prog_merch",
+   "cust_wwi",
+   "for"
+  ],
+  [
+   "me",
+   "prog_holiday",
+   "runs"
+  ],
+  [
+   "prog_holiday",
+   "cust_northwind",
+   "for"
+  ],
+  [
+   "prog_holiday",
+   "cust_margies",
+   "for"
+  ],
+  [
+   "me",
+   "prog_sprint",
+   "joins"
+  ],
+  [
+   "prog_store",
+   "prod_m365",
+   "adopts"
+  ],
+  [
+   "prog_merch",
+   "prod_studio",
+   "adopts"
+  ],
+  [
+   "cust_fourth",
+   "prod_chat",
+   "adopts"
+  ],
+  [
+   "cust_wwi",
+   "prod_purview",
+   "adopts"
+  ],
+  [
+   "cust_vanarsdel",
+   "prod_commerce",
+   "adopts"
+  ],
+  [
+   "cust_alpine",
+   "prod_studio",
+   "adopts"
+  ],
+  [
+   "cust_wwi",
+   "theme_dlp",
+   "raises"
+  ],
+  [
+   "cust_proseware",
+   "theme_supplier",
+   "raises"
+  ],
+  [
+   "cust_wwi",
+   "theme_supplier",
+   "raises"
+  ],
+  [
+   "cust_tailspin",
+   "theme_frontline",
+   "raises"
+  ],
+  [
+   "cust_northwind",
+   "theme_frontline",
+   "raises"
+  ],
+  [
+   "cust_fourth",
+   "theme_cost",
+   "raises"
+  ],
+  [
+   "cust_northwind",
+   "theme_holiday",
+   "raises"
+  ],
+  [
+   "cust_margies",
+   "theme_holiday",
+   "raises"
+  ],
+  [
+   "cust_alpine",
+   "theme_cost",
+   "raises"
+  ],
+  [
+   "cust_tailspin",
+   "esc_408127",
+   "escalates"
+  ],
+  [
+   "cust_northwind",
+   "esc_412233",
+   "escalates"
+  ],
+  [
+   "cust_wwi",
+   "esc_415906",
+   "escalates"
+  ],
+  [
+   "cust_fourth",
+   "esc_419342",
+   "escalates"
+  ],
+  [
+   "cust_alpine",
+   "esc_420518",
+   "escalates"
+  ],
+  [
+   "cust_northwind",
+   "esc_421764",
+   "escalates"
+  ],
+  [
+   "esc_415906",
+   "theme_dlp",
+   "about"
+  ],
+  [
+   "esc_419342",
+   "theme_cost",
+   "about"
+  ],
+  [
+   "esc_421764",
+   "theme_holiday",
+   "about"
+  ],
+  [
+   "person_megan",
+   "me",
+   "manages"
+  ],
+  [
+   "person_lee",
+   "cust_northwind",
+   "covers"
+  ],
+  [
+   "person_alex",
+   "esc_408127",
+   "answers"
+  ],
+  [
+   "person_pradeep",
+   "prog_merch",
+   "supports"
+  ],
+  [
+   "person_pradeep",
+   "esc_415906",
+   "answers"
+  ],
+  [
+   "person_nestor",
+   "theme_cost",
+   "supports"
+  ],
+  [
+   "person_elena",
+   "cust_northwind",
+   "works at"
+  ],
+  [
+   "person_nora",
+   "cust_tailspin",
+   "works at"
+  ],
+  [
+   "person_ines",
+   "cust_wwi",
+   "works at"
+  ],
+  [
+   "asset_scorecard",
+   "prog_store",
+   "evidences"
+  ],
+  [
+   "asset_digest",
+   "prog_store",
+   "reports on"
+  ],
+  [
+   "asset_prompts",
+   "cust_northwind",
+   "prepared for"
+  ],
+  [
+   "asset_calc",
+   "theme_frontline",
+   "answers"
+  ],
+  [
+   "me",
+   "cust_wingtip",
+   "supports"
+  ],
+  [
+   "me",
+   "cust_coho",
+   "supports"
+  ],
+  [
+   "me",
+   "cust_adventure",
+   "supports"
+  ],
+  [
+   "me",
+   "cust_relecloud",
+   "supports"
+  ],
+  [
+   "me",
+   "cust_bellows",
+   "supports"
+  ],
+  [
+   "person_lee",
+   "prog_store",
+   "co-runs"
+  ],
+  [
+   "me",
+   "asset_scorecard",
+   "edits"
+  ],
+  [
+   "me",
+   "asset_digest",
+   "edits"
+  ]
+ ],
+ "questions": [
+  {
+   "q": "Get me ready for this afternoon's {prog_store} check-in at {cust_northwind}",
+   "kind": "prep",
+   "from": [
+    "upcoming:store-manager-copilot-pilot-northwind-traders-weekly"
+   ],
+   "highlight": [
+    "cust_northwind",
+    "prog_store",
+    "esc_421764",
+    "esc_412233",
+    "person_elena",
+    "asset_scorecard",
+    "theme_holiday"
+   ],
+   "answer": [
+    "The weekly pilot call is at 14:00 UTC today; you have run {#meeting:store-manager-copilot-pilot-northwind-traders-weekly.count} of these in {#period}.",
+    "Open now: {esc_421764}, about holiday readiness blocker on store devices ({#esc:421764.count|mention|mentions} in {#period}).",
+    "Earlier: {esc_412233}, about Microsoft 365 Copilot licences not assigning to store managers ({#esc:412233.count|mention|mentions} in {#period}).",
+    "Joining: {person_lee} and {person_elena}, with others from their side.",
+    "Bring the latest {asset_scorecard}: you have sent it {#sent:pilot-scorecard-store-manager-copilot-pilot.count|time|times} in {#period}. You last edited it on {#file:store-manager-copilot-pilot-scorecard.last}."
+   ],
+   "grounding": "Grounded in {#org:northwindtraders.example.count|email or calendar event|emails and calendar events} with {cust_northwind}, its escalations and its sponsor."
+  },
+  {
+   "q": "Which supplier file problems is {cust_wwi} still raising with me?",
+   "kind": "escalations",
+   "from": [
+    "esc:415906"
+   ],
+   "highlight": [
+    "cust_wwi",
+    "theme_dlp",
+    "theme_supplier",
+    "prog_merch",
+    "esc_415906",
+    "person_ines",
+    "prod_purview"
+   ],
+   "answer": [
+    "The {prog_merch}: {#meeting:merchandising-agent-build-weekly-sync.count|weekly sync|weekly syncs} and {#meeting:merchandising-agent-build-sprint-demo.count|sprint demo|sprint demos} in {#period}.",
+    "Sharing supplier files safely: {esc_415906} is about Purview DLP policy blocking supplier files ({#esc:415906.count|mention|mentions} in {#period}).",
+    "{person_ines} leads on their side: {#person:ines.duarte@wideworldimporters.example.meetings|calendar event|calendar events} and {#person:ines.duarte@wideworldimporters.example.mails|email|emails} with you."
+   ],
+   "grounding": "Grounded in {#org:wideworldimporters.example.count|email or calendar event|emails and calendar events} with {cust_wwi} and its escalation."
+  },
+  {
+   "q": "What is behind the recent jump in {theme_holiday}?",
+   "kind": "change",
+   "from": [
+    "signal:t_holiday"
+   ],
+   "highlight": [
+    "theme_holiday",
+    "prog_holiday",
+    "cust_northwind",
+    "cust_margies",
+    "esc_421764"
+   ],
+   "answer": [
+    "{#signal:t_holiday.sum|holiday readiness signal|holiday readiness signals} in {#period}, peaking {#signal:t_holiday.peak} with {#signal:t_holiday.max}.",
+    "The {prog_holiday}: {#meeting:holiday-readiness-reviews-weekly-triage.count|weekly triage call|weekly triage calls} in {#period}.",
+    "{cust_northwind} and {cust_margies} both have holiday reviews coming up this week.",
+    "Open blocker: {esc_421764}, about holiday readiness blocker on store devices."
+   ],
+   "grounding": "Grounded in {#signal:t_holiday.sum|holiday readiness signal|holiday readiness signals} across {#signal:t_holiday.nonzero|unit}."
+  },
+  {
+   "q": "Write Friday's {asset_digest} from this week's pilot signals",
+   "kind": "draft",
+   "from": [
+    "sent:weekly-pilot-digest",
+    "file:weekly-pilot-digest-16-oct"
+   ],
+   "highlight": [
+    "asset_digest",
+    "prog_store",
+    "cust_northwind",
+    "cust_tailspin",
+    "esc_421764",
+    "theme_cost"
+   ],
+   "answer": [
+    "You have sent the digest {#sent:weekly-pilot-digest.count|time|times} in {#period} and keep each one as a file.",
+    "So far {#current}: {#signal:t_storepilot.last|store pilot signal|store pilot signals} and {#signal:t_cost.last} on agent cost control.",
+    "Headline: {esc_421764} at {cust_northwind}, {#esc:421764.count|mention|mentions} in {#period}.",
+    "Both pilot calls ({cust_northwind}, {cust_tailspin}) are on the calendar again this week."
+   ],
+   "grounding": "Grounded in {#sent:weekly-pilot-digest.count|earlier digest|earlier digests} and {#signal:t_storepilot.sum|store pilot signal|store pilot signals} in {#period}."
+  }
+ ],
+ "outputs": [
+  {
+   "title": "Pilot scorecard",
+   "text": "Sent every Monday: {#sent:pilot-scorecard-store-manager-copilot-pilot.count} in {#period}",
+   "from": [
+    "sent:pilot-scorecard-store-manager-copilot-pilot",
+    "file:store-manager-copilot-pilot-scorecard"
+   ]
+  },
+  {
+   "title": "Weekly pilot digest",
+   "text": "Sent every Friday: {#sent:weekly-pilot-digest.count} in {#period}",
+   "from": [
+    "sent:weekly-pilot-digest",
+    "file:weekly-pilot-digest-16-oct"
+   ]
+  },
+  {
+   "title": "Store manager prompt pack",
+   "text": "Shared {#sent:store-manager-prompt-pack.count|time|times} with pilot stores in {#period}",
+   "from": [
+    "sent:store-manager-prompt-pack",
+    "file:store-manager-prompt-pack-v4"
+   ]
+  },
+  {
+   "title": "A licence options tool for store roles",
+   "text": "Sent {#sent:licensing-options-calculator.count|time|times} in {#period}",
+   "from": [
+    "sent:licensing-options-calculator",
+    "file:licensing-options-calculator"
+   ]
+  },
+  {
+   "title": "This visual",
+   "text": "Built from the work above",
+   "from": [
+    "builtin:this-visual"
+   ]
+  }
+ ]
+}
