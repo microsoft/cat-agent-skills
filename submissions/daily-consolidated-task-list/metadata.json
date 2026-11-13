@@ -1,0 +1,10 @@
+{
+  "name": "Daily Consolidated Task List",
+  "description": "Every weekday at 9:00 AM, merges actionable items from your calendar, Outlook mail, and Teams chats into one ranked daily work plan, then emails it to you and posts it to your Teams self-chat.",
+  "tags": ["automation", "productivity", "calendar", "email", "teams", "planning"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.1.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-11-05"
+}
