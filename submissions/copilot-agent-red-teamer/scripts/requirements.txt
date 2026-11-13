@@ -1,0 +1,15 @@
+# Install only from the public production package index.
+--index-url https://pypi.org/simple
+
+# Content-safety evaluation engine
+azure-ai-evaluation[redteam]
+azure-identity
+azure-ai-projects
+python-dotenv
+
+# Encrypted interactive user-token persistence
+msal
+msal-extensions
+
+# The client declares its activity/hosting dependencies.
+microsoft-agents-copilotstudio-client>=1.6,<2
