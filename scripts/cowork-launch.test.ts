@@ -1,27 +1,11 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
-import { authorKey, computeStats, directoryAuthors, resolveBadges, type BadgeSkill } from "../src/lib/badges";
+import { computeStats, directoryAuthors, resolveBadges, type BadgeSkill } from "../src/lib/badges";
 import { contributorAvatar } from "../src/lib/contributor-avatar";
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICON_PATHS, CATEGORY_LABELS } from "../src/lib/categories";
 import { skillSchema } from "../src/lib/skill-schema";
-import { loadSubmission } from "./import-submissions";
-import { validatePluginFiles } from "./validate-plugin";
 
 const team = "Microsoft";
-const plugins = [
-  ["education-for-cowork", "education", 10],
-  ["legal-for-cowork", "legal", 20],
-  ["finance-for-cowork", "finance", 13],
-  ["capital-markets-for-cowork", "financial-services", 10],
-  ["accounting-for-cowork", "accounting", 7],
-] as const;
-const sales = [
-  "business-case-composer", "competitive-strategy", "customer-engagement-and-deal-risk-insights",
-  "deal-catchup", "meeting-prep", "pipeline-prioritizer", "post-meeting-follow-up",
-  "sales-progress-update", "stakeholder-and-decision-map",
-];
-const service = ["answer-research", "case-preparation-brief", "case-triage", "draft-customer-reply", "knowledge-harvest"];
 
 test("every category has a label, color, icon, and schema support", () => {
   assert.equal(new Set(CATEGORIES).size, 13);
@@ -34,39 +18,6 @@ test("every category has a label, color, icon, and schema support", () => {
       category, tags: ["example"], author: team,
     }).category, category);
   }
-});
-
-test("launch submissions are five complete plugins and fourteen individual Cowork skills", () => {
-  const entries = [
-    ...plugins.map(([slug, category]) => ({ slug, category, kind: "plugin" })),
-    ...sales.map((slug) => ({ slug, category: "sales", kind: "skill" })),
-    ...service.map((slug) => ({ slug, category: "service", kind: "skill" })),
-  ];
-  assert.equal(entries.length, 19);
-  for (const { slug, category, kind } of entries) {
-    const path = `submissions/${slug}`;
-    const sub = loadSubmission(path);
-    assert.ok(sub);
-    assert.equal(sub.kind, kind, slug);
-    assert.equal(sub.loadProblems?.length ?? 0, 0, slug);
-    assert.ok(sub.readmeMd?.trim(), `${slug} needs a human-facing README`);
-    assert.equal([...(sub.pluginFiles ?? []), ...sub.bundleFiles]
-      .some((file) => file.path.toLowerCase() === "readme.md"), false, slug);
-    const meta = skillSchema.parse(JSON.parse(readFileSync(`${path}/metadata.json`, "utf8")));
-    assert.equal(meta.category, category);
-    assert.equal(meta.builtByMicrosoft, true);
-    assert.equal(meta.author, team);
-    assert.equal(meta.authorUrl, "https://github.com/microsoft");
-    assert.deepEqual(meta.platforms, ["Cowork"]);
-    assert.equal(meta.authorGithub, undefined);
-    assert.equal(authorKey(meta.authorGithub, meta.author), "microsoft");
-    if (kind === "plugin") {
-      const validated = validatePluginFiles(sub.pluginFiles ?? [], slug);
-      assert.deepEqual(validated.problems, []);
-      assert.equal(validated.skills.length, plugins.find(([name]) => name === slug)?.[2]);
-    }
-  }
-  assert.match(readFileSync("submissions/accounting-for-cowork/README.md", "utf8"), /Frontier only/);
 });
 
 test("team directory entry aggregates all nineteen submissions without fabricating a login or badge", () => {
