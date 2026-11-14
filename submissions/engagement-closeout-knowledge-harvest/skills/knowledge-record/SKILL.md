@@ -1,7 +1,7 @@
 ---
 name: knowledge-record
 description: 'Drafts a practice-review knowledge record, governed lesson themes, sanitisation summary and credential handoff only from governed.json after sanitize-check; it is draft-first and never publishes, clears a confidentiality restriction, approves external use or creates a credential. Use when the user asks to "draft the knowledge record", "prepare for practice review", "write the governed closeout summary", "build the credential handoff", "write up the closeout for the practice" or "turn governed.json into a draft record". Do NOT use for loading (use artifact-assemble), scoring (use asset-identify), clustering (use lesson-cluster), deciding what is safe or clearing a HOLD (use sanitize-check) or a joiner onboarding pack (use the Engagement Mobilization Pack plugin).'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/record_check.py on governed.json from sanitize-check; drafts Markdown locally. No email, Teams, SharePoint-write, knowledge-base publishing or credential-creation tools.'
 metadata:
   version: "1.0.5"

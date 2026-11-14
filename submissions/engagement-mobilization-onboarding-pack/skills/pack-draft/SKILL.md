@@ -1,7 +1,7 @@
 ---
 name: pack-draft
 description: "Drafts this engagement's internal mobilization pack, joiner briefing and first-week plan only from the governed access-checklist.json and mobilization-pack.md, keeping every status, hold and DRAFT banner (never invents content, sends, shares or posts it). Use when the user asks \"draft the onboarding pack from the access checklist\", \"write the joiner briefing for this engagement\", \"prepare the first-week plan for the joiner\", \"turn the access checklist into the mobilization pack\" or \"tidy up the mobilization pack wording\". Do NOT use for a cold start with no access checklist yet (start with engagement-retrieve), wall, access, roster or knowledge decisions (use wall-check, roster-pull or knowledge-match), or a generic onboarding guide or Word document not tied to this engagement (use docx)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run scripts/verify_render.py, which re-derives access-checklist.json and mobilization-pack.md from the user-supplied raw inputs, staffing and Closeout JSON, wall register and workspace inventory. No connectors required; produces a Markdown draft for review."
 metadata:
   version: "1.0.7"

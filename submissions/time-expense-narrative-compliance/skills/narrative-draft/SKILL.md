@@ -1,7 +1,7 @@
 ---
 name: narrative-draft
 description: 'Drafts grounded time-entry narratives for entries that have none and offers cited suggested rewrites beside existing narratives without replacing them, never inventing roles, attendees or purpose. Use it after activity-pull (run that first if no activity packet exists) when the user says "write up my time", "draft my time entries", "turn my calendar into narratives", "suggest a better narrative for this entry" or "draft narratives from my week". Do NOT use for gathering raw activity (use activity-pull), choosing task codes (use code-map), judging whether an entry will be rejected (use guideline-check), sending, submitting or approving anything (exception-report answers those requests), or expense reports and receipts (out of scope: time entries only).'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/narrative_draft.py on activity.json from activity-pull (plus the raw exports for a team view); reads the config/signal-sources.json, contracts/ and references/ in this skill folder and writes drafted.json locally. No connectors, network access or outbound actions.'
 metadata:
   version: "1.0.13"

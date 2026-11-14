@@ -1,6 +1,7 @@
 ---
 name: institutional-client-review-prep
 description: Prepare a named institutional investment-client mandate review from IPS/guidelines, relationship commitments, and prior materials; separate the internal brief and client deck. Use for "prep our endowment client's review", "get ready for this client's consultant", "build the mandate review", "what do we owe this plan sponsor", or "pull the client's IPS". Do NOT use for the manager's own board/operating/forecast review or standalone stakeholder Q&A — use Finance forecast-review-prep or stakeholder-qa-prep if available; for commentary, use investment-commentary-draft instead; for questionnaires, use rfp-ddq-response-draft instead; for transcript summaries, use meeting-intel if available.
+license: MIT
 ---
 
 ## Quick Start

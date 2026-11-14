@@ -1,7 +1,7 @@
 ---
 name: attribute-normalize
 description: Maps supplier product fields to the retailer taxonomy through the mapping table only, converts units with the calculation shown, and validates every GTIN check digit (GS1). Use after source-ingest, or when the user says "map these to our taxonomy", "are these GTINs valid", "validate these GTINs", "check the GS1 check digit", "normalise the supplier attributes" or "which supplier columns are unmapped". Do NOT use for ad-hoc unit conversions or non-product data - answer in chat instead; do NOT use for completeness or missing fields - use completeness-score instead; do NOT use for claim wording - use claim-check instead.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: analysis, icon: ArrowSwap}
 ---
 # Attribute Normalize

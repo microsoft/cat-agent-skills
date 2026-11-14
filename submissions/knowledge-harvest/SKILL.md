@@ -3,6 +3,7 @@ name: knowledge-harvest
 description: Helps customer service representatives harvest reusable knowledge from a recently closed case or verified workaround, with a brief chat summary and one saved editable review artifact in CRM when supported, otherwise in Word or Markdown. Separates symptoms, cause, workaround, fix, and tested scope, removes identifying details, checks guidance overlap, and proposes knowledge updates and recurrence-prevention actions without publishing. Use when asked to "capture a verified fix", "draft a knowledge article", "update an article from resolution evidence", or assess whether there is enough evidence for reusable guidance. Do not use to answer a current customer's question, draft their reply, turn unresolved speculation into executable instructions, or publish automatically.
 metadata:
   displayname: Knowledge Harvest
+license: MIT
 ---
 
 # Knowledge Harvest for customer service representatives

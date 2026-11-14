@@ -1,7 +1,7 @@
 ---
 name: wo-intake
 description: Extracts cited work-order identity and asset context into draft inputs. Use for "intake this work order", "pull WO-4507", "extract the asset context", or "start the work-order packet". Do NOT use for evidence retrieval — use knowledge-retrieve instead; ranking — use similar-work-rank instead; stock checks — use parts-readiness instead; terminal notes — use work-order-writeup instead. Offline synthetic evidence only; no operational actions.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

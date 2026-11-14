@@ -1,6 +1,7 @@
 ---
 name: peer-product-intelligence
 description: Compare named investment funds or strategies in a sourced, share-class-specific matrix; describe differences without ranking products. Use for "how does our fund stack up", "build a competitive matrix", "benchmark this product against peers", "compare our fees to theirs", or "what differs between these funds". Do NOT use for issuer filing diffs — use security-research-brief instead; for new questionnaires, use rfp-ddq-response-draft instead; for recurring profiles, use consultant-database-refresh instead; for mandate reviews, use institutional-client-review-prep instead; for investment commentary, use investment-commentary-draft instead; for workbook formatting, use xlsx instead.
+license: MIT
 ---
 
 ## Quick Start

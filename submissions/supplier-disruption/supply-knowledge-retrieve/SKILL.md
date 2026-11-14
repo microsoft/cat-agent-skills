@@ -2,7 +2,7 @@
 name: supply-knowledge-retrieve
 description: Attaches cited supplied inventory, supplier master, BOM, open orders and delivery history to a local draft. Use for "where is this used", "what is our on-hand", "is this single-source", "has this supplier been late before", or "retrieve supply evidence". Do NOT use for intake, impact mapping, mitigation or drafts — use disruption-intake, shortage-impact-map, mitigation-recommend or disruption-writeup instead. No live ERP access.
 compatibility: Python 3.10+ and local supplied artifacts only; no connectors required.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.4.3"
   author: Microsoft Manufacturing Skills

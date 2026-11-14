@@ -1,7 +1,7 @@
 ---
 name: review-packet
 description: "Drafts the partner/QRM review packet from verified gate_check and severity_rank output, marked DRAFT - HUMAN REVIEW REQUIRED. Use after the gate check or when the user asks \"draft the review packet\", \"summarize partner review items\", \"make the issue list\", \"what needs fixing before client issue?\" or \"prepare the QRM packet\". Do NOT use for ingesting documents (use deliverable-ingest), retrieving criteria (use criteria-retrieve), mapping support (use assertion-map), computing findings, severity or status (use gate-check), time or expense narratives (use time-expense-narrative-compliance), closeout harvest (use engagement-closeout-knowledge-harvest), client status/QBR (use client-status-qbr), or to send, approve, sign off, publish or authorize reliance (never; a human decides)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run the bundled scripts/severity_rank.py --verify, with its bundled gate_check.py, assertion_rules.py and steering_guard.py. Reads severity-ranked.json and review-input.json and writes a draft markdown packet; no network access or connector is required."
 metadata:
   version: "1.0.9"

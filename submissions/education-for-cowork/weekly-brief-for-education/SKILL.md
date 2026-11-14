@@ -5,6 +5,7 @@ description: |
 metadata:
   category: productivity
   icon: CalendarWeekNumbers
+license: MIT
 ---
 
 # Weekly Brief for Education

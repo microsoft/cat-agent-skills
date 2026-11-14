@@ -1,7 +1,7 @@
 ---
 name: knowledge-retrieve
 description: Attaches cited SOPs, manuals, prior fixes and usage evidence to draft inputs. Use for "retrieve the SOP", "find the manual section", "pull prior fixes", or "get parts history". Do NOT use for intake — use wo-intake instead; ranking — use similar-work-rank instead; stock checks — use parts-readiness instead; terminal notes — use work-order-writeup instead. No scheduling, orders or live write-back.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

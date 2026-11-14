@@ -2,6 +2,7 @@
 name: enforcement-action-review
 description: Reads a public enforcement action, complaint, settlement, or consent order and produces a read-across against the firm's controls covering alleged conduct, cited rules, and corrective actions. Exposure is framed as hypotheses for human review, never admissions. Use when the user says "could this happen here", "what does this consent order mean for us", "lessons learned from this enforcement action", "read this across to our controls", or "which controls does this implicate". Do NOT use for customer or counterparty research (use kyc-research-pack), new rules, bulletins, SR letters, or proposed or final regulations (use reg-change-triage), request trackers (use exam-request-response), document formatting (use built-in docx), or sending email (use built-in outlook-email).
 metadata: {icon: Gavel}
+license: MIT
 ---
 
 ## Scope

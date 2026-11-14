@@ -1,7 +1,7 @@
 ---
 name: brief-draft
 description: Drafts the store readiness checklist, the shift brief in store language, and the exception escalation for a promotion launch from the ranked contract payload — draft-first, nothing sent. Use to close every execution run — "draft the shift brief", "write up the readiness pack", "build the launch checklist for store <id>", "what does the team do each shift", "write the escalation for the district manager". Do NOT use for field-sales store visit reports or action registers — use visit-report instead; not for the readiness test or ranking — use readiness-check instead for the test, use exception-raise instead for the ranking; not for ingesting the pack or store records — use pack-ingest instead for the pack, use store-map instead for the store records.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: writing, icon: Compose}
 ---
 # Brief Draft

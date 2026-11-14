@@ -3,6 +3,7 @@ name: stakeholder-and-decision-map
 description: Mines customer interactions to identify stakeholders, infer their likely roles and engagement, map the decision process, and highlight who or what may be missing. Use when asked to "map a deal's buying group", identify influential or missing stakeholders, "assess who has gone quiet", or "explain how the customer will decide". Do not use for phased engagement plans, contact sequences, choosing or drafting outreach to the single next contact, seller or team performance reviews, or contacting, scheduling, or changing records.
 metadata:
   displayname: Stakeholder & Decision Map
+license: MIT
 ---
 
 # Stakeholder & Decision Map

@@ -2,7 +2,7 @@
 name: shortage-impact-map
 description: Runs the local deterministic shortage impact engine. Use for "map the impact", "which lines and orders are hit", "what is at risk", "when does this bite", or "what does this shortage affect". Do NOT use for intake, source retrieval, mitigation or terminal drafts — use disruption-intake, supply-knowledge-retrieve, mitigation-recommend or disruption-writeup instead. Offline draft assessment; missing evidence blocks mapping.
 compatibility: Python 3.10+ and local supplied artifacts only; no connectors required.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.4"
   author: Microsoft Manufacturing Skills

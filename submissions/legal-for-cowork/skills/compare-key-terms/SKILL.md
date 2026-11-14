@@ -15,6 +15,7 @@ metadata:
   displayName: Compare key terms
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Compare key terms

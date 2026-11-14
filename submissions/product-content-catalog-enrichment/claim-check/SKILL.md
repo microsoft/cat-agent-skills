@@ -1,7 +1,7 @@
 ---
 name: claim-check
 description: Validates product marketing claims and regulated terms in supplier copy against the approved claim library for that GTIN and market - the explicit Govern step. Use after completeness-score, or when the user says "is this copy safe", "can we say antibacterial", "check the claims", "validate the marketing claims", "is this regulated wording allowed in <market>" or "do we have substantiation for <claim>". Do NOT use for trade-deduction, invoice or insurance claims - use claim-ingest / claim-match instead; do NOT use to approve or add a claim to the library - that is the claim owner's decision; do NOT use to draft copy - use content-draft instead.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: analysis, icon: ShieldCheckmark}
 ---
 # Claim Check (Govern)

@@ -1,7 +1,7 @@
 ---
 name: content-draft
 description: Drafts channel product descriptions, comparison copy and the steward review/approval packet from the governed enrichment payload, using normalised attributes and library-approved claims only. Use to close an enrichment batch, or when the user says "draft the product copy", "build the review packet", "write the channel listing copy", "draft the approval packet", "comparison copy for these SKUs" or "close the enrichment batch". Do NOT use for social posts, decks, blog or general marketing copy - use pptx, docx or plain drafting instead; do NOT publish to channel or approve claims - hand the DRAFT to the steward; do NOT use before claim-check has run - use claim-check instead; do NOT map attributes or validate GTINs - use attribute-normalize instead.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: writing, icon: DocumentEdit}
 ---
 # Content Draft (terminal hop)

@@ -2,6 +2,7 @@
 name: vendor-risk-review
 description: Reviews a vendor's SOC 2 report, DDQ, contract, or public vendor research against the interagency third-party risk lifecycle, covering report type, scope, opinion, exceptions, CUECs, residual risks, public findings, and open questions. Produces no risk rating and no approval decision. Use when the user says "review this SOC 2", "assess this third party", "what are the exceptions in this report", "write up a vendor risk review", or "what should we ask this vendor". Do NOT use for customer or beneficial-owner research (use kyc-research-pack), request trackers (use exam-request-response), regulatory-change triage (use reg-change-triage), enforcement read-across (use enforcement-action-review), workbook formatting (use built-in xlsx), or sending email (use built-in outlook-email).
 metadata: {icon: ShieldTask}
+license: MIT
 ---
 
 ## Scope

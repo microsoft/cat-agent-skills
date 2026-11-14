@@ -1,7 +1,7 @@
 ---
 name: ehs-knowledge-retrieve
 description: Attaches cited local OSHA, ISO summaries, JHA and policies and computes supplied-log history. Use for "find cited local safety evidence", "pull the OSHA criteria", "get the JHA", "attach local EHS evidence", or "have we had this incident before". Do NOT use for incident intake, recordability decisions or drafting — use incident-intake, severity-recordability or incident-writeup. No live retrieval; EHS REVIEW REQUIRED.
-license: Proprietary
+license: MIT
 metadata:
   version: "2.0.0-rc.7"
   author: Microsoft Manufacturing Skills

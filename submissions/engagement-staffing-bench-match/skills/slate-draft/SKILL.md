@@ -1,7 +1,7 @@
 ---
 name: slate-draft
 description: "Drafts the partner-ready staffing recommendation from constraint-check output (eligible slate, refused top matches, conflicts, utilisation context and gap statements); it is draft only and never sends, assigns or approves, and partner notes built from constraint-check output stay with slate-draft. Use when the user says \"draft the recommendation\", \"build me a slate\", \"prepare the partner approval note\", \"summarize staffing options\" or \"write the resourcing approval draft\". Do NOT use for general pages, one-pagers or apps (use create), client emails or thank-you notes (use an Outlook/email drafting skill), extracting roles (use role-intake), loading the bench (use bench-query), scoring or ranking candidates (use fit-score) or deciding eligibility (use constraint-check)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run the bundled scripts/slate_validate.py on governed.json from constraint-check, re-derived from roles.json, bench.json and constraints.json. No connectors required. Returns the draft in chat or as a document; never sends, posts or writes back to any system."
 metadata:
   version: "1.1.14"

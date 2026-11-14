@@ -15,6 +15,7 @@ metadata:
   displayName: Create playbook
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Create playbook

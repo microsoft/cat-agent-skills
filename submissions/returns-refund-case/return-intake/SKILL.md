@@ -1,7 +1,7 @@
 ---
 name: return-intake
 description: 'Structures a customer return request - item, order/receipt, reason as stated, condition, serials, customer history - into the rtl.returns-refund-case.v1 contract as case.json. Use when the user says "customer wants to return", "process this return", "start a return case", "log this return", "new return at the desk", or a return case begins. Do NOT use for eligibility or refund decisions - use eligibility-check instead; not for policy text - use policy-retrieve; not for the write-up or customer response - use case-packet.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.4", author: Microsoft Retail & CPG Skills, category: productivity, icon: Form}
 ---
 # Return Intake

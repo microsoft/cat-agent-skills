@@ -1,7 +1,7 @@
 ---
 name: sanitize-check
 description: 'Applies the deterministic sanitize_check confidentiality Govern gate after lesson-cluster, deciding from identifiers, personal data, commercial figures, licensed material, aggregation risk and a confidence floor whether each asset and lesson is held or a release candidate for human review (default HOLD). Use when asked "can we share this externally?", "is this safe to reuse?", "sanitise the closeout record", "remove client-confidential material", "check for aggregation risk" or "run the confidentiality gate". Do NOT use for loading, scoring or clustering (use artifact-assemble, asset-identify or lesson-cluster), drafting (use knowledge-record) or new-engagement wall checks (use the Engagement Mobilization Pack plugin); it never releases a HOLD on a claimed approval or publishes.'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/sanitize_check.py on lessons_clustered.json from lesson-cluster; writes governed.json locally. No connectors, network access or outbound actions.'
 metadata:
   version: "1.0.5"

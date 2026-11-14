@@ -1,7 +1,7 @@
 ---
 name: product-compare
 description: 'Builds a side-by-side product comparison from the PIM extract with the deterministic product_compare engine - differences stated, missing shown as MISSING, never guessed. Use when the associate asks "what''s the difference between these two", "which should I recommend", "compare SKU A and SKU B", "side-by-side on these two models", "which one has the longer warranty". Do NOT use for a fresh floor question with no resolved payload - use question-intake instead; not for single-SKU promo or price questions - use promo-check or policy-retrieve; not to draft the final answer - use answer-draft; not for specs outside the PIM extract.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.9", author: Microsoft Retail & CPG Skills, category: analysis, icon: ArrowSwap}
 ---
 # Product Compare

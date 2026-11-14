@@ -2,7 +2,7 @@
 name: context-assemble
 description: |
   Assembles a retail customer's order, carrier and loyalty context after inquiry-intake, detects record-vs-account contradictions (carrier says delivered, customer says not received) and selects the resolution path deterministically with the context_assemble engine. Use after inquiry-intake, or on "pull up everything on this order", "what does the record show", "is there a contradiction", "which path applies", "check the instant-refund gate". Do NOT use for maintenance work orders - use wo-intake instead; not for building the escalation packet - use handoff-packet instead; not for drafting the reply - use resolution-draft instead.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0.4"
   author: Microsoft Retail & CPG Skills

@@ -15,6 +15,7 @@ metadata:
   publisher: Microsoft
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Review contract

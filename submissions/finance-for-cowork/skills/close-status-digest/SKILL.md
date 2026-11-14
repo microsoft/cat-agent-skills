@@ -12,6 +12,7 @@ description: >-
   status.
 metadata:
   icon: TaskListLtr
+license: MIT
 ---
 
 # Close Status Digest

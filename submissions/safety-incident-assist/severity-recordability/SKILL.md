@@ -1,7 +1,7 @@
 ---
 name: severity-recordability
 description: Runs the deterministic local v2 draft classifier; reporting/deadlines remain undetermined. Use for "explain blocked reporting determination", "is this recordable", "classify this incident", "what severity is this", or "is this OSHA reportable". Do NOT use for source intake, history retrieval or routing — use incident-intake, ehs-knowledge-retrieve or routing-notify. No diagnosis or operational decision; EHS REVIEW REQUIRED.
-license: Proprietary
+license: MIT
 metadata:
   version: "2.0.0-rc.7"
   author: Microsoft Manufacturing Skills

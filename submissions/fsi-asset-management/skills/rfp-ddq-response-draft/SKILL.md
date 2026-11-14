@@ -1,6 +1,7 @@
 ---
 name: rfp-ddq-response-draft
 description: Draft a new institutional RFP/DDQ from approved library answers, citing each answer and separating internal gaps. Use for "draft answers to this RFP", "populate this DDQ", "respond to this due-diligence request", "fill what we can from the library", or "identify unanswered questionnaire items". Do NOT use for recurring profiles with a prior submission to diff — use consultant-database-refresh instead; for client mandate reviews, use institutional-client-review-prep instead; for product comparisons, use peer-product-intelligence instead; for investment commentary, use investment-commentary-draft instead; for document formatting, use the built-in docx instead.
+license: MIT
 ---
 
 ## Quick Start

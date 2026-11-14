@@ -15,6 +15,7 @@ metadata:
   displayName: Explain legal concepts
   category: communication
   icon: Scales
+license: MIT
 ---
 
 # Explain legal concepts

@@ -12,6 +12,7 @@ description: >-
   instead; or building the valuation or returns model.
 metadata:
   icon: DocumentRibbon
+license: MIT
 ---
 
 # Investment Committee Memo

@@ -1,7 +1,7 @@
 ---
 name: lesson-cluster
 description: 'Clusters cited decisions and retrospective inputs into ranked lesson themes with the deterministic lesson_cluster engine, after asset-identify and before sanitize-check. Use when the user asks for "lessons learned", "cluster the retrospective", "what did we learn?", "group the closeout lessons", "theme the decision log" or "rank the lessons by priority". Do NOT use for loading raw sources (use artifact-assemble), scoring assets (use asset-identify), deciding whether a lesson may be shared or rewriting named-person blame (use sanitize-check), drafting the final narrative (use knowledge-record) or briefing a new team (use the Engagement Mobilization Pack plugin); it never clears, publishes or sends.'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/lesson_cluster.py on asset_shortlist.json from asset-identify; writes lessons_clustered.json locally. No connectors, network access or outbound actions.'
 metadata:
   version: "1.0.5"

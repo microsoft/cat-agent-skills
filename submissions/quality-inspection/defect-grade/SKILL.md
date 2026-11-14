@@ -1,7 +1,7 @@
 ---
 name: defect-grade
 description: Recommends manufacturing defect severity and disposition from validated engine deviations. Use for "grade the defects", "what disposition?", "how bad is it?", "can we ship it?", or "certificate says pass". Do NOT use for document intake — use spec-ingest; tolerance math — use tolerance-check; NCR writing — use ncr-draft. No release approval or operational actions.
-license: Proprietary
+license: MIT
 metadata:
   version: "3.1"
   author: Microsoft Manufacturing Skills
