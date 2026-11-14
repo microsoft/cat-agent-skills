@@ -13,6 +13,8 @@ version: 2.0.0-rc.7
 createdAt: 2026-11-10
 updatedAt: 2026-11-10
 bundle: bundles/safety-incident-assist.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Safety Incident Assist turns authorized supplied incident files into cited, privacy-conscious drafts for qualified EHS review: intake, local evidence and history, draft classification, proposed unsent routing, and write-up. Use only in an organization-approved environment, with human review. No live retrieval, official regulatory or clinical determinations, equipment instructions, sending, filing, or closure. Source candidate 2.0.0-rc.7 is represented by numeric manifest version 2.0.0 for packaging compatibility only; this does not promote it to a stable or certified release.
 

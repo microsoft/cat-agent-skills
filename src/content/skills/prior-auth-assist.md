@@ -13,6 +13,8 @@ version: 1.0.3
 createdAt: 2026-10-28
 updatedAt: 2026-10-28
 bundle: bundles/prior-auth-assist.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Prior Authorization Packet gets a prior authorization request ready before it goes to the payer. It finds the coverage policy for the ordered service, checks the chart against each criterion, cites the notes that satisfy it, drafts the medical necessity narrative and lists what is still missing. It never approves, denies or submits a request.
 

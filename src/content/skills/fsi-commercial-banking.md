@@ -12,6 +12,8 @@ authorGithub: microsoft
 version: 1.0.1
 createdAt: 2026-10-28
 bundle: bundles/fsi-commercial-banking.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Six skills for commercial banking credit and coverage teams. Build a standalone historical borrower-credit spread with source assurance/basis, visible normalization, five-check extraction verification, and live credit ratios in Input, Normalized, and Ratios tabs. Draft descriptive credit-memo sections. Assemble annual credit-monitoring packets with explicit comparison limits. Perform separate governing-agreement/amendment-led covenant and borrowing-base reviews with verified inputs, states, and flags. Research borrower/prospect public records. Prepare named external borrower/prospect relationship calls and write up supplied call notes. Integrated three-statement model completion, including historical population and embedded covenant schedules, internal operating/forecast review prep, and standalone stakeholder Q&A are outside this plugin. Runs without a paid subscription or Finance-plugin dependency, using supplied documents, Microsoft 365, public registries, SEC EDGAR, and public web. Scanned and photographed statements are read directly; unreadable figures are marked, never estimated. Loan origination, core banking, CRM, business credit, and benchmark connectors enrich sources without expanding scope; templates change the credit schema or layout, not workflow ownership. Every figure carries its source and page. The skills never rate a credit, approve or decline, set pricing, draft adverse-action reasons, or characterise creditworthiness.
 

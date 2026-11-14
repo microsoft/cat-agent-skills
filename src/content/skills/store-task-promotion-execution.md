@@ -13,6 +13,8 @@ version: 1.0.5
 createdAt: 2026-09-05
 updatedAt: 2026-11-06
 bundle: bundles/store-task-promotion-execution.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Store Task Promotion Execution prepares a store for a promotion launch. It reads the HQ campaign pack, price file and the store's records, tests readiness for missing items, fixture and price conflicts, ranks exceptions by revenue at stake and drafts the checklist, shift brief and escalation. It never changes POS prices, planograms or schedules.
 

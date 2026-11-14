@@ -14,6 +14,8 @@ createdAt: 2026-09-05
 updatedAt: 2026-11-06
 featured: true
 bundle: bundles/store-associate-assist.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Store Associate Assist answers an associate's floor question with the source cited. It resolves the return, price match or raincheck clause, tests promotion eligibility by window, cluster and SKU, compares two products from your PIM export and drafts the answer or a shift lead escalation. It never overrides a price, authorises a refund or reserves stock.
 

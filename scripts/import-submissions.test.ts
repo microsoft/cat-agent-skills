@@ -13,6 +13,7 @@ import { dirname, join } from "node:path";
 import {
   buildMeta,
   CATALOG_PASSTHROUGH,
+  detectLicenseFiles,
   loadSubmission,
   targetsCopilotStudio,
   writeCopilotStudioSkill,
@@ -362,4 +363,92 @@ test("unpacked plugin support does not bypass the new ZIP payload ban", (t) => {
   }));
   assert.match(sub.loadProblems?.join("\n") ?? "", /zip.*payloads are no longer accepted/);
   assert.equal(sub.pluginFiles, undefined);
+});
+
+const repoLicense = readFileSync(new URL("../LICENSE", import.meta.url));
+const skillMetadata = JSON.stringify({
+  name: "Example",
+  description: "Catalog description",
+  platforms: ["Cowork"],
+  tags: ["testing"],
+  author: "Test Author",
+});
+
+test("submissions without LICENSE or NOTICE get no license keys", (t) => {
+  const sub = loadSubmission(submissionFixture(t, {
+    "SKILL.md": pluginFixture["skills/sample-skill/SKILL.md"],
+    "metadata.json": skillMetadata,
+    "references/guide.md": "# Guide\n",
+  }));
+  assert.deepEqual(sub.license, {});
+  assert.deepEqual(sub.bundleFiles.map((file) => file.path), ["references/guide.md"]);
+  const meta = buildMeta({ name: "N", description: "D", ...sub.license }, {});
+  for (const key of ["licenseName", "licenseFile", "noticeFile"]) {
+    assert.ok(!(key in meta), `expected no "${key}"`);
+  }
+});
+
+test("Microsoft MIT LICENSE is detected and still bundled", (t) => {
+  const crlf = Buffer.from(repoLicense.toString("utf8").replace(/\r?\n/g, "\r\n"));
+  const sub = loadSubmission(submissionFixture(t, {
+    "SKILL.md": pluginFixture["skills/sample-skill/SKILL.md"],
+    "metadata.json": skillMetadata,
+    LICENSE: crlf,
+    "NOTICE.md": "# Notices\n",
+  }));
+  assert.deepEqual(sub.license, { licenseFile: "LICENSE", licenseName: "MIT", noticeFile: "NOTICE.md" });
+  assert.deepEqual(sub.bundleFiles.map((file) => file.path).sort(), ["LICENSE", "NOTICE.md"]);
+});
+
+test("unrecognized or empty LICENSE text links the file without naming a license", () => {
+  for (const text of ["Apache License 2.0 ...", ""]) {
+    assert.deepEqual(detectLicenseFiles([{ path: "LICENSE", data: Buffer.from(text) }]), {
+      licenseFile: "LICENSE",
+    });
+  }
+  const edited = repoLicense.toString("utf8").replace("Microsoft Corporation", "Contoso");
+  assert.deepEqual(detectLicenseFiles([{ path: "LICENSE.txt", data: Buffer.from(edited) }]), {
+    licenseFile: "LICENSE.txt",
+  });
+});
+
+test("only root LICENSE / NOTICE files count", () => {
+  assert.deepEqual(
+    detectLicenseFiles([
+      { path: "skills/a/LICENSE", data: repoLicense },
+      { path: "references/NOTICE.md", data: Buffer.from("x") },
+    ]),
+    {},
+  );
+});
+
+test("unpacked plugins detect a root LICENSE without changing the package files", (t) => {
+  const files = { ...pluginFixture, LICENSE: repoLicense, "skills/sample-skill/LICENSE": repoLicense };
+  const sub = loadSubmission(submissionFixture(t, files));
+  assert.equal(sub.kind, "plugin");
+  assert.deepEqual(sub.license, { licenseFile: "LICENSE", licenseName: "MIT" });
+  assert.ok(sub.pluginFiles?.some((file) => file.path === "LICENSE"));
+  assert.ok(sub.pluginFiles?.some((file) => file.path === "skills/sample-skill/LICENSE"));
+});
+
+test("Scout automations are not scanned for license files", (t) => {
+  const sub = loadSubmission(submissionFixture(t, {
+    "example.json": '{"name":"Example","steps":[],"schedule":{"type":"single"}}',
+    "metadata.json": skillMetadata,
+    LICENSE: repoLicense,
+  }));
+  assert.equal(sub.kind, "automation");
+  assert.equal(sub.license, undefined);
+});
+
+test("license fields are optional in the skill schema", () => {
+  const base = { name: "N", description: "D", platforms: ["Cowork"], tags: ["t"], author: "A" };
+  const plain = skillSchema.parse(base);
+  assert.equal(plain.licenseName, undefined);
+  assert.equal(plain.licenseFile, undefined);
+  assert.equal(plain.noticeFile, undefined);
+  const licensed = skillSchema.parse({ ...base, licenseName: "MIT", licenseFile: "LICENSE", noticeFile: "NOTICE.md" });
+  assert.equal(licensed.licenseName, "MIT");
+  assert.equal(licensed.licenseFile, "LICENSE");
+  assert.equal(licensed.noticeFile, "NOTICE.md");
 });

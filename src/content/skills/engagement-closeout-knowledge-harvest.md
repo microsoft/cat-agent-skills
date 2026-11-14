@@ -13,6 +13,8 @@ version: 1.0.5
 createdAt: 2026-11-06
 updatedAt: 2026-11-06
 bundle: bundles/engagement-closeout-knowledge-harvest.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Closes out a professional services engagement: assembles deliverables, decision log and retrospective notes, scores reusable assets, clusters lessons, runs a confidentiality gate and drafts a sanitised knowledge record for practice review. Draft-first: it never publishes to a knowledge base, clears a confidentiality restriction, approves external use or waives a client term.
 

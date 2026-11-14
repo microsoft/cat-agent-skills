@@ -142,6 +142,9 @@ const FIELD_ORDER = [
   "coverColor",
   "featured",
   "bundle",
+  "licenseName",
+  "licenseFile",
+  "noticeFile",
 ];
 
 const checkOnly = process.argv.includes("--check");
@@ -190,7 +193,80 @@ type Submission = {
   pluginFiles?: SubFile[];
   /** Problems detected while loading (e.g. ambiguous or missing payload). */
   loadProblems?: string[];
+  /** Root LICENSE / NOTICE detected in an unpacked skill or plugin folder. */
+  license?: LicenseInfo;
 };
+
+/**
+ * Optional license metadata for the detail page. Every key is `undefined`
+ * unless the matching root file exists, so submissions without one produce
+ * byte-identical frontmatter (serializeFrontmatter skips undefined values).
+ */
+export type LicenseInfo = {
+  licenseName?: string;
+  licenseFile?: string;
+  noticeFile?: string;
+};
+
+const LICENSE_FILE_NAMES = ["license", "license.md", "license.txt"];
+const NOTICE_FILE_NAMES = ["notice", "notice.md", "notice.txt"];
+
+// Microsoft's standard MIT LICENSE text (microsoft/repo-templates
+// shared/LICENSE, identical to this repo's root LICENSE).
+const MICROSOFT_MIT_TEXT = `MIT License
+
+Copyright (c) Microsoft Corporation.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE`;
+
+const normalizeWhitespace = (text: string) =>
+  text.replace(/^\uFEFF/, "").replace(/\s+/g, " ").trim();
+
+/**
+ * Detect-only, never fatal: report a root LICENSE / NOTICE among a
+ * submission's files. Files are neither added nor removed, so bundles are
+ * unchanged. `licenseName` is set only for an exact match of the Microsoft MIT
+ * text; any other license text yields just `licenseFile`.
+ */
+export function detectLicenseFiles(files: SkillPayloadFile[]): LicenseInfo {
+  try {
+    const root = files.filter((f) => !f.path.includes("/"));
+    const find = (names: string[]) =>
+      root.find((f) => names.includes(f.path.toLowerCase()));
+    const info: LicenseInfo = {};
+    const license = find(LICENSE_FILE_NAMES);
+    if (license) {
+      info.licenseFile = license.path;
+      if (
+        normalizeWhitespace(license.data.toString("utf8")) ===
+        normalizeWhitespace(MICROSOFT_MIT_TEXT)
+      ) {
+        info.licenseName = "MIT";
+      }
+    }
+    const notice = find(NOTICE_FILE_NAMES);
+    if (notice) info.noticeFile = notice.path;
+    return info;
+  } catch {
+    return {};
+  }
+}
 
 function quote(value: string): string {
   return /[:#\[\]{},'"]|^\s|\s$/.test(value) ? JSON.stringify(value) : value;
@@ -547,6 +623,7 @@ function processSubmission(
       description: catalog.description,
       agentDescription,
       bundle: hasBundle ? `bundles/${slug}.zip` : undefined,
+      ...sub.license,
     },
     catalog,
   );
@@ -698,6 +775,7 @@ function processPlugin(sub: Submission): ImportProblem | null {
       platforms: ["Cowork"],
       type: "plugin",
       bundle: `bundles/${slug}.zip`,
+      ...sub.license,
     },
     catalog,
   );
@@ -1052,7 +1130,9 @@ export function loadSubmission(dir: string): Submission {
     }
   } else if (hasRootSkill) {
     // Unpacked: bundle the folder contents verbatim (minus the metadata sidecar).
-    classifyPayload(sub, listFiles(dir));
+    const files = listFiles(dir);
+    classifyPayload(sub, files);
+    sub.license = detectLicenseFiles(files);
   } else if (hasRootManifest) {
     sub.kind = "plugin";
     // Only root gallery sidecars are stripped; nested files belong to the plugin.
@@ -1061,6 +1141,7 @@ export function loadSubmission(dir: string): Submission {
         !METADATA_NAMES.includes(f.path.toLowerCase()) &&
         f.path.toLowerCase() !== README_NAME,
     );
+    sub.license = detectLicenseFiles(sub.pluginFiles);
   } else {
     // A Scout automation payload: a single top-level `.json` that is NOT the
     // metadata sidecar (all root `.json` files are automations by Scout's

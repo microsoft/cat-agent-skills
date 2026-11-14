@@ -12,6 +12,8 @@ authorGithub: microsoft
 version: 1.0.1
 createdAt: 2026-10-28
 bundle: bundles/fsi-asset-management.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Six skills for institutional asset managers: RFP and DDQ response teams, investment writers, research analysts, product specialists, client service, and consultant relations. Draft first-pass RFP and DDQ answers from your approved SharePoint library with a citation on every answer; write named fund, portfolio, or investment-strategy commentary from approved narrative and current performance/attribution sources; compare two issuer filings' risk-factor, MD&A, and guidance language with metrics as supporting context; compare funds from public summary prospectuses; prepare named institutional investment-client mandate reviews with IPS/guidelines and relationship commitments; and refresh consultant questionnaires with a redline. Corporate operating-variance commentary, executive business updates, the manager's own board/forecast reviews, and standalone stakeholder Q&A are outside this plugin. Runs without a paid subscription or Finance-plugin dependency, using Microsoft 365 content, supplied documents, SEC EDGAR, and public web. No connectors are bundled. Customer connectors enrich sources, and templates change layout without expanding workflow ownership. Current firm performance, AUM, attribution, and fees come verbatim from a system-of-record connector or uploaded export; peer-product facts may come from authoritative public filings. Gaps stay visible. Applicable performance-presentation policy gates remain mandatory. Outputs cite every claim and carry marketing-material labelling where appropriate for compliance review.
 

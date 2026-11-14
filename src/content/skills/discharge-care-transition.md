@@ -13,6 +13,8 @@ version: 1.0.3
 createdAt: 2026-10-28
 updatedAt: 2026-10-28
 bundle: bundles/discharge-care-transition.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Discharge Transition Packet prepares the packet for a patient going home from hospital. It reconciles admission, inpatient and discharge medications, drafts the discharge summary and plain language patient instructions, and builds a dated follow-up checklist with owners, each cited to the record. It never carries a flagged medication through silently and never signs or sends anything.
 

@@ -13,6 +13,8 @@ version: 1.0.9
 createdAt: 2026-11-06
 updatedAt: 2026-11-06
 bundle: bundles/deliverable-review-quality-gate.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Checks a client deliverable against your firm's quality-gate criteria. It maps each assertion to supporting evidence, runs the release gates, ranks issues by severity and drafts a partner review packet that cites every finding. Outputs are drafts for a human reviewer: it never signs off, approves client issue, authorizes reliance or sends anything.
 
