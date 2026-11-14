@@ -1,6 +1,6 @@
 ---
 name: financial-statement-spreading
-description: 'Spreads and analyses published annual or interim financial statements (PDF, scanned PDF, XLSX or CSV) for any entity type, including banks and insurers: maps the three statements into a standard spread, runs tie-out checks, computes auditable ratios and delivers a formula-driven Excel workbook and HTML report with source page citations. Use for "spread this annual report", "analyse these financial statements", "calculate ROE, ROIC and leverage", "does the balance sheet reconcile". Not for credit spreads from tax returns or lender templates (use financial-statement-spread), investment advice, live prices, Power BI, or spreadsheets without financial statements (use xlsx).'
+description: 'Spreads and analyses published annual or interim financial statements (PDF, scanned PDF, XLSX or CSV) for any entity type, including banks and insurers: maps the three statements into a standard spread, runs tie-out checks, computes auditable ratios and delivers a formula-driven Excel workbook and HTML report with source page citations. Use for "spread this annual report", "analyse these financial statements", "calculate ROE, ROIC and leverage", "does the balance sheet reconcile". Do NOT use for: buy/sell/hold advice, price targets or live prices; questions about what a filing says, such as "what does note 12 say" (use doc-qa); credit spreads from tax returns or a lender''s spread template; Power BI (use powerbi); budgets, trackers or other spreadsheets that are not financial statements (use xlsx).'
 ---
 # Financial Statement Spreading & Analysis
 
@@ -18,7 +18,7 @@ The model reviews and completes the mapping; the bundled script drafts it and do
 - Live share prices or market data: use web search, and pass a price in only as a stated user assumption.
 - Power BI reports or semantic models: use powerbi instead.
 - A spreadsheet that is not a set of financial statements (budget, tracker, forecast): use xlsx instead.
-- A borrower credit spread from tax returns or private-company financials, or populating a lender's credit-spread template: use financial-statement-spread instead.
+- A borrower credit spread from tax returns or private-company financials, or populating a lender's credit-spread template: use a dedicated credit-spreading skill if one is installed; otherwise say this skill does not cover it.
 - A question about wording in a filing (e.g. "what does note 12 say?"): use doc-qa instead.
 
 ## Platform setup
@@ -75,7 +75,7 @@ Everything you need is in this file and `references/`. Do not read `finance_skil
    Always pass `--doc` (the PDF, the OCR `.txt` for a scanned report, or the XLSX/CSV the statements came from): `analyze` then checks every cited value against its page or sheet and prints `SOURCES:` before writing any file. Without `--doc`, or when a citation is wrong, names no page or sheet, or the PDF has no text layer, the workbook, report and status are marked unverified. On `ERROR:`, fix the input the message names and re-run. Never work around an error by changing or inventing figures.
 5. **Verify before delivering.**
    - The `ANALYSED:` line (company, currency, unit, period labels, INTERIM / UNAUDITED / entity flags) must match the document. If it does not, fix the input and re-run.
-   - Citations: the `SOURCES:` block must show no `NOT ON CITED PAGE` lines; fix each one (always cite the PDF page number that `draft-map` and `page-text` show, never the page number printed in the report's footer) and re-run `analyze`. `check-sources <json> --doc <file>` runs the same check on its own.
+   - Citations: the `SOURCES:` block must show no `NOT ON CITED PAGE` lines; fix each one (always cite the PDF page number that `draft-map` and `page-text` show, never the page number printed in the report's footer) and re-run `analyze`. A value you computed from printed figures (e.g. two note lines added together) is verified only when its location lists them, e.g. `"p.33 (derived: 1,234 + 567)"`, and each is printed on the cited page(s); a bare "derived" fails the check. `check-sources <json> --doc <file>` runs the same check on its own.
    - `STATUS: OK`: deliver without pausing for approval of the mapping.
    - `STATUS: UNVERIFIED` (citations not checked or not all found): fix the citations, or pass `--doc` (the OCR `.txt` for a scanned PDF), and re-run. Never deliver an unverified workbook as final; if a value truly cannot be located, say so to the user with the value and its citation.
    - `STATUS: PRELIMINARY` (any failed check): fix the likely cause (sign, mis-mapped line, missing component, unit, restatement) and re-run once. If failures remain, deliver the workbook marked preliminary and show the failed checks to the user before calling any conclusion final, with the ambiguous values.

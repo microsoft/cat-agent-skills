@@ -1228,8 +1228,9 @@ class Sheet:
         merges=f'<mergeCells count="{len(self.merges)}">'+''.join(f'<mergeCell ref="{m}"/>' for m in self.merges)+'</mergeCells>' if self.merges else ''
         cf=''.join(f'<conditionalFormatting sqref="{rng}">'+''.join(f'<cfRule type="cellIs" dxfId="{d}" priority="{p}" operator="equal"><formula>"{v}"</formula></cfRule>' for p,(v,d) in enumerate(rules,1))+'</conditionalFormatting>' for rng,rules in self.cf)
         tab=f'<tabColor rgb="FF{self.tab}"/>' if self.tab else ''
+        sel_attr='tabSelected="1" ' if selected else ''   # built outside the f-string: a backslash inside an f-string expression needs Python 3.12+
         return ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-                f'<sheetPr>{tab}<pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView showGridLines="0" {"tabSelected=\"1\" " if selected else ""}workbookViewId="0">{pane}</sheetView></sheetViews>'
+                f'<sheetPr>{tab}<pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView showGridLines="0" {sel_attr}workbookViewId="0">{pane}</sheetView></sheetViews>'
                 '<sheetFormatPr defaultRowHeight="15"/>'+(f'<cols>{cols}</cols>' if cols else '')+'<sheetData>'+''.join(out)+'</sheetData>'
                 +(f'<autoFilter ref="{self.autofilter}"/>' if self.autofilter else '')+merges+cf
                 +'<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>')
@@ -2664,7 +2665,28 @@ def check_sources(json_file,doc_file):
         return cache[pno]
     def on(pno,a): return a in nums(pno) or (float(a).is_integer() and any(a==round(x) for x in nums(pno) if abs(x-a)<1))
     where_word='sheet' if kind=='sheet' else 'page'; unit='sheet ' if kind=='sheet' else 'p.'
-    total=found=0; miss=[]; skipped=0
+    total=found=0; miss=[]; derived_ok=0
+    numrx=r'\d{1,3}(?:,\d{2})+,\d{3}(?:\.\d+)?|\d{1,3}(?:[,\u00a0\u202f]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?'
+    def derived_parts(loc):
+        """Signed components written in a derived location, e.g. 'p.33 (derived: 1,234 + 567 - 89)'; None when absent
+        or unreadable. Page and note references are not components."""
+        m_=re.search(r'derived\s*:?\s*(.*)$',loc,re.I|re.S) or re.search(r'=\s*([^=]*)$',loc,re.S)
+        expr=(m_.group(1) if m_ else loc).strip()
+        if expr.endswith(')') and expr.count(')')>expr.count('('): expr=expr[:-1]
+        expr=re.sub(r'\b(?:pp?|pages?)\.?\s*\d+(?:\s*[-\u2013,&]\s*\d+)*|\bnotes?\s*\d+[a-z]?|\b[A-Z]{1,3}\d{1,7}\b',' ',expr,flags=re.I)
+        terms=re.split(r'\s*(\+|\u2212|\u2013|(?:(?<=\s)|^)-(?=[\s\d(]))\s*',expr.strip())
+        out=[]; sign=1
+        for t in terms:
+            if not t.strip(): continue
+            if t in ('+',): sign=1; continue
+            if t in ('-','\u2212','\u2013'): sign=-1; continue
+            ns=re.findall(r'\(?(?:'+numrx+r')\)?',t)
+            if len(ns)!=1: return None
+            n=ns[0]; neg=n.startswith('(') and n.endswith(')')
+            try: val=float(re.sub(r'[,\u00a0\u202f()]','',n))
+            except ValueError: return None
+            out.append(sign*(-val if neg else val)); sign=1
+        return out if len(out)>=2 else None
     for st,lines in d.get('statements',{}).items():
         for l in lines:
             for y,v in (l.get('values') or {}).items():
@@ -2672,8 +2694,12 @@ def check_sources(json_file,doc_file):
                 src=((l.get('sources') or {}).get(y) or l.get('source') or {}); loc=str(src.get('location',''))
                 sc=re.search(r'[x×\*]\s*1[ ,.]?000(?:[ ,.]?000)?\b',loc,re.I)
                 scale=(1e6 if sc and re.search(r'000[ ,.]?000',sc.group(0)) else 1e3) if sc else 1
-                if not sc and re.search(r'\bderived\b|[+=]',loc,re.I): skipped+=1; continue   # only an explicit "(derived ...)" location is skipped, never a label
+                derived=not sc and bool(re.search(r'\bderived\b|[+=]',loc,re.I))
                 if kind=='sheet': where=cited_sheet(loc,list(byno))   # the cited sheet only; an unnamed or unknown sheet is a miss
+                elif derived:   # a derived value may draw on several cited pages
+                    # every cited page, with ranges expanded: 'p.10, p.13', 'pp.5-6', 'pages 5–7'
+                    where=sorted({pg for a_,b_ in re.findall(r'\bp(?:p|age|ages)?\.?\s*(\d+)(?:\s*[-–]\s*(\d+))?',loc,re.I)
+                                  for pg in (range(int(a_),int(b_)+1) if b_ and 0<=int(b_)-int(a_)<=10 else (int(a_),))})
                 else:
                     mm=re.search(r'p(?:age)?\.?\s*(\d+)',loc,re.I)
                     where=[int(mm.group(1))] if mm else []   # a citation without a page number cannot be verified: a miss
@@ -2681,12 +2707,25 @@ def check_sources(json_file,doc_file):
                 if l['id'] in PCT_IDS or (st=='supplementary' and l['id'].endswith(('_ratio','_pct')) and abs(v)<1): cands.add(round(abs(v)*100,4))   # 0.145 is printed as 14.5
                 total+=1
                 if any(on(p,a) for p in where for a in cands): found+=1; continue
+                if derived:
+                    # Never skipped: a derived value is verified only when the components written in its location add up
+                    # to it and each component is printed on a cited page; otherwise it is reported like any other miss.
+                    parts=derived_parts(loc)
+                    if parts and where and abs(abs(sum(parts))-abs(v))<=max(0.001,1e-9*abs(v)) and all(any(on(p,round(abs(c),4)) for p in where) for c in parts):
+                        found+=1; derived_ok+=1; continue
+                    why=('its components are not written in the location' if not parts else
+                         'the location names no page' if not where else
+                         f'its components add up to {sum(parts):,.4g}, not {abs(v):,}' if abs(abs(sum(parts))-abs(v))>max(0.001,1e-9*abs(v)) else
+                         'not every component is printed on the cited page(s)')
+                    miss.append(f"  DERIVED VALUE NOT REPRODUCED: {l['id']}[{y}] = {v:,} cited {loc!r} - {why}; "
+                                "write the printed components in the location, e.g. 'p.33 (derived: 1,234 + 567)', or cite the page where the figure itself is printed")
+                    continue
                 alt=[q for q in (list(byno) if kind=='sheet' else sorted(byno)) if q not in where and any(a in nums(q) for a in cands)][:4]
                 miss.append(f"  NOT ON CITED {where_word.upper()}: {l['id']}[{y}] = {v:,} cited {loc!r}"+(f' (names no {where_word} of the document)' if not where else '')
                             +(f" - appears on {unit}{(', '+unit).join(map(str,alt))}" if alt else ' - not found in the document'))
-    print(f'SOURCES: {found} of {total} values found on their cited {where_word} ({skipped} derived values skipped)'+('' if miss else ' - all citations verified'))
+    print(f'SOURCES: {found} of {total} values found on their cited {where_word}'+(f" (incl. {derived_ok} derived value{'s' if derived_ok!=1 else ''} reproduced from their cited components)" if derived_ok else '')+('' if miss else ' - all citations verified'))
     for x in miss[:40]: print(x)
-    if miss: print('Fix each citation (for spreadsheets cite the sheet name; for PDFs use the page number shown by page-text, not the one printed on the page), or mark derived values "(derived ...)" in the location, then re-run analyze.')
+    if miss: print('Fix each citation (for spreadsheets cite the sheet name; for PDFs use the page number shown by page-text, not the one printed on the page); for a value computed from printed figures, write them in the location, e.g. "p.33 (derived: 1,234 + 567)". Then re-run analyze.')
     return {'verified':not miss,'checked':total,'found':found,'missing':len(miss),
             'reason':'' if not miss else f'{len(miss)} of {total} cited values were not found on their cited {where_word}'}
 

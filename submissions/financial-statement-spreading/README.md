@@ -141,7 +141,7 @@ by a document question-answering skill.
 
 ## For maintainers
 
-Current version: **1.0.0** (see [CHANGELOG.md](CHANGELOG.md)).
+Current version: **1.0.0**.
 
 The script is a single file with no third-party imports. To confirm the runtime
 and the version from an extracted skill directory:
