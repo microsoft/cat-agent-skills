@@ -13,6 +13,8 @@ version: 1.0.5
 createdAt: 2026-09-05
 updatedAt: 2026-11-06
 bundle: bundles/product-content-catalog-enrichment.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Product Content Enrichment turns supplier item sheets into draft product records for a channel. It maps fields to your taxonomy, validates GTIN check digits, scores completeness, checks marketing claims against your approved claim library and drafts copy with a review packet. It never publishes, approves a claim or changes the taxonomy.
 

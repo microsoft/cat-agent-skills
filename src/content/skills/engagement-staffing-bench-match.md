@@ -13,6 +13,8 @@ version: 1.1.14
 createdAt: 2026-11-06
 updatedAt: 2026-11-06
 bundle: bundles/engagement-staffing-bench-match.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Builds a ranked staffing slate for a signed engagement from the SOW, bench roster, availability, rates and conflicts register. Engines score fit and refuse conflicted or unavailable candidates, citing the rule. Draft-first: it drafts a partner recommendation and never approves, allocates or assigns staff, changes rates or overrides independence.
 

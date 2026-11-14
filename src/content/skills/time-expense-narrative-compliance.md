@@ -13,6 +13,8 @@ version: 1.0.13
 createdAt: 2026-11-06
 updatedAt: 2026-11-06
 bundle: bundles/time-expense-narrative-compliance.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Drafts and checks time-entry narratives: gathers cited calendar and document activity, drafts grounded narratives, recommends phase and task codes, checks client billing guidelines and missing time, and builds a draft pre-bill exception packet. Draft-first: it never submits time, approves a pre-bill or sends anything without explicit confirmation. Expense reports and receipts are out of scope.
 

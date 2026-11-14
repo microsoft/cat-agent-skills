@@ -13,6 +13,8 @@ version: 1.0.4
 createdAt: 2026-09-05
 updatedAt: 2026-11-06
 bundle: bundles/customer-service-order-support.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Customer Service Order Support works retail order inquiries such as where is my order and delivered but not received. It classifies the inquiry, assembles order, carrier and loyalty records, flags contradictions and drafts a grounded reply or a tier 2 escalation packet. It never issues goodwill credit, changes payment details or sends replies.
 
