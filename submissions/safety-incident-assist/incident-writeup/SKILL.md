@@ -1,7 +1,7 @@
 ---
 name: incident-writeup
 description: Revalidates and recomputes every terminal v2 hop, then renders a null-aware local Markdown draft and blank RCA template. Use for "prepare an evidence-grounded incident draft", "draft the incident summary", "write up the incident", "give me the RCA template", or "prepare the OSHA writeup". Do NOT use for intake, classification or routing — use incident-intake, severity-recordability or routing-notify. No operational actions; EHS REVIEW REQUIRED.
-license: Proprietary
+license: MIT
 metadata:
   version: "2.0.0-rc.7"
   author: Microsoft Manufacturing Skills

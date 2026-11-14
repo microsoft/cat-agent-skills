@@ -3,6 +3,7 @@ name: business-case-composer
 description: Builds a customer-specific business-case draft connecting the problem, cost of inaction, proposed solution, investment, and supported value. Use when a customer-specific deal or initiative needs a decision-ready qualitative or quantitative business case, such as "draft a business case", "build the value case", or "justify this initiative". DO NOT use for generic product pitches or price and discount quotes.
 metadata:
   displayname: Business Case Composer
+license: MIT
 ---
 
 # Business Case Composer

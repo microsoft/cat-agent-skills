@@ -1,7 +1,7 @@
 ---
 name: activity-pull
 description: 'Gathers engagement-scoped calendar metadata, document activity and timesheet rows into a cited activity packet, honoring the config/signal-sources.json in this skill (mailbox sources off unless the firm enables them). Use it first in the time-entry chain, before narratives are drafted, when the user says "pull my activity for this matter", "gather my week for time entry", "what did I work on for this engagement?", "collect my calendar and document activity for billing" or "build my activity packet for this period". Do NOT use for writing narratives (use narrative-draft), finding missing or unrecorded time (use guideline-check), general calendar questions such as "what is on my calendar today" (use the built-in calendar), or expense reports and receipts (out of scope: time entries only).'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/activity_pull.py on user-supplied raw exports for one engagement (calendar, document activity, workplan and timesheet CSVs plus the engagement-letter extract); reads the config/signal-sources.json, contracts/ and references/ in this skill folder and writes activity.json locally. No connectors, network access or outbound actions; mailbox sources are off by default.'
 metadata:
   version: "1.0.13"

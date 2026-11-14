@@ -1,6 +1,7 @@
 ---
 name: consultant-database-refresh
 description: Refresh a recurring consultant questionnaire from approved content and a prior submission, showing prior versus proposed answers and aging-figure flags. Use for "refresh our eVestment profile", "update the Mercer questionnaire", "what changed since our Callan submission", "redline this manager profile", or "roll forward last year's answers". Do NOT use without a prior submission — use rfp-ddq-response-draft instead; for client mandate reviews, use institutional-client-review-prep instead; for investment commentary, use investment-commentary-draft instead; for fund comparisons, use peer-product-intelligence instead; for workbook formatting, use the built-in xlsx instead.
+license: MIT
 ---
 
 ## Quick Start

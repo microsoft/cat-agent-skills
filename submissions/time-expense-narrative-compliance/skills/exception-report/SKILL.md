@@ -1,7 +1,7 @@
 ---
 name: exception-report
 description: 'Builds a cited DRAFT pre-bill exception packet from guideline-check for internal billing review (rejects, holds, privacy exclusions and missing time). Handles every submit, approve or write-off request only to refuse it; nothing is sent without explicit confirmation. Use for "show me the pre-bill exceptions", "what needs fixing before billing?", "build the WIP cleanup list", "summarize rejected narratives", "draft the pre-bill packet", "approve the pre-bill", "submit my time" or "write off these hours". Do NOT use for gathering activity (use activity-pull), drafting narratives (use narrative-draft), task codes (use code-map), an entry''s compliance or missing time (use guideline-check), client invoices or emails (use the built-in email), or expense reports and receipts (out of scope).'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/exception_report.py on governed.json from guideline-check and activity.json from activity-pull; reads the config/signal-sources.json, contracts/ and references/ in this skill folder and writes a local Markdown draft (exception-report.md). No connectors, network access or send capability.'
 metadata:
   version: "1.0.13"

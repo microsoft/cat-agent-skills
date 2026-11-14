@@ -1,7 +1,7 @@
 ---
 name: routing-notify
 description: Computes proposed investigators and unsent recipients from validated local classification, history and governance. Use for "propose unsent incident recipients", "who investigates this", "route this incident", "who do we notify", or "start the OSHA clock" (only to explain the blocked clock). Do NOT use for classification or terminal drafting — use severity-recordability or incident-writeup. Never sends, files or starts a clock; EHS REVIEW REQUIRED.
-license: Proprietary
+license: MIT
 metadata:
   version: "2.0.0-rc.7"
   author: Microsoft Manufacturing Skills

@@ -5,6 +5,7 @@ description: |
 metadata:
   category: research
   icon: BookOpen
+license: MIT
 ---
 
 # Research Project Brief

@@ -11,6 +11,7 @@ description: >-
   ledger or subledger reconciliation, or interpreting accounting standards.
 metadata:
   icon: DocumentBulletList
+license: MIT
 ---
 
 # Audit Evidence and Workpaper Package

@@ -1,7 +1,7 @@
 ---
 name: incident-intake
 description: Preserves cited authorized user-supplied incident files, including real incidents, as v2 inputs for human-reviewed drafts only. Use for "preserve conflicting incident accounts", "intake this incident", "process this safety report", "extract incident facts", or "intake this near miss". Do NOT use for classification, routing or terminal drafting — use severity-recordability, routing-notify or incident-writeup respectively. No live retrieval or official determinations; EHS REVIEW REQUIRED.
-license: Proprietary
+license: MIT
 metadata:
   version: "2.0.0-rc.7"
   author: Microsoft Manufacturing Skills

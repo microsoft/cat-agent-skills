@@ -3,6 +3,7 @@ name: competitive-strategy
 description: Builds customer-specific competitive positioning with supported differentiators, honest tradeoffs, objection responses, and claims to avoid. Use when a customer use case needs supported competitive positioning, comparison, objection handling, or discovery hypotheses, such as "position against this competitor", "answer this competitive objection", "compare options for this customer", "which competitive claims are safe to use", "build a battlecard for this deal", or "how do we beat this competitor here". DO NOT use for business-case or ROI modeling, a full meeting brief, generic product pitches, or unsupported competitor claims.
 metadata:
   displayname: Competitive Strategy
+license: MIT
 ---
 
 # Competitive Strategy

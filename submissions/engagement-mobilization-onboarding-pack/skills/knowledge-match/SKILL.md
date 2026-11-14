@@ -1,7 +1,7 @@
 ---
 name: knowledge-match
 description: "Matches released Scenario 01 Closeout knowledge to the engagement with the deterministic knowledge_match engine and reports only engine output (never invents assets, scores or summaries, and never publishes, sends or shares knowledge). Use when the user asks \"what prior knowledge can the joiner use?\", \"which reusable assets apply here?\", \"match closeout lessons to this engagement\", \"which closeout assets were excluded and why?\" or \"build the prior-knowledge digest\". Do NOT use for harvesting, sanitising or releasing Closeout knowledge or judging whether it is safe to reuse or share externally (use engagement-closeout-knowledge-harvest), deciding whether the joiner may see an item (use wall-check), starting a run (use engagement-retrieve) or drafting the pack (use pack-draft)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run scripts/knowledge_match.py. Reads user-supplied files: scope.json, the raw engagement inputs and staffing JSON, the Scenario 01 Closeout governed JSON and the ethical-wall register CSV. No connectors required; writes matched.json only."
 metadata:
   version: "1.0.7"

@@ -14,6 +14,7 @@ description: >-
   ic-memo instead.
 metadata:
   icon: Building
+license: MIT
 ---
 
 # Company Profile Pack

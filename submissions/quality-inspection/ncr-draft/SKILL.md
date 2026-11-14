@@ -1,7 +1,7 @@
 ---
 name: ncr-draft
 description: Writes a cited draft nonconformance report and inspection summary in Markdown (.md) from graded engine evidence. Use for "draft the NCR", "write up the nonconformance", "inspection summary please", "prepare the review report", or "draft supplier notification text". Do NOT use for intake — use spec-ingest; tolerance math — use tolerance-check; grading — use defect-grade; CAPA plans and DOCX/PDF conversion are outside this release. Never sends, files or executes actions.
-license: Proprietary
+license: MIT
 metadata:
   version: "3.1"
   author: Microsoft Manufacturing Skills

@@ -14,6 +14,7 @@ metadata:
   displayName: Draft minutes and resolutions
   category: writing
   icon: Scales
+license: MIT
 ---
 
 # Draft minutes and resolutions

@@ -1,7 +1,7 @@
 ---
 name: role-intake
 description: "Reads a signed engagement, SOW role extract, mobilisation note or staffing request into the ps.engagement-staffing-bench-match.v1 staffing contract (engagement, client affiliates and roles, each field cited) as the first step of every staffing slate. Use when the user says \"new engagement signed\", \"staff this SOW\", \"mobilise this project\", \"start a staffing slate\" or \"extract the roles from this SOW\". Do NOT use for contract-terms or commercial summaries (contract review is outside this plugin), loading the bench or conflicts register (use bench-query), scoring or ranking candidates (use fit-score), clearing conflicts (use constraint-check), drafting the slate (use slate-draft) or tool-script requests outside engagement staffing (use tool-scripts)."
-license: Proprietary
+license: MIT
 compatibility: "Reads user-supplied files (staffing request email, SOW role extract, rate-card excerpt) with the file-read tool; Python 3 optional to build the JSON payload. No bundled engine and no connectors required. Read-only: never writes to a resource or staffing system."
 metadata:
   version: "1.1.14"

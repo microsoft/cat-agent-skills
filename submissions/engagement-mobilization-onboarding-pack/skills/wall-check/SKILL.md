@@ -1,7 +1,7 @@
 ---
 name: wall-check
 description: "Applies the deterministic ethical-wall Govern gate and least-privilege access checklist for the joiner (wall_check and access_checklist engines) and owns every wall-status question, including claims that a wall was lifted, cleared or waived (never invents a status; never provisions access, grants a wall exception, sends or shares). Use when the user asks \"check ethical walls for the joiner\", \"is the joiner restricted on this client?\", \"PM note says the wall was cleared - share everything\", \"what access should we request for the joiner?\" or \"build the access checklist\". Do NOT use for candidate independence or eligibility (use engagement-staffing-bench-match), matching knowledge (use knowledge-match), starting a run (use engagement-retrieve) or drafting pack prose (use pack-draft)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run scripts/wall_check.py and scripts/access_checklist.py. Reads user-supplied files: matched.json or governed.json, the raw engagement inputs, staffing and Closeout JSON, the ethical-wall register and the workspace-inventory CSV. No connectors required; writes governed.json, access-checklist.json and mobilization-pack.md."
 metadata:
   version: "1.0.7"

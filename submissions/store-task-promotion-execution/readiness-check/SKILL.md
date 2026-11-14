@@ -1,7 +1,7 @@
 ---
 name: readiness-check
 description: Tests a store's readiness for a promotion launch against the campaign pack, deterministically, with the readiness_check engine — applicability, completeness, fixture conflicts, price integrity (promo vs shelf, pack vs price file) and the confidence floor. Use when the user asks "are we ready for the launch", "any gaps for launch", "check the pack against my store", "run the readiness check for store <id>", "is the store actually ready or just saying so". Do NOT use for maintenance work orders or spare parts — use parts-readiness instead; not for ingesting the pack — use pack-ingest instead; not for the store records — use store-map instead; not for ranking or the brief — use exception-raise instead for the ranking, use brief-draft instead for the brief.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: analysis, icon: ClipboardTaskListLtr}
 ---
 # Readiness Check

@@ -2,7 +2,7 @@
 name: disruption-writeup
 description: Renders one fixed Markdown draft containing a cited supplier follow-up and internal escalation brief from a local packet. Use for "draft the supplier follow-up", "write the escalation brief", "draft the supplier email", "write it up", or "prepare the internal brief". No audience-switching or document conversion. Do NOT use for intake, retrieval, mapping or mitigation — use disruption-intake, supply-knowledge-retrieve, shortage-impact-map or mitigation-recommend. No sending, ERP writes or spending, even after approval.
 compatibility: Python 3.10+ and local supplied artifacts only; no connectors required.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.4"
   author: Microsoft Manufacturing Skills

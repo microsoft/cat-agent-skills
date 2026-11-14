@@ -11,6 +11,7 @@ description: >-
   trading multiples, or non-valuation spreadsheets (use xlsx).
 metadata:
   icon: CalculatorMultiple
+license: MIT
 ---
 
 # DCF Valuation

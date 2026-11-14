@@ -5,6 +5,7 @@ description: |
 metadata:
   category: communication
   icon: ClipboardTaskListLtr
+license: MIT
 ---
 
 # Policy Change Pack for Education

@@ -3,6 +3,7 @@ name: draft-customer-reply
 description: Drafts a reviewable customer-facing support reply grounded in known facts, applicable policy, and the customer's actual needs. Use when a ticket, incident, issue, request, or complaint needs a reviewable customer-facing reply grounded in the known facts, applicable policy, customer need, and communication context. Triggers include "draft a reply," "respond to the customer," "write a status update," and requests to adjust tone, length, or language. Do not use to research an unresolved answer or to send automatically.
 metadata:
   displayname: Draft Customer Reply
+license: MIT
 ---
 
 # Draft Customer Reply

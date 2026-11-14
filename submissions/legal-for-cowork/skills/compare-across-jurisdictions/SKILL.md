@@ -16,6 +16,7 @@ metadata:
   displayName: Compare across jurisdictions
   category: research
   icon: Scales
+license: MIT
 ---
 
 # Compare across jurisdictions

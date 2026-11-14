@@ -5,6 +5,7 @@ description: |
 metadata:
   category: productivity
   icon: Rocket
+license: MIT
 ---
 
 # AI Rollout and Role-Based Training

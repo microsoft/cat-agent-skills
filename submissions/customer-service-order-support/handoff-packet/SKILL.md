@@ -2,7 +2,7 @@
 name: handoff-packet
 description: |
   Builds the structured tier-2 escalation packet for a retail customer-service run that cannot resolve - intent and confidence, cited context, contradiction flags with the carrier scan, everything already checked, the recommended next step, goodwill as a proposal, plus an interim customer reply draft. Use on any low-confidence, contradicted, ungrounded or money-boundary run: "escalate this", "hand off to tier 2", "build the escalation packet", "we can't resolve this", "below confidence, hand it over". Do NOT use for resolvable runs - use resolution-draft instead; not for work-order handovers - use work-order-writeup instead; not for return cases - use case-packet instead.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0.4"
   author: Microsoft Retail & CPG Skills

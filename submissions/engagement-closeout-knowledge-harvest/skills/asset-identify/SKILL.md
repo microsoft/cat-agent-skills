@@ -1,7 +1,7 @@
 ---
 name: asset-identify
 description: 'Scores candidate reusable assets and checks final-deliverable completeness with the deterministic asset_identify engine, after artifact-assemble has produced engagement.json. Use when the user asks "what can we reuse from this?", "find reusable assets", "shortlist closeout assets", "is the final deliverable package complete?", "score the reuse value" or "build the final deliverable index". Do NOT use for loading sources (use artifact-assemble), clustering lessons (use lesson-cluster), deciding if an asset is safe to share (use sanitize-check; a score is never clearance), drafting the record (use knowledge-record) or reviewing a live deliverable (use the Deliverable Quality Gate plugin); it never clears, publishes or sends.'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/asset_identify.py on the engagement.json payload from artifact-assemble; writes asset_shortlist.json locally. No connectors, network access or outbound actions.'
 metadata:
   version: "1.0.5"

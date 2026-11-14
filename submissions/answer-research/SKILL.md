@@ -3,6 +3,7 @@ name: answer-research
 description: Researches a bounded, source-backed answer to a support, policy, eligibility, or troubleshooting question, with citations and explicit evidence gaps. Use when a support, policy, eligibility, informational, or troubleshooting question needs a bounded, source-backed investigation that reconciles authority, applicability, currency, contradictions, and source coverage. Triggers include "research this answer," "what does the guidance support," "reconcile these sources," and "does this customer appear eligible." Do not use merely to compose a reply after the answer is established.
 metadata:
   displayname: Answer Research
+license: MIT
 ---
 
 # Answer Research

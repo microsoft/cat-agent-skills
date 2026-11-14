@@ -1,7 +1,7 @@
 ---
 name: eligibility-check
 description: 'Determines return eligibility against the configured policy and surfaces fraud signals deterministically with the eligibility_check engine - the explicit Govern step of this plugin. Use after reason-classify, or on "is this returnable", "do they qualify for a refund", "check eligibility", "any fraud signals", "can we accept this return". Do NOT use to retrieve policy text - use policy-retrieve instead; not to start a case - use return-intake; not to draft the packet or customer response - use case-packet.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.4", author: Microsoft Retail & CPG Skills, category: analysis, icon: ShieldCheckmark}
 ---
 # Eligibility Check (Govern)

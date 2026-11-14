@@ -11,6 +11,7 @@ description: >-
   forecast itself, or general meeting prep.
 metadata:
   icon: ChartMultiple
+license: MIT
 ---
 
 # Forecast / Business Review Prep

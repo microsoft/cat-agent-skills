@@ -3,6 +3,7 @@ name: meeting-prep
 description: Prepares a seller for one upcoming customer conversation such as what to learn, say, prove, and ask, with an evidence-backed next move and a private editable brief. Use when asked to "prep my customer call", "brief me before my sales meeting", "prepare for this buyer demo", "plan my renewal conversation", or "build talking points for this opportunity meeting". Do NOT use for past-meeting recaps, broad account plans, pipeline audits, seller coaching, standalone pitch decks, or automatic outreach.
 metadata:
   displayname: Meeting Prep
+license: MIT
 ---
 
 # Meeting Prep for upcoming customer conversations

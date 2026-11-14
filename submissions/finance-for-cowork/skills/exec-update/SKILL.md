@@ -10,6 +10,7 @@ description: >-
   analysis that does not exist yet.
 metadata:
   icon: MailDataBar
+license: MIT
 ---
 
 # Executive Update

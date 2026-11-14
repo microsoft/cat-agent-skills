@@ -2,6 +2,7 @@
 name: reg-change-triage
 description: Triages a new or changed regulatory instrument into a decision-ready brief covering what changed, date ladder, affected parties, obligations cited to primary source, candidate policies, gaps, and actions. Applicability is proposed with reasoning, never decided. Use when the user says "what does this new rule mean for us", "triage this SR letter", "summarize the impact of this regulatory change", "when do we have to comply", or "which policies does this hit". Do NOT use for enforcement actions, settlements, or consent orders (use enforcement-action-review), one policy against one rule (use policy-gap-analysis), request trackers (use exam-request-response), a vendor SOC 2 (use vendor-risk-review), workbook formatting (use built-in xlsx), or sending email (use built-in outlook-email).
 metadata: {icon: DocumentSearch}
+license: MIT
 ---
 
 ## Scope

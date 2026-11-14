@@ -3,6 +3,7 @@ name: deal-catchup
 description: Summarizes what changed and why across a scoped deal set, separating genuine customer movement from record housekeeping. Use to report what changed and why across a scoped set of deals since a stated baseline, such as "which deals slipped", "what moved on my top deals", or "what changed while I was out". Needs a defined scope and current deal evidence; a baseline improves the comparison, but a current-state result is available without one. DO NOT use for ranking what to work on next or a single deal's full standing review.
 metadata:
   displayname: Deal Catch-up
+license: MIT
 ---
 
 # Deal Catch-up

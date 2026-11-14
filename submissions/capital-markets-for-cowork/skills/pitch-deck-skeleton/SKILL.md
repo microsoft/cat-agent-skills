@@ -15,6 +15,7 @@ description: >-
   merger-model instead.
 metadata:
   icon: SlideLayout
+license: MIT
 ---
 
 # Pitch Deck Skeleton

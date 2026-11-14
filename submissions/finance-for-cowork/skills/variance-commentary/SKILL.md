@@ -13,6 +13,7 @@ description: >-
   forecast changes not tied to actuals.
 metadata:
   icon: DocumentFlowchart
+license: MIT
 ---
 
 # Variance Commentary

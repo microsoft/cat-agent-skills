@@ -5,6 +5,7 @@ description: |
 metadata:
   category: analysis
   icon: PeopleTeam
+license: MIT
 ---
 
 # Discussion Insights for Education

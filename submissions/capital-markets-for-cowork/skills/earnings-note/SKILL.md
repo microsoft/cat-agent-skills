@@ -12,6 +12,7 @@ description: >-
   instead; or building a valuation model.
 metadata:
   icon: ArrowTrendingText
+license: MIT
 ---
 
 # Earnings Note

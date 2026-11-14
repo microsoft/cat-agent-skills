@@ -16,6 +16,7 @@ metadata:
   displayName: Summarize legal matters
   category: productivity
   icon: Scales
+license: MIT
 ---
 
 # Summarize legal matters

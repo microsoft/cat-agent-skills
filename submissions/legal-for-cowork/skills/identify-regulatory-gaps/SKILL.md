@@ -16,6 +16,7 @@ metadata:
   displayName: Identify regulatory gaps
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Identify regulatory gaps

@@ -11,6 +11,7 @@ description: >-
   and forecasting.
 metadata:
   icon: MoneyHand
+license: MIT
 ---
 
 # LBO Model

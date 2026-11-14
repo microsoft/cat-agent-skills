@@ -3,6 +3,7 @@ name: customer-engagement-and-deal-risk-insights
 description: Explains customer engagement and deal momentum, identifying evidence-backed risks, blockers, their owners, and meaningful seller actions. Use this skill when a seller asks "which deals need attention", "what changed with a customer", "what is blocking progress", whether a deal has lost momentum, who owns the blocker, or what they can do next. Support both portfolio questions and questions about one deal. Do not use to predict win or close probability, infer deal risk from low activity alone, claim authoritative pipeline risk without live CRM, or take unapproved external action.
 metadata:
   displayname: Customer Engagement and Deal Risk Insights
+license: MIT
 ---
 
 # Customer Engagement and Deal Risk Insights

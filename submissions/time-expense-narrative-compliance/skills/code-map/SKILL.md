@@ -1,7 +1,7 @@
 ---
 name: code-map
 description: 'Maps drafted time entries to the client phase and task codes with the deterministic code_map engine and flags submitted-code mismatches with citations; it recommends codes only. Use it after narrative-draft and before guideline-check when the user asks "what code should this entry use?", "map my time to billing codes", "is this task code wrong?", "check my phase and task codes" or "recommend phase codes for my entries". Do NOT use for gathering activity (use activity-pull), narrative wording (use narrative-draft), overall compliance or rejection risk (use guideline-check), recoding entries in the billing or time system (never; submit and approve requests go to exception-report), or expense reports and receipts (out of scope: time entries only).'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/code_map.py on drafted.json from narrative-draft and activity.json from activity-pull; reads the config/signal-sources.json, contracts/ and references/ (task-phase-codes.md) in this skill folder and writes coded.json locally. No connectors, network access or outbound actions.'
 metadata:
   version: "1.0.13"

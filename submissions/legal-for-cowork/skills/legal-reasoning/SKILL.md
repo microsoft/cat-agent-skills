@@ -15,6 +15,7 @@ metadata:
   displayName: Legal reasoning
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Legal reasoning

@@ -16,6 +16,7 @@ metadata:
   displayName: Analyze related contracts
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Analyze related contracts
