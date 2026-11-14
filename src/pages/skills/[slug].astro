@@ -86,6 +86,18 @@ const meta: Array<[string, string, string?]> = [];
 if (d.version) meta.push(["Version", d.version]);
 if (created) meta.push(["Added", created]);
 if (updated && updated !== created) meta.push(["Updated", updated]);
+// License / notice rows appear only when the submission ships those files.
+const submissionUrl = `https://github.com/microsoft/cat-agent-skills/blob/main/submissions/${skill.id}`;
+if (d.licenseFile) {
+  meta.push([
+    "License",
+    d.licenseName ?? "See LICENSE",
+    `${submissionUrl}/${encodeURIComponent(d.licenseFile)}`,
+  ]);
+}
+if (d.noticeFile) {
+  meta.push(["Notice", "View", `${submissionUrl}/${encodeURIComponent(d.noticeFile)}`]);
+}
 
 // Keep the contributor byline in the gallery, with a GitHub avatar when known.
 const authorLogin = normalizeLogin(d.authorGithub);
