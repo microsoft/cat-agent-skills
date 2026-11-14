@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: Search Documentation",
+  "description": "Search the published documentation links rendered on the selected documentation index page.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}

@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: List Destination Activities",
+  "description": "Read the bounded published activities shown on the destination page.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}

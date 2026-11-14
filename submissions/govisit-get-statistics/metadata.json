@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: Get Statistics",
+  "description": "Use when an agent needs exact GoVisit catalog coverage counts for the physical World or a selected Destination, with observation dates and provenance.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}

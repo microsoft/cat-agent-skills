@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: Get Documentation Page",
+  "description": "Read bounded structured content from the selected published article.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}

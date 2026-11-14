@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: Search Places",
+  "description": "Search GoVisit places by name or traveler intent, optionally constrained by country, destination, or proximity.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}

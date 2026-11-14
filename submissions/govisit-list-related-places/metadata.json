@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: List Related Places",
+  "description": "Find bounded, page-local related place cards using optional published-field filters.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}

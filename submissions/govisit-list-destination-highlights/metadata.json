@@ -1,0 +1,16 @@
+{
+  "name": "GoVisit: List Destination Highlights",
+  "description": "Read the bounded published highlights shown on the destination page.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "govisit",
+    "travel",
+    "agent-skills",
+    "destinations"
+  ],
+  "author": "GoVisit.ai",
+  "authorUrl": "https://govisit.ai/en/docs/developers/agent-skills/overview",
+  "category": "agent-development"
+}
