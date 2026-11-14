@@ -10,6 +10,7 @@ author: Microsoft
 authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
 createdAt: 2026-10-31
+bundle: bundles/stakeholder-and-decision-map.zip
 ---
 # Stakeholder & Decision Map
 
