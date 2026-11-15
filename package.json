@@ -18,7 +18,7 @@
     "ratings:fetch": "tsx scripts/fetch-ratings.ts"
   },
   "dependencies": {
-    "astro": "^7.3.3"
+    "astro": "^7.4.7"
   },
   "devDependencies": {
     "@fontsource/dm-sans": "^5.2.8",
