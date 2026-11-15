@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.5",
+  "id": "ed3c20cc-770a-463f-9696-be3803743d6c",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Product Content Enrichment",
+    "full": "Product Content Enrichment for Cowork"
+  },
+  "description": {
+    "short": "Product content: normalise supplier data, score completeness, check claims",
+    "full": "Product Content Enrichment turns supplier item sheets into draft product records for a channel. It maps fields to your taxonomy, validates GTIN check digits, scores completeness, checks marketing claims against your approved claim library and drafts copy with a review packet. It never publishes, approves a claim or changes the taxonomy.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#8764B8",
+  "agentSkills": [
+    {
+      "folder": "source-ingest"
+    },
+    {
+      "folder": "attribute-normalize"
+    },
+    {
+      "folder": "completeness-score"
+    },
+    {
+      "folder": "claim-check"
+    },
+    {
+      "folder": "content-draft"
+    }
+  ]
+}
