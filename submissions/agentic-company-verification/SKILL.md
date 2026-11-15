@@ -1,5 +1,5 @@
 ---
-name: companies-house-verification
+name: agentic-company-verification
 description: Verify UK companies using the Companies House API. Use when the user asks whether a company exists, wants its registration (company) number, status (active/dissolved), incorporation date, SIC codes, registered office, directors/officers, persons with significant control, charges, insolvency or filing history. Triggers - "verify company", "does X Ltd exist", "Companies House", "company number", "who are the directors", "SIC code", "is company active", "create this company in Dynamics 365 Dataverse account table".
 ---
 
