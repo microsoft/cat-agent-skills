@@ -1,0 +1,10 @@
+{
+  "name": "Prompt to Set Agenda",
+  "description": "Every weekday at 9:00 AM, flags newly set up meetings in the next 3 days that have no agenda, saves one draft email per meeting asking the organizer for an agenda and pre-read, and sends a run summary to Teams and email.",
+  "tags": ["automation", "meetings", "agenda", "calendar", "outlook", "teams", "productivity"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.0.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-11-05"
+}

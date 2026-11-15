@@ -1,0 +1,11 @@
+{
+  "name": "Competitive Strategy",
+  "description": "Build customer-specific competitive positioning with supported differentiators, tradeoffs, and objection responses.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "competitive-strategy", "positioning"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "createdAt": "2026-10-31"
+}

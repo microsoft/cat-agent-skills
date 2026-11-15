@@ -1,0 +1,1361 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ps.time-expense-narrative-compliance.v1",
+  "title": "Time & Expense Narrative Compliance contract v1",
+  "description": "Chains activity-pull -> narrative-draft -> code-map -> guideline-check (Govern) -> exception-report. Every hop carries data, confidence, provenance and citations. Existing narratives stay unchanged while optional suggested_rewrites are separately labeled; compliance flags may include no_linked_evidence and recommended_task_code may be BH910; purpose may be null; optional organizer, attendees, deliverable, excluded_activity_ids and provenance.excluded_signals / signal_policy record signal-privacy exclusions (client-billing-guidelines.md #10.1). v1.0.4 adds optional engagement.engagement_manager, provenance.timekeeper_scope (requester, mode self|team, engagement-manager team_view confirmation, withheld rows; client-billing-guidelines.md #12.1) and provenance.period_check, draft.covered_activity_ids, and embedded_instruction markers on signals, entries and missing-time items; flagged text is withheld from drafts, rewrites and missing-time listings (#11.1, #11.2). Every engine validates every field it reads (signal_policy.validate_packet): a wrong JSON type, a missing required field or an unrecognised enum value is an input error with no output, never coerced. Engine results are never taken on trust (client-billing-guidelines.md #13): guideline_check recomputes every code_mapping and holds an entry whose supplied mapping disagrees (code_mapping_mismatch; the recomputed mapping is written with supplied_mapping_rejected: true), and exception_report re-runs the guideline rules and refuses governed data whose verdicts, flags, missing-time items or summary figures are understated or contradict the line items. This schema is enforced in full: every engine walks it (contract_check.py, shipped byte-identically with each engine) over every input - required fields, JSON types, closed enums, patterns, nested objects and arrays - and a violation is an input error with no output. Engagement identity is fixed by activity_pull in the required provenance.engagement_identity (client-billing-guidelines.md #13.3): every later engine refuses a packet whose engagement header differs from it, so packets written before 1.0.4 must be re-run from activity_pull. A signal or time entry whose source (connector:<name>:<engagement>) or engagement_id names another engagement is excluded (provenance.excluded_signals, provenance.excluded_entries) and never rendered. Exclusion reasons and citations are printed only in the engines' own wording, and draft and rewrite review reasons are screened as free text (#13.2).",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "engagement",
+    "period",
+    "activity_signals",
+    "time_entries",
+    "provenance",
+    "signal_config",
+    "code_structure",
+    "guidelines"
+  ],
+  "definitions": {
+    "text": {
+      "type": "string"
+    },
+    "text_or_null": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "\\S",
+      "description": "A non-empty identifier."
+    },
+    "record_id": {
+      "type": "string",
+      "format": "record-id",
+      "description": "A record ID (client-billing-guidelines.md #13.9): 1 to 64 ASCII letters or digits in segments joined by single - _ or . separators. An ID is a key, never prose: no space, punctuation or other character."
+    },
+    "record_id_or_null": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "record-id",
+      "description": "A record ID (client-billing-guidelines.md #13.9): 1 to 64 ASCII letters or digits in segments joined by single - _ or . separators. An ID is a key, never prose: no space, punctuation or other character. Null when absent."
+    },
+    "record_id_or_withheld": {
+      "type": "string",
+      "format": "record-id-or-withheld",
+      "description": "A record ID (client-billing-guidelines.md #13.9): 1 to 64 ASCII letters or digits in segments joined by single - _ or . separators. An ID is a key, never prose: no space, punctuation or other character. An excluded ID that the engines screened out is the exact withheld marker (#11.3)."
+    },
+    "record_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/record_id"
+      }
+    },
+    "record_ids_or_withheld": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/record_id_or_withheld"
+      }
+    },
+    "strings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "withheld_fields": {
+      "type": "array",
+      "description": "Placeholder ledger (client-billing-guidelines.md #11.4): the exact relative path of every withheld marker in this record, written by the engine that placed it. A marker without its own ledger path, or a path without its marker, is refused.",
+      "items": {
+        "type": "string",
+        "pattern": "^(?:/(?:[a-z_]{1,40}|[0-9]+|@member[0-9]+|@key[0-9a-f]{16}))+$"
+      }
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "YYYY-MM-DD; a real calendar date (format is enforced at every stage).",
+      "format": "date"
+    },
+    "date_or_null": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "format": "date"
+    },
+    "date_or_multiple": {
+      "type": "string",
+      "pattern": "^(?:[0-9]{4}-[0-9]{2}-[0-9]{2}|multiple)$",
+      "format": "date-or-multiple",
+      "description": "A real YYYY-MM-DD date, or 'multiple' for a rolled-up missing-time exception."
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,6})?(?:Z|[+-][0-9]{2}:[0-9]{2})$",
+      "format": "date-time",
+      "description": "ISO-8601 date-time with seconds and an offset, as the engines write it; a real instant, checked at every stage."
+    },
+    "hours": {
+      "type": "number",
+      "minimum": 0
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "source": {
+      "type": "string",
+      "pattern": "^(engine|skill|connector):",
+      "description": "Origin label. A third ':'-separated segment is an engagement scope: a signal or time entry whose scope names another engagement is excluded (client-billing-guidelines.md #13.3). A self-declared source is never proof of origin (#13.2)."
+    },
+    "engine": {
+      "type": "string",
+      "pattern": "^engine:[a-z_]+$"
+    },
+    "period": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/definitions/date_or_null"
+        },
+        "end": {
+          "$ref": "#/definitions/date_or_null"
+        }
+      }
+    },
+    "flag": {
+      "type": "object",
+      "required": [
+        "flag",
+        "severity",
+        "detail",
+        "confidence",
+        "citations",
+        "source"
+      ],
+      "properties": {
+        "flag": {
+          "enum": [
+            "disabled_source_signal",
+            "minimum_detail",
+            "required_elements_missing",
+            "block_billing",
+            "prohibited_term",
+            "vague_phrase",
+            "embedded_instruction",
+            "code_mapping_mismatch",
+            "non_billable_activity",
+            "rounding_increment",
+            "date_mismatch",
+            "no_linked_evidence",
+            "evidence_overrun",
+            "cross_person_link",
+            "unmapped_code",
+            "submitted_code_mismatch",
+            "duplicate_meeting",
+            "confidence_floor"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "needs_review",
+            "hold_for_review",
+            "reject"
+          ]
+        },
+        "detail": {
+          "$ref": "#/definitions/text"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidence"
+        },
+        "citations": {
+          "$ref": "#/definitions/strings"
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        }
+      }
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/flag"
+      }
+    },
+    "dates_or_null": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/definitions/date"
+      },
+      "description": "[first, last] ISO dates, or null when there are none"
+    }
+  },
+  "properties": {
+    "contract_version": {
+      "const": "ps.time-expense-narrative-compliance.v1"
+    },
+    "engagement": {
+      "type": "object",
+      "required": [
+        "engagement_id",
+        "client_name",
+        "matter_name",
+        "billing_guidelines_id",
+        "engagement_manager",
+        "source",
+        "confidence",
+        "citations"
+      ],
+      "properties": {
+        "engagement_id": {
+          "$ref": "#/definitions/record_id"
+        },
+        "client_name": {
+          "$ref": "#/definitions/text"
+        },
+        "matter_name": {
+          "$ref": "#/definitions/text"
+        },
+        "billing_guidelines_id": {
+          "$ref": "#/definitions/record_id_or_null"
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidence"
+        },
+        "citations": {
+          "$ref": "#/definitions/strings"
+        },
+        "engagement_manager": {
+          "$ref": "#/definitions/text_or_null",
+          "description": "Engagement manager recorded in the engagement letter; the only requester who can be granted the team view (client-billing-guidelines.md #12.1)."
+        }
+      }
+    },
+    "period": {
+      "$ref": "#/definitions/period",
+      "description": "Required, never null. start and end are both present: a YYYY-MM-DD date, or null for an open end (activity_pull without --period-start/--period-end). A missing or null period, or a start after its end, is an input error at every engine."
+    },
+    "signal_config": {
+      "type": "object",
+      "required": [
+        "sources"
+      ],
+      "properties": {
+        "config_version": {
+          "$ref": "#/definitions/text"
+        },
+        "purpose": {
+          "$ref": "#/definitions/text"
+        },
+        "citation": {
+          "$ref": "#/definitions/text"
+        },
+        "default_posture": {
+          "$ref": "#/definitions/text"
+        },
+        "enforcement": {
+          "$ref": "#/definitions/text"
+        },
+        "redaction": {
+          "type": "object",
+          "properties": {
+            "default": {
+              "$ref": "#/definitions/text"
+            },
+            "store_document_body": {
+              "type": "boolean"
+            },
+            "store_raw_mail": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "default",
+            "store_document_body",
+            "store_raw_mail"
+          ]
+        },
+        "sources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "enabled"
+            ],
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "content": {
+                "$ref": "#/definitions/text"
+              },
+              "scope": {
+                "$ref": "#/definitions/text"
+              },
+              "enablement_requires": {
+                "$ref": "#/definitions/strings"
+              },
+              "lookback_days_default": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "requires_engagement_id": {
+                "type": "boolean"
+              },
+              "requires_engagement_workspace": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "activity_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "activity_id",
+          "person",
+          "date",
+          "activity_class",
+          "duration_hours",
+          "subject",
+          "purpose",
+          "billable_signal",
+          "source",
+          "confidence",
+          "citations",
+          "deliverable",
+          "meeting_id"
+        ],
+        "properties": {
+          "activity_id": {
+            "$ref": "#/definitions/record_id"
+          },
+          "person": {
+            "$ref": "#/definitions/id"
+          },
+          "date": {
+            "$ref": "#/definitions/date"
+          },
+          "activity_class": {
+            "$ref": "#/definitions/text"
+          },
+          "duration_hours": {
+            "$ref": "#/definitions/hours"
+          },
+          "subject": {
+            "$ref": "#/definitions/text"
+          },
+          "purpose": {
+            "$ref": "#/definitions/text_or_null",
+            "description": "Client-facing purpose from a controlled source (engagement workplan); null when none is recorded - never invented."
+          },
+          "deliverable": {
+            "$ref": "#/definitions/text_or_null"
+          },
+          "meeting_id": {
+            "$ref": "#/definitions/record_id_or_null"
+          },
+          "organizer": {
+            "$ref": "#/definitions/text_or_null",
+            "description": "Meeting organizer from calendar metadata; drives Led vs Attended."
+          },
+          "attendees": {
+            "$ref": "#/definitions/strings"
+          },
+          "file_name": {
+            "$ref": "#/definitions/text"
+          },
+          "billable_signal": {
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/definitions/source"
+          },
+          "confidence": {
+            "$ref": "#/definitions/confidence"
+          },
+          "citations": {
+            "$ref": "#/definitions/strings"
+          },
+          "embedded_instruction": {
+            "type": "boolean",
+            "description": "True when free text in the signal trips the embedded-instruction tripwire or is too long to screen; the text is never drafted from or displayed (client-billing-guidelines.md #11.1, #11.2)."
+          },
+          "needs_review": {
+            "type": "boolean"
+          },
+          "review_reason": {
+            "$ref": "#/definitions/text"
+          },
+          "engagement_id": {
+            "$ref": "#/definitions/record_id",
+            "description": "Optional engagement scope. A signal naming another engagement is excluded and never rendered (client-billing-guidelines.md #13.3)."
+          },
+          "withheld_fields": {
+            "$ref": "#/definitions/withheld_fields"
+          }
+        }
+      }
+    },
+    "time_entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "entry_id",
+          "person",
+          "date",
+          "duration_hours",
+          "source",
+          "confidence",
+          "citations",
+          "narrative",
+          "activity_ids",
+          "excluded_activity_ids",
+          "cross_person_activity_ids",
+          "submitted_phase_code",
+          "submitted_task_code"
+        ],
+        "properties": {
+          "entry_id": {
+            "$ref": "#/definitions/record_id"
+          },
+          "person": {
+            "$ref": "#/definitions/id"
+          },
+          "date": {
+            "$ref": "#/definitions/date"
+          },
+          "duration_hours": {
+            "$ref": "#/definitions/hours"
+          },
+          "narrative": {
+            "$ref": "#/definitions/text"
+          },
+          "notes": {
+            "$ref": "#/definitions/text_or_null"
+          },
+          "activity_ids": {
+            "$ref": "#/definitions/record_ids"
+          },
+          "submitted_phase_code": {
+            "$ref": "#/definitions/record_id_or_null"
+          },
+          "submitted_task_code": {
+            "$ref": "#/definitions/record_id_or_null"
+          },
+          "draft": {
+            "type": "object",
+            "description": "narrative_draft output: narrative, status (engine_generated_from_activity, needs_review, needs_review_insufficient_detail, needs_review_embedded_instruction, needs_activity_evidence, existing_timesheet_narrative), review_reasons, linked_activity_ids, covered_activity_ids (every linked activity the draft or rewrites describe), excluded_activity_ids, optional suggested_rewrites[] (status withheld_embedded_instruction when guideline_check withholds one), confidence, source, citations.",
+            "required": [
+              "narrative",
+              "status",
+              "needs_review",
+              "confidence",
+              "citations",
+              "review_reasons",
+              "word_count",
+              "sufficiency",
+              "linked_activity_ids",
+              "covered_activity_ids",
+              "excluded_activity_ids",
+              "source"
+            ],
+            "properties": {
+              "narrative": {
+                "$ref": "#/definitions/text"
+              },
+              "status": {
+                "enum": [
+                  "engine_generated_from_activity",
+                  "existing_timesheet_narrative",
+                  "needs_review",
+                  "needs_review_insufficient_detail",
+                  "needs_review_embedded_instruction",
+                  "needs_activity_evidence"
+                ]
+              },
+              "needs_review": {
+                "type": "boolean"
+              },
+              "review_reasons": {
+                "$ref": "#/definitions/strings",
+                "description": "Engine-written reasons. Screened by guideline_check like any free text (client-billing-guidelines.md #11.1); a flagged reason is replaced by the withheld marker and the entry is held."
+              },
+              "word_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sufficiency": {
+                "$ref": "#/definitions/text"
+              },
+              "linked_activity_ids": {
+                "$ref": "#/definitions/record_ids"
+              },
+              "covered_activity_ids": {
+                "$ref": "#/definitions/record_ids"
+              },
+              "excluded_activity_ids": {
+                "$ref": "#/definitions/record_ids_or_withheld"
+              },
+              "suggested_rewrites": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "narrative",
+                    "status",
+                    "review_reasons",
+                    "linked_activity_ids",
+                    "confidence",
+                    "source",
+                    "citations"
+                  ],
+                  "properties": {
+                    "narrative": {
+                      "$ref": "#/definitions/text"
+                    },
+                    "status": {
+                      "enum": [
+                        "engine_generated_from_activity",
+                        "needs_review",
+                        "needs_review_insufficient_detail",
+                        "withheld_embedded_instruction"
+                      ]
+                    },
+                    "review_reasons": {
+                      "$ref": "#/definitions/strings"
+                    },
+                    "linked_activity_ids": {
+                      "$ref": "#/definitions/record_ids"
+                    },
+                    "confidence": {
+                      "$ref": "#/definitions/confidence"
+                    },
+                    "source": {
+                      "$ref": "#/definitions/source"
+                    },
+                    "citations": {
+                      "$ref": "#/definitions/strings"
+                    }
+                  }
+                }
+              },
+              "confidence": {
+                "$ref": "#/definitions/confidence"
+              },
+              "source": {
+                "$ref": "#/definitions/source"
+              },
+              "citations": {
+                "$ref": "#/definitions/strings"
+              }
+            }
+          },
+          "code_mapping": {
+            "type": "object",
+            "required": [
+              "recommended_phase_code",
+              "recommended_task_code",
+              "basis",
+              "confidence",
+              "recommended_label",
+              "submitted_phase_code",
+              "submitted_task_code",
+              "flags",
+              "source",
+              "citations"
+            ],
+            "properties": {
+              "recommended_phase_code": {
+                "$ref": "#/definitions/record_id"
+              },
+              "recommended_task_code": {
+                "$ref": "#/definitions/record_id"
+              },
+              "recommended_label": {
+                "$ref": "#/definitions/text_or_null"
+              },
+              "submitted_phase_code": {
+                "$ref": "#/definitions/record_id_or_null"
+              },
+              "submitted_task_code": {
+                "$ref": "#/definitions/record_id_or_null"
+              },
+              "basis": {
+                "enum": [
+                  "direct_activity_class",
+                  "conflicting_activity_classes",
+                  "partially_mapped_activity_classes",
+                  "unknown_activity_class",
+                  "keyword_inference",
+                  "unmapped"
+                ]
+              },
+              "flags": {
+                "$ref": "#/definitions/flags"
+              },
+              "confidence": {
+                "$ref": "#/definitions/confidence"
+              },
+              "source": {
+                "$ref": "#/definitions/source"
+              },
+              "citations": {
+                "$ref": "#/definitions/strings"
+              },
+              "supplied_mapping_rejected": {
+                "type": "boolean"
+              }
+            }
+          },
+          "compliance": {
+            "type": "object",
+            "required": [
+              "verdict",
+              "confidence",
+              "flags",
+              "required_elements",
+              "evidence_hours_same_date",
+              "source",
+              "citations"
+            ],
+            "properties": {
+              "verdict": {
+                "enum": [
+                  "compliant",
+                  "needs_review",
+                  "hold_for_review",
+                  "reject"
+                ]
+              },
+              "flags": {
+                "$ref": "#/definitions/flags"
+              },
+              "required_elements": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "actor": {
+                    "type": "boolean"
+                  },
+                  "subject": {
+                    "type": "boolean"
+                  },
+                  "purpose": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "actor",
+                  "subject",
+                  "purpose"
+                ]
+              },
+              "evidence_hours_same_date": {
+                "$ref": "#/definitions/hours"
+              },
+              "confidence": {
+                "$ref": "#/definitions/confidence"
+              },
+              "source": {
+                "$ref": "#/definitions/source"
+              },
+              "citations": {
+                "$ref": "#/definitions/strings"
+              }
+            }
+          },
+          "source": {
+            "$ref": "#/definitions/source"
+          },
+          "confidence": {
+            "$ref": "#/definitions/confidence"
+          },
+          "citations": {
+            "$ref": "#/definitions/strings"
+          },
+          "excluded_activity_ids": {
+            "$ref": "#/definitions/record_ids_or_withheld",
+            "description": "Links removed because the signal came from a disabled, unknown or unresolvable source (client-billing-guidelines.md #10.1). Always present once activity-pull has run (empty when none); every copy of an entry's link state is reconciled exactly at every later stage (client-billing-guidelines.md #13.4)."
+          },
+          "cross_person_activity_ids": {
+            "$ref": "#/definitions/record_ids",
+            "description": "Links to an activity recorded for another timekeeper; never evidence, and the entry is held (client-billing-guidelines.md #12.2). Always present once activity-pull has run (empty when none); every copy of an entry's link state is reconciled exactly at every later stage (client-billing-guidelines.md #13.4)."
+          },
+          "embedded_instruction": {
+            "type": "boolean",
+            "description": "True when the existing narrative or notes trip the embedded-instruction tripwire or are too long to screen (client-billing-guidelines.md #11.1)."
+          },
+          "engagement_id": {
+            "$ref": "#/definitions/record_id",
+            "description": "Optional engagement scope. An entry naming another engagement is excluded and recorded in provenance.excluded_entries (client-billing-guidelines.md #13.3)."
+          },
+          "withheld_fields": {
+            "$ref": "#/definitions/withheld_fields"
+          }
+        }
+      }
+    },
+    "code_structure": {
+      "type": "object",
+      "properties": {
+        "code_set_id": {
+          "$ref": "#/definitions/record_id"
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidence"
+        },
+        "citations": {
+          "$ref": "#/definitions/strings"
+        }
+      },
+      "required": [
+        "code_set_id",
+        "source",
+        "confidence",
+        "citations"
+      ]
+    },
+    "guidelines": {
+      "type": "object",
+      "properties": {
+        "guidelines_id": {
+          "$ref": "#/definitions/record_id_or_null"
+        },
+        "summary": {
+          "$ref": "#/definitions/text"
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidence"
+        },
+        "citations": {
+          "$ref": "#/definitions/strings"
+        }
+      },
+      "required": [
+        "guidelines_id",
+        "summary",
+        "source",
+        "confidence",
+        "citations"
+      ]
+    },
+    "missing_time_report": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "Unrecorded billable activity; a subject that trips the tripwire is replaced by the withheld marker and the item carries embedded_instruction: true (client-billing-guidelines.md #8.1, #11.2).",
+        "required": [
+          "activity_id",
+          "person",
+          "date",
+          "duration_hours",
+          "activity_class",
+          "subject",
+          "finding",
+          "source",
+          "confidence",
+          "citations"
+        ],
+        "properties": {
+          "activity_id": {
+            "$ref": "#/definitions/record_id"
+          },
+          "person": {
+            "$ref": "#/definitions/id"
+          },
+          "date": {
+            "$ref": "#/definitions/date"
+          },
+          "duration_hours": {
+            "$ref": "#/definitions/hours"
+          },
+          "activity_class": {
+            "$ref": "#/definitions/text"
+          },
+          "subject": {
+            "$ref": "#/definitions/text"
+          },
+          "finding": {
+            "$ref": "#/definitions/text"
+          },
+          "source": {
+            "$ref": "#/definitions/source"
+          },
+          "confidence": {
+            "$ref": "#/definitions/confidence"
+          },
+          "citations": {
+            "$ref": "#/definitions/strings"
+          },
+          "embedded_instruction": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "exception_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "verdict",
+          "flags",
+          "entry_id",
+          "person",
+          "date",
+          "duration_hours",
+          "recommended_action",
+          "source",
+          "confidence",
+          "citations"
+        ],
+        "properties": {
+          "entry_id": {
+            "$ref": "#/definitions/record_id_or_null"
+          },
+          "person": {
+            "$ref": "#/definitions/text"
+          },
+          "date": {
+            "$ref": "#/definitions/date_or_multiple"
+          },
+          "duration_hours": {
+            "$ref": "#/definitions/hours"
+          },
+          "verdict": {
+            "enum": [
+              "compliant",
+              "needs_review",
+              "hold_for_review",
+              "reject",
+              "missing_time"
+            ]
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "disabled_source_signal",
+                "minimum_detail",
+                "required_elements_missing",
+                "block_billing",
+                "prohibited_term",
+                "vague_phrase",
+                "embedded_instruction",
+                "code_mapping_mismatch",
+                "non_billable_activity",
+                "rounding_increment",
+                "date_mismatch",
+                "no_linked_evidence",
+                "evidence_overrun",
+                "cross_person_link",
+                "unmapped_code",
+                "submitted_code_mismatch",
+                "duplicate_meeting",
+                "confidence_floor",
+                "missing_time"
+              ]
+            }
+          },
+          "recommended_action": {
+            "enum": [
+              "rewrite_or_remove_before_prebill",
+              "billing_coordinator_review",
+              "review_activity_and_create_draft_entries_if_billable"
+            ]
+          },
+          "excluded_activity_ids": {
+            "$ref": "#/definitions/record_ids_or_withheld"
+          },
+          "source": {
+            "$ref": "#/definitions/source"
+          },
+          "confidence": {
+            "$ref": "#/definitions/confidence"
+          },
+          "citations": {
+            "$ref": "#/definitions/strings"
+          }
+        }
+      }
+    },
+    "prebill_summary": {
+      "type": "object",
+      "required": [
+        "total_entries",
+        "total_hours",
+        "verdict_counts",
+        "missing_time_hours",
+        "period",
+        "exception_count",
+        "excluded_signal_ids",
+        "source",
+        "confidence",
+        "citations"
+      ],
+      "properties": {
+        "period": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "start",
+            "end"
+          ],
+          "properties": {
+            "start": {
+              "$ref": "#/definitions/date_or_null"
+            },
+            "end": {
+              "$ref": "#/definitions/date_or_null"
+            }
+          }
+        },
+        "total_entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_hours": {
+          "$ref": "#/definitions/hours"
+        },
+        "verdict_counts": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "compliant",
+              "needs_review",
+              "hold_for_review",
+              "reject"
+            ]
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "missing_time_hours": {
+          "$ref": "#/definitions/hours"
+        },
+        "exception_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_signal_ids": {
+          "$ref": "#/definitions/record_ids_or_withheld"
+        },
+        "source": {
+          "$ref": "#/definitions/source"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidence"
+        },
+        "citations": {
+          "$ref": "#/definitions/strings"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "engagement_identity",
+        "engines",
+        "generated_at",
+        "sources_read",
+        "excluded_signals",
+        "signal_policy",
+        "skipped_sources",
+        "out_of_scope_rows",
+        "timekeeper_scope",
+        "period_check"
+      ],
+      "properties": {
+        "engines": {
+          "$ref": "#/definitions/strings"
+        },
+        "withheld_fields": {
+          "$ref": "#/definitions/withheld_fields"
+        },
+        "generated_at": {
+          "$ref": "#/definitions/timestamp"
+        },
+        "demo_scenario": {
+          "$ref": "#/definitions/text"
+        },
+        "sources_read": {
+          "$ref": "#/definitions/strings"
+        },
+        "engagement_identity": {
+          "type": "object",
+          "description": "Recorded once by activity_pull from the engagement letter. Every later engine refuses a packet whose engagement header (engagement_id, client_name, matter_name, engagement_manager) differs from it (client-billing-guidelines.md #13.3).",
+          "required": [
+            "engagement_id",
+            "client_name",
+            "matter_name",
+            "engagement_manager",
+            "recorded_by",
+            "citations"
+          ],
+          "properties": {
+            "engagement_id": {
+              "$ref": "#/definitions/record_id"
+            },
+            "client_name": {
+              "$ref": "#/definitions/text"
+            },
+            "matter_name": {
+              "$ref": "#/definitions/text"
+            },
+            "engagement_manager": {
+              "$ref": "#/definitions/text_or_null"
+            },
+            "recorded_by": {
+              "const": "engine:activity_pull"
+            },
+            "citations": {
+              "$ref": "#/definitions/strings"
+            }
+          }
+        },
+        "excluded_signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "reason and citations are the signal policy's own wording, reconciled exactly by exception_report before they are printed (client-billing-guidelines.md #13.2).",
+            "required": [
+              "activity_id",
+              "reason",
+              "excluded_by",
+              "citations",
+              "source",
+              "policy_key"
+            ],
+            "properties": {
+              "activity_id": {
+                "$ref": "#/definitions/record_id_or_withheld"
+              },
+              "source": {
+                "$ref": "#/definitions/text_or_null"
+              },
+              "policy_key": {
+                "enum": [
+                  "calendar",
+                  "document_activity",
+                  "mailbox_metadata",
+                  "mailbox_content",
+                  null
+                ]
+              },
+              "reason": {
+                "$ref": "#/definitions/text"
+              },
+              "excluded_by": {
+                "$ref": "#/definitions/engine"
+              },
+              "citations": {
+                "$ref": "#/definitions/strings"
+              }
+            }
+          }
+        },
+        "excluded_entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "Time entries whose engagement scope names another engagement; dropped and never rendered (client-billing-guidelines.md #13.3).",
+            "required": [
+              "entry_id",
+              "reason",
+              "excluded_by",
+              "citations"
+            ],
+            "properties": {
+              "entry_id": {
+                "$ref": "#/definitions/record_id_or_withheld"
+              },
+              "reason": {
+                "enum": [
+                  "engagement scope names another engagement; excluded and never rendered"
+                ]
+              },
+              "excluded_by": {
+                "$ref": "#/definitions/engine"
+              },
+              "citations": {
+                "$ref": "#/definitions/strings"
+              }
+            }
+          }
+        },
+        "signal_policy": {
+          "type": "object",
+          "properties": {
+            "enabled_sources": {
+              "$ref": "#/definitions/strings"
+            },
+            "disabled_sources": {
+              "$ref": "#/definitions/strings"
+            },
+            "policies_applied": {
+              "$ref": "#/definitions/strings"
+            },
+            "rule": {
+              "const": "most_restrictive_wins"
+            },
+            "engine": {
+              "$ref": "#/definitions/text"
+            },
+            "citations": {
+              "$ref": "#/definitions/strings"
+            }
+          },
+          "required": [
+            "enabled_sources",
+            "disabled_sources",
+            "policies_applied",
+            "rule",
+            "engine",
+            "citations"
+          ]
+        },
+        "skipped_sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "policy_key": {
+                "enum": [
+                  "calendar",
+                  "document_activity",
+                  "mailbox_metadata",
+                  "mailbox_content",
+                  null
+                ]
+              },
+              "file": {
+                "$ref": "#/definitions/text"
+              },
+              "reason": {
+                "$ref": "#/definitions/text"
+              },
+              "citations": {
+                "$ref": "#/definitions/strings"
+              }
+            },
+            "required": [
+              "policy_key",
+              "file",
+              "reason",
+              "citations"
+            ]
+          }
+        },
+        "out_of_scope_rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "activity_id": {
+                "$ref": "#/definitions/record_id"
+              },
+              "reason": {
+                "$ref": "#/definitions/text"
+              },
+              "citations": {
+                "$ref": "#/definitions/strings"
+              }
+            },
+            "required": [
+              "activity_id",
+              "reason",
+              "citations"
+            ]
+          }
+        },
+        "timekeeper_scope": {
+          "type": "object",
+          "description": "Recorded by activity_pull and enforced by every engine: only the requester's rows unless a confirmed engagement-manager team view is recorded (client-billing-guidelines.md #12.1).",
+          "required": [
+            "mode",
+            "requester",
+            "people",
+            "team_view",
+            "withheld",
+            "citations"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "self",
+                "team"
+              ]
+            },
+            "requester": {
+              "$ref": "#/definitions/text_or_null"
+            },
+            "people": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "team_view": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Set only by activity_pull. confirmed must be a JSON boolean (a string such as \"true\" or \"yes\" is an input error, never a confirmation); role and confirmation are closed values.",
+              "required": [
+                "confirmed",
+                "role",
+                "confirmation",
+                "verified_against",
+                "citations"
+              ],
+              "properties": {
+                "confirmed": {
+                  "type": "boolean"
+                },
+                "role": {
+                  "enum": [
+                    "engagement_manager"
+                  ]
+                },
+                "confirmation": {
+                  "type": "string",
+                  "pattern": "^engagement-manager:[A-Za-z0-9._-]+$"
+                },
+                "verified_against": {
+                  "$ref": "#/definitions/text"
+                },
+                "citations": {
+                  "$ref": "#/definitions/strings"
+                }
+              }
+            },
+            "withheld": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "properties": {
+                "requested": {
+                  "type": [
+                    "string",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "reason": {
+                  "$ref": "#/definitions/text"
+                },
+                "citations": {
+                  "$ref": "#/definitions/strings"
+                }
+              },
+              "required": [
+                "requested",
+                "reason",
+                "citations"
+              ]
+            },
+            "withheld_by_engines": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "engine": {
+                    "$ref": "#/definitions/text"
+                  },
+                  "rows_withheld": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "reason": {
+                    "$ref": "#/definitions/text"
+                  },
+                  "citations": {
+                    "$ref": "#/definitions/strings"
+                  }
+                },
+                "required": [
+                  "engine",
+                  "rows_withheld",
+                  "reason",
+                  "citations"
+                ]
+              }
+            },
+            "citations": {
+              "$ref": "#/definitions/strings"
+            }
+          }
+        },
+        "period_check": {
+          "type": "object",
+          "description": "Whether the requested period holds any data (status data_found, no_data_in_period or no_period_requested) with a warning naming the dates that do.",
+          "required": [
+            "status",
+            "warning"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "data_found",
+                "no_data_in_period",
+                "no_period_requested"
+              ]
+            },
+            "warning": {
+              "$ref": "#/definitions/text_or_null"
+            },
+            "requested": {
+              "$ref": "#/definitions/period"
+            },
+            "data_dates_in_period": {
+              "$ref": "#/definitions/dates_or_null"
+            },
+            "data_dates_available": {
+              "$ref": "#/definitions/dates_or_null"
+            }
+          }
+        }
+      }
+    }
+  }
+}

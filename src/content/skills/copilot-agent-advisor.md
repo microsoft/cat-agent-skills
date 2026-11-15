@@ -3,6 +3,7 @@ name: Copilot Agent Advisor
 description: "Tells you which Microsoft 365 / Copilot Studio agent option fits your scenario — use M365 Copilot as-is, build a standard (declarative) agent, or build a custom (custom engine) agent — and which Copilot Studio harness (GitHub Copilot, standard, or Copilot chat) to build on."
 agentDescription: "Recommends which Microsoft 365 / Copilot Studio agent option fits a described\nscenario — using Microsoft 365 Copilot as-is, building a standard (declarative)\nagent, or building a custom (custom engine) agent — and which Copilot Studio\nharness to build on (GitHub Copilot, standard, or Copilot chat). Use when\nthe user asks \"which agent type should I build\", \"declarative vs custom engine\nagent\", \"standard agent or custom agent\", \"should I use Copilot Studio or\nMicrosoft 365 Copilot\", \"which Copilot Studio harness\", \"help me choose a\nCopilot agent\", or describes an agent scenario and wants a recommendation.\nDo NOT use to actually build, deploy, configure, or write code for an agent,\nand do NOT use for non-agent product comparisons — this skill only advises on\nthe choice. For general capability questions about Microsoft 365 Copilot,\nanswer directly instead of invoking this skill.\n"
 platforms: [Cowork, Copilot Studio, Scout]
+category: agent-development
 tags: [copilot-studio, agents, decision-support, architecture, advisor]
 author: Sandra Boucenna
 authorUrl: "https://github.com/SandraBcna"
