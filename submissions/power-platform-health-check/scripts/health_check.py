@@ -182,7 +182,8 @@ def check_component(c, sol, comp):
 
 
 def check_dependencies(c, sol_id, name):
-    data, err = c.try_get("RetrieveMissingDependencies(SolutionUniqueName='%s')" % name)
+    safe_name = name.replace("'", "''")
+    data, err = c.try_get("RetrieveMissingDependencies(SolutionUniqueName='%s')" % safe_name)
     if data is None:
         add(name, "Dependencies", name, sol_id, "WARN", "Could not evaluate: %s" % err)
         return
