@@ -12,7 +12,7 @@
 1. **Get an API key**: https://developer.company-information.service.gov.uk/ → register → *Create an application* → add a **REST** key.
 2. **Create the connector**: make.powerapps.com → *Custom connectors* → *New custom connector* → *Import an OpenAPI file* → `assets/companies-house-connector.swagger.json`.
    On *Security*, authentication type **Basic authentication** (parameter labels: "API key" / "Password (leave blank)"). Create it.
-3. **Create a connection** (*Test* tab → *New connection*): username = your API key; password = leave blank. If the portal insists on a password, instead set authentication to *No authentication* and on the *Definition* tab add the policy template **Set HTTP header**: name `Authorization`, value `Basic <base64 of "APIKEY:">`.
+3. **Create a connection** (*Test* tab → *New connection*): username = your API key; password = leave blank (or a placeholder if the UI requires one). Avoid hard-coding an Authorization header or API key into the connector definition.
    Test `GetCompanyProfile` with `00445790` → expect `company_status: active`.
 4. **Add the tools to the agent**: Copilot Studio → agent → *Tools* → *Add a tool* → *Connector* → *Companies House Verification*; add all operations with your connection.
 5. **Add the skill**: download the skill bundle from the gallery and add it under the agent's *Skills*. If your tenant has no Skills option, paste the body of `SKILL.md` into the agent's *Instructions*.
