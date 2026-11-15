@@ -1,7 +1,7 @@
 {
   "name": "Power Platform Health Check",
   "description": "Read-only health check of a Power Platform environment: verifies every component in your solutions (tables, flows, plug-ins, web resources, apps, environment variables, connection references) and missing dependencies.",
-  "platforms": ["Cowork"],
+  "platforms": ["power-platform"],
   "tags": ["power-platform", "dataverse", "health-check", "solutions", "alm", "validation"],
   "author": "Suneetha Akula",
   "version": "1.0.0",
