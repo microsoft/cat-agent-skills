@@ -1,0 +1,12 @@
+{
+  "name": "Legal",
+  "description": "Understand, organize, review, and prepare legal documents.",
+  "platforms": ["Cowork"],
+  "category": "legal",
+  "builtByMicrosoft": true,
+  "tags": ["legal", "contracts", "document-review"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.10",
+  "createdAt": "2026-10-31"
+}

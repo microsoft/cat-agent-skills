@@ -1,0 +1,884 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ps.engagement-closeout-knowledge-harvest.v1",
+  "title": "Engagement Closeout & Knowledge Harvest contract v1",
+  "description": "Chains artifact-assemble -> asset-identify -> lesson-cluster -> sanitize-check (Govern) -> knowledge-record. Carries data + confidence + provenance + citations on every hop. The terminal knowledge_record shape is stable for downstream credential-case-study-assembly consumption. Inputs are validated strictly (unknown members, duplicate keys or IDs, wrong types and engine-owned sections are refused) and every free-text field is screened for embedded instructions; withheld values are replaced by a placeholder bound to a screening_holds entry. Later stages re-derive the whole document from the screened input it carries and refuse any edit.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "engagement",
+    "artifacts",
+    "candidate_assets",
+    "decision_log",
+    "retrospective_inputs",
+    "confidentiality_terms"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "ps.engagement-closeout-knowledge-harvest.v1"
+    },
+    "run_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ$"
+        },
+        "demo_scenario": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        }
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "required": [
+        "engagement_id",
+        "title",
+        "client_name",
+        "client_descriptor",
+        "confidence",
+        "source",
+        "citation"
+      ],
+      "properties": {
+        "engagement_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "client_name": {
+          "type": "string"
+        },
+        "client_descriptor": {
+          "type": "string"
+        },
+        "sector": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "client_headcount": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "go_live_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "third_party_products": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^(skill|connector):[a-z0-9][a-z0-9_.-]{0,63}$"
+        },
+        "citation": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "title",
+          "artifact_type",
+          "required",
+          "status",
+          "owner",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "artifact_type": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "complete",
+              "draft",
+              "missing",
+              "superseded"
+            ]
+          },
+          "owner": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(skill|connector):[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "citation": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "candidate_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "asset_id",
+          "title",
+          "asset_type",
+          "description",
+          "generalisability",
+          "effort_to_recreate",
+          "shelf_life_months",
+          "client_dependency",
+          "confidentiality_markers",
+          "aggregation_tokens",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "asset_type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "generalisability": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "effort_to_recreate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "shelf_life_months": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 600
+          },
+          "client_dependency": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "confidentiality_markers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            }
+          },
+          "aggregation_tokens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            }
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(skill|connector):[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "citation": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "decision_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "decision_id",
+          "summary",
+          "impact",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "decision_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(skill|connector):[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "citation": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "retrospective_inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "input_id",
+          "speaker_role",
+          "text",
+          "named_people",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "input_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "text": {
+            "type": "string"
+          },
+          "speaker_role": {
+            "type": "string"
+          },
+          "named_people": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(skill|connector):[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "citation": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "confidentiality_terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "term_id",
+          "summary",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "term_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(skill|connector):[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "citation": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deliverable_index": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "reusable_asset_shortlist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "asset_id",
+          "reuse_score",
+          "recommendation",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "reuse_score": {
+            "type": "number"
+          },
+          "recommendation": {
+            "enum": [
+              "shortlist",
+              "retain_for_internal_reference",
+              "archive_with_engagement"
+            ]
+          },
+          "reuse_rationale": {
+            "type": "string"
+          },
+          "clearance_state": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(engine|skill|connector):"
+          },
+          "citation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "engines",
+        "generated_at",
+        "demo_scenario",
+        "input_escalations",
+        "policies",
+        "screening"
+      ],
+      "properties": {
+        "engines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generated_at": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ$"
+        },
+        "demo_scenario": {
+          "type": "string"
+        },
+        "input_escalations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "screening": {
+          "type": "string"
+        }
+      }
+    },
+    "lesson_clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "cluster_id",
+          "category",
+          "priority_score",
+          "review_candidate",
+          "evidence_ids",
+          "evidence_citations",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "cluster_id": {
+            "type": "string",
+            "pattern": "^LC-\\d{3}$"
+          },
+          "category": {
+            "enum": [
+              "delivery-governance",
+              "adoption-change",
+              "data-integration",
+              "commercial-staffing",
+              "unclassified"
+            ]
+          },
+          "priority_score": {
+            "type": "integer"
+          },
+          "review_candidate": {
+            "type": "boolean"
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+            }
+          },
+          "evidence_citations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "citation_withheld": {
+            "type": "boolean"
+          },
+          "summary_seed": {
+            "type": "string"
+          },
+          "sensitivity_signals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "evidence_id",
+                "signal",
+                "citation"
+              ],
+              "properties": {
+                "evidence_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+                },
+                "signal": {
+                  "enum": [
+                    "named_person",
+                    "named_person_blame",
+                    "embedded_instruction"
+                  ]
+                },
+                "citation": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "rewrite_required": {
+            "type": "boolean"
+          },
+          "drafting_guidance": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^engine:"
+          },
+          "citation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "sanitisation_report": {
+      "type": "object",
+      "required": [
+        "overall_disposition",
+        "findings",
+        "governance_note",
+        "source",
+        "citation"
+      ],
+      "properties": {
+        "overall_disposition": {
+          "enum": [
+            "HOLD",
+            "RELEASE_CANDIDATE_SANITISED"
+          ]
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "target_type",
+              "target_id",
+              "disposition",
+              "clearance_state",
+              "reason",
+              "confidence",
+              "source",
+              "citation"
+            ],
+            "properties": {
+              "target_type": {
+                "enum": [
+                  "asset",
+                  "asset_group",
+                  "lesson",
+                  "screening",
+                  "register",
+                  "engagement"
+                ]
+              },
+              "target_id": {
+                "type": "string"
+              },
+              "disposition": {
+                "enum": [
+                  "release_candidate",
+                  "hold",
+                  "rewrite"
+                ]
+              },
+              "clearance_state": {
+                "enum": [
+                  "RELEASE_CANDIDATE_SANITISED",
+                  "HOLD_EMBEDDED_INSTRUCTION",
+                  "HOLD_IDENTITY_UNSCREENABLE",
+                  "HOLD_TERMS_UNAVAILABLE",
+                  "HOLD_UNRECOGNISED_MARKER",
+                  "HOLD_PERSONAL_DATA_REWRITE",
+                  "HOLD_RIGHTS_UNKNOWN",
+                  "HOLD_REDACTION_REQUIRED",
+                  "HOLD_AGGREGATION_RISK",
+                  "HOLD_LOW_CONFIDENCE",
+                  "HOLD_NOT_SHORTLISTED"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "source": {
+                "type": "string",
+                "pattern": "^engine:"
+              },
+              "citation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "governance_note": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^engine:"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "released_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "asset_id",
+          "clearance_state",
+          "review_required",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string"
+          },
+          "title_withheld": {
+            "type": "boolean"
+          },
+          "clearance_state": {
+            "const": "RELEASE_CANDIDATE_SANITISED"
+          },
+          "review_required": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(engine|skill|connector):"
+          },
+          "citation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "held_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "asset_id",
+          "title",
+          "reuse_score",
+          "clearance_state",
+          "review_required",
+          "reason",
+          "confidence",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+          },
+          "title_withheld": {
+            "type": "boolean"
+          },
+          "clearance_state": {
+            "enum": [
+              "HOLD_EMBEDDED_INSTRUCTION",
+              "HOLD_IDENTITY_UNSCREENABLE",
+              "HOLD_TERMS_UNAVAILABLE",
+              "HOLD_UNRECOGNISED_MARKER",
+              "HOLD_PERSONAL_DATA_REWRITE",
+              "HOLD_RIGHTS_UNKNOWN",
+              "HOLD_REDACTION_REQUIRED",
+              "HOLD_AGGREGATION_RISK",
+              "HOLD_LOW_CONFIDENCE",
+              "HOLD_NOT_SHORTLISTED"
+            ]
+          }
+        }
+      }
+    },
+    "lessons_for_draft": {
+      "type": "array",
+      "items": {
+        "$ref": "#/properties/lesson_clusters/items"
+      }
+    },
+    "knowledge_record": {
+      "type": "object",
+      "required": [
+        "record_id",
+        "status",
+        "engagement_context_guidance",
+        "reusable_assets",
+        "lessons",
+        "sanitisation_summary",
+        "downstream_handoff",
+        "clearance_state",
+        "confidence",
+        "source",
+        "citation",
+        "title",
+        "held_assets_summary",
+        "draft_label"
+      ],
+      "properties": {
+        "record_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "engagement_context_guidance": {
+          "type": "string"
+        },
+        "reusable_assets": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "lessons": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "sanitisation_summary": {
+          "type": "string"
+        },
+        "downstream_handoff": {
+          "type": "object",
+          "properties": {
+            "consumer_template": {
+              "const": "credential-case-study-assembly"
+            },
+            "contract_fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "handoff_note": {
+              "type": "string"
+            }
+          }
+        },
+        "clearance_state": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^(engine|skill|connector):"
+        },
+        "citation": {
+          "type": "string"
+        },
+        "held_assets_summary": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "asset_id",
+              "clearance_state",
+              "reason",
+              "citation"
+            ]
+          }
+        },
+        "draft_label": {
+          "const": "DRAFT - HUMAN REVIEW REQUIRED"
+        }
+      }
+    },
+    "screening_holds": {
+      "type": "array",
+      "description": "One entry per withheld field (confidentiality-sanitisation-rules.md #8). Additive in 1.0.3.",
+      "items": {
+        "type": "object",
+        "required": [
+          "hold_id",
+          "path",
+          "location",
+          "family",
+          "reason",
+          "source",
+          "citation"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "hold_id": {
+            "type": "string",
+            "pattern": "^SH-\\d{3,}$"
+          },
+          "path": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "pattern": "^(field|record|run|rendered|line \\d+|lines \\d+-\\d+)$"
+          },
+          "family": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "engine:asset_identify",
+              "engine:sanitize_check"
+            ]
+          },
+          "citation": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

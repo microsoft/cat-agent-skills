@@ -1,0 +1,11 @@
+{
+  "name": "Knowledge Harvest",
+  "description": "Turn verified support resolutions into reviewable, reusable knowledge while removing identifying details.",
+  "platforms": ["Cowork"],
+  "category": "service",
+  "builtByMicrosoft": true,
+  "tags": ["customer-service", "knowledge-management", "case-resolution"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "createdAt": "2026-10-31"
+}

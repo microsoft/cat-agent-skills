@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.5",
+  "id": "1d4bed96-657f-4898-a72f-8ea06b9e0c33",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Closeout Knowledge Harvest",
+    "full": "Engagement Closeout & Knowledge Harvest"
+  },
+  "description": {
+    "short": "Engagement closeout: reusable assets, lessons and sanitised knowledge records",
+    "full": "Closes out a professional services engagement: assembles deliverables, decision log and retrospective notes, scores reusable assets, clusters lessons, runs a confidentiality gate and drafts a sanitised knowledge record for practice review. Draft-first: it never publishes to a knowledge base, clears a confidentiality restriction, approves external use or waives a client term.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0B6A7A",
+  "agentSkills": [
+    {
+      "folder": "./skills/artifact-assemble"
+    },
+    {
+      "folder": "./skills/asset-identify"
+    },
+    {
+      "folder": "./skills/lesson-cluster"
+    },
+    {
+      "folder": "./skills/sanitize-check"
+    },
+    {
+      "folder": "./skills/knowledge-record"
+    }
+  ]
+}

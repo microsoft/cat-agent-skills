@@ -1,0 +1,22 @@
+{
+  "name": "Deliverable Quality Gate",
+  "description": "A cited partner review packet before a deliverable goes to the client: map each assertion to the support pack, run the firm's quality-gate criteria and required-language checks, rank the findings by severity and list every release blocker.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "professional-services",
+    "quality-review",
+    "deliverable",
+    "qrm",
+    "evidence",
+    "release-gate"
+  ],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.9",
+  "createdAt": "2026-11-06",
+  "updatedAt": "2026-11-06",
+  "category": "professional-services",
+  "builtByMicrosoft": true
+}

@@ -1,0 +1,286 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "rtl.returns-refund-case.v1",
+  "title": "Returns & Refund Case contract v1",
+  "description": "Chains return-intake -> policy-retrieve -> reason-classify -> eligibility-check (Govern) -> case-packet. Data + confidence + provenance + citations on every hop. v1.0.2: policy_context hop defined; case_id convention RET-<YYYY>-<5 digits>.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "case_id",
+    "return_request"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "rtl.returns-refund-case.v1"
+    },
+    "case_id": {
+      "type": "string",
+      "pattern": "^RET-[0-9]{4}-[0-9]{5}$",
+      "description": "Case id convention: RET-<order/request year>-<5-digit zero-padded sequence>, e.g. RET-2026-08977. return-intake mints it from the request year and the desk's sequence counter; it never encodes the order id or customer identity."
+    },
+    "return_request": {
+      "type": "object",
+      "required": [
+        "category",
+        "value",
+        "has_receipt",
+        "requested_on",
+        "reason_text"
+      ],
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "has_receipt": {
+          "type": "boolean"
+        },
+        "opened": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "worn": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "requested_on": {
+          "type": "string",
+          "format": "date"
+        },
+        "reason_text": {
+          "type": "string"
+        },
+        "unit_serial": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "item": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "order": {
+      "type": "object",
+      "properties": {
+        "order_id": {
+          "type": "string"
+        },
+        "order_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "sold_serial": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "customer_history": {
+      "type": "object",
+      "properties": {
+        "receiptless_returns_90d": {
+          "type": "integer"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "reason": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "source": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "tie_break": {
+          "type": "string"
+        }
+      }
+    },
+    "eligibility": {
+      "type": "object",
+      "properties": {
+        "determination": {
+          "enum": [
+            "eligible",
+            "ineligible",
+            "needs_evidence"
+          ]
+        },
+        "clause": {
+          "type": "string",
+          "description": "Always present - every determination cites its clause (#2.1)."
+        },
+        "detail": {
+          "type": "string"
+        },
+        "missing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recommendation": {
+          "enum": [
+            "refund",
+            "exchange",
+            "repair",
+            "decline",
+            "hold_for_review"
+          ]
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "source": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string"
+        }
+      }
+    },
+    "fraud_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "signal",
+          "source",
+          "citation"
+        ],
+        "properties": {
+          "signal": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "citation": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "policy_context": {
+      "type": "object",
+      "description": "The {policy} hop written by policy-retrieve. Retrieval only - no determination.",
+      "required": [
+        "clauses",
+        "config_values",
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "e.g. skill:policy-retrieve/1.0.2"
+        },
+        "policy_document": {
+          "type": "string",
+          "description": "references/returns-rules.md"
+        },
+        "clauses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "clause_id",
+              "text",
+              "citation"
+            ],
+            "properties": {
+              "clause_id": {
+                "type": "string",
+                "description": "e.g. RET-1.2"
+              },
+              "text": {
+                "type": "string",
+                "description": "verbatim clause text"
+              },
+              "citation": {
+                "type": "string",
+                "description": "e.g. returns-rules.md #1.2"
+              },
+              "applies_because": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "config_values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "citation"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {},
+              "unit": {
+                "type": "string"
+              },
+              "citation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "not_found": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Policy areas requested but absent from the shipped policy text (e.g. warranty)."
+        }
+      }
+    }
+  }
+}

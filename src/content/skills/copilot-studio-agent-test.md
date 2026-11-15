@@ -3,6 +3,7 @@ name: Copilot Studio Agent Test
 description: Test a Copilot Studio agent against your own Q&A set and get a graded pass/fail report — no browser automation.
 agentDescription: "Test Microsoft Copilot Studio agents programmatically against a set of question/answer pairs, without driving a browser. Use when the user wants to evaluate, test, validate, benchmark or regression-test a Copilot Studio agent; run an eval set or test set against an agent; check whether an agent answers correctly from its knowledge bases; verify agent grounding or citations; or ask a Copilot Studio agent a question from the command line. Triggers include 'test my Copilot Studio agent', 'run an eval against the agent', 'validate agent answers', 'check the agent knowledge base', 'ask the agent', 'regression test the agent'. Do NOT use for building or authoring agents, for Copilot Studio topic design, or for testing declarative agents in Microsoft 365 Copilot."
 platforms: [Scout]
+category: agent-development
 tags: [copilot-studio, testing, evaluation, quality, agents, power-platform]
 author: Matteo Pagani
 authorUrl: "https://github.com/qmatteoq"

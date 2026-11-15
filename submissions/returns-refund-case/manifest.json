@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.4",
+  "id": "af02d002-f5fa-433f-b9b3-f42d53e7e471",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Returns Refund Case",
+    "full": "Returns Refund Case for Cowork"
+  },
+  "description": {
+    "short": "Retail returns: code the reason, check eligibility, draft the case packet",
+    "full": "Returns Refund Case builds a return case from desk notes, customer emails and order exports. It attaches the policy clauses, codes the return reason, determines eligibility with the clause cited, lists fraud signals as facts and drafts the case packet and customer response. It never authorises a refund, releases funds or adjudicates fraud.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#CA5010",
+  "agentSkills": [
+    {
+      "folder": "return-intake"
+    },
+    {
+      "folder": "policy-retrieve"
+    },
+    {
+      "folder": "reason-classify"
+    },
+    {
+      "folder": "eligibility-check"
+    },
+    {
+      "folder": "case-packet"
+    }
+  ]
+}
