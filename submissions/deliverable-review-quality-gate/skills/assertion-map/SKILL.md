@@ -1,7 +1,7 @@
 ---
 name: assertion-map
 description: "Maps each deliverable assertion to the support pack with the deterministic assertion_map engine and reports its support status. Use after intake and criteria, or when the user asks \"what is not substantiated?\", \"check the claims\", \"trace this saving\", \"which assertions lack evidence?\" or \"map assertions to evidence\". Do NOT use for ingesting documents (use deliverable-ingest), choosing criteria (use criteria-retrieve), gate findings or review status (use gate-check), drafting the partner packet (use review-packet), time or expense narratives (use time-expense-narrative-compliance), closeout harvest (use engagement-closeout-knowledge-harvest), client status/QBR (use client-status-qbr) or generic citation search outside this plugin (use built-in search)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) for scripts/assertion_map.py. Reads review-input.json supplied by the user or deliverable-ingest and writes assertion-mapped.json; no network access or connector is required."
 metadata:
   version: "1.0.9"

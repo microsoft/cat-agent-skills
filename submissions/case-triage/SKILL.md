@@ -3,6 +3,7 @@ name: case-triage
 description: Ranks support issues into an explainable work order based on impact, deadlines, commitments, and evidenced urgency. Use when two or more tickets, incidents, issues, requests, or complaints need an explainable relative work order based on impact, deadlines, commitments, staleness, unanswered contact, documented urgency, and any available priority or response-time evidence. Also supports a bounded urgency assessment for one issue without inventing a queue rank. Examples include "rank these cases", "which complaint should be first", and "how urgent is this issue". Do not use for a deep brief on one selected issue or to claim work automatically.
 metadata:
   displayname: Case Triage
+license: MIT
 ---
 
 # Case Triage

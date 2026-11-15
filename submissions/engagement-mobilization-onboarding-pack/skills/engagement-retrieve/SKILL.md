@@ -1,7 +1,7 @@
 ---
 name: engagement-retrieve
 description: "Starts every Scenario 03 mobilization run, including a cold start: runs the deterministic scope_digest engine on the SOW, letter, pursuit record, confirmed roster and Scenario 02 staffing and reports only its output (never invents scope, dates or names; never sends, shares or provisions anything). Use when the user asks \"mobilize this engagement\", \"start the onboarding pack\", \"build an onboarding pack for the new joiner\", \"summarise the SOW for the new joiner\" or \"what is in and out of scope for the joiner?\". Do NOT use for confirmed vs proposed team (use roster-pull), prior knowledge (use knowledge-match), wall status, including a note that the wall was lifted or cleared, or access (use wall-check), rewording a pack (use pack-draft) or ranking staff (use engagement-staffing-bench-match)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run scripts/scope_digest.py. Reads user-supplied files: the SOW, engagement-letter and pursuit-record extracts, the confirmed-roster CSV and the Scenario 02 staffing JSON. No connectors required; writes scope.json only."
 metadata:
   version: "1.0.7"

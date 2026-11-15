@@ -1,7 +1,7 @@
 ---
 name: work-order-writeup
 description: Renders one fixed-layout cited Markdown work-order draft for technician/planner review. Use for "draft technician notes", "write up this work order", "give the planner summary", or "show the proposed next action". No audience-switching or document-conversion feature. Do NOT use for intake — use wo-intake; retrieval — use knowledge-retrieve; ranking — use similar-work-rank; stock checks — use parts-readiness. No CMMS write-back, closure, scheduling or purchasing, even when approved.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

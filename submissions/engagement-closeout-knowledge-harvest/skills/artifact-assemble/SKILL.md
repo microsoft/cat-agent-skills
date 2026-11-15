@@ -1,7 +1,7 @@
 ---
 name: artifact-assemble
 description: 'Retrieves and normalizes raw closeout sources (deliverable register, decision log, retrospective notes, confidentiality terms) into a cited engagement.json draft in the shared closeout contract. Use at the start of a closeout harvest when the user says "close out the engagement", "assemble the final deliverables", "load the decision log", "bring in the retrospective", "pull the confidentiality terms" or "gather the closeout artifacts". Do NOT use for scoring assets (use asset-identify), clustering lessons (use lesson-cluster), confidentiality or clearance (use sanitize-check), drafting the record (use knowledge-record) or loading a new engagement SOW (use the Engagement Mobilization Pack plugin); it never publishes, sends or writes back.'
-license: Proprietary
+license: MIT
 compatibility: 'Reads user-supplied closeout files (deliverable register, decision and risk logs, retrospective notes, confidentiality terms) with the file-read tool or an existing SharePoint or OneDrive connection; optionally uses Python 3 to write engagement.json locally. No scripts to run, no write, send or publish connectors.'
 metadata:
   version: "1.0.5"

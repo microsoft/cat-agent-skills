@@ -12,6 +12,8 @@ authorGithub: microsoft
 version: 1.0.29
 createdAt: 2026-10-28
 bundle: bundles/fsi-risk-and-compliance.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 FSI Risk and Compliance drafts cited working papers for compliance, risk and audit teams: regulatory change triage, policy-to-rule gap tables, exam request trackers, enforcement read-across, vendor SOC 2 reviews and KYC research records. It never concludes compliance, rates risk, approves a vendor or screens sanctions. Nothing is sent or filed.
 

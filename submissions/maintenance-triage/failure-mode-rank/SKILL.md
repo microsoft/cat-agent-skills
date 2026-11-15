@@ -1,7 +1,7 @@
 ---
 name: failure-mode-rank
 description: Ranks the likely failure modes for a fault against the failure-mode library, symptoms, alarm codes and repeat-failure history, deterministically. Use when the user says "what's the likely cause", "rank the failure modes", "diagnose this fault", "is this the real root cause?", or after history-retrieve completes. Do NOT use for intake — use fault-intake; history retrieval — use history-retrieve; priority — use criticality-rank; drafting — use work-order-update.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

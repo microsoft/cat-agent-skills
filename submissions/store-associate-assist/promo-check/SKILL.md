@@ -1,7 +1,7 @@
 ---
 name: promo-check
 description: 'Presents the promotion eligibility already computed by policy_resolve - the three-part test (window AND cluster AND SKU) with the failing leg and exact dates named. Use for "is this on promo", "does this customer get the deal", "is the discount still running", "why isn''t the promo applying", "did the offer end". Do NOT use to resolve the clause or compute eligibility - use policy-retrieve instead (it populates promo_check); not for return or price-match questions - use policy-retrieve; not for product comparisons - use product-compare; not to draft the floor answer - use answer-draft.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.9", author: Microsoft Retail & CPG Skills, category: analysis, icon: ReceiptMoney}
 ---
 # Promo Check

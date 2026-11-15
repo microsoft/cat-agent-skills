@@ -1,7 +1,7 @@
 ---
 name: work-order-update
 description: Drafts the work-order update and recommended action from the triaged contract payload, with every determination cited to the manual, history and rules. Use when the user says "draft the work order", "write up the WO update", "what should we do", "recommend the fix", or after criticality-rank completes. Do NOT use for intake — use fault-intake; history retrieval — use history-retrieve; cause ranking — use failure-mode-rank; priority calculation — use criticality-rank.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

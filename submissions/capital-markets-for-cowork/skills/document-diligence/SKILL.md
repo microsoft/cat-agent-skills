@@ -13,6 +13,7 @@ description: >-
   public-company background — use company-profile-pack instead.
 metadata:
   icon: DocumentBulletList
+license: MIT
 ---
 
 # Document Diligence

@@ -1,7 +1,7 @@
 ---
 name: reason-classify
 description: 'Classifies the stated return reason against the reason-code taxonomy with the deterministic reason_classify engine, recording confidence and candidate codes. Use after return-intake in every case, or on "what reason code is this", "classify the return reason", "which reason code", "code this return", "why are they returning it". Do NOT use for sentiment or complaint triage; not for eligibility or red flags - use eligibility-check instead; not for policy text - use policy-retrieve.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.4", author: Microsoft Retail & CPG Skills, category: analysis, icon: TextBulletListLtr}
 ---
 # Reason Classify

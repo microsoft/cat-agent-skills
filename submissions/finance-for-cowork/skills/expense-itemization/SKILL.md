@@ -11,6 +11,7 @@ description: >-
   (use budget-consolidation).
 metadata:
   icon: ReceiptMoney
+license: MIT
 ---
 
 # Expense Itemization and Reconciliation

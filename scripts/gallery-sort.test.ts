@@ -12,12 +12,12 @@ test("Microsoft category sorting groups launch categories and orders names withi
   const submissions = [
     { category: "sales", name: "Alpha sales" },
     { category: "service", name: "Alpha service" },
-    { category: "accounting", name: "Zulu accounting" },
+    { category: "finance", name: "Zulu finance" },
     { category: "sales", name: "Zulu sales" },
-    { category: "accounting", name: "Alpha accounting" },
+    { category: "finance", name: "Alpha finance" },
   ] as const;
   assert.deepEqual(submissions.toSorted(compareCategoryThenName).map(({ name }) => name), [
-    "Alpha accounting", "Zulu accounting", "Alpha sales", "Zulu sales", "Alpha service",
+    "Alpha finance", "Zulu finance", "Alpha sales", "Zulu sales", "Alpha service",
   ]);
 });
 

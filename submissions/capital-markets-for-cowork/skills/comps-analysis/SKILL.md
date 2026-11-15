@@ -12,6 +12,7 @@ description: >-
   discounted cash flow, LBO, or precedent transaction analysis.
 metadata:
   icon: ArrowTrendingLines
+license: MIT
 ---
 
 # Comparable Company Analysis

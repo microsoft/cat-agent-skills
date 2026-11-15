@@ -1,7 +1,7 @@
 ---
 name: similar-work-rank
 description: Computes deterministic similarity and recurring-failure evidence from supplied history. Use for "rank similar past work", "have we repaired this before", "find the closest prior fix", or "explain similarity scores". Do NOT use for intake — use wo-intake instead; retrieval — use knowledge-retrieve instead; stock checks — use parts-readiness instead; terminal notes — use work-order-writeup instead. Local draft evidence only.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

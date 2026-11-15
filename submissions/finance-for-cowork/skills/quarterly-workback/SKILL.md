@@ -14,6 +14,7 @@ description: >-
   (use forecast-review-prep), or one-off emails.
 metadata:
   icon: CalendarDataBar
+license: MIT
 ---
 
 # Quarterly Work-Back Plan

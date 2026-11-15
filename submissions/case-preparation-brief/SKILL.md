@@ -3,6 +3,7 @@ name: case-preparation-brief
 description: Builds a decision-ready brief on one support issue, covering status, material history, open commitments, and the recommended next step. Use before the next interaction or action on one case, incident, ticket, customer issue, request, or complaint — reconciling what's happened, what's still open, and what to do next, even from a single description or one substantive interaction with no full record yet. Examples include "brief me on this case", "prepare this case handoff", and "what is still open on this complaint". Do not use to rank several issues, compose the outbound customer reply, or close, reassign, or otherwise change the case.
 metadata:
   displayname: Case Preparation Brief
+license: MIT
 ---
 
 # Case Preparation Brief

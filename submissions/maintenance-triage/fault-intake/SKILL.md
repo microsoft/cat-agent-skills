@@ -1,7 +1,7 @@
 ---
 name: fault-intake
 description: Reads maintenance fault notes, operator reports, alarm/event logs, asset IDs and location into the mfg.maintenance-triage.v1 contract inputs. Use when the user says "triage this fault", "work this breakdown", "read the fault note for <asset>", "what's wrong with pump <id>", or when a maintenance triage run begins. Do NOT use for history retrieval — use history-retrieve; cause ranking — use failure-mode-rank; priority — use criticality-rank; drafting — use work-order-update. Not employee-injury recordability.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

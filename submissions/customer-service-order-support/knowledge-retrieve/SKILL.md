@@ -2,7 +2,7 @@
 name: knowledge-retrieve
 description: |
   Retail customer-service grounding step: attaches the approved knowledge article, policy clause or records-only grounding that backs the customer answer for a classified inquiry (order status, delivered-not-received, returns, stock, how-to). Use after context-assemble, or on "what's the approved answer for this", "what's the approved wording", "find the policy clause for", "cite the article", "is there an approved script". Do NOT use for SOPs, OEM manuals or work orders - use the work-order-assist knowledge-retrieve instead; not for drafting the reply - use resolution-draft instead.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0.4"
   author: Microsoft Retail & CPG Skills

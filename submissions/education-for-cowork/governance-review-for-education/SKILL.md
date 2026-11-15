@@ -5,6 +5,7 @@ description: |
 metadata:
   category: analysis
   icon: ShieldCheckmark
+license: MIT
 ---
 
 # Governance Review for Education

@@ -10,6 +10,9 @@ author: Microsoft
 authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
 createdAt: 2026-10-31
+bundle: bundles/sales-progress-update.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 # Sales Progress Update
 

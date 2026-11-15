@@ -1,7 +1,7 @@
 ---
 name: guideline-check
 description: 'Checks drafted, coded time narratives against the client billing guidelines with the deterministic guideline_check engine: block billing, prohibited or vague terms, minimum detail, non-billable work, duplicates, increments and unrecorded time. Use it after code-map, or directly, when the user asks "will this narrative get rejected?", "is my time compliant?", "catch block billing", "find prohibited terms" or "find my missing time". Do NOT use for drafting or rewriting narratives (use narrative-draft), building the manager-facing exception packet (use exception-report), approving, submitting or writing off time (exception-report answers those requests), or expense reports and receipts (out of scope: time entries only).'
-license: Proprietary
+license: MIT
 compatibility: 'Requires Python 3 (standard library only) to run scripts/guideline_check.py on coded.json from code-map and activity.json from activity-pull; reads the config/signal-sources.json, contracts/ and references/ (client-billing-guidelines.md) in this skill folder and writes governed.json locally. No connectors, network access or outbound actions.'
 metadata:
   version: "1.0.13"

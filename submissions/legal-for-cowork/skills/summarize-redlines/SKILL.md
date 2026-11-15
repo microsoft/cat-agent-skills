@@ -14,6 +14,7 @@ metadata:
   displayName: Summarize redlines
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Summarize redlines

@@ -1,7 +1,7 @@
 ---
 name: policy-retrieve
 description: 'Resolves the applicable policy clause and checks promotion eligibility deterministically with the policy_resolve engine (window AND cluster AND SKU). Use after question-intake on "what does the policy say", "is this return within the window", "can we price match this competitor", "is the customer eligible for the promo", "does the raincheck clause apply". Do NOT use for a fresh floor question with no question.json - use question-intake instead; not for a pure two-SKU spec comparison - use product-compare; not to present an already-computed promo result - use promo-check; not to draft the answer - use answer-draft.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.9", author: Microsoft Retail & CPG Skills, category: research, icon: BookSearch}
 ---
 # Policy Retrieve

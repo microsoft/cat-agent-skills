@@ -2,6 +2,7 @@
 name: kyc-research-pack
 description: Assembles a cited public-source research record on a customer, counterparty, or beneficial owner for a human-owned KYC/CDD/EDD file, covering adverse media, litigation, registry data, and identity resolution. NOT a sanctions or PEP screen; route list screening to the firm's screening tool. Use when the user says "run a negative news check on this customer", "background on this beneficial owner", "what is public on this counterparty", "build an EDD pack", or "any adverse media on this entity". Do NOT use for policy-versus-rule gap analysis (use policy-gap-analysis), vendor due diligence (use vendor-risk-review), enforcement read-across (use enforcement-action-review), rule triage (use reg-change-triage), exam trackers (use exam-request-response), or document formatting (use built-in docx).
 metadata: {icon: PersonSearch}
+license: MIT
 ---
 
 ## Scope

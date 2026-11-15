@@ -13,6 +13,7 @@ description: >-
   company-profile-pack instead; or the returns model.
 metadata:
   icon: DocumentSearch
+license: MIT
 ---
 
 # CIM Teardown

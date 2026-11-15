@@ -1,7 +1,7 @@
 ---
 name: fit-score
 description: "Computes deterministic, pre-governance candidate-role fit scores, utilisation context and provisional ranks with the bundled engines, after bench-query and before constraint-check. Use when the user says \"rank the bench\", \"score the candidates\", \"who is the best fit?\", \"compare candidate fit for this role\" or \"show the provisional ranking\". Do NOT use for RFP or vendor-proposal scoring, extracting roles (use role-intake), loading the bench (use bench-query), drafting the slate (\"build me a slate\"; use slate-draft), eligibility or conflicts (use constraint-check), sales pipeline prioritization (use d365-sales-pipeline-prioritizer), sales meeting prep (use d365-sales-meeting-prep) or ranking or tool scripts outside engagement staffing (use tool-scripts)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run the bundled scripts/fit_score.py and scripts/slate_rank.py on roles.json and bench.json from earlier skills or the user. No connectors required. Writes local JSON only; never writes to a resource or staffing system."
 metadata:
   version: "1.1.14"

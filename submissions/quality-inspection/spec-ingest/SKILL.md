@@ -1,7 +1,7 @@
 ---
 name: spec-ingest
 description: Organizes cited inspection documents into engine-ready inputs without grading. Use for "load the inspection results", "read the part spec", "structure the lot documents", "intake inspection evidence", or "review lot documents". Do NOT use for deviation math — use tolerance-check; grading — use defect-grade; NCR writing — use ncr-draft. Never authorizes release or operational actions.
-license: Proprietary
+license: MIT
 metadata:
   version: "3.1"
   author: Microsoft Manufacturing Skills

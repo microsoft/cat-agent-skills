@@ -15,6 +15,7 @@ metadata:
   displayName: Check defined terms
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Check defined terms

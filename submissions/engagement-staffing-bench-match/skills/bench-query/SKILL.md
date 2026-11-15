@@ -1,7 +1,7 @@
 ---
 name: bench-query
 description: "Normalizes bench, availability, rate and conflicts-register data into bench_candidates[] and constraints[] after role-intake, keeping every record and its citation without deciding fit or eligibility. Use when the user says \"check the bench\", \"who is available?\", \"pull the roster\", \"include rates\" or \"load the conflicts extract\". Do NOT use for job postings or recruiting copy, extracting roles from a SOW (use role-intake), fit scores (use fit-score), eligibility or conflict verdicts (use constraint-check), drafting the slate (use slate-draft), or for sales segmentation, general rate analysis or generic tool scripting outside engagement staffing (use d365-sales-segment-analysis or tool-scripts)."
-license: Proprietary
+license: MIT
 compatibility: "Reads user-supplied roster, availability, leave, rate-card and conflicts-register exports (CSV or JSON) with the file-read tool; Python 3 to normalise them into bench.json and constraints.json. No bundled engine and no connectors required. Read-only: never writes to a resource or staffing system."
 metadata:
   version: "1.1.14"

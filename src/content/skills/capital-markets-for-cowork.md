@@ -12,6 +12,8 @@ authorGithub: microsoft
 version: 1.0.7
 createdAt: 2026-10-31
 bundle: bundles/capital-markets-for-cowork.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Analyst work for banking, research and private equity. Helps with company profiles, comparable company analysis, merger models, CIM teardowns, document diligence, diligence tracking, earnings notes, coverage meeting prep and debriefs, pitch deck skeletons and investment committee memos. Every output states its source and date, marks assumptions rather than inventing them, stays analytical support rather than advice, and never sends or shares anything without your confirmation.
 Sign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise

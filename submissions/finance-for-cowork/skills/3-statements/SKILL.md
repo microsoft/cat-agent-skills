@@ -11,6 +11,7 @@ description: >-
   buyout modeling (use lbo-model).
 metadata:
   icon: Table
+license: MIT
 ---
 
 # Complete an Existing Three-Statement Template

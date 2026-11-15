@@ -1,7 +1,7 @@
 ---
 name: case-packet
 description: 'Drafts the return case packet - determination, recommendation, evidence list, fraud signals, customer response draft, manager exception request - from the governed contract payload using the packet template. Use to close every return case: "build the case packet", "write up the return", "draft the customer response", "draft the manager exception request", "close the return case". Do NOT use to start a case - use return-intake instead; not for eligibility or red flags - use eligibility-check; not for incident or safety write-ups.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.4", author: Microsoft Retail & CPG Skills, category: writing, icon: DocumentEdit}
 ---
 # Case Packet

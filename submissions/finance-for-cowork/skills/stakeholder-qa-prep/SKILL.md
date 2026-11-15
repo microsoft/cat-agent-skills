@@ -13,6 +13,7 @@ description: >-
   personnel conversations.
 metadata:
   icon: ChatBubblesQuestion
+license: MIT
 ---
 
 # Stakeholder Q&A Prep

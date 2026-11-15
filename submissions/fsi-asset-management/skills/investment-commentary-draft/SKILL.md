@@ -1,6 +1,7 @@
 ---
 name: investment-commentary-draft
 description: Draft periodic investor commentary for a named fund, portfolio, or investment strategy from approved narrative and current system-of-record figures, with performance-policy gates. Use for "write our fund's quarterly commentary", "draft the strategy market review", "update the strategy letter", "describe this portfolio's attribution", or "start annual fund commentary". Do NOT use for corporate operating-variance or executive updates — use Finance variance-commentary or exec-update if available; for mandate meetings, use institutional-client-review-prep instead; for recurring questionnaires, use consultant-database-refresh instead; for fund comparisons, use peer-product-intelligence instead; for formatting, use docx instead.
+license: MIT
 ---
 
 ## Quick Start

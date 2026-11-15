@@ -1,7 +1,7 @@
 ---
 name: completeness-score
 description: Product content / catalog completeness - scores each SKU's normalised attributes against the channel's required fields and names the missing fields per SKU, with the customer's completeness floor applied. Use after attribute-normalize, or when the user says "how complete are these SKUs", "what's missing per SKU", "completeness per SKU", "catalog gap report for <channel>", "which required product fields are blank" or "is this batch ready for the copy team". Do NOT use for store-visit or perfect-store compliance scoring - use the retail-execution gap-score (visit_score) instead; do NOT use for claim wording - use claim-check instead; do NOT use for project or task completeness - plain chat.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: analysis, icon: DataBarVertical}
 ---
 # Completeness Score (product content completeness)

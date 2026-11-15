@@ -1,7 +1,7 @@
 ---
 name: gate-check
 description: "Runs the explicit Govern step: deterministic gate_check and severity_rank set gate results, release blockers and review status. Use after assertion-map or when the user asks \"run the quality gate\", \"what blocks client issue?\", \"can this go to the client?\", \"rank the review findings\", \"check required reliance language\" or \"list the release blockers\". Do NOT use for ingesting documents (use deliverable-ingest), retrieving criteria (use criteria-retrieve), mapping assertion support (use assertion-map), the packet narrative (use review-packet), time or expense narratives (use time-expense-narrative-compliance), closeout harvest (use engagement-closeout-knowledge-harvest), client status/QBR (use client-status-qbr), or to approve, sign off, send or authorize reliance (never; a human decides)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) for the bundled scripts/gate_check.py and scripts/severity_rank.py, and scripts/assertion_map.py when assertion-mapped.json is missing; every script it runs is inside this skill. Reads review-input.json and engine output; no network access or connector is required."
 metadata:
   version: "1.0.9"

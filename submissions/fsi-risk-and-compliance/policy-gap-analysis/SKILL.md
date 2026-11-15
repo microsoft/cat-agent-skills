@@ -2,6 +2,7 @@
 name: policy-gap-analysis
 description: Compares a firm policy to a regulation clause by clause, giving a coverage table with verbatim excerpts, suggested edits and a memo. Reports coverage states; never concludes compliance. Use when the user says "does our policy cover this regulation", "where are the gaps against this rule", "map our procedure to the requirements", "compare our AML policy to the rule", or "what needs to change in this policy". Do NOT use for customer or counterparty research or EDD packs (use kyc-research-pack), firm-wide triage of a new rule (use reg-change-triage), enforcement read-across (use enforcement-action-review), exam requests (use exam-request-response), vendor SOC 2 reviews (use vendor-risk-review), workbook formatting (use built-in xlsx), or sending email (use built-in outlook-email).
 metadata: {icon: DocumentBulletListMultiple}
+license: MIT
 ---
 
 ## Scope

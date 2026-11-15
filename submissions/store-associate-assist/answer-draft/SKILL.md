@@ -1,7 +1,7 @@
 ---
 name: answer-draft
 description: 'Drafts the cited floor answer for the associate - or the shift-lead escalation when the payload is out of scope or below confidence - from the completed rtl.store-associate-assist.v1 payload, using the answer template. Use to close every assist run: "draft the floor answer", "write up the answer for the associate", "close out the assist run", "draft the escalation to the shift lead", "what can I tell the customer". Do NOT use for a new question with no resolved payload - use question-intake instead; not to compute eligibility - use policy-retrieve or promo-check; never send, post or execute anything - drafts only.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.9", author: Microsoft Retail & CPG Skills, category: writing, icon: Compose}
 ---
 # Answer Draft

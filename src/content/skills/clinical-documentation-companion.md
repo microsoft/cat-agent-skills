@@ -13,6 +13,8 @@ version: 1.0.3
 createdAt: 2026-10-28
 updatedAt: 2026-10-28
 bundle: bundles/clinical-documentation-companion.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Clinical Docs Companion turns a signed visit note into the documents that follow it. It drafts the referral letter, after-visit summary and clinician handoff, builds the coding rationale for codes already on the claim and checks quality measures, each cited to a line of the note. It never marks a measure met without documentation and never sends anything.
 

@@ -1,7 +1,7 @@
 ---
 name: tolerance-check
 description: Computes inspection deviation statistics using a local deterministic engine. Use for "check tolerances", "compare against spec", "any out-of-spec?", "bore exceedance", or "measurement band consumption". Do NOT use for document intake — use spec-ingest; grading — use defect-grade; NCR or review-report Markdown — use ncr-draft. This release does not produce DOCX/PDF or other report formats. No release decisions or operational actions.
-license: Proprietary
+license: MIT
 metadata:
   version: "3.1"
   author: Microsoft Manufacturing Skills

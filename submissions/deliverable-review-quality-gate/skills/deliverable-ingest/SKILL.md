@@ -1,7 +1,7 @@
 ---
 name: deliverable-ingest
 description: "Retrieves and structures a draft deliverable, recipients, evidence index, registers and prior review notes for the gate. Use to start a deliverable review or when the user asks \"review this deliverable\", \"check this support pack\", \"find unsupported claims\", \"start a deliverable gate review\" or \"ingest the draft and evidence\". For a release yes/no on already-ingested material, use gate-check. Do NOT use for choosing criteria (use criteria-retrieve), support mapping (use assertion-map), gate findings (use gate-check), the partner packet (use review-packet), time or expense narratives (use time-expense-narrative-compliance), closeout harvest (use engagement-closeout-knowledge-harvest), client status/QBR (use client-status-qbr) or general document editing (use built-in document tools)."
-license: Proprietary
+license: MIT
 compatibility: "No scripts of its own. Reads the user-supplied draft deliverable, evidence index, recipient list, registers and prior review notes read-only (for example from an engagement workspace, SharePoint or OneDrive); no connector is required. Produces review-input.json for assertion-map, whose engine needs Python 3."
 metadata:
   version: "1.0.9"

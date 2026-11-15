@@ -5,6 +5,7 @@ description: |
 metadata:
   category: productivity
   icon: ClipboardTextLtr
+license: MIT
 ---
 
 # Instructional Continuity

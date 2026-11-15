@@ -16,6 +16,7 @@ metadata:
   displayName: Build case chronology
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Build case chronology

@@ -1,7 +1,7 @@
 ---
 name: criticality-rank
 description: Prioritizes the fault by asset criticality and downtime cost into a P1-P4 maintenance priority with a response target and cost estimate, deterministically. Use when the user says "how urgent is this", "what's the priority", "rank by criticality", "what will downtime cost", or after failure-mode-rank completes. Do NOT use for intake — use fault-intake; history retrieval — use history-retrieve; cause ranking — use failure-mode-rank; drafting — use work-order-update.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

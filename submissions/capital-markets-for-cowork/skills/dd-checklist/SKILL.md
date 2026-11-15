@@ -12,6 +12,7 @@ description: >-
   an issues list — use document-diligence instead.
 metadata:
   icon: ClipboardTaskListLtr
+license: MIT
 ---
 
 # Due Diligence Checklist

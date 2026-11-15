@@ -1,7 +1,7 @@
 ---
 name: question-intake
 description: 'Takes an associate''s floor question with store, role and department context into the rtl.store-associate-assist.v1 contract (question.json, the entry hop). Use when an associate asks "can she return this", "do we price match", "is this still on promo", "what''s the difference between these two", "customer is asking about the return policy", or any new floor question about policy, product or promotion. Do NOT use to resolve the policy - use policy-retrieve instead; not to present promo results - use promo-check; not to compare two SKUs from a resolved payload - use product-compare; not for the final answer - use answer-draft; not for staffing, scheduling, inventory or refund requests.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.9", author: Microsoft Retail & CPG Skills, category: productivity, icon: Form}
 ---
 # Question Intake

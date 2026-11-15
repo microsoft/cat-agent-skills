@@ -14,6 +14,8 @@ createdAt: 2026-08-01
 updatedAt: 2026-11-06
 featured: true
 bundle: bundles/maintenance-triage.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Maintenance Triage organizes fault evidence, retrieves supplied history, ranks likely causes and priorities, and drafts work-order updates. The bundled CP-200 pump rules are limited and require applicable OEM/domain review. No predictive maintenance, live CMMS connector, dispatch, notifications or repair authorization.
 

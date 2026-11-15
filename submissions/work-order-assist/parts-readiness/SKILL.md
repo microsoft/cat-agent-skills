@@ -1,7 +1,7 @@
 ---
 name: parts-readiness
 description: Computes cited stock sufficiency and replacement-part availability from supplied extracts. Use for "check parts readiness", "are the parts in stock", "is this part current", or "show stock shortages". Do NOT use for intake — use wo-intake instead; retrieval — use knowledge-retrieve instead; ranking — use similar-work-rank instead; terminal notes — use work-order-writeup instead. Never reserves, orders or schedules.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

@@ -13,6 +13,7 @@ description: >-
   meeting-intel instead.
 metadata:
   icon: CalendarPerson
+license: MIT
 ---
 
 # Coverage Meeting Prep & Debrief

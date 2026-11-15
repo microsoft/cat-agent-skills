@@ -13,6 +13,8 @@ version: 1.0.7
 createdAt: 2026-11-06
 updatedAt: 2026-11-06
 bundle: bundles/engagement-mobilization-onboarding-pack.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Drafts an internal mobilization and onboarding pack for a Professional Services engagement joiner. Deterministic engines digest SOW scope, separate confirmed from proposed staff, match only released prior knowledge, apply the ethical-wall register and draft least-privilege access requests, with every decision cited. Output is a draft for human review: it does not provision access, grant wall exceptions, assign staff, send messages or approve anything.
 

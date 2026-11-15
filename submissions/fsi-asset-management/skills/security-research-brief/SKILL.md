@@ -1,6 +1,7 @@
 ---
 name: security-research-brief
 description: Compare two issuer filings' risk-factor, MD&A, and guidance language using matched passages and explicit retrieval coverage; metrics support the diff only. Use for "what changed in their latest 10-K", "compare these risk factors", "how did MD&A wording shift", "build a two-filing change pack", or "diff guidance wording". Do NOT use for standalone corporate variance narrative — use Finance variance-commentary if available; for one earnings-event recap, use earnings-review if available; for fund comparisons, use peer-product-intelligence instead; for mandate reviews, use institutional-client-review-prep instead; for recurring questionnaires, use consultant-database-refresh instead; for formatting, use docx instead.
+license: MIT
 ---
 
 ## Quick Start

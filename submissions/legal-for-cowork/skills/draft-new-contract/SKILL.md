@@ -15,6 +15,7 @@ metadata:
   displayName: Draft new contract
   category: writing
   icon: Scales
+license: MIT
 ---
 
 # Draft new contract

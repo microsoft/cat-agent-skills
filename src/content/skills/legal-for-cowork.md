@@ -12,6 +12,8 @@ authorGithub: microsoft
 version: 1.0.10
 createdAt: 2026-10-31
 bundle: bundles/legal-for-cowork.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Helps with legal work across contracts and other legal documents. Draft new documents, understand and review content, make precise edits, and surface key information and obligations.
 

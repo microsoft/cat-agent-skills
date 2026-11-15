@@ -3,6 +3,7 @@ name: sales-progress-update
 description: Creates or refreshes a sales progress update for a manager or team about work done, deal movement, pending outcomes, supported forecast position, and help needed. Use when asked to "create my weekly sales update", "refresh my sales progress deck", "report my forecast position", "where do I stand against my quarter forecast", or "catch my manager up on committed deals". Do NOT use for non-sales project updates, a since-date deal change digest, momentum or blocker analysis, meeting prep, or outreach drafting.
 metadata:
   displayname: Sales Progress Update
+license: MIT
 ---
 
 # Sales Progress Update

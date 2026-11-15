@@ -15,6 +15,7 @@ metadata:
   displayName: Draft legal memo
   category: writing
   icon: Scales
+license: MIT
 ---
 
 # Draft legal memo

@@ -14,6 +14,7 @@ metadata:
   displayName: Extract obligations and deadlines
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Extract obligations and deadlines

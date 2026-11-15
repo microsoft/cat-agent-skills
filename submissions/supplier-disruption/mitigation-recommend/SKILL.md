@@ -2,7 +2,7 @@
 name: mitigation-recommend
 description: Runs the local deterministic draft mitigation and unsent owner-notification engine. Use for "recommend a mitigation", "should we expedite or substitute", "who do we notify", "who do we escalate to", or "what do we do about it". Do NOT use for intake, retrieval, mapping or terminal drafts — use disruption-intake, supply-knowledge-retrieve, shortage-impact-map or disruption-writeup instead. No procurement, supplier or ERP actions.
 compatibility: Python 3.10+ and local supplied artifacts only; no connectors required.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.4"
   author: Microsoft Manufacturing Skills

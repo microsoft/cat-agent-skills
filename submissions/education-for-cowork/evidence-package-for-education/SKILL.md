@@ -5,6 +5,7 @@ description: |
 metadata:
   category: analysis
   icon: DocumentBulletListMultiple
+license: MIT
 ---
 
 # Evidence Package for Education

@@ -3,6 +3,7 @@ name: pipeline-prioritizer
 description: Ranks a scoped set of open opportunities into an evidence-backed worklist of what to work next and why, with ties and unknowns where needed. Use when a scoped visible opportunity set needs a ranked or tied worklist explaining what deserves attention next and why, such as "which deals should I work today", "rank my open opportunities", or "prioritize this deal list". DO NOT use for change digests, meeting prep, or full team pipeline reviews.
 metadata:
   displayname: Pipeline Prioritizer
+license: MIT
 ---
 
 # Pipeline Prioritizer

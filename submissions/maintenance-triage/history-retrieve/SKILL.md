@@ -1,7 +1,7 @@
 ---
 name: history-retrieve
 description: Retrieves the asset's maintenance history — prior work orders, similar failures, PM records — and the relevant OEM manual and troubleshooting sections, and attaches them to the mfg.maintenance-triage.v1 contract. Use when the user says "pull the history for <asset>", "has this failed before?", "find the manual section", "any prior work orders?", or after fault-intake completes. Do NOT use for intake — use fault-intake; cause ranking — use failure-mode-rank; priority — use criticality-rank; drafting — use work-order-update.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0"
   author: Microsoft Manufacturing Skills

@@ -2,7 +2,7 @@
 name: resolution-draft
 description: |
   Drafts the customer-facing service reply (chat, email or voice script) for a resolvable retail order inquiry - order status, delivery ETA, in-stock or how-to answers - from the assembled context and approved grounding, marked DRAFT for the agent to send. Use to close resolvable runs: "draft the reply", "answer the customer", "write the customer response", "reply on chat", "answer the where-is-my-order question". Do NOT use when escalations or contradictions are present - use handoff-packet instead; not for purchase-order confirmations or order-entry notes - use the order-intake response-draft instead; not for general mailbox tasks - use outlook-email instead.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0.4"
   author: Microsoft Retail & CPG Skills

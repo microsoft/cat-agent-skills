@@ -13,6 +13,7 @@ description: >-
   valuation.
 metadata:
   icon: ArrowJoin
+license: MIT
 ---
 
 # Merger Model

@@ -1,7 +1,7 @@
 ---
 name: store-map
 description: Retrieves one store's profile for the promotion readiness test — format, cluster, fixtures, received assets, completed tasks, prior execution history and current shelf prices — from the store master, receiving, task-system and POS exports into store.json + shelf-prices.json. Use after pack-ingest, or when the user asks "what does this store actually have", "pull the store profile for <id>", "what's been received at the store", "which launch tasks are done", "get the current shelf prices for store <id>". Do NOT use for floor plans, department layouts or wayfinding maps — use a store layout / planogram tool instead; not for the readiness verdict — use readiness-check instead; not for ingesting the HQ pack — use pack-ingest instead.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: research, icon: DocumentTable}
 ---
 # Store Map

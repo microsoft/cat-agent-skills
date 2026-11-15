@@ -14,6 +14,8 @@ createdAt: 2026-08-01
 updatedAt: 2026-11-06
 featured: true
 bundle: bundles/quality-inspection.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Quality Inspection organizes supplied inspection evidence, computes tolerances, grades deviations and drafts cited nonconformance reports. Local source replay supports deterministic checks. No release authorization, QMS filing, supplier sending, stock movement or CAPA execution. Quality engineer review is required.
 

@@ -16,6 +16,7 @@ metadata:
   displayName: Improve legal prompt
   category: productivity
   icon: Scales
+license: MIT
 ---
 
 # Improve legal prompt

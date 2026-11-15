@@ -5,6 +5,7 @@ description: |
 metadata:
   category: analysis
   icon: ArrowSyncCircle
+license: MIT
 ---
 
 # Instructional Retrospective

@@ -1,0 +1,10 @@
+{
+  "name": "Missed-Meeting Recovery",
+  "description": "When you miss or decline a calendar meeting, pulls the transcript, meeting chat, or event details and produces a recap with the decisions made and the action items assigned to you, then sends it to you by email and Teams chat.",
+  "tags": ["automation", "meetings", "calendar", "transcripts", "action-items", "email", "teams"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.1.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-11-05"
+}

@@ -2,7 +2,7 @@
 name: disruption-intake
 description: Extracts cited local supplier delay notices into draft contract inputs. Use for "a PO is late", "process this supplier notice", "intake this disruption", "extract the delay facts", or "our supplier is delayed". Do NOT use for impact mapping, retrieval, mitigation or terminal drafts — use shortage-impact-map, supply-knowledge-retrieve, mitigation-recommend or disruption-writeup instead. Offline only; no supplier or ERP actions.
 compatibility: Python 3.10+ and local supplied artifacts only; no connectors required.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.4"
   author: Microsoft Manufacturing Skills

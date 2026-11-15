@@ -1,7 +1,7 @@
 ---
 name: source-ingest
 description: Structures a supplier's product package (item spreadsheet, spec sheets, marketing copy) into the rtl.product-content-enrichment.v1 entry hop - one record per SKU with the GTIN and every supplier field verbatim. Use when the user says "enrich these SKUs", "supplier sent the item sheet", "get these products channel-ready", "ingest the supplier item sheet", "start an enrichment batch" or "new SKUs from <supplier>". Do NOT use for sales, sell-through or trade-terms analysis - use xlsx or the trade-deduction skills instead; do NOT normalise, score or draft here - use attribute-normalize, completeness-score or content-draft instead.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: analysis, icon: DocumentTable}
 ---
 # Source Ingest (entry hop)

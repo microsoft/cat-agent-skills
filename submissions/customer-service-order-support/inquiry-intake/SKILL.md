@@ -2,7 +2,7 @@
 name: inquiry-intake
 description: |
   Takes a retail customer's service inquiry from any channel (chat, mail, voice transcript) and classifies intent against the taxonomy with the deterministic intent_classify engine - the first hop of every Customer Service & Order Support run. Use when a service inquiry arrives: "where is my order", "it says delivered but I never got it", "new customer inquiry", "a chat just came in", "classify this contact", "start the service run". Do NOT use for supplier or purchase-order delays - use disruption-intake instead; not for return requests - use return-intake instead; not for the approved answer - use knowledge-retrieve instead; not for drafting the response - use resolution-draft instead; not for general mailbox tasks - use outlook-email instead.
-license: Proprietary
+license: MIT
 metadata:
   version: "1.0.4"
   author: Microsoft Retail & CPG Skills

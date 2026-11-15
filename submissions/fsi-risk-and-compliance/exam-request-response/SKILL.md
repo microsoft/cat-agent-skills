@@ -2,6 +2,7 @@
 name: exam-request-response
 description: Turns a regulator or auditor request list, PDL, IRL, or first-day letter into a tracked response register with original numbering, owners, candidate evidence, status, gaps, and a draft memo. Never asserts that evidence satisfies a request and never sends anything. Use when the user says "build a tracker for this PDL", "who owns each exam item", "find evidence for this request list", "draft responses to the first-day letter", or "what are we missing for the exam". Do NOT use for vendor SOC 2 or DDQ reviews (use vendor-risk-review), enforcement read-across (use enforcement-action-review), one policy against one rule (use policy-gap-analysis), new regulatory instruments (use reg-change-triage), document formatting (use built-in docx), or sending email (use built-in outlook-email).
 metadata: {icon: ClipboardTaskListLtr}
+license: MIT
 ---
 
 ## Scope

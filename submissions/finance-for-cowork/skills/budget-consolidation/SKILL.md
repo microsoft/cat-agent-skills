@@ -12,6 +12,7 @@ description: >-
   modeling.
 metadata:
   icon: MoneyCalculator
+license: MIT
 ---
 
 # Budget Submission Chase and Consolidation

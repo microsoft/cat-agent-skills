@@ -12,6 +12,7 @@ description: >-
   Power BI model.
 metadata:
   icon: DataTrending
+license: MIT
 ---
 
 # Dataset Analysis with Shipped Report

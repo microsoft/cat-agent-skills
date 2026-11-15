@@ -5,6 +5,7 @@ description: |
 metadata:
   category: writing
   icon: AccessibilityCheckmark
+license: MIT
 ---
 
 # Accessible Learning Materials

@@ -15,6 +15,7 @@ metadata:
   displayName: Check cross-references
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Check cross-references

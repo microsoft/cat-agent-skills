@@ -1,7 +1,7 @@
 ---
 name: exception-raise
 description: Ranks a store's promotion-launch readiness exceptions — missing kits, fixture conflicts, price conflicts from checked.json — by weekly revenue at stake with the exception_rank engine, and raises the exception list for the store and district manager. Use after readiness-check, or when the user asks "what do we fix first for the launch", "rank the readiness exceptions", "which gaps cost the most before Monday", "raise the exception list for the store", "what goes to the district manager". Do NOT use for product-content or listing completeness gaps — use the catalog enrichment completeness-score instead, or action-register instead for the fix order; not for the readiness test itself — use readiness-check instead; not for the checklist or shift brief — use brief-draft instead.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: analysis, icon: Warning}
 ---
 # Exception Raise

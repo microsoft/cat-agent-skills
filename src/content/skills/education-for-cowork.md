@@ -12,6 +12,8 @@ authorGithub: microsoft
 version: 1.0.0
 createdAt: 2026-10-31
 bundle: bundles/education-for-cowork.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Helps education teams run the work that repeats each term.
 

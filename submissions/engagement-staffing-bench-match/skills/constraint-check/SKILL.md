@@ -1,7 +1,7 @@
 ---
 name: constraint-check
 description: "Applies staffing independence, conflict, prior-role (including prior client board service), ethical-wall and availability rules to fit-scored candidates and refuses ineligible ones; it never clears a conflict or grants an exception. Use when the user says \"is anyone conflicted?\", \"can we staff them?\", \"check independence for this engagement\", \"why can't we use the top match?\" or \"is this candidate independent of the client?\". Do NOT use for corporate board or proxy-statement independence, extracting roles (use role-intake), loading the register (use bench-query), scoring candidates (use fit-score), drafting the slate (use slate-draft) or sales deal catch-up or pipeline review (use d365-sales-deal-catchup, d365-sales-pipeline-prioritizer or d365-sales-team-pipeline-review)."
-license: Proprietary
+license: MIT
 compatibility: "Requires Python 3 (standard library only) to run the bundled scripts/constraint_check.py on roles.json from role-intake, bench.json and constraints.json from bench-query, and ranked.json from fit-score. No connectors required. Writes local JSON only; never clears conflicts or writes to a resource, staffing or conflicts system."
 metadata:
   version: "1.1.14"

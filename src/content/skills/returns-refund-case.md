@@ -13,6 +13,8 @@ version: 1.0.4
 createdAt: 2026-09-05
 updatedAt: 2026-11-06
 bundle: bundles/returns-refund-case.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Returns Refund Case builds a return case from desk notes, customer emails and order exports. It attaches the policy clauses, codes the return reason, determines eligibility with the clause cited, lists fraud signals as facts and drafts the case packet and customer response. It never authorises a refund, releases funds or adjudicates fraud.
 

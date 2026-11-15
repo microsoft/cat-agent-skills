@@ -1,7 +1,7 @@
 ---
 name: policy-retrieve
 description: 'Retrieves the applicable return policy clauses and the configured windows/limits for a return case and attaches them verbatim as policy_context. Use after return-intake, or on "what does the return policy say for <category>", "what''s the return window for", "pull the policy clauses", "what does policy say about no receipt", "attach the policy to the case". Do NOT use to decide eligibility or red flags - use eligibility-check instead; not to start a case - use return-intake; not for the packet - use case-packet.'
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.4", author: Microsoft Retail & CPG Skills, category: research, icon: BookSearch}
 ---
 # Policy Retrieve

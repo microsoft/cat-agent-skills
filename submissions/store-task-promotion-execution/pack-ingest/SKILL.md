@@ -1,7 +1,7 @@
 ---
 name: pack-ingest
 description: Ingests the HQ campaign pack, price-change file, planogram/signage list and task list for a store promotion launch into the rtl.store-task-promotion-execution.v1 contract (pack.json, the entry hop). Use when the user says "new campaign pack landed", "prep the store for the launch", "are we ready for Monday's promo", "get the promo pack into the contract", "ingest the campaign pack for store <id>", or when a store assignment arrives. Do NOT use for supplier PO delays or shortages — use disruption-intake instead; not for supplier item sheets or catalog SKU enrichment — use source-ingest instead; not for the store's own records — use store-map instead; not for the readiness verdict — use readiness-check instead.
-license: Proprietary
+license: MIT
 metadata: {version: "1.0.5", author: Microsoft Retail & CPG Skills, category: productivity, icon: Box}
 ---
 # Pack Ingest

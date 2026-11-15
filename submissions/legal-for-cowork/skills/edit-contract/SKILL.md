@@ -15,6 +15,7 @@ metadata:
   publisher: Microsoft
   category: writing
   icon: Scales
+license: MIT
 ---
 
 # Edit contract

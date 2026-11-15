@@ -3,6 +3,7 @@ name: post-meeting-follow-up
 description: Turns one completed sales meeting into an accurate summary of decisions and commitments, proposed next actions, and an optional customer follow-up draft. Use when one completed sales meeting or call needs accurate capture, proposed durable actions, and safe customer follow-up, such as "summarize this completed call", "capture meeting commitments", or "draft the meeting follow-up". DO NOT use for upcoming meeting prep, account-wide activity summaries, or lead re-engagement campaigns.
 metadata:
   displayname: Post-Meeting Follow-Up
+license: MIT
 ---
 
 # Post-Meeting Follow-Up

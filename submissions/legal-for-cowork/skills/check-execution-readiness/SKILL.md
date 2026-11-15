@@ -17,6 +17,7 @@ metadata:
   displayName: Check execution readiness
   category: analysis
   icon: Scales
+license: MIT
 ---
 
 # Check execution readiness

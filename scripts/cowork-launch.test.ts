@@ -14,7 +14,6 @@ const plugins = [
   ["legal-for-cowork", "legal", 20],
   ["finance-for-cowork", "finance", 13],
   ["capital-markets-for-cowork", "financial-services", 10],
-  ["accounting-for-cowork", "accounting", 7],
 ] as const;
 const sales = [
   "business-case-composer", "competitive-strategy", "customer-engagement-and-deal-risk-insights",
@@ -24,7 +23,7 @@ const sales = [
 const service = ["answer-research", "case-preparation-brief", "case-triage", "draft-customer-reply", "knowledge-harvest"];
 
 test("every category has a label, color, icon, and schema support", () => {
-  assert.equal(new Set(CATEGORIES).size, 13);
+  assert.equal(new Set(CATEGORIES).size, 12);
   for (const category of CATEGORIES) {
     assert.ok(CATEGORY_LABELS[category]);
     assert.match(CATEGORY_COLORS[category], /^#[0-9a-f]{6}$/i);
@@ -36,13 +35,13 @@ test("every category has a label, color, icon, and schema support", () => {
   }
 });
 
-test("launch submissions are five complete plugins and fourteen individual Cowork skills", () => {
+test("launch submissions are four complete plugins and fourteen individual Cowork skills", () => {
   const entries = [
     ...plugins.map(([slug, category]) => ({ slug, category, kind: "plugin" })),
     ...sales.map((slug) => ({ slug, category: "sales", kind: "skill" })),
     ...service.map((slug) => ({ slug, category: "service", kind: "skill" })),
   ];
-  assert.equal(entries.length, 19);
+  assert.equal(entries.length, 18);
   for (const { slug, category, kind } of entries) {
     const path = `submissions/${slug}`;
     const sub = loadSubmission(path);
@@ -66,7 +65,6 @@ test("launch submissions are five complete plugins and fourteen individual Cowor
       assert.equal(validated.skills.length, plugins.find(([name]) => name === slug)?.[2]);
     }
   }
-  assert.match(readFileSync("submissions/accounting-for-cowork/README.md", "utf8"), /Frontier only/);
 });
 
 test("team directory entry aggregates all nineteen submissions without fabricating a login or badge", () => {
