@@ -1,0 +1,11 @@
+{
+  "name": "Companies House Verification",
+  "description": "Verify UK companies via the Companies House API (status, number, incorporation date, SIC codes, officers, PSCs) and save them to the Dataverse account table.",
+  "platforms": ["Copilot Studio", "Dynamics 365"],
+  "tags": ["companies-house", "uk", "company-verification", "kyc", "due-diligence", "sic-code", "dataverse", "dynamics-365", "account"],
+  "author": "Suneetha Akula",
+  "version": "1.1.0",
+  "createdAt": "2026-11-15",
+  "updatedAt": "2026-11-15",
+  "category": "professional-services"
+}
