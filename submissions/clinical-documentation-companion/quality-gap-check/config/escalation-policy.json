@@ -1,0 +1,137 @@
+{
+  "routees": {
+    "override_refusal": {
+      "name": "[TO CONFIGURE: quality/compliance contact name for override refusals]",
+      "role": "[TO CONFIGURE: role]",
+      "contact": "[TO CONFIGURE: contact channel]"
+    },
+    "unsupported_claim_element": {
+      "name": "attending clinician of record",
+      "role": "Clinician",
+      "contact": "via EHR in-basket"
+    },
+    "unsigned_note": {
+      "name": "attending clinician of record",
+      "role": "Clinician",
+      "contact": "via EHR in-basket"
+    },
+    "code_change_refusal": {
+      "name": "[TO CONFIGURE: coding compliance contact name]",
+      "role": "[TO CONFIGURE: coding compliance role]",
+      "contact": "[TO CONFIGURE: coding compliance contact channel]"
+    },
+    "omission_refusal": {
+      "name": "[TO CONFIGURE: quality/compliance contact for handoff-omission requests]",
+      "role": "[TO CONFIGURE: role]",
+      "contact": "[TO CONFIGURE: contact channel]"
+    }
+  },
+  "override_intent_terms": [
+    "mark",
+    "marked",
+    "marking",
+    "count it",
+    "counts as",
+    "close the gap",
+    "attest",
+    "just say",
+    "note it as",
+    "put it down as",
+    "record as",
+    "was likely performed",
+    "probably",
+    "assume",
+    "call it done",
+    "met anyway",
+    "override",
+    "let it count",
+    "count this",
+    "counts this",
+    "go ahead and count",
+    "treat it as met",
+    "treat as met",
+    "consider it met",
+    "surely",
+    "must have",
+    "was done",
+    "was performed",
+    "likely",
+    "credit it",
+    "give credit",
+    "count {measure}",
+    "treat {measure} as"
+  ],
+  "override_negation_terms": [
+    "don't",
+    "dont",
+    "do not",
+    "never",
+    "no need to",
+    "without",
+    "shouldn't",
+    "should not",
+    "must not",
+    "mustn't",
+    "won't",
+    "will not"
+  ],
+  "override_non_status_terms": [
+    "final",
+    "finalised",
+    "finalized",
+    "draft",
+    "urgent",
+    "read",
+    "unread",
+    "private",
+    "confidential",
+    "important"
+  ],
+  "override_context_window_words": 3,
+  "request_text_fields": [
+    "request_text",
+    "user_request",
+    "message",
+    "messages",
+    "requester_notes",
+    "raw_request"
+  ],
+  "action_levels": {
+    "default": "L0",
+    "maximum_permitted": "L1",
+    "L0": "draft only, nothing leaves the plugin",
+    "L1": "draft prepared for a named human approver; the human sends, signs or files"
+  },
+  "omission_intent_terms": [
+    "leave it out",
+    "leave out",
+    "omit",
+    "don't flag",
+    "do not flag",
+    "no need to flag",
+    "skip the gap",
+    "drop the gap",
+    "don't mention",
+    "do not mention",
+    "take it off the handoff",
+    "leave the gap out",
+    "leave the foot-exam gap out"
+  ],
+  "code_change_intent_terms": [
+    "bump",
+    "upgrade",
+    "upcode",
+    "higher level",
+    "raise the level",
+    "level up",
+    "change the code",
+    "pick a code",
+    "pick whatever",
+    "choose a code",
+    "select a code",
+    "add the code",
+    "swap the code",
+    "optimise the code",
+    "optimize the code"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.4",
+  "id": "ec4ad0e8-0d46-45a1-a491-834be4b6de98",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Customer Service Order Support",
+    "full": "Customer Service Order Support for Cowork"
+  },
+  "description": {
+    "short": "Retail order service: classify inquiries, assemble order records, draft replies",
+    "full": "Customer Service Order Support works retail order inquiries such as where is my order and delivered but not received. It classifies the inquiry, assembles order, carrier and loyalty records, flags contradictions and drafts a grounded reply or a tier 2 escalation packet. It never issues goodwill credit, changes payment details or sends replies.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "inquiry-intake"
+    },
+    {
+      "folder": "context-assemble"
+    },
+    {
+      "folder": "knowledge-retrieve"
+    },
+    {
+      "folder": "resolution-draft"
+    },
+    {
+      "folder": "handoff-packet"
+    }
+  ]
+}

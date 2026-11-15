@@ -1,0 +1,22 @@
+{
+  "name": "Staffing & Bench Match",
+  "description": "A ranked, partner-ready staffing slate for a signed engagement: extract the roles from the SOW, score bench fit against availability and rates, refuse conflicted or unavailable candidates with the rule cited and draft the recommendation.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "professional-services",
+    "staffing",
+    "resource-management",
+    "bench",
+    "independence",
+    "conflicts"
+  ],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.1.14",
+  "createdAt": "2026-11-06",
+  "updatedAt": "2026-11-06",
+  "category": "professional-services",
+  "builtByMicrosoft": true
+}
