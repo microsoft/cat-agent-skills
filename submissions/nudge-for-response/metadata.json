@@ -1,0 +1,10 @@
+{
+  "name": "Nudge for Response",
+  "description": "Every weekday at 9:00 AM, finds sent emails with an ask that has gone unanswered for 3+ business days, saves brief polite nudge replies as drafts for manual review, and posts a Teams summary. Never sends mail.",
+  "tags": ["automation", "email", "follow-up", "drafts", "teams", "workiq", "productivity"],
+  "author": "Payal Awasthi",
+  "authorUrl": "https://github.com/awasthipayal07-tech",
+  "version": "1.1.0",
+  "createdAt": "2026-10-24",
+  "updatedAt": "2026-11-05"
+}
