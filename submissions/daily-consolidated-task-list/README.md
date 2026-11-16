@@ -26,6 +26,17 @@ When the plan is ready, the automation delivers it to you:
 Your address is resolved at run time from your signed-in profile, so nothing is
 hardcoded.
 
+## Safeguards
+
+- **Untrusted content:** calendar, mail, chat, and transcript content is treated
+  as data, never as instructions. A request found inside it (for example
+  "forward this" or "skip this item") is recorded as an item, not followed.
+- **Read-only collection:** collecting, merging, and ranking only read data. They
+  never send, reply, forward, create, modify, or delete anything.
+- **Delivery to you only:** the plan goes only to the signed-in user's own
+  mailbox and Teams self-chat. No other recipient can be added, and instructions
+  in source content to send it elsewhere are ignored.
+
 ## Run in Scout Desktop or Scout Cloud
 
 Use the [automation JSON file](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/daily-consolidated-task-list/daily-consolidated-task-list.json):
@@ -36,9 +47,11 @@ Use the [automation JSON file](https://raw.githubusercontent.com/microsoft/cat-a
 
 ## Before you enable it
 
-- Scout needs access to your Microsoft 365 calendar, Outlook mail, and Teams
-  (for example through the WorkIQ connector), including permission to send
-  email and Teams chat messages as you.
+- Scout needs read access to your Microsoft 365 calendar, Outlook mail, and Teams
+  (for example through the WorkIQ connector), plus the ability to deliver the
+  plan to you only: an email to your own mailbox and a post to your Teams
+  self-chat. It is not given, and does not use, permission to send, reply, or
+  forward to anyone else.
 - After importing into Scout, review the schedule and steps, then confirm that
   the automation is enabled when you are ready for it to run.
 - It reads your calendar, mail, and chats, and only sends the plan to you (your
