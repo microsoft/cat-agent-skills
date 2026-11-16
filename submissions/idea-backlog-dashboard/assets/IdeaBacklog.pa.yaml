@@ -155,8 +155,7 @@ Screens:
             Text: ="Save"
             OnSelect: |-
               =Patch(Ideas, varIdea, {
-                Status: Switch(drpEditStatus.Selected.Value, "New", 'Status (Ideas)'.New, "In Progress", 'Status (Ideas)'.'In Progress', "Completed", 'Status (Ideas)'.Completed),
-
+                Status: Switch(drpEditStatus.Selected.Value, "New", 'Status (Ideas)'.New, "In Progress", 'Status (Ideas)'.'In Progress', "Completed", 'Status (Ideas)'.Completed),
                 'Status Notes': txtNotes.Text,
                 'Completed On': If(drpEditStatus.Selected.Value = "Completed", Today(), Blank())});
               Set(varIdea, LookUp(Ideas, Idea = varIdea.Idea));
