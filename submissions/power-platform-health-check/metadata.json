@@ -4,6 +4,7 @@
   "platforms": ["Copilot Studio"],
   "tags": ["power-platform", "dataverse", "health-check", "solutions", "alm", "validation"],
   "author": "Suneetha Akula",
+  "authorUrl": "https://github.com/SuneethaXpedition",
   "version": "1.0.0",
   "category": "agent-development"
 }
