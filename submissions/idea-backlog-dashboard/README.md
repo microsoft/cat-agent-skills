@@ -1,29 +1,24 @@
 # Idea Backlog Dashboard
 
-This skill helps organize and prioritize product or project ideas in a single, visible backlog.
+A portable, end-to-end package for collecting and tracking ideas on Power Platform:
 
-## What it does
+**User → Copilot Studio agent → Dataverse `Idea` table → Power Apps dashboard**
 
-- captures ideas with a clear problem, value statement, and owner
-- scores ideas by impact, effort, and urgency
-- surfaces the highest-value opportunities first
-- tracks status and next actions for each item
+## What you get
 
-## Typical use cases
+- **Dataverse**: script that idempotently creates an `IdeaBacklog` solution and an `Idea` table (title, description, status, priority, category, submitter, business value, status notes, source, conversation ID, completed date).
+- **Copilot Studio agent**: instructions, topic and Dataverse "Add a new row" tool setup to capture ideas conversationally.
+- **Power Apps canvas app**: dashboard with status counts, search and filter, an ideas gallery, and a detail screen where owners can update status and notes.
+- **Import script and sample data** for seeding or bulk-loading ideas.
 
-- reviewing customer feedback and feature opportunities
-- planning product experiments
-- managing internal innovation ideas
-- aligning stakeholders around what to build next
+## Prerequisites
 
-## Suggested output format
+- A Dataverse environment with Copilot Studio and Power Apps
+- A service principal and an existing publisher; set these environment variables: `DATAVERSE_ENV_URL`, `DATAVERSE_TENANT_ID`, `DATAVERSE_CLIENT_ID`, `DATAVERSE_CLIENT_SECRET`, `DATAVERSE_PUBLISHER_PREFIX`
+- PowerShell 7
 
-Use a simple dashboard with columns for:
+## Usage
 
-- Idea
-- Status
-- Priority
-- Impact
-- Effort
-- Owner
-- Next action
+Ask your agent, for example: *"Build an idea backlog dashboard with a Copilot Studio capture agent."* The skill walks through schema creation, agent setup, app creation, validation and sharing.
+
+The Copilot Studio agent and canvas app are built in the maker portals following the included references; they are not generated automatically.

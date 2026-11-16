@@ -1,11 +1,9 @@
 {
   "name": "Idea Backlog Dashboard",
-  "description": "Track, prioritize, and surface promising product ideas in a single backlog dashboard.",
+  "description": "Capture ideas with a Copilot Studio agent, store them in Dataverse, and track them by status (New, In Progress, Completed) in a Power Apps canvas dashboard with a detail view.",
   "platforms": ["Copilot Studio"],
-  "tags": ["productivity", "planning", "ideas", "dashboard"],
-  "author": "SuneethaXpedition",
-  "authorUrl": "https://github.com/SuneethaXpedition",
+  "tags": ["power-apps", "dataverse", "copilot-studio", "idea-management", "backlog", "dashboard"],
+  "author": "Suneetha Akula",
   "version": "1.0.0",
-  "createdAt": "2026-11-16",
-  "updatedAt": "2026-11-16"
+  "category": "productivity"
 }
