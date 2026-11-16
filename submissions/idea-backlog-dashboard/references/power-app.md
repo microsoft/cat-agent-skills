@@ -30,9 +30,9 @@ SortByColumns(
 - Edit controls (for owners/triage): status dropdown, notes input, Save button:
 ```
 Patch(Ideas, varIdea, {
-  Status: drpEditStatus.Selected.Value,
+  Status: Switch(drpEditStatus.Selected.Value, "New", 'Status (Ideas)'.New, "In Progress", 'Status (Ideas)'.'In Progress', "Completed", 'Status (Ideas)'.Completed),
   'Status Notes': txtNotes.Text,
-  'Completed On': If(drpEditStatus.Selected.Value = 'Status (Ideas)'.Completed, Today(), Blank())});
+  'Completed On': If(drpEditStatus.Selected.Value = "Completed", Today(), Blank())});
 Set(varIdea, LookUp(Ideas, Idea = varIdea.Idea)); Notify("Saved", NotificationType.Success)
 ```
 
