@@ -3,6 +3,7 @@
 __version__='1.0.0'
 import argparse, csv, json, math, re, html, zipfile
 from pathlib import Path
+from collections import Counter
 from datetime import datetime, timezone
 from xml.etree import ElementTree as ET  # nosec B405 - XLSX parts are parsed only through safe_xml(), whose parser refuses any DTD
 
@@ -1009,6 +1010,14 @@ def agent_hints(res):
                     break
     return out
 
+def assumption_note(sv,lead=''):
+    """Plain-language note of the user-stated market inputs (share price, share count), which are not from the report."""
+    a=(sv or {}).get('assumptions') or []
+    if not a: return ''
+    names=sorted({x.split('[')[0].replace('_',' ') for x in a}); years=sorted({x.split('[')[1].rstrip(']') for x in a if '[' in x})
+    return (f"{lead}User assumptions, not from the report: {' and '.join(names)} ({', '.join(years)}). "
+            "Market capitalisation and the price ratios depend on them.")
+
 def findings(res):
     per=res['periods']; last=per[-1]['metrics']; prev=per[-2]['metrics'] if len(per)>1 else {}; lv=per[-1]['values']; pv=per[-2]['values'] if len(per)>1 else {}
     lab=[p['label'] for p in per]; lines=R_lines(res)
@@ -1107,6 +1116,7 @@ def findings(res):
     if res.get('unaudited'): warn.insert(0,'Source statements are UNAUDITED.')
     sv=res.get('source_verification')
     if sv and not sv.get('verified'): warn.insert(0,f"Source citations NOT VERIFIED: {sv.get('reason')}. Figures are unconfirmed against the report until this is fixed.")
+    if sv and sv.get('assumptions'): warn.append(assumption_note(sv))
     if cfail: warn.insert(0,f"WARNING: {len(cfail)} accounting reconciliation check(s) failed. Findings are preliminary until resolved.")
     out=warn+out
     return out or ['Available data are insufficient for a robust multi-year conclusion; review missing metrics and source completeness.']
@@ -1139,6 +1149,7 @@ def report_html(res):
     sv=res.get('source_verification')
     sv_html=(f'<div class="flag" style="margin-top:10px"><strong>Source citations not verified</strong><div>{esc(sv.get("reason"))}. Figures are unconfirmed against the report.</div></div>' if sv and not sv.get('verified')
              else f'<div class="ok" style="margin-top:10px">Source citations verified: {sv.get("found")} of {sv.get("checked")} cited values found on their cited page or sheet.</div>' if sv else '')
+    if sv and sv.get('assumptions'): sv_html+=f'<div class="flag" style="margin-top:10px"><strong>User assumptions</strong><div>{esc(assumption_note(sv))}</div></div>'
     disc=[(str(d.get('text','')),((d['source'].get('location','') if isinstance(d.get('source'),dict) else d.get('source')) or '') if d.get('source') else '') for d in res.get('key_disclosures') or []]
     disc_html=('<h2>Key disclosures (from the report)</h2><ul>'+''.join('<li>'+esc(t)+(f' <span class="sub">[{esc(s)}]</span>' if s else '')+'</li>' for t,s in disc)+'</ul>') if disc else ''
     return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Financial Statement Spreading &amp; Analysis — {esc(res['company'])}</title><style>body{{font:15px/1.55 system-ui,Arial,sans-serif;color:#15243b;background:#f1f5fa;margin:0}}main{{max-width:1100px;margin:36px auto;background:white;padding:40px;border-radius:16px;box-shadow:0 8px 30px #172b4d15}}h1{{font-size:30px;margin:0}}h2{{margin-top:38px;padding-bottom:9px;border-bottom:2px solid #dbe8f4}}h3{{margin:24px 0 4px;color:#1f3864}}.sub{{color:#607188}}.flag{{padding:14px;background:#fff1e8;border-left:4px solid #df7a24}}.ok{{padding:14px;background:#eaf6f2;border-left:4px solid #16896d}}table{{border-collapse:collapse;width:100%;font-size:12px;margin:10px 0 22px}}td,th{{padding:7px 9px;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top}}td:first-child,th:first-child{{text-align:left}}th{{background:#1f3864;color:white}}tr.sec td{{background:#dce6f1;font-weight:600;color:#1f3864}}tr.tot td{{font-weight:600;border-top:1px solid #8aa0bf}}.scroll{{overflow-x:auto}}footer{{color:#526475;font-size:12px;margin-top:30px}}@media print{{body{{background:white}}main{{margin:0;box-shadow:none;padding:12px}}}}</style></head><body><main>{'<div class="flag" style="background:#fde8e7;border-color:#b42318;color:#b42318;font-weight:700">DEMO DATA: synthetic figures for testing only. This is not an analysis of any real company.</div>' if res.get('demo') else ''}<p class="sub">FINANCIAL STATEMENT SPREADING &amp; ANALYSIS · AUDITABLE</p><h1>{esc(res['company'])}</h1><p class="sub">{esc(res['currency'])} · {esc(m['display_unit'])} · {esc(res['basis'])} · {esc(flow_h[0])} – {esc(flow_h[-1])}{' · <strong>UNAUDITED</strong>' if m['unaudited'] else ''}</p><div class="{'flag' if cfail else 'ok'}"><strong>{'Reconciliation issues detected' if cfail else 'No detected reconciliation failures'}</strong><div>{len(cfail)} failed checks; {sum(c['status']=='not_tested' for c in checks)} checks not testable. A passing check does not prove audit assurance or extraction accuracy.</div></div>{sv_html}<h2>Executive assessment</h2><ul>{''.join('<li>'+esc(f)+'</li>' for f in findings(res))}</ul>{disc_html}<p><strong>Interpretation limits:</strong> Automated findings describe observed movements only. Missing fields, business models, notes and restatements may change conclusions. Do not treat this report as investment advice.</p><h2>Financial statements</h2>{st_html}<h2>Ratio and trend dashboard</h2>{table(['Ratio / metric']+flow_h,rt,rc)}<h2>Reconciliation controls</h2>{checktable}<h2>Calculation register</h2>{audittable}<footer>Expenses and cash outflows are shown as negative values. Source references appear in each calculation and check; detailed source metadata remains in analysis.json and the workbook Sources sheet. Generated {esc(res['generated_utc'])}. This report must be reviewed against the original audited sources.</footer></main></body></html>'''
@@ -1390,7 +1401,7 @@ def write_xlsx(path, res):
     sv=res.get('source_verification')
     if sv:
         sm.put(7,0,'Source citations',S(font={'b':1}))
-        sm.put(7,1,f"Verified: {sv.get('found')} of {sv.get('checked')} cited values found" if sv.get('verified') else f"NOT VERIFIED: {sv.get('reason')}",
+        sm.put(7,1,(f"Verified: {sv.get('found')} of {sv.get('checked')} cited values found" if sv.get('verified') else f"NOT VERIFIED: {sv.get('reason')}")+assumption_note(sv,'; '),
                S(font={'b':1,'color':'0B6E4F' if sv.get('verified') else 'B42318'},fill='E3F4EC' if sv.get('verified') else 'FDE8E7',align={'h':'left','indent':1}))
         sm.merges.append(f'B7:{col(max(ny,3))}7')
     hr=8; sm.put(hr,0,'Key metrics',hdr_l)
@@ -2597,6 +2608,7 @@ def extract_xlsx(input_file,out):
 
 PCT_IDS={'cet1_ratio','total_capital_ratio','solvency_ratio'}   # entered as decimals (0.145); reports print them as percentages (14.5%)
 SHEET_SUFFIXES=('.xlsx','.xlsm','.csv','.tsv')
+ASSUMPTION_IDS={'share_price','shares_outstanding'}   # market inputs a user may state; every other figure must come from the document
 
 def sheet_pages(doc_file):
     """(sheet name, TextPage) per worksheet of an XLSX, or one page for a CSV/TSV, so spreadsheet citations can be
@@ -2687,11 +2699,60 @@ def check_sources(json_file,doc_file):
             except ValueError: return None
             out.append(sign*(-val if neg else val)); sign=1
         return out if len(out)>=2 else None
+    zero_ok=0; assumed=[]
+    DASHES='-–—―−－'   # incl. the full-width dash Japanese reports print for nil
+    nil_tok=re.compile(r'^(?:\(?['+DASHES+r']\)?|\(?0(?:[.,]0+)?\)?|nil|n[ée]ant)$',re.I)   # '–', '(0)', '0.0', 'nil'
+    amt_tok=re.compile(r'^\(?['+DASHES+r']?\d[\d,.  ]*\)?%?$')
+    nows=lambda s: re.sub(r'\s+','',str(s).replace('’',"'").replace('‘',"'")).lower()
+    def nil_on(pno):
+        """The page shows a nil entry somewhere: a printed 0, a dash standing alone in a column, or the word nil / néant."""
+        t=byno[pno].get_text() if pno in byno else ''
+        return 0.0 in nums(pno) or bool(re.search(r'(?:^|[\s(|])['+DASHES+r'](?=[\s)|]|$)|\bnil\b|\bn[ée]ant\b',t,re.I|re.M))
+    def rows_of(pno):
+        """[label, amounts, has_nil] per printed row: a text line followed by the amount cells of that row (a label
+        wrapped over two lines is joined)."""
+        rows=[]
+        cell=lambda c: amt_tok.match(c.replace(' ','')) or nil_tok.match(c)
+        for raw in (byno[pno].get_text() if pno in byno else '').split('\n'):
+            s=raw.strip()
+            if not s: continue
+            # cells: one per line (PDF text), or separated by tabs / 2+ spaces (OCR text, sheets); a lone line of digits is
+            # one cell even when space-grouped ('392 687')
+            toks=[c for c in re.split(r'\t|\s{2,}',s) if c.strip()] if re.search(r'\t|\s{2,}',s) else ([s] if cell(s) else s.split())
+            k=len(toks)
+            while k and cell(toks[k-1].strip()): k-=1
+            tail=toks[k:]
+            if k:
+                lab=' '.join(toks[:k])
+                if rows and rows[-1][1]==0 and not tail: rows[-1][0]+=lab
+                elif rows and rows[-1][1]==0: rows[-1][0]+=lab; rows[-1][1]=len(tail); rows[-1][2]=any(nil_tok.match(x) for x in tail)
+                else: rows.append([lab,len(tail),any(nil_tok.match(x) for x in tail)])
+            elif rows: rows[-1][1]+=len(tail); rows[-1][2]|=any(nil_tok.match(x) for x in tail)
+        return rows
+    def zero_row(pno,label):
+        """None when the line's printed label is not on the page; else True when its row shows a nil entry or has fewer
+        amounts than a full row on the page (a blank cell), False when the row is fully populated. A full row has the most
+        common number of amounts: unlabelled total rows add their amounts to the row above, so the maximum overstates it."""
+        key=nows(label)
+        if len(key)<4: return None
+        rows=rows_of(pno); hit=[r for r in rows if key in nows(r[0])]
+        if not hit: return None
+        cnt=Counter(r[1] for r in rows if r[1]>0)
+        if not cnt: return True
+        full=max(cnt,key=lambda c:(cnt[c],c))
+        return any(r[2] or r[1]<full for r in hit)
     for st,lines in d.get('statements',{}).items():
         for l in lines:
             for y,v in (l.get('values') or {}).items():
-                if not isinstance(v,(int,float)) or v==0: continue
+                if not isinstance(v,(int,float)): continue
                 src=((l.get('sources') or {}).get(y) or l.get('source') or {}); loc=str(src.get('location',''))
+                if st=='supplementary' and (src.get('assumption') is True or re.match(r'\s*user[- ]?(?:supplied )?assumption',str(src.get('document','')),re.I)):
+                    # A market input the user stated (share price, share count) is not in the report: it is listed as an
+                    # assumption in every output instead of being checked. Nothing else may bypass the check this way.
+                    if l['id'] in ASSUMPTION_IDS: assumed.append(f"{l['id']}[{y}]"); continue
+                    total+=1
+                    miss.append(f"  NOT A PERMITTED ASSUMPTION: {l['id']}[{y}] = {v:,} - only {' and '.join(sorted(ASSUMPTION_IDS))} may be user assumptions; cite the page of the report for this value")
+                    continue
                 sc=re.search(r'[x×\*]\s*1[ ,.]?000(?:[ ,.]?000)?\b',loc,re.I)
                 scale=(1e6 if sc and re.search(r'000[ ,.]?000',sc.group(0)) else 1e3) if sc else 1
                 derived=not sc and bool(re.search(r'\bderived\b|[+=]',loc,re.I))
@@ -2703,6 +2764,22 @@ def check_sources(json_file,doc_file):
                 else:
                     mm=re.search(r'p(?:age)?\.?\s*(\d+)',loc,re.I)
                     where=[int(mm.group(1))] if mm else []   # a citation without a page number cannot be verified: a miss
+                if v==0:
+                    # A zero is checked too (a false nil, such as debt entered as 0, would otherwise pass). Confirmed when the
+                    # location quotes words printed on the cited page ('p.30 (note: "no borrowings")'); else, when the line's
+                    # printed label is on the page, when that row shows nil or has a blank cell (a fully populated row fails);
+                    # else when the page shows a nil entry.
+                    total+=1; pages=[p for p in where if p in byno]
+                    q=re.search(r'["“«]\s*([^"“”«»]{3,200}?)\s*["”»]',loc)
+                    rowres=[] if q or kind=='sheet' else [r for r in (zero_row(p,lb) for p in pages for lb in {src.get('label'),l.get('label')} if lb) if r is not None]
+                    if pages and (any(nows(q.group(1)) in nows(byno[p].get_text()) for p in pages) if q else any(rowres) if rowres else any(nil_on(p) for p in pages)):
+                        found+=1; zero_ok+=1; continue
+                    why=(f'the location names no {where_word} of the document' if not pages else
+                         f'the quoted words are not on the cited {where_word}' if q else
+                         f'its row on the cited {where_word} shows an amount in every column' if rowres else f'the cited {where_word} shows no nil entry (0, a dash or "nil")')
+                    miss.append(f"  ZERO NOT CONFIRMED: {l['id']}[{y}] = 0 cited {loc!r} - {why}; cite the {where_word} where the line shows nil, "
+                                "or quote the words that say there is none, e.g. 'p.30 (note: \"no borrowings\")'; if the document does not give the figure, leave it empty (null), not 0")
+                    continue
                 cands={round(abs(v)/scale,4)}
                 if l['id'] in PCT_IDS or (st=='supplementary' and l['id'].endswith(('_ratio','_pct')) and abs(v)<1): cands.add(round(abs(v)*100,4))   # 0.145 is printed as 14.5
                 total+=1
@@ -2723,10 +2800,13 @@ def check_sources(json_file,doc_file):
                 alt=[q for q in (list(byno) if kind=='sheet' else sorted(byno)) if q not in where and any(a in nums(q) for a in cands)][:4]
                 miss.append(f"  NOT ON CITED {where_word.upper()}: {l['id']}[{y}] = {v:,} cited {loc!r}"+(f' (names no {where_word} of the document)' if not where else '')
                             +(f" - appears on {unit}{(', '+unit).join(map(str,alt))}" if alt else ' - not found in the document'))
-    print(f'SOURCES: {found} of {total} values found on their cited {where_word}'+(f" (incl. {derived_ok} derived value{'s' if derived_ok!=1 else ''} reproduced from their cited components)" if derived_ok else '')+('' if miss else ' - all citations verified'))
+    incl=[x for x in (f"{derived_ok} derived value{'s' if derived_ok!=1 else ''} reproduced from their cited components" if derived_ok else '',
+                      f"{zero_ok} zero{'s' if zero_ok!=1 else ''} confirmed as nil" if zero_ok else '') if x]
+    print(f'SOURCES: {found} of {total} values found on their cited {where_word}'+(f" (incl. {'; '.join(incl)})" if incl else '')+('' if miss else ' - all citations verified'))
+    if assumed: print(f"  USER ASSUMPTIONS (not from the document, labelled as such in every output): {', '.join(assumed)}")
     for x in miss[:40]: print(x)
     if miss: print('Fix each citation (for spreadsheets cite the sheet name; for PDFs use the page number shown by page-text, not the one printed on the page); for a value computed from printed figures, write them in the location, e.g. "p.33 (derived: 1,234 + 567)". Then re-run analyze.')
-    return {'verified':not miss,'checked':total,'found':found,'missing':len(miss),
+    return {'verified':not miss,'checked':total,'found':found,'missing':len(miss),'zero_confirmed':zero_ok,'assumptions':assumed,
             'reason':'' if not miss else f'{len(miss)} of {total} cited values were not found on their cited {where_word}'}
 
 def page_text(input_file,pages=None,find=None,width=4000):
