@@ -1,0 +1,166 @@
+# Reference canvas app source (Power Apps YAML). Replace display names if your table differs.
+App:
+  Properties:
+    StartScreen: =scrDashboard
+Screens:
+  scrDashboard:
+    Properties:
+      Fill: =RGBA(243, 242, 241, 1)
+    Children:
+      - lblTitle:
+          Control: Label
+          Properties:
+            Text: ="Idea Backlog"
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Size: =24
+            X: =20
+            Y: =10
+            Width: =400
+            Height: =50
+      - btnRefresh:
+          Control: Button
+          Properties:
+            Text: ="Refresh"
+            OnSelect: =Refresh(Ideas)
+            X: =Parent.Width - 140
+            Y: =14
+            Width: =120
+            Height: =40
+      - lblNew:
+          Control: Label
+          Properties:
+            Text: ="New: " & CountRows(Filter(Ideas, Status = 'Status (Ideas)'.New))
+            Fill: =RGBA(0, 120, 212, 1)
+            Color: =Color.White
+            X: =20
+            Y: =70
+            Width: =180
+            Height: =60
+            OnSelect: =Set(varStatus, "New")
+      - lblInProgress:
+          Control: Label
+          Properties:
+            Text: ="In Progress: " & CountRows(Filter(Ideas, Status = 'Status (Ideas)'.'In Progress'))
+            Fill: =RGBA(255, 140, 0, 1)
+            Color: =Color.White
+            X: =210
+            Y: =70
+            Width: =180
+            Height: =60
+            OnSelect: =Set(varStatus, "In Progress")
+      - lblCompleted:
+          Control: Label
+          Properties:
+            Text: ="Completed: " & CountRows(Filter(Ideas, Status = 'Status (Ideas)'.Completed))
+            Fill: =RGBA(16, 124, 16, 1)
+            Color: =Color.White
+            X: =400
+            Y: =70
+            Width: =180
+            Height: =60
+            OnSelect: =Set(varStatus, "Completed")
+      - drpStatus:
+          Control: DropDown
+          Properties:
+            Items: =["All", "New", "In Progress", "Completed"]
+            Default: =If(IsBlank(varStatus), "All", varStatus)
+            X: =600
+            Y: =80
+            Width: =200
+            Height: =40
+      - txtSearch:
+          Control: TextInput
+          Properties:
+            HintText: ="Search ideas"
+            X: =820
+            Y: =80
+            Width: =300
+            Height: =40
+      - galIdeas:
+          Control: Gallery
+          Variant: BrowseLayout_Vertical_TwoTextOneImageVariant_ver5.0
+          Properties:
+            Items: |-
+              =SortByColumns(Filter(Ideas,
+                (drpStatus.Selected.Value = "All" || Text(Status) = drpStatus.Selected.Value) &&
+                (IsBlank(txtSearch.Text) || txtSearch.Text in Title || txtSearch.Text in Description)),
+                "createdon", SortOrder.Descending)
+            X: =20
+            Y: =150
+            Width: =Parent.Width - 40
+            Height: =Parent.Height - 170
+            TemplateSize: =90
+            OnSelect: =Set(varIdea, ThisItem); Navigate(scrDetail, ScreenTransition.Fade)
+  scrDetail:
+    Properties:
+      Fill: =RGBA(255, 255, 255, 1)
+    Children:
+      - btnBack:
+          Control: Button
+          Properties:
+            Text: ="< Back"
+            OnSelect: =Navigate(scrDashboard, ScreenTransition.Fade)
+            X: =20
+            Y: =20
+            Width: =120
+            Height: =40
+      - lblDetailTitle:
+          Control: Label
+          Properties:
+            Text: =varIdea.Title
+            FontWeight: =FontWeight.Bold
+            Size: =24
+            X: =20
+            Y: =70
+            Width: =Parent.Width - 40
+            Height: =50
+      - lblDetailStatus:
+          Control: Label
+          Properties:
+            Text: =Text(varIdea.Status) & " | Priority: " & Text(varIdea.Priority) & " | " & Text(varIdea.Category)
+            X: =20
+            Y: =125
+            Width: =Parent.Width - 40
+            Height: =30
+      - lblDetailBody:
+          Control: Label
+          Properties:
+            Text: =varIdea.Description & Char(10) & Char(10) & "Business value: " & varIdea.'Business Value' & Char(10) & "Submitted by: " & varIdea.'Submitted By' & " (" & varIdea.'Submitter Email' & ")" & Char(10) & "Submitted on: " & Text(varIdea.'Created On', "dd mmm yyyy") & Char(10) & "Notes: " & varIdea.'Status Notes'
+            X: =20
+            Y: =165
+            Width: =Parent.Width - 40
+            Height: =220
+      - drpEditStatus:
+          Control: DropDown
+          Properties:
+            Items: =["New", "In Progress", "Completed"]
+            Default: =Text(varIdea.Status)
+            X: =20
+            Y: =400
+            Width: =220
+            Height: =40
+      - txtNotes:
+          Control: TextInput
+          Properties:
+            Default: =varIdea.'Status Notes'
+            Mode: =TextMode.MultiLine
+            X: =260
+            Y: =400
+            Width: =500
+            Height: =80
+      - btnSave:
+          Control: Button
+          Properties:
+            Text: ="Save"
+            OnSelect: |-
+              =Patch(Ideas, varIdea, {
+                Status: Switch(drpEditStatus.Selected.Value, "New", 'Status (Ideas)'.New, "In Progress", 'Status (Ideas)'.'In Progress', "Completed", 'Status (Ideas)'.Completed),
+                'Status Notes': txtNotes.Text,
+                'Completed On': If(drpEditStatus.Selected.Value = "Completed", Today(), Blank())});
+              Set(varIdea, LookUp(Ideas, Idea = varIdea.Idea));
+              Notify("Saved", NotificationType.Success)
+            X: =780
+            Y: =400
+            Width: =120
+            Height: =40

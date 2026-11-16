@@ -1,0 +1,301 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Companies House Verification",
+    "description": "Read-only lookups against the Companies House Public Data API.",
+    "version": "1.0"
+  },
+  "host": "api.company-information.service.gov.uk",
+  "basePath": "/",
+  "schemes": ["https"],
+  "produces": ["application/json"],
+  "securityDefinitions": {
+    "basicAuth": {
+      "type": "basic",
+      "description": "Username = Companies House REST API key; password = leave blank."
+    }
+  },
+  "security": [{ "basicAuth": [] }],
+  "paths": {
+    "/search/companies": {
+      "get": {
+        "operationId": "SearchCompanies",
+        "summary": "Search companies by name or number",
+        "description": "Find companies matching a name or number. Use to check whether a company exists.",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "type": "string", "description": "Company name or number" },
+          { "name": "items_per_page", "in": "query", "required": false, "type": "integer", "default": 5 },
+          { "name": "start_index", "in": "query", "required": false, "type": "integer", "default": 0 }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_results": { "type": "integer" },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": { "type": "string" },
+                      "company_number": { "type": "string" },
+                      "company_status": { "type": "string" },
+                      "company_type": { "type": "string" },
+                      "date_of_creation": { "type": "string" },
+                      "address_snippet": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/company/{companyNumber}": {
+      "get": {
+        "operationId": "GetCompanyProfile",
+        "summary": "Get company profile",
+        "description": "Status, incorporation date, SIC codes, registered office, accounts and confirmation statement for a company number.",
+        "parameters": [
+          { "name": "companyNumber", "in": "path", "required": true, "type": "string", "description": "8-character company number" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "company_name": { "type": "string" },
+                "company_number": { "type": "string" },
+                "company_status": { "type": "string" },
+                "company_status_detail": { "type": "string" },
+                "type": { "type": "string" },
+                "jurisdiction": { "type": "string" },
+                "date_of_creation": { "type": "string" },
+                "date_of_cessation": { "type": "string" },
+                "sic_codes": { "type": "array", "items": { "type": "string" } },
+                "has_charges": { "type": "boolean" },
+                "has_insolvency_history": { "type": "boolean" },
+                "has_been_liquidated": { "type": "boolean" },
+                "undeliverable_registered_office_address": { "type": "boolean" },
+                "registered_office_address": {
+                  "type": "object",
+                  "properties": {
+                    "address_line_1": { "type": "string" },
+                    "address_line_2": { "type": "string" },
+                    "locality": { "type": "string" },
+                    "region": { "type": "string" },
+                    "postal_code": { "type": "string" },
+                    "country": { "type": "string" }
+                  }
+                },
+                "accounts": {
+                  "type": "object",
+                  "properties": {
+                    "overdue": { "type": "boolean" },
+                    "next_due": { "type": "string" },
+                    "last_accounts": { "type": "object", "properties": { "made_up_to": { "type": "string" } } }
+                  }
+                },
+                "confirmation_statement": {
+                  "type": "object",
+                  "properties": {
+                    "overdue": { "type": "boolean" },
+                    "next_due": { "type": "string" },
+                    "last_made_up_to": { "type": "string" }
+                  }
+                },
+                "previous_company_names": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": { "name": { "type": "string" }, "effective_from": { "type": "string" }, "ceased_on": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Company not found" }
+        }
+      }
+    },
+    "/company/{companyNumber}/officers": {
+      "get": {
+        "operationId": "ListOfficers",
+        "summary": "List company officers",
+        "description": "Directors, secretaries and other officers, current and resigned.",
+        "parameters": [
+          { "name": "companyNumber", "in": "path", "required": true, "type": "string" },
+          { "name": "items_per_page", "in": "query", "required": false, "type": "integer", "default": 35 },
+          { "name": "start_index", "in": "query", "required": false, "type": "integer", "default": 0 }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "active_count": { "type": "integer" },
+                "resigned_count": { "type": "integer" },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "officer_role": { "type": "string" },
+                      "appointed_on": { "type": "string" },
+                      "resigned_on": { "type": "string" },
+                      "nationality": { "type": "string" },
+                      "country_of_residence": { "type": "string" },
+                      "occupation": { "type": "string" },
+                      "date_of_birth": { "type": "object", "properties": { "month": { "type": "integer" }, "year": { "type": "integer" } } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/company/{companyNumber}/persons-with-significant-control": {
+      "get": {
+        "operationId": "ListPSCs",
+        "summary": "List persons with significant control",
+        "parameters": [
+          { "name": "companyNumber", "in": "path", "required": true, "type": "string" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "kind": { "type": "string" },
+                      "natures_of_control": { "type": "array", "items": { "type": "string" } },
+                      "notified_on": { "type": "string" },
+                      "ceased_on": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/company/{companyNumber}/charges": {
+      "get": {
+        "operationId": "ListCharges",
+        "summary": "List company charges",
+        "parameters": [
+          { "name": "companyNumber", "in": "path", "required": true, "type": "string" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_count": { "type": "integer" },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "string" },
+                      "created_on": { "type": "string" },
+                      "delivered_on": { "type": "string" },
+                      "classification": { "type": "object", "properties": { "description": { "type": "string" } } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/company/{companyNumber}/insolvency": {
+      "get": {
+        "operationId": "GetInsolvency",
+        "summary": "Get insolvency information",
+        "parameters": [
+          { "name": "companyNumber", "in": "path", "required": true, "type": "string" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "array", "items": { "type": "string" } },
+                "cases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string" },
+                      "number": { "type": "integer" },
+                      "dates": {
+                        "type": "array",
+                        "items": { "type": "object", "properties": { "type": { "type": "string" }, "date": { "type": "string" } } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "No insolvency information" }
+        }
+      }
+    },
+    "/company/{companyNumber}/filing-history": {
+      "get": {
+        "operationId": "ListFilingHistory",
+        "summary": "List filing history",
+        "parameters": [
+          { "name": "companyNumber", "in": "path", "required": true, "type": "string" },
+          { "name": "items_per_page", "in": "query", "required": false, "type": "integer", "default": 10 }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_count": { "type": "integer" },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": { "type": "string" },
+                      "category": { "type": "string" },
+                      "description": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        }
+      }
+    }
+  }
+}
