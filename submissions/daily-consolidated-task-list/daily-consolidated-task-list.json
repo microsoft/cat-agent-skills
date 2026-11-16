@@ -50,6 +50,5 @@
   "createdAt": "2026-11-16T11:53:36.500Z",
   "updatedAt": "2026-11-16T11:55:05.841Z",
   "triggerType": "schedule",
-  "workingDir": "C:\\Users\\paawasth\\.scout\\m-automations\\resources\\daily-consolidated-task-list",
   "lastExecutedAt": null
 }
