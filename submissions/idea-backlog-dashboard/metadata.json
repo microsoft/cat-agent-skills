@@ -1,0 +1,11 @@
+{
+  "name": "Idea Backlog Dashboard",
+  "description": "Track, prioritize, and surface promising product ideas in a single backlog dashboard.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["productivity", "planning", "ideas", "dashboard"],
+  "author": "SuneethaXpedition",
+  "authorUrl": "https://github.com/SuneethaXpedition",
+  "version": "1.0.0",
+  "createdAt": "2026-11-16",
+  "updatedAt": "2026-11-16"
+}
