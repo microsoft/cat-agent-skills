@@ -3,6 +3,7 @@ name: Knowledge Source Router
 description: "Route country-specific SharePoint questions through Country metadata first, then search only the complete set of matching documents."
 agentDescription: "Required whenever a knowledge request names or implies a country, asks what applies \"here,\" or compares countries. Treat Country as document metadata, not as a content-search term. Before any content search, general-knowledge answer, or clarification, use sharepoint_metadata_filter to discover and filter the Country column. Then pass every matching document URL to knowledge_search_sharepoint through scopeUrls."
 platforms: [Copilot Studio]
+category: agent-development
 tags: [knowledge, routing, sharepoint, metadata, grounding]
 author: Adi Leibowitz
 authorUrl: "https://microsoft.github.io/mcscatblog/"

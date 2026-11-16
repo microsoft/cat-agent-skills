@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "2.0.0",
+  "id": "8ac94a9e-4e60-41f2-8904-a912afe90e4b",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Safety Incident Assist",
+    "full": "Safety Incident Assist for Cowork"
+  },
+  "description": {
+    "short": "Prepare cited incident drafts for qualified human EHS review.",
+    "full": "Safety Incident Assist turns authorized supplied incident files into cited, privacy-conscious drafts for qualified EHS review: intake, local evidence and history, draft classification, proposed unsent routing, and write-up. Use only in an organization-approved environment, with human review. No live retrieval, official regulatory or clinical determinations, equipment instructions, sending, filing, or closure. Source candidate 2.0.0-rc.7 is represented by numeric manifest version 2.0.0 for packaging compatibility only; this does not promote it to a stable or certified release.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "ehs-knowledge-retrieve"
+    },
+    {
+      "folder": "incident-intake"
+    },
+    {
+      "folder": "incident-writeup"
+    },
+    {
+      "folder": "routing-notify"
+    },
+    {
+      "folder": "severity-recordability"
+    }
+  ]
+}

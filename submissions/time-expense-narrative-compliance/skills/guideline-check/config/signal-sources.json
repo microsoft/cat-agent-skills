@@ -1,0 +1,47 @@
+{
+  "config_version": "ps.time-expense-narrative-compliance.signal-sources.v1",
+  "default_posture": "narrowest_range_that_still_works",
+  "purpose": "Limit activity grounding to engagement-scoped signals unless the firm explicitly enables broader sources.",
+  "sources": {
+    "calendar": {
+      "enabled": true,
+      "scope": "engagement_calendar_only",
+      "content": "title_organizer_attendees_start_end_location_only",
+      "lookback_days_default": 7,
+      "requires_engagement_id": true
+    },
+    "document_activity": {
+      "enabled": true,
+      "scope": "engagement_workspace_only",
+      "content": "file_name_activity_type_timestamp_duration_no_document_body",
+      "requires_engagement_workspace": true
+    },
+    "mailbox_content": {
+      "enabled": false,
+      "scope": "off_by_default",
+      "content": "disabled",
+      "enablement_requires": [
+        "firm_policy_approval",
+        "matter_scope_filter",
+        "user_notice"
+      ]
+    },
+    "mailbox_metadata": {
+      "enabled": false,
+      "scope": "off_by_default",
+      "content": "sender_recipient_subject_timestamp_only_when_enabled",
+      "enablement_requires": [
+        "firm_policy_approval",
+        "matter_scope_filter",
+        "user_notice"
+      ]
+    }
+  },
+  "redaction": {
+    "default": "summarize_signals_before_drafting",
+    "store_raw_mail": false,
+    "store_document_body": false
+  },
+  "citation": "client-billing-guidelines.md #10.1",
+  "enforcement": "Every engine (activity_pull, narrative_draft, code_map, guideline_check, exception_report) applies this file via signal_policy.py; most restrictive of this file and the packet's signal_config wins; disabled or unknown sources are dropped and recorded in provenance.excluded_signals."
+}

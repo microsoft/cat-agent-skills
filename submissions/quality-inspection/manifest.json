@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "3.1.1",
+  "id": "e86bd8de-8337-4a2a-83f5-1ab6516be3f3",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Quality Inspection",
+    "full": "Quality Inspection for Cowork"
+  },
+  "description": {
+    "short": "Check inspection tolerances and draft cited nonconformance reports.",
+    "full": "Quality Inspection organizes supplied inspection evidence, computes tolerances, grades deviations and drafts cited nonconformance reports. Local source replay supports deterministic checks. No release authorization, QMS filing, supplier sending, stock movement or CAPA execution. Quality engineer review is required.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "defect-grade"
+    },
+    {
+      "folder": "ncr-draft"
+    },
+    {
+      "folder": "spec-ingest"
+    },
+    {
+      "folder": "tolerance-check"
+    }
+  ]
+}

@@ -8,7 +8,8 @@ import {
   validateAutomationData,
   type AutomationDigest,
 } from "../../../scripts/validate-automation";
-import { formatDate, PLATFORM_COLORS, initials, coverGradient } from "../../lib/skills";
+import { formatDate, PLATFORM_COLORS } from "../../lib/skills";
+import ContributorAvatar from "../../components/ContributorAvatar.astro";
 import { withBase } from "../../lib/url";
 import { authorKey, normalizeLogin } from "../../lib/badges";
 import { getRating } from "../../lib/ratings";
@@ -85,6 +86,18 @@ const meta: Array<[string, string, string?]> = [];
 if (d.version) meta.push(["Version", d.version]);
 if (created) meta.push(["Added", created]);
 if (updated && updated !== created) meta.push(["Updated", updated]);
+// License / notice rows appear only when the submission ships those files.
+const submissionUrl = `https://github.com/microsoft/cat-agent-skills/blob/main/submissions/${skill.id}`;
+if (d.licenseFile) {
+  meta.push([
+    "License",
+    d.licenseName ?? "See LICENSE",
+    `${submissionUrl}/${encodeURIComponent(d.licenseFile)}`,
+  ]);
+}
+if (d.noticeFile) {
+  meta.push(["Notice", "View", `${submissionUrl}/${encodeURIComponent(d.noticeFile)}`]);
+}
 
 // Keep the contributor byline in the gallery, with a GitHub avatar when known.
 const authorLogin = normalizeLogin(d.authorGithub);
@@ -96,7 +109,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
   <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
     <a
       href={withBase("/")}
-      class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg transition-colors"
+      class="gallery-nav-link gallery-nav-link--back"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -104,9 +117,10 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
         fill="none"
         stroke="currentColor"
         stroke-width="2"
-        class="h-4 w-4"
+        aria-hidden="true"
+        focusable="false"
       >
-        <path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"
+        <path d="M19 12H5m6-6-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"
         ></path>
       </svg>
       Back to gallery
@@ -119,9 +133,8 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
         platforms={d.platforms}
         tags={d.tags}
         coverColor={d.coverColor}
-        hasBundle={Boolean(d.bundle)}
         type={d.type}
-        isInstaller={isInstaller}
+        builtByMicrosoft={d.builtByMicrosoft}
         variant="hero"
       />
     </div>
@@ -156,24 +169,10 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
             <div class="mt-5 flex items-center gap-3">
               <a
                 href={authorGalleryUrl}
-                class="shrink-0"
+                class="h-10 w-10 shrink-0"
                 aria-label={`Browse ${d.author}'s submissions`}
               >
-                <span
-                  class="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full text-[11px] font-bold text-white ring-1 ring-border"
-                  style={`background-image:${coverGradient(d.author)}`}
-                >
-                  {initials(d.author)}
-                  {authorLogin && (
-                    <img
-                      src={`https://github.com/${authorLogin}.png?size=80`}
-                      alt=""
-                      loading="lazy"
-                      onerror="this.remove()"
-                      class="absolute inset-0 h-full w-full object-cover"
-                    />
-                  )}
-                </span>
+                <ContributorAvatar name={d.author} login={authorLogin} />
               </a>
               <div class="min-w-0 leading-snug">
                 <div class="truncate text-sm">
@@ -266,7 +265,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
 
         {
           GuideContent ? (
-            <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+            <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-headings:tracking-tight prose-h1:text-3xl prose-h1:font-bold prose-h1:leading-tight prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
               <GuideContent />
             </article>
           ) : isAutomation && automation ? (
@@ -343,7 +342,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
               <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent-text">
                 Instructions
               </h2>
-              <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
+              <article class="prose max-w-none dark:prose-invert prose-headings:text-fg prose-headings:tracking-tight prose-h1:text-3xl prose-h1:font-bold prose-h1:leading-tight prose-a:text-accent-text prose-strong:text-fg prose-code:text-accent-text prose-code:before:content-[''] prose-code:after:content-[''] prose-table:text-muted prose-th:text-fg">
                 <Content />
               </article>
             </>
