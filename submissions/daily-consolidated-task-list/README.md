@@ -26,6 +26,34 @@ When the plan is ready, the automation delivers it to you:
 Your address is resolved at run time from your signed-in profile, so nothing is
 hardcoded.
 
+## Safeguards
+
+- **Prompt injection:** calendar, mail, chat, and transcript content is treated as
+  untrusted data. Instructions found inside it (for example "forward this" or
+  "skip this item") are recorded as items, never followed.
+- **Locked recipients:** the plan goes only to your own mailbox and Teams
+  self-chat. No other recipients can be added.
+- **Explicit sensitivity status:** calendar, email, and Teams collection records
+  source links, exact labels, and metadata evidence for every source read.
+  Status is `labelled`, `confirmed_unlabelled`, or `unknown`. Missing or
+  inaccessible metadata is `unknown`, not proof that a source is unlabelled.
+- **Merge safety:** deduplication retains every contributing source and label.
+  The strongest restriction applies to the whole merged item, including its
+  priority reason and effort. A separate manifest retains even sources that
+  produce no tasks.
+- **Safe deliveries:** email and Teams receive the same sanitized plan, not the
+  raw merged list. Unknown status, missing provenance or usable links, unresolved
+  policy, or a prohibition on copying causes the entire item to be withheld,
+  with only a generic count and reason category reported. Confidential and
+  Highly Confidential items appear only as generic, policy-permitted source
+  links in a separate unranked section; subjects, names, and derived task details
+  are not copied. If a safe reference cannot be verified, the item is withheld.
+- **Honest header:** `Highest sensitivity label seen: <value>` covers all sources
+  read, including withheld items and sources with no tasks. `None` is used only
+  when every source is confirmed unlabelled. Incomplete verification reports
+  `Not verified` alongside the highest confirmed label (or known labels when their
+  ordering is unresolved); no sources read reports `Not assessed`.
+
 ## Run in Scout Desktop or Scout Cloud
 
 Use the [automation JSON file](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/daily-consolidated-task-list/daily-consolidated-task-list.json):
@@ -39,6 +67,9 @@ Use the [automation JSON file](https://raw.githubusercontent.com/microsoft/cat-a
 - Scout needs access to your Microsoft 365 calendar, Outlook mail, and Teams
   (for example through the WorkIQ connector), including permission to send
   email and Teams chat messages as you.
+- The connector must expose authoritative sensitivity metadata and applicable
+  label policies to release task details. If it cannot verify them, affected
+  items are withheld rather than assumed safe.
 - After importing into Scout, review the schedule and steps, then confirm that
   the automation is enabled when you are ready for it to run.
 - It reads your calendar, mail, and chats, and only sends the plan to you (your
