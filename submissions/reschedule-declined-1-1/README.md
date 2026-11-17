@@ -34,13 +34,13 @@ For each declined 1:1 it:
 **It never sends the draft to the other participant automatically** — review and
 send it yourself from Outlook Drafts.
 
-## Run in Scout Desktop or Scout Cloud
+## Run in Scout Desktop or Autopilot
 
 Use the [automation JSON file](https://microsoft.github.io/cat-agent-skills/bundles/reschedule-declined-1-1.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
-- **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
-  Scout Cloud, then run the automation.
+- **Autopilot:** Open the JSON file, copy its full contents, paste them into
+  Autopilot, then run the automation.
 
 ## Before you enable it
 
