@@ -47,8 +47,9 @@
     }
   ],
   "enabled": true,
+  "oneShot": false,
   "createdAt": "2026-11-16T08:05:01.830Z",
-  "updatedAt": "2026-11-17T10:19:43.819Z",
+  "updatedAt": "2026-11-17T13:34:39.424Z",
   "triggerType": "schedule",
   "lastExecutedAt": null
 }
