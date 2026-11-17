@@ -268,6 +268,29 @@ def effective_tolerances(matching):
     return matching.get("amountToleranceAbsolute", 0.01), matching.get("amountTolerancePercent", 0.0)
 
 
+def validate_matching_config(config):
+    """Validate high-impact matching knobs up front to prevent bad runs or runaway searches."""
+    m = config.get("matching", {})
+    if m.get("enableSimilarityMatching", True):
+        try:
+            win = int(m.get("dateWindowDays", 3))
+        except Exception as exc:
+            raise ValueError("matching.dateWindowDays must be an integer >= 0.") from exc
+        if win < 0:
+            raise ValueError("matching.dateWindowDays must be >= 0.")
+        thr = m.get("similarityThreshold", 0.9)
+        if not isinstance(thr, (int, float)) or thr < 0 or thr > 1:
+            raise ValueError("matching.similarityThreshold must be a number between 0 and 1.")
+    if m.get("enableGrouped", True):
+        try:
+            members = int(m.get("groupedMaxMembers", 6))
+        except Exception as exc:
+            raise ValueError("matching.groupedMaxMembers must be an integer between 2 and 12.") from exc
+        # Keep grouped-search complexity bounded for large ledgers.
+        if members < 2 or members > 12:
+            raise ValueError("matching.groupedMaxMembers must be between 2 and 12.")
+
+
 def _distinct_currencies(df, currency_col):
     """Distinct, normalized (upper/trim) non-blank currency codes present in a source column."""
     out = []
@@ -295,6 +318,15 @@ def check_currency(df_a, df_b, config):
     norm = config.get("normalization", {})
     expected = norm.get("expectedCurrency")
     expected_n = str(expected).strip().upper() if expected else None
+    cols = {side: config["sources"][side].get("currencyColumn") for side in ("a", "b")}
+    has_cols = {side: bool(cols[side]) for side in ("a", "b")}
+    if has_cols["a"] ^ has_cols["b"]:
+        raise ValueError("Currency guard requires currencyColumn on both sources (or neither). "
+                         "With only one side configured, cross-source currency parity cannot be proven.")
+    if expected_n and not (has_cols["a"] and has_cols["b"]):
+        raise ValueError("normalization.expectedCurrency is set but currencyColumn is not configured on "
+                         "both sources. Configure both currency columns to enforce expected currency.")
+
     found = {}
     for side, df in (("a", df_a), ("b", df_b)):
         col = config["sources"][side].get("currencyColumn")
@@ -2658,6 +2690,10 @@ def main():
 
     with open(args.config, encoding="utf-8") as f:
         config = json.load(f)
+    try:
+        validate_matching_config(config)
+    except ValueError as e:
+        sys.exit(f"Matching configuration validation failed: {e}")
 
     # Resolve sheet selectors: CLI overrides config; config `sheet` under each source is honored.
     sheet_a = args.sheet_a if args.sheet_a is not None else config["sources"]["a"].get("sheet")
