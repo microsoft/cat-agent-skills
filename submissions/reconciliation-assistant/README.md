@@ -31,7 +31,7 @@ It works in tiers, and a record can only match once:
 3. **Similarity** — no shared key, but amount, date, and name all line up within thresholds → *Probable*, sent to Needs Review. Optional — you decide at setup whether to allow it.
 4. **Grouped** — one record on one side equals several on the other (e.g. an invoice paid by three partial payments) → sent to Needs Review.
 5. **Timing** — the same item posted to a *different period* on each side (same account and amount, different month) → flagged as a timing difference in Needs Review, instead of showing up as two confusing one-sided breaks. Ideal for GL, bank, and accrual reconciliations.
-6. **Unmatched** — everything left, split by which side it came from.
+6. **Unmatched** — everything left, split by which side it came from. One-sided items dated near period end are flagged as possible **Timing** differences so common cut-off items are not mislabeled as setup/mapping issues.
 
 The rule underneath all of it: **it never fabricates a match.** Weak or ambiguous evidence goes to Needs Review, never silently into Matched and never dropped. A reconciliation you can't trust is worse than none.
 
@@ -49,8 +49,8 @@ and confirms it closes. If it doesn't close, the skill tells you so and shows th
 
 The method is the same everywhere; the mechanics adapt to the host:
 
-- **Cowork / Scout** — point it at two files (`.xlsx`, `.csv`, `.tsv`). It runs the bundled reference script, handles large files, and writes a workbook. Your source files are never modified.
-- **Copilot Studio** — paste the two tables or supply them through a connector, and it reconciles them by reasoning. On the GitHub Copilot harness it delivers a real Excel workbook (via the harness's native file creation, or the Excel Online + OneDrive tools); otherwise it renders the report inline. Best for modest datasets (up to a few hundred rows per source); for larger data it tells you to run it on a code-capable host rather than quietly truncating.
+- **Cowork / Scout** — point it at two files (`.xlsx`, `.csv`, `.tsv`). It runs the bundled reference script, handles large files, and writes a workbook plus plain-results companions (`.results.json` and `.results.csv`). Your source files are never modified.
+- **Copilot Studio** — on the GitHub Copilot harness, run the same Python script in sandbox (same behavior as Cowork/Scout), including workbook + plain results outputs. If a specific run cannot execute Python, reconcile analytically over the provided tables and render inline output; keep this fallback for modest datasets (typically up to a few hundred rows per source).
 
 ## Setup takes a few questions
 

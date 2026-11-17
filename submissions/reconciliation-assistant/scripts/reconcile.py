@@ -16,6 +16,7 @@ Dependencies: pandas, openpyxl. (difflib is stdlib and used for similarity.)
 """
 
 import argparse
+import csv
 import json
 import re
 import sys
@@ -108,6 +109,25 @@ def apply_sign(amount, convention):
     if convention == "flip":
         return -amount
     return amount
+
+
+def _parse_dateish(value):
+    """Best-effort scalar date parse for timing heuristics. Returns pandas NaT on failure."""
+    if _is_missing(value):
+        return pd.NaT
+    return pd.to_datetime(value, errors="coerce")
+
+
+def _near_period_end(value, window_days):
+    """True when the date lies within N days of its month-end (inclusive)."""
+    dt = _parse_dateish(value)
+    if pd.isna(dt):
+        return False
+    eom = dt + pd.offsets.MonthEnd(0)
+    try:
+        return int((eom - dt).days) <= int(window_days)
+    except Exception:
+        return False
 
 
 _MULTISPACE = re.compile(r" {2,}")
@@ -664,7 +684,8 @@ def _build_narrative_perkey(rows, config):
     if acct_order:
         biggest = max(acct_order, key=lambda a: abs(acct[a]["a"] - acct[a]["b"]))
         big_diff = acct[biggest]["a"] - acct[biggest]["b"]
-        lines.append(f"Largest account driver: {acct[biggest]['name']} at {_num(big_diff)}.")
+        biggest_name = str(acct[biggest]["name"] or "").strip() or str(biggest or "").strip() or "Unspecified"
+        lines.append(f"Largest account driver: {biggest_name} at {_num(big_diff)}.")
     lines.append(
         f"Root causes: {m_c} measurement ({_num(m_v)}), {t_c} timing ({_num(t_v)}) "
         f"and {s_c} scope or mapping ({_num(s_v)}).")
@@ -983,17 +1004,27 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
     # would be grouped together and mislabelled "Timing" (mirrors the reconcile()/HTML guard).
     timing_on = (config["matching"].get("enableTimingDetection", True)
                  and timing_col is not None and len(nontiming_keys) >= 1)
+    near_period_end_days = int(config.get("matching", {}).get("timingNearPeriodEndDays", 5))
+    date_a_col = config["sources"]["a"].get("dateColumn")
+    date_b_col = config["sources"]["b"].get("dateColumn")
+    timing_window_on = timing_on and bool(date_a_col and date_b_col)
     # Hidden helper column holding the NORMALIZED reduced key (the non-timing key components,
     # TRIM/LOWER'd exactly like the Matching Key). The Root Cause timing COUNTIFS groups offsetting
     # entries by this normalized identity - matching the Python matcher and the HTML - instead of
     # the raw display columns, which ignore trimWhitespace / caseInsensitiveKeys.
     L_rk = _CL(ncols + 1)
     nontiming_recon_letters = [desc_letter[k] for k in nontiming_keys]
+    L_npe = _CL(ncols + 2)
     if timing_on:
         hc = ws.cell(row=4, column=ncols + 1, value="Reduced Key (helper)")
         hc.fill = hdr_fill
         hc.font = f_hdr
         ws.column_dimensions[L_rk].hidden = True
+    if timing_window_on:
+        hc2 = ws.cell(row=4, column=ncols + 2, value="Near period end (helper)")
+        hc2.fill = hdr_fill
+        hc2.font = f_hdr
+        ws.column_dimensions[L_npe].hidden = True
 
     mk_a = _xl_sheet_ref(sa, f"${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}")
     amt_a_rng = _xl_sheet_ref(sa, f"${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}")
@@ -1044,6 +1075,13 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
             row_timing = any(reduced)
         else:
             row_timing = False
+        if timing_window_on:
+            if side == "a":
+                raw_date = a_recs[srow - 2].get(date_a_col) if date_a_col in a_recs[srow - 2] else None
+            else:
+                b_date = keymap.get(date_a_col, date_b_col)
+                raw_date = b_recs[srow - 2].get(b_date) if b_date in b_recs[srow - 2] else None
+            ws.cell(row=r, column=ncols + 2, value=1 if _near_period_end(raw_date, near_period_end_days) else 0).font = f_mk
         # Descriptive columns pulled from the source row by reference. Numeric key columns are
         # left-aligned Cambria; free-text columns (Account Name, Period) use Arial 10 (v15 style).
         for name in desc_cols:
@@ -1121,10 +1159,12 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
             timing_test = (f'SUMPRODUCT((${L_rk}$5:${L_rk}${r_last}=${L_rk}{r})*'
                            f'(${L_dtype}$5:${L_dtype}${r_last}={opp})*'
                            f'({amt_ok}))>0')
+            one_sided = f'OR({L_dtype}{r}={miss_a},{L_dtype}{r}={miss_b})'
+            near_end_timing = f'AND({one_sided},{L_npe}{r}=1)'
             root = (f'=IF({L_status}{r}="Reconciled","—",'
                     f'IF({L_dtype}{r}="Amount mismatch","Measurement",'
                     f'IF(OR({L_dtype}{r}={dup_lit},{L_dtype}{r}={miss_amt_lit}),"Scope / mapping",'
-                    f'IF({timing_test},"Timing","Scope / mapping"))))')
+                    f'IF(OR({timing_test},{near_end_timing}),"Timing","Scope / mapping"))))')
         else:
             root = (f'=IF({L_status}{r}="Reconciled","—",'
                     f'IF({L_dtype}{r}="Amount mismatch","Measurement","Scope / mapping"))')
@@ -1822,8 +1862,13 @@ def compute_reconciliation(df_a, df_b, config):
     out = config.get("output", {})
     acct_col = out.get("accountColumn")
     name_col = out.get("accountNameColumn")
+    reference_col = out.get("referenceColumn") or (a_keys[0] if a_keys else None)
+    description_col = out.get("descriptionColumn") or name_col
     group_by = out.get("groupBy", [])
     timing_col = config["matching"].get("timingKeyColumn")
+    date_a_col = config["sources"]["a"].get("dateColumn")
+    date_b_col = config["sources"]["b"].get("dateColumn")
+    near_period_end_days = int(config.get("matching", {}).get("timingNearPeriodEndDays", 5))
     keymap_ab = dict(zip(a_keys, b_keys))
 
     def kstr(row, keys):
@@ -1914,10 +1959,16 @@ def compute_reconciliation(df_a, df_b, config):
         status = "Reconciled" if dtype == "None" else "Open Item"
         rows.append({
             "key": kl,
+            "reference": field(kl, reference_col) if reference_col else kl,
+            "description": ((field(kl, description_col) if description_col else "")
+                            or (field(kl, name_col) if name_col else "")
+                            or kl),
             "company": field(kl, group_by[0]) if group_by else "",
             "account": field(kl, acct_col) if acct_col else "",
             "name": field(kl, name_col) if name_col else "",
             "period": field(kl, timing_col) if timing_col else (field(kl, group_by[1]) if len(group_by) > 1 else ""),
+            "date_a": field(kl, date_a_col, bcol=date_a_col) if date_a_col else "",
+            "date_b": field(kl, date_b_col, bcol=date_b_col) if date_b_col else "",
             "amt_a": aa["sum"], "amt_b": bb["sum"], "diff": diff,
             "lines_a": aa["n"], "lines_b": bb["n"], "status": status, "difftype": dtype,
         })
@@ -1958,7 +2009,11 @@ def compute_reconciliation(df_a, df_b, config):
                 o["difftype"] == opp
                 and within_tolerance(this_amt, (o["amt_a"] if opp == f"Missing in {lb}" else o["amt_b"]), abs_tol, pct_tol)
                 for o in grp.get(gk, [])))
-            r["rootcause"] = "Timing" if has_offset else "Scope / mapping"
+            present_date = r["date_a"] if r["difftype"] == f"Missing in {lb}" else r["date_b"]
+            possible_timing = _near_period_end(present_date, near_period_end_days)
+            r["rootcause"] = "Timing" if (has_offset or possible_timing) else "Scope / mapping"
+            r["timing_flag"] = ("Possible timing (one-sided, near period end)"
+                                if (possible_timing and not has_offset) else "")
     return rows, la, lb
 
 
@@ -1978,10 +2033,15 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
     renames = out.get("columnRenames", {})
     acct_col = out.get("accountColumn")
     name_col = out.get("accountNameColumn")
+    reference_col = out.get("referenceColumn") or (config["sources"]["a"]["keyColumns"][0]
+                                                   if config["sources"]["a"]["keyColumns"] else None)
+    description_col = out.get("descriptionColumn") or name_col or "Matching Key"
     # Display headers derive from the configured column names so the pivots read correctly in
     # any domain (e.g. "Vendor ID" for a WHT run instead of a hardcoded "Account Number").
     acct_hdr = renames.get(acct_col, acct_col) if acct_col else "Account"
     name_hdr = renames.get(name_col, name_col) if name_col else "Name"
+    ref_hdr = renames.get(reference_col, reference_col) if reference_col else "Reference"
+    desc_hdr = renames.get(description_col, description_col) if description_col else "Description"
     comp_hdr = renames.get(group_by[0], group_by[0]) if group_by else "Company"
     per_hdr = renames.get(group_by[1], group_by[1]) if len(group_by) > 1 else "Period"
 
@@ -2100,37 +2160,85 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
                                    DT_DUPLICATE, DT_MISSING_AMOUNT])
     root_body = kv_table(by_root, ["Measurement", "Timing", "Scope / mapping"])
 
+    has_account = bool(acct_col and any(str(r.get("account", "")).strip() for r in rows))
+    has_company_period = bool(group_by and len(group_by) > 1 and any(
+        str(r.get("company", "")).strip() and str(r.get("period", "")).strip() for r in rows))
+
     # ---- account table ----
-    maxacct = max((abs(acct[a]["a"] - acct[a]["b"]) for a in acct_order), default=1) or 1
-    acct_body = ""
-    for a in acct_order:
-        d = acct[a]; diff = d["a"] - d["b"]
-        acct_body += (f'<tr><td>{e(a)}</td><td>{e(d["name"])}</td>'
-                      f'{numcell(d["a"])}{numcell(d["b"])}{numcell(diff, bar=True, maxabs=maxacct)}</tr>')
-    acct_body += (f'<tr class="total"><td></td><td>Total</td>{numcell(total_a)}{numcell(total_b)}'
-                  f'{numcell(round(total_a-total_b,2))}</tr>')
+    acct_section = ""
+    if has_account:
+        maxacct = max((abs(acct[a]["a"] - acct[a]["b"]) for a in acct_order), default=1) or 1
+        acct_body = ""
+        for a in acct_order:
+            d = acct[a]; diff = d["a"] - d["b"]
+            acct_body += (f'<tr><td>{e(a)}</td><td>{e(d["name"])}</td>'
+                          f'{numcell(d["a"])}{numcell(d["b"])}{numcell(diff, bar=True, maxabs=maxacct)}</tr>')
+        acct_body += (f'<tr class="total"><td></td><td>Total</td>{numcell(total_a)}{numcell(total_b)}'
+                      f'{numcell(round(total_a-total_b,2))}</tr>')
+        acct_section = (
+            "<section>"
+            "<h2>Difference by account</h2>"
+            "<div class=\"card\"><table>"
+            f"<thead><tr><th>{e(acct_hdr)}</th><th>{e(name_hdr)}</th><th class=\"num\">Amount — {e(la)}</th>"
+            f"<th class=\"num\">Amount — {e(lb)}</th><th class=\"num\">Difference</th></tr></thead>"
+            f"<tbody>{acct_body}</tbody></table></div>"
+            "</section>"
+        )
 
     # ---- company/period table ----
-    maxcp = max((abs(cp[k]["a"] - cp[k]["b"]) for k in cp_order), default=1) or 1
-    cp_body = ""
-    cp_ta = cp_tb = cp_open = 0
-    for k in cp_order:
-        d = cp[k]; diff = d["a"] - d["b"]; cp_ta += d["a"]; cp_tb += d["b"]; cp_open += d["open"]
-        cp_body += (f'<tr><td>{e(k[0])}</td><td>{e(k[1])}</td>'
-                    f'{numcell(d["a"])}{numcell(d["b"])}{numcell(diff, bar=True, maxabs=maxcp)}'
-                    f'<td class="num">{d["open"]}</td></tr>')
-    cp_body += (f'<tr class="total"><td></td><td>Total</td>{numcell(cp_ta)}{numcell(cp_tb)}'
-                f'{numcell(round(cp_ta-cp_tb,2))}<td class="num">{cp_open}</td></tr>')
+    cp_section = ""
+    if has_company_period:
+        maxcp = max((abs(cp[k]["a"] - cp[k]["b"]) for k in cp_order), default=1) or 1
+        cp_body = ""
+        cp_ta = cp_tb = cp_open = 0
+        for k in cp_order:
+            d = cp[k]; diff = d["a"] - d["b"]; cp_ta += d["a"]; cp_tb += d["b"]; cp_open += d["open"]
+            cp_body += (f'<tr><td>{e(k[0])}</td><td>{e(k[1])}</td>'
+                        f'{numcell(d["a"])}{numcell(d["b"])}{numcell(diff, bar=True, maxabs=maxcp)}'
+                        f'<td class="num">{d["open"]}</td></tr>')
+        cp_body += (f'<tr class="total"><td></td><td>Total</td>{numcell(cp_ta)}{numcell(cp_tb)}'
+                    f'{numcell(round(cp_ta-cp_tb,2))}<td class="num">{cp_open}</td></tr>')
+        cp_section = (
+            "<section>"
+            f"<h2>{e(f'Difference by {comp_hdr.lower()} and {per_hdr.lower()}')}</h2>"
+            "<div class=\"card\"><table>"
+            f"<thead><tr><th>{e(comp_hdr)}</th><th>{e(per_hdr)}</th><th class=\"num\">Amount — {e(la)}</th>"
+            f"<th class=\"num\">Amount — {e(lb)}</th><th class=\"num\">Difference</th><th class=\"num\">Open items</th></tr></thead>"
+            f"<tbody>{cp_body}</tbody></table></div>"
+            "</section>"
+        )
 
     # ---- open-item detail (sorted by magnitude) ----
     det = sorted(open_rows, key=lambda r: abs(r["diff"]), reverse=True)
     det_body = ""
+    detail_headers = [f"<th>{e(ref_hdr)}</th>", f"<th>{e(desc_hdr)}</th>"]
+    detail_cells_prefix = lambda r: f"<td>{e(r.get('reference', ''))}</td><td>{e(r.get('description', ''))}</td>"
+    if group_by and any(str(r.get("company", "")).strip() for r in rows):
+        detail_headers.append(f"<th>{e(comp_hdr)}</th>")
+        detail_cells_prefix = lambda r, _orig=detail_cells_prefix: _orig(r) + f"<td>{e(r.get('company', ''))}</td>"
+    if has_account:
+        detail_headers.append(f"<th>{e(acct_hdr)}</th>")
+        detail_cells_prefix = lambda r, _orig=detail_cells_prefix: _orig(r) + f"<td>{e(r.get('account', ''))}</td>"
+    if has_company_period:
+        detail_headers.append(f"<th>{e(per_hdr)}</th>")
+        detail_cells_prefix = lambda r, _orig=detail_cells_prefix: _orig(r) + f"<td>{e(r.get('period', ''))}</td>"
+    detail_headers += [
+        f"<th class=\"num\">Amount — {e(la)}</th>",
+        f"<th class=\"num\">Amount — {e(lb)}</th>",
+        "<th class=\"num\">Difference</th>",
+        "<th>Status</th>",
+        "<th>Difference Type</th>",
+        "<th>Root Cause</th>",
+    ]
     for r in det:
-        det_body += (f'<tr><td>{e(r["company"])}</td><td>{e(r["account"])}</td><td>{e(r["name"])}</td>'
-                     f'<td>{e(r["period"])}</td>{numcell(r["amt_a"])}{numcell(r["amt_b"])}{numcell(r["diff"])}'
+        root = r["rootcause"]
+        if r.get("timing_flag"):
+            root = f'{root} — {r["timing_flag"]}'
+        det_body += (f'<tr>{detail_cells_prefix(r)}{numcell(r["amt_a"])}{numcell(r["amt_b"])}{numcell(r["diff"])}'
                      f'<td><span class="tag tag-open">Open Item</span></td>'
-                     f'<td>{e(r["difftype"])}</td><td>{e(r["rootcause"])}</td></tr>')
-    det_body += (f'<tr class="total"><td colspan="6">Total difference on open items</td>'
+                     f'<td>{e(r["difftype"])}</td><td>{e(root)}</td></tr>')
+    detail_prefix_cols = len(detail_headers) - 6
+    det_body += (f'<tr class="total"><td colspan="{detail_prefix_cols}">Total difference on open items</td>'
                  f'{numcell(round(sum(r["diff"] for r in open_rows),2))}<td colspan="3"></td></tr>')
 
     # ---- headlines ----
@@ -2150,10 +2258,15 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
     # Build the sub-header from escaped pieces so user-derived labels/values can't inject markup.
     esc_comp = " and ".join(e(c) for c in companies)
     esc_per = " and ".join(e(p) for p in periods)
-    sub = (f"{e(la)} vs {e(lb)} &nbsp;|&nbsp; {e(gb0)} " + esc_comp +
-           f" &nbsp;|&nbsp; {e(gb1)} " + esc_per +
-           f" &nbsp;|&nbsp; Difference = {e(la)} less {e(lb)}" +
-           (f" &nbsp;|&nbsp; Source: {e(src_name)}" if src_name else ""))
+    sub_parts = [f"{e(la)} vs {e(lb)}"]
+    if esc_comp:
+        sub_parts.append(f"{e(gb0)} {esc_comp}")
+    if esc_per:
+        sub_parts.append(f"{e(gb1)} {esc_per}")
+    sub_parts.append(f"Difference = {e(la)} less {e(lb)}")
+    if src_name:
+        sub_parts.append(f"Source: {e(src_name)}")
+    sub = " &nbsp;|&nbsp; ".join(sub_parts)
 
     return _HTML_TEMPLATE.format(
         title=e(f"{la} vs {lb} Reconciliation Dashboard"),
@@ -2164,9 +2277,8 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
         k_net=_num(net), k_net_cls=("value neg" if net < 0 else "value"),
         k_gross=_num(gross),
         type_body=type_body, root_body=root_body,
-        la=e(la), lb=e(lb), acct_body=acct_body, cp_body=cp_body,
-        acct_hdr=e(acct_hdr), name_hdr=e(name_hdr), comp_hdr=e(comp_hdr), per_hdr=e(per_hdr),
-        cp_title=e(f"Difference by {comp_hdr.lower()} and {per_hdr.lower()}"),
+        la=e(la), lb=e(lb),         acct_section=acct_section, cp_section=cp_section,
+        detail_headers="".join(detail_headers),
         open_ct=opn, det_body=det_body, rec_ct=reconciled,
         head=head_html,
         footer=(f"Prepared from {e(src_name)}. " if src_name else "") + "Companion workbook with live formulas accompanies this dashboard.",
@@ -2177,6 +2289,30 @@ def write_html_report(rows, config, out_path, src_name=None, df_a=None, df_b=Non
     html = build_html_dashboard(rows, config, src_name, df_a=df_a, df_b=df_b)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
+
+
+def write_plain_results(rows, config, json_path, csv_path, summary):
+    """Write machine-readable reconciliation outputs for agents that cannot evaluate Excel formulas."""
+    payload = {
+        "sources": {
+            "a": config["sources"]["a"].get("label", "Source A"),
+            "b": config["sources"]["b"].get("label", "Source B"),
+        },
+        "summary": summary,
+        "rows": rows,
+    }
+    with open(json_path, "w", encoding="utf-8") as jf:
+        json.dump(payload, jf, indent=2, ensure_ascii=False)
+
+    fields = [
+        "key", "reference", "description", "company", "account", "name", "period",
+        "amt_a", "amt_b", "diff", "lines_a", "lines_b", "status", "difftype", "rootcause", "timing_flag",
+    ]
+    with open(csv_path, "w", encoding="utf-8", newline="") as cf:
+        writer = csv.DictWriter(cf, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
 
 
 _HTML_TEMPLATE = """<!DOCTYPE html>
@@ -2297,24 +2433,13 @@ footer{{margin-block-start:30px; padding-block-start:10px; border-block-start:1p
     <tbody>{root_body}</tbody></table></div></section>
 </div>
 
-<section>
-  <h2>Difference by account</h2>
-  <div class="card"><table>
-    <thead><tr><th>{acct_hdr}</th><th>{name_hdr}</th><th class="num">Amount — {la}</th><th class="num">Amount — {lb}</th><th class="num">Difference</th></tr></thead>
-    <tbody>{acct_body}</tbody></table></div>
-</section>
-
-<section>
-  <h2>{cp_title}</h2>
-  <div class="card"><table>
-    <thead><tr><th>{comp_hdr}</th><th>{per_hdr}</th><th class="num">Amount — {la}</th><th class="num">Amount — {lb}</th><th class="num">Difference</th><th class="num">Open items</th></tr></thead>
-    <tbody>{cp_body}</tbody></table></div>
-</section>
+{acct_section}
+{cp_section}
 
 <section>
   <h2>Reconciliation detail — {open_ct} open items</h2>
   <div class="card"><table>
-    <thead><tr><th>{comp_hdr}</th><th>{acct_hdr}</th><th>{name_hdr}</th><th>{per_hdr}</th><th class="num">Amount — {la}</th><th class="num">Amount — {lb}</th><th class="num">Difference</th><th>Status</th><th>Difference Type</th><th>Root Cause</th></tr></thead>
+    <thead><tr>{detail_headers}</tr></thead>
     <tbody>{det_body}</tbody></table>
     <p class="sub" style="margin:10px 0 0">The remaining {rec_ct} lines are <span class="tag tag-rec">Reconciled</span> and are listed in full on the Reconciliation tab of the workbook.</p>
   </div>
@@ -2339,6 +2464,10 @@ def main():
     p.add_argument("--out", default="reconciliation.xlsx")
     p.add_argument("--html", default=None,
                    help="Also write the styled HTML dashboard to this path (or set output.emitHtml in config).")
+    p.add_argument("--results-json", default=None,
+                   help="Write machine-readable per-key results JSON (default: <out>.results.json).")
+    p.add_argument("--results-csv", default=None,
+                   help="Write machine-readable per-key results CSV (default: <out>.results.csv).")
     args = p.parse_args()
     import os
 
@@ -2434,6 +2563,7 @@ def main():
 
     results, total_a, total_b = reconcile(df_a, df_b, config)
     summary = tie_out(results, total_a, total_b, effective_tolerances(config["matching"])[0])
+    perkey_rows, _, _ = compute_reconciliation(df_a, df_b, config)
     counts = write_report(results, config, args.out, df_a=df_a, df_b=df_b,
                           src_name=os.path.basename(args.source_a))
 
@@ -2444,10 +2574,31 @@ def main():
     if html_path is None and config.get("output", {}).get("emitHtml"):
         html_path = os.path.splitext(args.out)[0] + ".html"
     if html_path:
-        rows, _, _ = compute_reconciliation(df_a, df_b, config)
-        write_html_report(rows, config, html_path, src_name=os.path.basename(args.source_a),
+        write_html_report(perkey_rows, config, html_path, src_name=os.path.basename(args.source_a),
                           df_a=df_a, df_b=df_b)
         print(f"HTML dashboard written to {html_path}")
+
+    json_path = args.results_json or config.get("output", {}).get("resultsJsonPath")
+    csv_path = args.results_csv or config.get("output", {}).get("resultsCsvPath")
+    if json_path is None:
+        json_path = os.path.splitext(args.out)[0] + ".results.json"
+    if csv_path is None:
+        csv_path = os.path.splitext(args.out)[0] + ".results.csv"
+    write_plain_results(
+        perkey_rows,
+        config,
+        json_path,
+        csv_path,
+        {
+            "total_a": total_a,
+            "total_b": total_b,
+            "net_difference": summary["net_difference"],
+            "residual": summary["residual"],
+            "tied_out": summary["tied_out"],
+            "status_counts": counts,
+        },
+    )
+    print(f"Plain results written to {json_path} and {csv_path}")
 
     print(f"Control total {la} = {total_a:.2f} | {lb} = {total_b:.2f} | net = {summary['net_difference']:.2f}")
     print(f"Tied out: {'YES' if summary['tied_out'] else 'NO (residual %.2f)' % summary['residual']}")

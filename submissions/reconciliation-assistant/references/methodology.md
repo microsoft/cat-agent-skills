@@ -74,6 +74,8 @@ Timing detection requires at least one **non-timing** key column, so the reduced
 
 Timing detection **does not create a new match state**. The two lines **remain `Unmatched (A)` and `Unmatched (B)`** - so the counts and the tie-out still reflect one break on each side - but each is **annotated** with an evidence note ("Possible timing difference - same amount in <other period>"). In the delivered formula workbook these two lines are additionally classified with **Root Cause = Timing** (the "Missing in <source>" line has an offsetting "Missing in <other source>" line for the same reduced key). This keeps two confusing one-sided breaks readable as a single timing story without inventing a state the tie-out would have to special-case.
 
+When both sources also provide `dateColumn`, one-sided unmatched items dated near period end (default within 5 days of month-end, configurable via `timingNearPeriodEndDays`) are flagged as **possible Timing** even without an offsetting counterpart yet. This captures common in-transit / cut-off items that usually clear next period.
+
 Worked example. SAP GL has `Co 900001 | Accrued Liabilities | 2025-09 | -5,000`; the internal ledger has `Co 900001 | Accrued Liabilities | 2025-08 | -5,000`. No exact key match (periods differ), so both fall to Unmatched. The reduced key (`Co 900001 | Accrued Liabilities`) and the amount (`-5,000`) are identical and the periods differ, so both lines are annotated as a possible timing difference and classified Root Cause = Timing in the workbook - the accrual was booked a month apart in the two systems.
 
 Because the two lines carry equal and opposite amounts, their net contribution to the tie-out identity is zero - annotating them as timing does not change whether the reconciliation ties.
@@ -139,7 +141,7 @@ The formula-driven workbook (Cowork/Scout code path) presents one row per matchi
 
 - **Status** — *Reconciled* where the difference rounds to nil, otherwise *Open Item*.
 - **Difference Type** — *Amount mismatch* (both sides present, amounts disagree), *Missing in &lt;source&gt;* (present on only one side), or *None* (agrees).
-- **Root Cause** — *Measurement* for an amount mismatch; *Timing* where an offsetting *Missing in &lt;other source&gt;* line exists for the same key minus its period (the classic "posted a month apart" case, matching Tier 4b); *Scope / mapping* otherwise.
+- **Root Cause** — *Measurement* for an amount mismatch; *Timing* where an offsetting *Missing in &lt;other source&gt;* line exists for the same key minus its period (the classic "posted a month apart" case, matching Tier 4b), or where a one-sided item is near period end with date evidence; *Scope / mapping* otherwise.
 - **Action Needed** — a plain-language next step keyed off the root cause.
 
 The Dashboard rolls these up (control panel, summary, open items by difference type and by root cause, difference by account and by company/period) — every figure a formula over the two source tabs, so editing a source balance recomputes the whole reconciliation and its controls. The optional HTML dashboard is generated from the identical computation, so it always agrees with the workbook.

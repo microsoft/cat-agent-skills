@@ -31,7 +31,8 @@
     "enableGrouped": true,
     "groupedMaxMembers": 6,
     "enableTimingDetection": true,
-    "timingKeyColumn": "Period"
+    "timingKeyColumn": "Period",
+    "timingNearPeriodEndDays": 5
   },
   "controlTotal": {
     "controlSide": "a",
@@ -48,7 +49,11 @@
   },
   "output": {
     "emitHtml": false,
+    "resultsJsonPath": null,
+    "resultsCsvPath": null,
     "columnRenames": {"Account No.": "Account Number"},
+    "referenceColumn": "Account No.",
+    "descriptionColumn": "Account Name",
     "accountColumn": "Account No.",
     "accountNameColumn": "Account Name",
     "groupBy": ["Company", "Period"]
