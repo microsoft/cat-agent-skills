@@ -493,10 +493,12 @@ def reconcile(df_a, df_b, config):
             # A split is same-sign as its target, so drop opposite-sign candidates and any
             # single item already larger (by magnitude) than the target - this prunes the
             # search space sharply before enumerating combinations.
+            pct_bound = abs(target) * (pct_tol / 100) if pct_tol and pct_tol > 0 else 0.0
+            member_bound = max(abs_tol, pct_bound)
             if target >= 0:
-                avail = [r for r in avail if 0 <= r["_amt"] <= target + abs_tol]
+                avail = [r for r in avail if 0 <= r["_amt"] <= target + member_bound]
             else:
-                avail = [r for r in avail if target - abs_tol <= r["_amt"] <= 0]
+                avail = [r for r in avail if target - member_bound <= r["_amt"] <= 0]
             # Search smaller (nearest-magnitude-first) combinations first, with an attempt cap
             # so a pathological pool can't blow up the run.
             avail.sort(key=lambda r: abs(r["_amt"]), reverse=True)
@@ -707,6 +709,7 @@ def _src_meta(df, src_cfg, config):
     amt = src_cfg["amountColumn"]
     keys = src_cfg["keyColumns"]
     amt_letter = _CL(cols.index(amt) + 1)
+    amt_norm_letter = _CL(len(cols) + 2)  # hidden helper; sign-normalized parsed amount
     key_letters = [_CL(cols.index(k) + 1) for k in keys]
     mk_letter = _CL(len(cols) + 1)          # Matching Key helper appended after the data
     # Data occupies rows 2..(n+1). Clamp to a minimum of 2 so that, when a source has no data
@@ -715,7 +718,7 @@ def _src_meta(df, src_cfg, config):
     last = max(n + 1, 2)
     return {
         "cols": cols, "n": n, "amt_letter": amt_letter, "key_letters": key_letters,
-        "mk_letter": mk_letter, "last": last, "keys": keys,
+        "amt_norm_letter": amt_norm_letter, "mk_letter": mk_letter, "last": last, "keys": keys,
     }
 
 
@@ -832,10 +835,16 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
         cell.font = f_hdr
         cell.alignment = a_ctr_v
     mk_c = len(cols) + 1
+    amt_norm_c = len(cols) + 2
     hc = ws.cell(row=1, column=mk_c, value="Matching Key")
     hc.fill = hdr_fill
     hc.font = f_hdr
     hc.alignment = a_ctr_v
+    hc2 = ws.cell(row=1, column=amt_norm_c, value="Normalized Amount (helper)")
+    hc2.fill = hdr_fill
+    hc2.font = f_hdr
+    hc2.alignment = a_ctr_v
+    ws.column_dimensions[_CL(amt_norm_c)].hidden = True
 
     # Data rows. v15 convention: numeric non-amount cells use Cambria left-aligned (General
     # format renders integer keys cleanly); free-text cells (e.g. Account Name, Period) use
@@ -850,10 +859,19 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
             if pd.isna(v):
                 v = None
             if _CL(c) == amt_letter:
-                # Sign-normalized numeric value drives the workbook's SUMIF totals.
-                cell = ws.cell(row=r, column=c, value=apply_sign(normalize_amount(v, norm), sign))
-                cell.number_format = ACCT2
-                cell.font = f_body
+                # Preserve the source value verbatim on the visible amount column; formulas read the
+                # hidden normalized helper so ties remain deterministic without rewriting source data.
+                if isinstance(v, str):
+                    cell = ws.cell(row=r, column=c, value=_neutralize(v))
+                    cell.font = f_body
+                else:
+                    cell = ws.cell(row=r, column=c, value=v)
+                    if isinstance(v, (int, float)) and not pd.isna(v):
+                        cell.number_format = ACCT2
+                    cell.font = f_body
+                ncell = ws.cell(row=r, column=amt_norm_c, value=apply_sign(normalize_amount(v, norm), sign))
+                ncell.number_format = ACCT2
+                ncell.font = f_body
             elif name in text_cols:
                 cell = ws.cell(row=r, column=c, value=_neutralize(v))
                 cell.font = f_text
@@ -882,6 +900,7 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
         width = min(max(max(len(str(name)), body_max) + 2, 10), 40)
         ws.column_dimensions[_CL(c)].width = width
     ws.column_dimensions[_CL(mk_c)].width = 26
+    ws.column_dimensions[_CL(amt_norm_c)].width = 18
     ws.freeze_panes = "A2"
 
 
@@ -1027,9 +1046,9 @@ def _write_reconciliation(ws, df_a, df_b, config, meta_a, meta_b, sa, sb):
         ws.column_dimensions[L_npe].hidden = True
 
     mk_a = _xl_sheet_ref(sa, f"${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}")
-    amt_a_rng = _xl_sheet_ref(sa, f"${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}")
+    amt_a_rng = _xl_sheet_ref(sa, f"${meta_a['amt_norm_letter']}$2:${meta_a['amt_norm_letter']}${meta_a['last']}")
     mk_b = _xl_sheet_ref(sb, f"${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}")
-    amt_b_rng = _xl_sheet_ref(sb, f"${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}")
+    amt_b_rng = _xl_sheet_ref(sb, f"${meta_b['amt_norm_letter']}$2:${meta_b['amt_norm_letter']}${meta_b['last']}")
 
     b_cols = list(df_b.columns)
     keymap = dict(zip(a_keys, b_keys))
@@ -1332,8 +1351,8 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         header(6, 1 + j, h)
     a_mk = _xl_sheet_ref(sa, f"${meta_a['mk_letter']}$2:${meta_a['mk_letter']}${meta_a['last']}")
     b_mk = _xl_sheet_ref(sb, f"${meta_b['mk_letter']}$2:${meta_b['mk_letter']}${meta_b['last']}")
-    a_amt = _xl_sheet_ref(sa, f"${meta_a['amt_letter']}$2:${meta_a['amt_letter']}${meta_a['last']}")
-    b_amt = _xl_sheet_ref(sb, f"${meta_b['amt_letter']}$2:${meta_b['amt_letter']}${meta_b['last']}")
+    a_amt = _xl_sheet_ref(sa, f"${meta_a['amt_norm_letter']}$2:${meta_a['amt_norm_letter']}${meta_a['last']}")
+    b_amt = _xl_sheet_ref(sb, f"${meta_b['amt_norm_letter']}$2:${meta_b['amt_norm_letter']}${meta_b['last']}")
     controls = [
         ("Every key in either ledger appears once",
          f"=COUNTA(Reconciliation!$A${rf}:$A${rl})",
@@ -1619,18 +1638,20 @@ def control_total_tieout(df_a, df_b, config):
             detail = d_by.get(gk, {"sum": 0.0})["sum"]
             var = round(control - detail, 2)
             grp_miss = c_by[gk]["miss"] + d_by.get(gk, {"miss": 0})["miss"]
-            if gk not in d_by:
+            is_orphan_control = gk not in d_by
+            if is_orphan_control:
                 orphans_control.append((c_disp[gk], control))
             # A group with a blank/unparseable amount is never reported tied - the sum is unreliable.
             rows.append({"group": c_disp[gk], "control": control, "detail": detail, "variance": var,
-                         "missing": grp_miss, "tied": grp_miss == 0 and is_tied(control, detail)})
+                         "missing": grp_miss,
+                         "tied": (not is_orphan_control) and grp_miss == 0 and is_tied(control, detail)})
         for gk in d_by:
             if gk not in c_by:
                 orphans_detail.append((d_disp[gk], d_by[gk]["sum"]))
                 grp_miss = d_by[gk]["miss"]
                 rows.append({"group": d_disp[gk], "control": 0.0, "detail": d_by[gk]["sum"],
                              "variance": round(-d_by[gk]["sum"], 2), "missing": grp_miss,
-                             "tied": grp_miss == 0 and is_tied(0.0, d_by[gk]["sum"])})
+                             "tied": False})
     else:
         control = detail = 0.0
         for v in df_c[c_amt_col].tolist():
@@ -1650,7 +1671,9 @@ def control_total_tieout(df_a, df_b, config):
     return {"mode": "control-total", "control_label": clabel, "detail_label": dlabel,
             "grouped": bool(cgroup and dgroup), "rows": rows, "detail_rows": detail_rows,
             "control_total": control_total, "detail_total": detail_total,
-            "variance": variance, "tied_out": total_missing == 0 and is_tied(control_total, detail_total),
+            "variance": variance,
+            "tied_out": (total_missing == 0 and not orphans_control and not orphans_detail
+                         and is_tied(control_total, detail_total)),
             "orphans_control": orphans_control, "orphans_detail": orphans_detail,
             "missing_control": missing_control, "missing_detail": missing_detail}
 
@@ -2010,7 +2033,8 @@ def compute_reconciliation(df_a, df_b, config):
                 and within_tolerance(this_amt, (o["amt_a"] if opp == f"Missing in {lb}" else o["amt_b"]), abs_tol, pct_tol)
                 for o in grp.get(gk, [])))
             present_date = r["date_a"] if r["difftype"] == f"Missing in {lb}" else r["date_b"]
-            possible_timing = _near_period_end(present_date, near_period_end_days)
+            possible_timing = (timing_on and date_a_col is not None and date_b_col is not None
+                               and _near_period_end(present_date, near_period_end_days))
             r["rootcause"] = "Timing" if (has_offset or possible_timing) else "Scope / mapping"
             r["timing_flag"] = ("Possible timing (one-sided, near period end)"
                                 if (possible_timing and not has_offset) else "")
@@ -2239,7 +2263,8 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
                      f'<td>{e(r["difftype"])}</td><td>{e(root)}</td></tr>')
     detail_prefix_cols = len(detail_headers) - 6
     det_body += (f'<tr class="total"><td colspan="{detail_prefix_cols}">Total difference on open items</td>'
-                 f'{numcell(round(sum(r["diff"] for r in open_rows),2))}<td colspan="3"></td></tr>')
+                 f'<td class="num"></td><td class="num"></td>{numcell(round(sum(r["diff"] for r in open_rows),2))}'
+                 f'<td></td><td></td><td></td></tr>')
 
     # ---- headlines ----
     gb0 = group_by[0] if group_by else "company"
@@ -2291,6 +2316,36 @@ def write_html_report(rows, config, out_path, src_name=None, df_a=None, df_b=Non
         f.write(html)
 
 
+def _to_jsonable(value):
+    """Convert pandas/NumPy scalars and datetimes into JSON-serializable primitives."""
+    if _is_missing(value):
+        return None
+    if value is None:
+        return None
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    try:
+        import numpy as np  # optional at runtime via pandas dependency chain
+        if isinstance(value, np.generic):
+            value = value.item()
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                return value
+    except Exception:
+        pass
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if hasattr(value, "isoformat") and callable(value.isoformat):
+        try:
+            return value.isoformat()
+        except Exception:
+            pass
+    if isinstance(value, dict):
+        return {str(k): _to_jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_to_jsonable(v) for v in value]
+    return str(value)
+
+
 def write_plain_results(rows, config, json_path, csv_path, summary):
     """Write machine-readable reconciliation outputs for agents that cannot evaluate Excel formulas."""
     payload = {
@@ -2299,7 +2354,7 @@ def write_plain_results(rows, config, json_path, csv_path, summary):
             "b": config["sources"]["b"].get("label", "Source B"),
         },
         "summary": summary,
-        "rows": rows,
+        "rows": [_to_jsonable(r) for r in rows],
     }
     with open(json_path, "w", encoding="utf-8") as jf:
         json.dump(payload, jf, indent=2, ensure_ascii=False)
@@ -2312,6 +2367,38 @@ def write_plain_results(rows, config, json_path, csv_path, summary):
         writer = csv.DictWriter(cf, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         for row in rows:
+            writer.writerow(row)
+
+
+def write_control_plain_results(result, config, json_path, csv_path):
+    """Write machine-readable control-total outputs so non-Excel consumers can summarize results."""
+    payload = {
+        "mode": "control-total",
+        "sources": {
+            "control": result["control_label"],
+            "detail": result["detail_label"],
+        },
+        "summary": {
+            "control_total": result["control_total"],
+            "detail_total": result["detail_total"],
+            "variance": result["variance"],
+            "tied_out": result["tied_out"],
+            "missing_control": result.get("missing_control", 0),
+            "missing_detail": result.get("missing_detail", 0),
+            "orphans_control": len(result.get("orphans_control", [])),
+            "orphans_detail": len(result.get("orphans_detail", [])),
+        },
+        "rows": [_to_jsonable(r) for r in result.get("rows", [])],
+        "detail_rows": [_to_jsonable(r) for r in result.get("detail_rows", [])],
+    }
+    with open(json_path, "w", encoding="utf-8") as jf:
+        json.dump(payload, jf, indent=2, ensure_ascii=False)
+
+    fields = ["group", "control", "detail", "variance", "missing", "tied"]
+    with open(csv_path, "w", encoding="utf-8", newline="") as cf:
+        writer = csv.DictWriter(cf, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        for row in result.get("rows", []):
             writer.writerow(row)
 
 
@@ -2534,6 +2621,14 @@ def main():
                 print(f"  Detail groups with no control: {len(ct_result['orphans_detail'])}")
             if ct_result["orphans_control"]:
                 print(f"  Control groups with no detail: {len(ct_result['orphans_control'])}")
+        json_path = args.results_json or config.get("output", {}).get("resultsJsonPath")
+        csv_path = args.results_csv or config.get("output", {}).get("resultsCsvPath")
+        if json_path is None:
+            json_path = os.path.splitext(args.out)[0] + ".results.json"
+        if csv_path is None:
+            csv_path = os.path.splitext(args.out)[0] + ".results.csv"
+        write_control_plain_results(ct_result, config, json_path, csv_path)
+        print(f"Plain results written to {json_path} and {csv_path}")
         return
     if mode and mode != "recordToRecord":
         sys.exit(f"reconciliationMode '{mode}' is not recognized. Use 'recordToRecord' for the "
