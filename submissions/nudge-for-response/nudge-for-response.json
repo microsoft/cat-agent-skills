@@ -1,5 +1,5 @@
 {
-  "description": "Multi-step follow-through: find unanswered sent asks (3+ business days), draft polite nudges only, and summarize results using recurring permissions to create and edit nudge drafts. NOTE : If JSON upload isn't supported, copy the JSON content and paste it into the Scout Cloud prompt to set up the automation.",
+  "description": "Multi-step follow-through: find unanswered sent asks (3+ business days), draft polite nudges only, and summarize results using recurring permissions to create and edit nudge drafts. NOTE : If JSON upload isn't supported, copy the JSON content and paste it into the Autopilot prompt to set up the automation.",
   "schedule": {
     "kind": "single",
     "naturalLanguage": "every weekday at 9am",
@@ -17,7 +17,7 @@
     "hour": 9,
     "minute": 0
   },
-  "id": "rmers47rmvgwnkdd",
+  "id": "fvkurnfxmwiza9s6",
   "name": "Nudge for Response",
   "steps": [
     {
@@ -48,8 +48,8 @@
   ],
   "enabled": true,
   "oneShot": false,
-  "createdAt": "2026-10-20T16:36:08.545Z",
-  "updatedAt": "2026-11-03T20:49:40.786Z",
+  "createdAt": "2026-11-16T08:05:01.830Z",
+  "updatedAt": "2026-11-17T13:34:39.424Z",
   "triggerType": "schedule",
   "lastExecutedAt": null
 }
