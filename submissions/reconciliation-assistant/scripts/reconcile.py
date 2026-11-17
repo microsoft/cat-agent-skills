@@ -348,6 +348,9 @@ def reconcile(df_a, df_b, config):
     m = config["matching"]
     norm = config.get("normalization", {})
     abs_tol, pct_tol = effective_tolerances(m)
+    date_a = src["a"].get("dateColumn")
+    date_b = src["b"].get("dateColumn")
+    near_period_end_days = int(m.get("timingNearPeriodEndDays", 5))
 
     a_keys = src["a"]["keyColumns"]
     b_keys = src["b"]["keyColumns"]
@@ -455,8 +458,6 @@ def reconcile(df_a, df_b, config):
     # without dates the two remaining signals (amount within tolerance + name) would fabricate
     # "Probable" pairs on common round amounts. When dates aren't configured the tier is skipped
     # (documented in references/methodology.md and SKILL.md).
-    date_a = src["a"].get("dateColumn")
-    date_b = src["b"].get("dateColumn")
     if m.get("enableSimilarityMatching", True) and date_a and date_b:
         window = m.get("dateWindowDays", 3)
         sim_thr = m.get("similarityThreshold", 0.9)
@@ -600,6 +601,16 @@ def reconcile(df_a, df_b, config):
                     break
 
     # Tier 5: whatever remains as genuine one-sided breaks.
+    # Add the near-period-end timing hint for one-sided rows when timing is enabled and both date
+    # columns are configured, so tiered/plain outputs align with the workbook + per-key model.
+    if enable_timing and date_a and date_b:
+        for ra in unmatched_a:
+            if not ra.get("_timing_note") and _near_period_end(ra.get(date_a), near_period_end_days):
+                ra["_timing_note"] = "Possible timing (one-sided, near period end)"
+        for rb in unmatched_b:
+            if not rb.get("_timing_note") and _near_period_end(rb.get(date_b), near_period_end_days):
+                rb["_timing_note"] = "Possible timing (one-sided, near period end)"
+
     for ra in unmatched_a:
         results.append({"status": "Unmatched (A)", "a_idx": ra["_idx"], "b_idx": None,
                         "key": ra["_key"], "amount_a": ra["_amt"], "amount_b": None,
