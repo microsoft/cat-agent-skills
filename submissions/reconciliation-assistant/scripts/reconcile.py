@@ -2406,8 +2406,13 @@ def _to_jsonable(value):
     return str(value)
 
 
-def write_plain_results(rows, config, json_path, csv_path, summary):
-    """Write machine-readable reconciliation outputs for agents that cannot evaluate Excel formulas."""
+def write_plain_results(rows, config, json_path, csv_path, summary, record_results=None):
+    """Write machine-readable reconciliation outputs for agents that cannot evaluate Excel formulas.
+
+    `rows` is the per-key model used by workbook/HTML controls. `record_results` (when supplied)
+    carries the tiered matcher output so grouped/similarity candidate evidence is preserved for
+    non-Excel consumers in the same artifact.
+    """
     payload = {
         "sources": {
             "a": config["sources"]["a"].get("label", "Source A"),
@@ -2416,6 +2421,8 @@ def write_plain_results(rows, config, json_path, csv_path, summary):
         "summary": summary,
         "rows": [_to_jsonable(r) for r in rows],
     }
+    if record_results is not None:
+        payload["record_results"] = [_to_jsonable(r) for r in record_results]
     with open(json_path, "w", encoding="utf-8") as jf:
         json.dump(payload, jf, indent=2, ensure_ascii=False)
 
@@ -2724,6 +2731,8 @@ def main():
     perkey_rows, _, _ = compute_reconciliation(df_a, df_b, config)
     counts = write_report(results, config, args.out, df_a=df_a, df_b=df_b,
                           src_name=os.path.basename(args.source_a))
+    perkey_counts = (pd.DataFrame(perkey_rows)["status"].value_counts().to_dict()
+                     if perkey_rows else {})
 
     print(f"Reconciliation written to {args.out}")
 
@@ -2753,8 +2762,10 @@ def main():
             "net_difference": summary["net_difference"],
             "residual": summary["residual"],
             "tied_out": summary["tied_out"],
-            "status_counts": counts,
+            "status_counts": perkey_counts,
+            "record_level_status_counts": counts,
         },
+        record_results=results,
     )
     print(f"Plain results written to {json_path} and {csv_path}")
 
