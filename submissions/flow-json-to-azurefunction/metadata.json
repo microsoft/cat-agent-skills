@@ -1,0 +1,11 @@
+{
+  "name": "Flow JSON to Azure Function",
+  "description": "Converts a Power Automate cloud flow definition (JSON) into a deployable Python Azure Function, with a PDF analysis report and a ready-to-deploy ZIP package.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["power-automate", "azure-functions", "migration", "python"],
+  "author": "Kamalika Balaji, Swarup Mishra, Deborshi Deb",
+  "authorGithub": "KamalikaBalaji1",
+  "version": "1.0.0",
+  "createdAt": "2026-10-14",
+  "updatedAt": "2026-10-14"
+}
