@@ -1,0 +1,12 @@
+{
+  "name": "Capital Markets",
+  "description": "Analyst work for banking, research and private equity.",
+  "platforms": ["Cowork"],
+  "category": "financial-services",
+  "builtByMicrosoft": true,
+  "tags": ["financial-services", "capital-markets", "investment-research", "due-diligence"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.7",
+  "createdAt": "2026-10-31"
+}
