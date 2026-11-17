@@ -790,21 +790,25 @@ def _xl_normalized_amount_formula(cell_ref, norm, sign):
     The helper must be formula-driven (not a static number) so editing the visible source cell
     recomputes downstream SUMIF/controls when the workbook is opened in Excel.
     """
-    # Base text normalization from the visible cell.
     txt = f'TRIM(TEXT({cell_ref},"@"))'
-    cleaned = txt
     if norm.get("stripCurrencySymbols", True):
-        # Keep this explicit and deterministic (no locale-dependent regex equivalent in Excel).
-        for token in [",", "$", "€", "£", "¥", "USD", "EUR", "GBP", "INR", " "]:
-            cleaned = f'SUBSTITUTE({cleaned},"{token}","")'
-        cleaned = f"SUBSTITUTE({cleaned},CHAR(160),\"\")"
-    if norm.get("parenthesesMeanNegative", True):
-        core = f'SUBSTITUTE(SUBSTITUTE({cleaned},"(",""),")","")'
-        parsed = (f'IF(AND(ISNUMBER(SEARCH("(",{cleaned})),ISNUMBER(SEARCH(")",{cleaned}))),'
-                  f'-ABS(NUMBERVALUE({core})),NUMBERVALUE({cleaned}))')
+        cleaned_expr = ('IFERROR(LET(_chars,MID(_raw,SEQUENCE(LEN(_raw)),1),'
+                        '_keep,FILTER(_chars,ISNUMBER(SEARCH(_chars,"0123456789.-()"))),'
+                        'TEXTJOIN("",,_keep)),"")')
     else:
-        parsed = f"NUMBERVALUE({cleaned})"
-    base = f'IF(ISNUMBER({cell_ref}),{cell_ref},IFERROR({parsed},""))'
+        cleaned_expr = "_raw"
+
+    if norm.get("parenthesesMeanNegative", True):
+        parsed_expr = ('IF(AND(ISNUMBER(SEARCH("(",_clean)),ISNUMBER(SEARCH(")",_clean))),'
+                       '-ABS(NUMBERVALUE(SUBSTITUTE(SUBSTITUTE(_clean,"(",""),")",""))),'
+                       'NUMBERVALUE(_clean))')
+    else:
+        parsed_expr = "NUMBERVALUE(_clean)"
+
+    base = (f'LET(_raw,{txt},'
+            f'_clean,{cleaned_expr},'
+            f'_parsed,{parsed_expr},'
+            f'IF(ISNUMBER({cell_ref}),{cell_ref},IFERROR(_parsed,"")))')
     if sign == "flip":
         return f'=IF({base}="","",-1*({base}))'
     return f"={base}"
