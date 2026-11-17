@@ -693,9 +693,15 @@ def tie_out(results, total_a, total_b, abs_tol):
     # can carry a small real variance that still has to be explained for the identity to close - it
     # is exactly 0 for an exact-mode match, so this never changes exact-mode results.
     explained = 0.0
+    missing_amount_findings = 0
     for r in results:
         st = r["status"]
         d = r.get("difference")
+        if ((st in ("Matched", "Matched (with difference)", "Probable (Needs Review)", "Grouped (Needs Review)")
+             and (r.get("amount_a") is None or r.get("amount_b") is None))
+                or (st == "Unmatched (A)" and r.get("amount_a") is None)
+                or (st == "Unmatched (B)" and r.get("amount_b") is None)):
+            missing_amount_findings += 1
         if st in ("Matched", "Matched (with difference)", "Probable (Needs Review)",
                   "Grouped (Needs Review)") and d is not None:
             explained += d
@@ -710,9 +716,10 @@ def tie_out(results, total_a, total_b, abs_tol):
     # one-cent break (which the old "floor the threshold at 0.01" logic incorrectly accepted in
     # exact mode). A configured absolute tolerance is still honored; in exact mode (abs_tol 0) only
     # an exact cent-level match ties out.
-    closed = abs(round(residual, 2)) <= abs_tol
+    closed = abs(round(residual, 2)) <= abs_tol and missing_amount_findings == 0
     return {"total_a": total_a, "total_b": total_b, "net_difference": left,
-            "explained": explained, "residual": residual, "tied_out": closed}
+            "explained": explained, "residual": residual, "tied_out": closed,
+            "missing_amount_findings": missing_amount_findings}
 
 
 # ----------------------------- output -----------------------------
@@ -1476,7 +1483,7 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
     b2 = ws.cell(row=2, column=1, value=_neutralize(" | ".join(basis_bits)))
     b2.font = Font(name=REPORT_FONT, color=SUB_C)
 
-    # ---- Control panel (rows 5-11) ----
+    # ---- Control panel (rows 5-12) ----
     section(5, 1, "Control panel — every control must read OK before sign-off")
     for j, h in enumerate(["Control", "Result", "Expected", "Status"]):
         header(6, 1 + j, h)
@@ -1505,6 +1512,9 @@ def _write_dashboard(ws, info, config, df_a, df_b, meta_a, meta_b, sa, sb, narra
         ("Reconciled plus open items equal total lines",
          f'=COUNTIF({R(Kst)},"Reconciled")+COUNTIF({R(Kst)},"Open Item")',
          f"=COUNTA(Reconciliation!$A${rf}:$A${rl})", "count"),
+        ("No blank/unparseable amounts remain in source data",
+         f'=COUNTIF({a_amt},"")+COUNTIF({b_amt},"")',
+         "0", "count"),
     ]
     for i, (label, result, expected, kind) in enumerate(controls):
         row = 7 + i
@@ -2259,6 +2269,15 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
         return d
     by_type = agg_by(lambda r: r["difftype"])
     by_root = agg_by(lambda r: r["rootcause"])
+    missing_amount_cells = 0
+    if a_recs is not None and b_recs is not None:
+        missing_amount_cells = sum(
+            1 for rec in a_recs
+            if normalize_amount(rec.get(amt_a_col), nrm) is None
+        ) + sum(
+            1 for rec in b_recs
+            if normalize_amount(rec.get(amt_b_col), nrm) is None
+        )
 
     # By account (all rows), by company/period (all rows) with open counts.
     acct = {}; acct_order = []
@@ -2297,6 +2316,8 @@ def build_html_dashboard(rows, config, src_name=None, df_a=None, df_b=None):
         ("Total difference proves to the two ledger totals",
          _num(net), _num(round(ind_a - ind_b, 2)), round(net - (ind_a - ind_b), 2) == 0),
         ("Reconciled plus open items equal total lines", str(reconciled + opn), str(total), reconciled + opn == total),
+        ("No blank/unparseable amounts remain in source data",
+         str(missing_amount_cells), "0", missing_amount_cells == 0),
     ]
     ctrl_html = "".join(
         f'<tr><td>{e(lbl)}</td><td class="num">{res}</td><td class="num">{exp}</td>'
@@ -2479,6 +2500,13 @@ def _to_jsonable(value):
     return str(value)
 
 
+def _csv_safe(value):
+    """Defuse spreadsheet-formula injection for CSV cells opened in Excel."""
+    if isinstance(value, str) and value.lstrip()[:1] in ("=", "+", "-", "@"):
+        return "'" + value
+    return value
+
+
 def write_plain_results(rows, config, json_path, csv_path, summary, record_results=None):
     """Write machine-readable reconciliation outputs for agents that cannot evaluate Excel formulas.
 
@@ -2507,7 +2535,7 @@ def write_plain_results(rows, config, json_path, csv_path, summary, record_resul
         writer = csv.DictWriter(cf, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         for row in rows:
-            writer.writerow(row)
+            writer.writerow({k: _csv_safe(v) for k, v in row.items()})
 
 
 def write_control_plain_results(result, config, json_path, csv_path):
@@ -2539,7 +2567,7 @@ def write_control_plain_results(result, config, json_path, csv_path):
         writer = csv.DictWriter(cf, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         for row in result.get("rows", []):
-            writer.writerow(row)
+            writer.writerow({k: _csv_safe(v) for k, v in row.items()})
 
 
 _HTML_TEMPLATE = """<!DOCTYPE html>
@@ -2839,6 +2867,7 @@ def main():
             "net_difference": summary["net_difference"],
             "residual": summary["residual"],
             "tied_out": summary["tied_out"],
+            "missing_amount_findings": summary.get("missing_amount_findings", 0),
             "status_counts": perkey_counts,
             "record_level_status_counts": counts,
         },
@@ -2848,6 +2877,8 @@ def main():
 
     print(f"Control total {la} = {total_a:.2f} | {lb} = {total_b:.2f} | net = {summary['net_difference']:.2f}")
     print(f"Tied out: {'YES' if summary['tied_out'] else 'NO (residual %.2f)' % summary['residual']}")
+    if summary.get("missing_amount_findings", 0):
+        print(f"  WARNING: {summary['missing_amount_findings']} row(s) have blank/unparseable amounts - tie-out not trustworthy until resolved")
     for status, n in counts.items():
         print(f"  {status}: {n}")
 

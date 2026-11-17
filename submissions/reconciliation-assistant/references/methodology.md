@@ -94,6 +94,8 @@ TotalA - TotalB
 
 Compute the left side (from the raw control totals in Step 1) and the right side (from the classified results) and confirm they are equal within tolerance. If they do not close, there is a defect - a double-counted match, a sign not normalized, a row dropped - and the result must be presented as **not tied**, with the residual amount shown, rather than as a finished reconciliation.
 
+Also treat any blank/unparseable amount rows as a hard tie-out blocker: even if the arithmetic residual happens to be nil, the run is still **not tied** until those rows are resolved, because unknown amounts make the apparent closure non-auditable.
+
 For a clean run where every item is either matched-equal, matched-with-difference, or one-sided unmatched, the identity reduces to: the net difference between the two control totals equals the sum of the differences plus the one-sided items. If that number is not what the user expected, the breaks in the report explain exactly why.
 
 ## GL vs sub-ledger (record-to-record) worked example
@@ -105,7 +107,7 @@ A classic detail-vs-detail reconciliation. Source A is the GL detail for an AP c
 - Sub-ledger `DOC-4402 | 3,200.00` with no GL line → **Unmatched (B)**. A **timing difference**: the invoice is in the sub-ledger but not yet posted to the GL.
 - GL `DOC-4403 | 1,000.00` with no sub-ledger line → **Unmatched (A)**. A GL entry the sub-ledger never recorded - a manual journal or a mis-post.
 
-The tie-out then proves it: `GL total − sub-ledger total = +450.00 (difference) + 1,000.00 (unmatched A) − 3,200.00 (unmatched B)`. If that identity closes, the reconciliation is defensible; the four line items above are exactly the exceptions an accountant would chase.
+The tie-out then proves it: `GL total − sub-ledger total = +450.00 (difference) + 1,000.00 (unmatched A) − 3,200.00 (unmatched B)`. If that identity closes **and all amounts are parseable**, the reconciliation is defensible; the four line items above are exactly the exceptions an accountant would chase.
 
 ## Control-total tie-out mode
 
