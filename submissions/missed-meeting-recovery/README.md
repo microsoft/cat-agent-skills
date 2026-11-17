@@ -1,6 +1,6 @@
 # Missed-Meeting Recovery
 
-A **condition-triggered** Scout automation that catches you up after a meeting
+A **condition-triggered** Automation that catches you up after a meeting
 you skipped.
 
 **Trigger:** Scout checks every 60 minutes whether you missed or declined a
@@ -26,13 +26,13 @@ For each candidate meeting in the last 24 hours it:
    `Missed-Meeting Recovery | <date>`) and by Teams chat, and reports delivery
    success or failure for each channel.
 
-## Run in Scout Desktop or Scout Cloud
+## Run in Scout Desktop or Autopilot
 
 Use the [automation JSON file](https://microsoft.github.io/cat-agent-skills/bundles/missed-meeting-recovery.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
-- **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
-  Scout Cloud, then run the automation.
+- **Autopilot:** Open the JSON file, copy its full contents, paste them into
+  Autopilot, then run the automation.
 
 ## Before you enable it
 
