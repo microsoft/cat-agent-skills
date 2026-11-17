@@ -31,8 +31,29 @@ override known author intent.
   spaces and whitespace crossing run boundaries.
 - Preserve bold/italic spans inside multiword phrases and linked text.
 - Test inherited RTL styles with local English overrides, and the reverse.
+- For Word, include a Hebrew-base paragraph whose bidi setting is already RTL
+  but whose physical alignment is wrong. Verify logical start alignment
+  (`w:jc w:val="start"` where supported) resolves to the physical right margin
+  in the target application, while a centered heading stays centered. Do not
+  grade alignment from the raw `left`/`right` XML token alone: structurally
+  valid bidi paragraphs can still be aligned to the wrong side.
+- For Hebrew-base Word sentences ending in an LTR date, filename, path,
+  mention, or English phrase, check the final period separately from the token.
+  Include a punctuation-only run with no Hebrew letters. The sentence period
+  must stay at the Hebrew sentence boundary, while punctuation inside the
+  technical token remains intact and LTR. Structural validity, paragraph
+  alignment, and unchanged text alone do not prove this visual check passed.
 - Test centered headings, numbered lists, bullets, table cells, slide notes,
   nested/grouped objects, headers, and footers where applicable.
+- In PowerPoint, include a single mixed-script run that needs splitting while
+  preserving styled spans, hyperlink targets, and boundary spaces. Verify both
+  native run direction and matching Hebrew/English language context; a correct
+  paragraph RTL flag alone is not a visual pass. Check colons, parentheses,
+  signed amounts, and terminal periods in both Hebrew- and English-base cases.
+- Follow each slide's actual notes relationship and inspect its notes text.
+  Render notes separately when possible. A zero-size or hidden notes placeholder
+  is a layout/visibility limitation, not evidence that the note is empty; report
+  it separately and do not claim a visual pass or redesign it without approval.
 - Preserve hyperlink targets separately from their display labels.
 - Preserve spreadsheet formula text, data types, leading zeros, numeric values,
   shared styles, and the original CSV/TSV records.

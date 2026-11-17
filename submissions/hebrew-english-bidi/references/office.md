@@ -16,11 +16,27 @@ For a confirmed Hebrew-base paragraph:
 
 - Set paragraph bidi behavior independently from its alignment.
 - In WordprocessingML, `w:pPr/w:bidi` controls RTL paragraph layout.
-  `w:jc w:val="right"` sets right alignment when appropriate. Paragraph bidi
-  alone is not a complete solution for mixed-run text ordering.
+- Resolve physical alignment using the paragraph's reading direction and
+  inherited formatting. For a Hebrew-base paragraph intended to be
+  right-aligned, prefer logical start alignment, `w:jc w:val="start"`, where
+  supported, or use the native application's alignment controls. Do not assume
+  that a raw `w:jc` value of `right` means the physical right margin: Word can
+  interpret the transitional `left`/`right` values relative to bidi direction.
+  Verify the effective alignment in the target application. Preserve intentional
+  centered or justified alignment. Paragraph bidi alone is not a complete
+  solution for mixed-run text ordering.
 - Inspect `w:rPr/w:rtl` and inherited styles. Hebrew runs may require RTL
   properties. English runs must not inherit an RTL run override; use an explicit
   `w:rtl w:val="0"` where necessary to cancel inherited RTL.
+- Resolve punctuation-only runs by ownership, not by whether they contain
+  Hebrew letters. In a Hebrew-base sentence ending with an LTR token, keep the
+  sentence's final punctuation outside that token's LTR override. Where Word
+  needs an explicit run setting, retain it as a separate Hebrew-context run
+  with `w:rtl`, even when that run contains only `.`. Keep token-internal
+  punctuation, such as filename dots, a minus sign, `@`, or URL separators,
+  inside the intact LTR token. Preserve exact text, spaces, and styling when
+  splitting runs; do not insert Unicode controls to compensate for an unset
+  native run direction. Verify the sentence boundary in the rendered result.
 - Keep multiword English phrases and technical tokens logically contiguous,
   while preserving internal bold, italic, links, and other run formatting.
   Do not merge styled runs blindly or assign one direction to a mixed run.
@@ -35,7 +51,7 @@ Illustrative paragraph fragment (not a complete DOCX package):
 <w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:pPr>
     <w:bidi/>
-    <w:jc w:val="right"/>
+    <w:jc w:val="start"/>
   </w:pPr>
   <w:r>
     <w:rPr><w:rtl/></w:rPr>
@@ -44,6 +60,10 @@ Illustrative paragraph fragment (not a complete DOCX package):
   <w:r>
     <w:rPr><w:rtl w:val="0"/></w:rPr>
     <w:t>Microsoft Teams</w:t>
+  </w:r>
+  <w:r>
+    <w:rPr><w:rtl/></w:rPr>
+    <w:t>.</w:t>
   </w:r>
 </w:p>
 ```
@@ -67,9 +87,21 @@ For a confirmed Hebrew-base paragraph:
 - Inspect inherited default run properties as well as individual runs.
   The run property is the **child element** `a:rtl` within `a:rPr`,
   not an invented `rtl` attribute on `a:rPr`.
-- Apply `a:rtl` to suitable Hebrew runs. Use `a:rtl val="0"` on English
-  runs only when necessary to cancel inherited RTL. Never apply an RTL run
-  override to strong LTR English text.
+- Paragraph RTL alone is not a complete inline repair. If a run mixes Hebrew,
+  English tokens, and punctuation, split it at logical span boundaries while
+  copying its styling and preserving every character and space. Do not merge
+  across existing emphasis or hyperlink boundaries.
+- Give confirmed Hebrew spans an appropriate Hebrew language context, such as
+  `a:rPr lang="he-IL"`, together with `a:rtl val="1"`. Preserve the English
+  locale on LTR spans and use `a:rtl val="0"` where needed to cancel inherited
+  RTL. This pairs native run direction with matching language context; a
+  language tag alone is not a direction setting. Never mark a mixed run
+  wholesale as RTL when it contains strong English text: split it first.
+- Assign neutral punctuation and boundary spaces to their owning sentence or
+  token. A Hebrew sentence's final period after an English token needs Hebrew
+  run context; an English-base sentence surrounding a Hebrew phrase keeps its
+  outer punctuation in English context. Keep URL separators, filename dots,
+  signed numbers, mentions, and paired token punctuation together in LTR spans.
 - Preserve existing `a:latin` and `a:cs` fonts if they cover the required
   characters. An RTL run can select the complex-script font, so inspect
   whether a font change is the real cause of unexpected appearance.
@@ -88,6 +120,10 @@ Illustrative DrawingML fragment:
   <a:r>
     <a:rPr lang="en-US"><a:rtl val="0"/></a:rPr>
     <a:t>Microsoft Teams</a:t>
+  </a:r>
+  <a:r>
+    <a:rPr lang="he-IL"><a:rtl val="1"/></a:rPr>
+    <a:t>.</a:t>
   </a:r>
 </a:p>
 ```
