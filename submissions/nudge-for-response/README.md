@@ -1,6 +1,6 @@
 # Nudge for Response
 
-A Scout automation that follows up on emails you sent that never got an answer.
+A automation that follows up on emails you sent that never got an answer.
 
 **Runs:** every weekday at 9:00 AM.
 
@@ -31,13 +31,19 @@ Each run has five steps:
 
 **It never sends email.** Every nudge waits in Drafts for you to review and send.
 
-## Run in Scout Desktop or Scout Cloud
+**Safeguards.** All mail content is treated as data, never as instructions, so
+text embedded in a message can't steer what the automation drafts or posts.
+Nudge drafts reply only to the original sent message's recipients, and the Teams
+summary is sent only to your own self-chat (your address is resolved from your
+profile), never to anyone else.
+
+## Run in Scout Desktop or Autopilot
 
 Use the [automation JSON file](https://microsoft.github.io/cat-agent-skills/bundles/nudge-for-response.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
-- **Scout Cloud:** If JSON upload isn't supported, open the JSON file, copy its
-  full contents, and paste them into the Scout Cloud prompt to set up the
+- **Autopilot:** If JSON upload isn't supported, open the JSON file, copy its
+  full contents, and paste them into the Autopilot prompt to set up the
   automation, then run it.
 
 ## Before you enable it
