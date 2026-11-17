@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.13",
+  "id": "d373b45f-1900-4027-a23b-cbc5d0e16857",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Time & Expense Narrative Check",
+    "full": "Time & Expense Narrative Compliance for Professional Services"
+  },
+  "description": {
+    "short": "Draft and check time-entry narratives for pre-bill; time entries only",
+    "full": "Drafts and checks time-entry narratives: gathers cited calendar and document activity, drafts grounded narratives, recommends phase and task codes, checks client billing guidelines and missing time, and builds a draft pre-bill exception packet. Draft-first: it never submits time, approves a pre-bill or sends anything without explicit confirmation. Expense reports and receipts are out of scope.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#7B3FA0",
+  "agentSkills": [
+    {
+      "folder": "./skills/activity-pull"
+    },
+    {
+      "folder": "./skills/narrative-draft"
+    },
+    {
+      "folder": "./skills/code-map"
+    },
+    {
+      "folder": "./skills/guideline-check"
+    },
+    {
+      "folder": "./skills/exception-report"
+    }
+  ]
+}

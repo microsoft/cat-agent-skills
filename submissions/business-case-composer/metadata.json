@@ -1,0 +1,11 @@
+{
+  "name": "Business Case Composer",
+  "description": "Draft a customer-specific business case connecting the problem, investment, and evidence-backed value.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "business-case", "customer-value"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "createdAt": "2026-10-31"
+}

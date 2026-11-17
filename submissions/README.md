@@ -45,6 +45,15 @@ stripped; they are sidecars and never land inside the bundle.
 > `CONTRIBUTING` next to your payload — they'd just waste the agent's context. Put
 > those in your PR description.
 
+> ⚖️ **Optional `LICENSE` / `NOTICE`.** A submission may include a root-level
+> `LICENSE` (or `LICENSE.md` / `LICENSE.txt`) and, when it redistributes
+> third-party material, a `NOTICE` (or `NOTICE.md` / `NOTICE.txt`). Unlike
+> `README.md`, these **are bundled** so the terms travel with the download. When
+> present, the detail page shows a **License** (and **Notice**) row linking to
+> the file; the license is named only when it is Microsoft's standard MIT text,
+> otherwise the row reads "See LICENSE". A plugin can also place a `LICENSE` in
+> each skill folder.
+
 ## Two descriptions — they are different on purpose
 
 | | Lives in | Who reads it |
@@ -120,6 +129,8 @@ The same fields work in a `metadata.yaml` if you prefer YAML.
 | `updatedAt`   | `metadata.json` |          | `YYYY-MM-DD`.                                                |
 | `coverColor`  | `metadata.json` |          | CSS color to override the auto-generated cover.              |
 | `featured`    | `metadata.json` |          | `true` to sort the skill to the top.                         |
+| `category`    | `metadata.json` |          | `manufacturing`, `retail-cpg`, `financial-services`, `healthcare`, `professional-services`, `productivity` (default), `agent-development`, `education`, `legal`, `sales`, `service`, or `finance`. Visitors can match any of several selected categories. |
+| `builtByMicrosoft` | `metadata.json` |     | Defaults to `false`. Set only for verified Microsoft-built content, shown in the Microsoft collection rather than the community grid. Author attribution is unchanged. |
 | `bundle`      | —               |          | Set automatically when your skill ships files beyond `SKILL.md` — don't add it.|
 
 A missing or invalid **required** field fails the PR with a message listing

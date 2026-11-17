@@ -1,0 +1,49 @@
+{ "$schema": "http://json-schema.org/draft-07/schema#", "$id": "rtl.store-associate-assist.v1",
+  "title": "Store Associate Assist contract v1",
+  "description": "v1.0.7: question.facts (receipt, stock_at_this_store, purchase_date, evidence) is required and is the only source of those facts for the engine. Chains question-intake -> policy-retrieve -> product-compare/promo-check -> answer-draft. Data + confidence + provenance + citations on every hop. v1.0.2: question and store_context are typed so intake validation catches a missing asked_on or cluster before the engines run; product_comparison gains missing_from_pim; the payload carries store/role/department context only - never customer PII or payment-card data.",
+  "type": "object", "required": ["contract_version", "question"],
+  "properties": {
+    "contract_version": { "const": "rtl.store-associate-assist.v1" },
+    "question": { "type": "object", "required": ["text", "asked_on", "facts"], "properties": {
+        "text": { "type": "string", "minLength": 1, "description": "The associate's question verbatim - no customer names, card numbers, phone numbers or addresses" },
+        "topic": { "type": "string" },
+        "asked_on": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "sku": { "type": ["string", "null"], "pattern": "^GTIN-[0-9]{14}$" },
+        "compare_skus": { "type": "array", "items": { "type": "string", "pattern": "^GTIN-[0-9]{14}$" }, "maxItems": 2 },
+        "compare_attributes": { "type": "array", "items": { "type": "string" }, "description": "Attributes the associate asked about; any absent from both SKUs is surfaced as MISSING" },
+        "asked_by_role": { "type": "string" },
+        "facts": { "type": "object", "required": ["receipt", "stock_at_this_store", "purchase_date", "evidence"],
+          "description": "Written by question-intake from the associate's words (v1.0.7). policy_resolve reads receipt, stock and purchase date ONLY from here. Never inferred: anything not clearly stated is unclear / null.",
+          "properties": {
+            "receipt": { "enum": ["in_hand", "not_in_hand", "unclear"], "description": "in_hand only when the message clearly says the customer has the receipt or proof of purchase with them now" },
+            "stock_at_this_store": { "enum": ["in_stock", "out_of_stock", "unclear"], "description": "out_of_stock only when this store has none anywhere (shelf, back room, stockroom, display) and nothing says units exist here" },
+            "purchase_date": { "type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "explicit date, or an exact relative phrase converted with asked_on; otherwise null" },
+            "evidence": { "type": "object", "description": "verbatim words from the associate's message behind each fact",
+              "properties": { "receipt": { "type": "string", "minLength": 1 }, "stock": { "type": "string", "minLength": 1 }, "purchase_date": { "type": "string", "minLength": 1 } } } },
+          "allOf": [
+            { "if": { "properties": { "receipt": { "enum": ["in_hand", "not_in_hand"] } } }, "then": { "properties": { "evidence": { "required": ["receipt"] } } } },
+            { "if": { "properties": { "stock_at_this_store": { "enum": ["in_stock", "out_of_stock"] } } }, "then": { "properties": { "evidence": { "required": ["stock"] } } } },
+            { "if": { "properties": { "purchase_date": { "type": "string" } } }, "then": { "properties": { "evidence": { "required": ["purchase_date"] } } } } ] } } },
+    "store_context": { "type": "object", "required": ["store_id", "cluster"], "properties": {
+        "store_id": { "type": "string", "pattern": "^ST-[0-9]{4}$" },
+        "cluster": { "type": "string", "enum": ["urban-large", "suburban-standard", "rural-compact"] },
+        "department": { "type": ["string", "null"] },
+        "format": { "type": "string" },
+        "source": { "type": "string", "description": "the user's store master export and row, e.g. Store Master Export.csv row 1" } } },
+    "policy_resolution": { "type": "object", "properties": {
+        "topic": { "type": "string" }, "applicable_clause": { "type": ["string", "null"] },
+        "determination": { "type": "string" }, "conditions": { "type": "array", "items": { "type": "string" } },
+        "in_scope": { "type": "boolean" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "promo_check": { "type": "object", "properties": {
+        "checked": { "type": "boolean" }, "eligible": { "type": "boolean" }, "promo_id": { "type": "string" },
+        "reasons": { "type": "array", "items": { "type": "string" } }, "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "product_comparison": { "type": "object", "properties": {
+        "skus": { "type": "array", "items": { "type": "string" } }, "names": { "type": "array" }, "prices": { "type": "array" },
+        "rows": { "type": "array", "items": { "type": "object", "required": ["attribute", "differs"] } },
+        "differences": { "type": "integer" },
+        "missing_from_pim": { "type": "array", "items": { "type": "string" } },
+        "source": { "type": "string" }, "citation": { "type": "string" } } },
+    "escalations": { "type": "array", "items": { "type": "string" } },
+    "provenance": { "type": "object", "properties": {
+        "engines": { "type": "array", "items": { "type": "string" } }, "generated_at": { "type": "string" } } } } }

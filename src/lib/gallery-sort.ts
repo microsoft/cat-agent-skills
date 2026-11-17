@@ -1,5 +1,21 @@
+import { CATEGORY_LABELS, type Category } from "./categories";
+
 interface GalleryItem {
   dataset: Record<string, string | undefined>;
+}
+
+interface CategorizedSubmission {
+  category: Category;
+  name: string;
+}
+
+export function defaultGallerySort(scope: string | undefined): "category" | "featured" {
+  return scope === "microsoft" ? "category" : "featured";
+}
+
+export function compareCategoryThenName(left: CategorizedSubmission, right: CategorizedSubmission): number {
+  return CATEGORY_LABELS[left.category].localeCompare(CATEGORY_LABELS[right.category]) ||
+    left.name.localeCompare(right.name);
 }
 
 export function compareNewest(left: GalleryItem, right: GalleryItem): number {

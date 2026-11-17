@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.5",
+  "id": "aaa5caa6-7fcc-405b-88ae-9c618f73fd6b",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Store Task Promotion Execution",
+    "full": "Store Task Promotion Execution for Cowork"
+  },
+  "description": {
+    "short": "Store promotion launches: test readiness, rank exceptions, draft the shift brief",
+    "full": "Store Task Promotion Execution prepares a store for a promotion launch. It reads the HQ campaign pack, price file and the store's records, tests readiness for missing items, fixture and price conflicts, ranks exceptions by revenue at stake and drafts the checklist, shift brief and escalation. It never changes POS prices, planograms or schedules.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#107C10",
+  "agentSkills": [
+    {
+      "folder": "pack-ingest"
+    },
+    {
+      "folder": "store-map"
+    },
+    {
+      "folder": "readiness-check"
+    },
+    {
+      "folder": "exception-raise"
+    },
+    {
+      "folder": "brief-draft"
+    }
+  ]
+}

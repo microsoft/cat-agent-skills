@@ -1,0 +1,11 @@
+{
+  "name": "Deal Catch-up",
+  "description": "Summarize what changed across a scoped set of deals, separating customer movement from record housekeeping.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "deal-updates", "pipeline"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "createdAt": "2026-10-31"
+}
