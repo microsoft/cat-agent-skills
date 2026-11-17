@@ -1,0 +1,15 @@
+{
+  "libraryName": "Meeting Moments Library",
+  "subtitle": "Verified moments from authorized meeting recordings",
+  "capture": {
+    "type": "how-to",
+    "itemNoun": "moment",
+    "itemNounPlural": "moments",
+    "maxMinutes": 5,
+    "excludeExternalMeetings": true
+  },
+  "output": {
+    "baseName": "meeting-moments-library",
+    "includeEvidenceNotesInJson": true
+  }
+}

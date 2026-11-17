@@ -1,0 +1,500 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "hls.discharge-care-transition.v1",
+  "title": "Discharge & Care-Transition Packet contract v1",
+  "description": "Chains admission-synthesise -> med-reconcile -> summary-draft -> patient-instructions -> followup-plan. Citations ride the contract: every medication action and inpatient change carries source_note and documented_date (discharge-rules.md #9).",
+  "x-action-level": "L1",
+  "x-action-level-note": "L0 read/analyse and L1 draft-for-approval only. No skill in this plugin files, sends, signs or transmits; the discharge summary is a legal record and requires clinician signature (discharge-rules.md #2).",
+  "standards_alignment": {
+    "primary": [
+      "HL7 C-CDA R2.1 Discharge Summary (LOINC 18842-5)",
+      "HL7 FHIR R4 MedicationStatement",
+      "HL7 FHIR R4 MedicationRequest"
+    ],
+    "field_map": {
+      "encounter": "C-CDA Hospital Discharge Diagnosis section (LOINC 11535-2) + document header; FHIR R4 Encounter",
+      "admission_meds[]": "FHIR R4 MedicationStatement (status, medicationCodeableConcept, dosage.text); C-CDA Medications section entry",
+      "inpatient_changes[]": "FHIR R4 MedicationRequest (intent=order; status active|stopped|on-hold); documenting note narrated in C-CDA Hospital Course section (LOINC 8648-8)",
+      "draft_discharge_meds[]": "C-CDA Hospital Discharge Medications section (LOINC 10183-2); FHIR R4 MedicationRequest",
+      "reconciliation_report.expected_discharge_meds[]": "C-CDA Hospital Discharge Medications section (LOINC 10183-2); FHIR R4 MedicationRequest",
+      "discharge_summary": "C-CDA R2.1 Discharge Summary document (LOINC 18842-5)",
+      "patient_instructions": "C-CDA Hospital Discharge Instructions section",
+      "followup_checklist[]": "C-CDA Plan of Treatment section (LOINC 18776-5); FHIR R4 ServiceRequest / Task",
+      "pending_results[]": "FHIR R4 DiagnosticReport (status registered|partial); C-CDA Plan of Treatment section (LOINC 18776-5)",
+      "source_note / documented_date": "FHIR R4 Provenance (agent, recorded) / DocumentReference"
+    },
+    "not_mapped": "reconciliation_report.discrepancies, readability_report and followup_report are plugin-native quality objects with no C-CDA/FHIR equivalent; they are carried alongside the mapped fields, never in place of them."
+  },
+  "type": "object",
+  "required": [
+    "contract_version",
+    "encounter"
+  ],
+  "definitions": {
+    "citation": {
+      "type": "object",
+      "description": "Provenance that rides the contract (discharge-rules.md #9).",
+      "required": [
+        "source_note",
+        "documented_date"
+      ],
+      "properties": {
+        "source_note": {
+          "type": "string",
+          "description": "Documenting note or order this fact comes from."
+        },
+        "documented_date": {
+          "type": "string",
+          "description": "ISO-8601 date the fact was documented."
+        }
+      }
+    },
+    "medication": {
+      "type": "object",
+      "required": [
+        "drug"
+      ],
+      "properties": {
+        "drug": {
+          "type": "string"
+        },
+        "dose": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "description": "active | stopped | discontinued | held"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_note": {
+          "type": "string"
+        },
+        "documented_date": {
+          "type": "string"
+        }
+      }
+    },
+    "inpatient_change": {
+      "type": "object",
+      "required": [
+        "drug",
+        "action"
+      ],
+      "properties": {
+        "drug": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "start",
+            "stop",
+            "change"
+          ]
+        },
+        "dose": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_note": {
+          "type": "string",
+          "description": "Required by discharge-rules.md #9; absence is discrepancy change_provenance_missing."
+        },
+        "documented_date": {
+          "type": "string",
+          "description": "Required by discharge-rules.md #9."
+        }
+      }
+    },
+    "discrepancy": {
+      "type": "object",
+      "required": [
+        "drug",
+        "type",
+        "detail",
+        "citation"
+      ],
+      "properties": {
+        "drug": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "unresolved_stop_reappeared",
+            "missing_from_discharge",
+            "stopped_med_undocumented",
+            "unordered_addition",
+            "dose_mismatch",
+            "change_to_absent_med",
+            "change_provenance_missing"
+          ]
+        },
+        "detail": {
+          "type": "string"
+        },
+        "citation": {
+          "type": "string",
+          "description": "Numbered rule in base/references/discharge-rules.md."
+        },
+        "source_note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "documented_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "followup_item": {
+      "type": "object",
+      "required": [
+        "item",
+        "owner",
+        "due_date",
+        "source_note"
+      ],
+      "properties": {
+        "item": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string",
+          "description": "Must be one of config/followup-rules.json allowed_owners (discharge-rules.md #10)."
+        },
+        "due_date": {
+          "type": "string",
+          "description": "ISO-8601; inside the configured window (discharge-rules.md #11)."
+        },
+        "source_note": {
+          "type": "string"
+        },
+        "documented_date": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "description": "appointment | referral | pending_result | self_care"
+        }
+      }
+    },
+    "pending_result": {
+      "type": "object",
+      "required": [
+        "result",
+        "owner",
+        "due_date",
+        "source_note"
+      ],
+      "properties": {
+        "result": {
+          "type": "string"
+        },
+        "ordered_date": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "due_date": {
+          "type": "string"
+        },
+        "source_note": {
+          "type": "string"
+        },
+        "documented_date": {
+          "type": "string"
+        }
+      }
+    },
+    "instruction_note": {
+      "type": "object",
+      "description": "1.0.2: a cited discharge order / patient education note whose text patient-instructions may use for non-medication sections (Activity, Diet, When to call). Text is carried verbatim, grouped by required section heading.",
+      "required": [
+        "source_note",
+        "documented_date",
+        "sections"
+      ],
+      "properties": {
+        "note_id": {
+          "type": "string"
+        },
+        "note_type": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "description": "Provenance label, e.g. the SYNTHETIC DEMO DATA label on demo records."
+        },
+        "synthetic": {
+          "type": "boolean",
+          "description": "true on synthetic demo records; such text needs clinician review before any customer or real-patient use."
+        },
+        "source_note": {
+          "type": "string"
+        },
+        "documented_date": {
+          "type": "string"
+        },
+        "sections": {
+          "type": "object",
+          "description": "Map of required section heading -> list of instruction lines, verbatim from the note."
+        }
+      }
+    }
+  },
+  "properties": {
+    "contract_version": {
+      "const": "hls.discharge-care-transition.v1"
+    },
+    "encounter": {
+      "type": "object",
+      "properties": {
+        "patient_id": {
+          "type": "string"
+        },
+        "admission_dx": {
+          "type": "string"
+        },
+        "discharge_date": {
+          "type": "string"
+        },
+        "source_note": {
+          "type": "string",
+          "description": "Optional (1.0.1): note/order the encounter facts come from. When absent, admission-synthesise escalates the missing citation (discharge-rules.md #9)."
+        },
+        "documented_date": {
+          "type": "string",
+          "description": "Optional (1.0.1): ISO-8601 date the encounter facts were documented."
+        }
+      }
+    },
+    "admission_meds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/medication"
+      }
+    },
+    "inpatient_changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/inpatient_change"
+      }
+    },
+    "draft_discharge_meds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/medication"
+      }
+    },
+    "reconciliation_report": {
+      "type": "object",
+      "properties": {
+        "expected_discharge_meds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/medication"
+          },
+          "description": "Cited medication objects sorted by drug; each carries source_note and documented_date."
+        },
+        "stopped_meds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/medication"
+          },
+          "description": "1.0.3: medications stopped in-house (status stopped), sorted by drug, each with its stop reason, source_note and documented_date."
+        },
+        "discrepancies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/discrepancy"
+          }
+        },
+        "clean": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "string"
+        },
+        "unrecognised_actions": {
+          "type": "array",
+          "description": "1.0.1: present only when an inpatient change has an action other than start/stop/change; blocks clean."
+        }
+      }
+    },
+    "discharge_summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "patient_instructions": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "readability_report": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "grade_level": {
+          "type": "number"
+        },
+        "max_grade_level": {
+          "type": "number"
+        },
+        "max_sentence_words": {
+          "type": "integer"
+        },
+        "long_sentences": {
+          "type": "array"
+        },
+        "jargon_hits": {
+          "type": "array"
+        },
+        "missing_sections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "config": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "followup_checklist": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/followup_item"
+      }
+    },
+    "pending_results": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/pending_result"
+      }
+    },
+    "referral_orders": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/followup_item"
+      }
+    },
+    "discharge_instruction_notes": {
+      "type": "array",
+      "description": "1.0.2 (optional): cited discharge order / education notes - the only source for Activity, Diet and When-to-call lines in patient_instructions (discharge-rules.md #3).",
+      "items": {
+        "$ref": "#/definitions/instruction_note"
+      }
+    },
+    "followup_report": {
+      "type": "object",
+      "properties": {
+        "items_checked": {
+          "type": "integer",
+          "description": "1.0.1: follow-up checklist items only (pending results and referral orders are counted separately)."
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "subject",
+              "type",
+              "detail",
+              "citation"
+            ],
+            "properties": {
+              "subject": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "missing_field",
+                  "owner_not_allowed",
+                  "due_date_out_of_window",
+                  "due_date_unverifiable",
+                  "untracked_order"
+                ]
+              },
+              "detail": {
+                "type": "string"
+              },
+              "citation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "config": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "pending_results_checked": {
+          "type": "integer"
+        },
+        "referral_orders_checked": {
+          "type": "integer"
+        }
+      }
+    },
+    "escalations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "engines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "generated_at": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "x-plugin-version": "1.0.2"
+}
