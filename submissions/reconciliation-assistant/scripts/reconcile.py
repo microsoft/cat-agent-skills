@@ -303,18 +303,42 @@ def align_key_columns(config):
     """If matching.keyMap pairs A's key columns to differently-named B columns, reorder
     sources.b.keyColumns to match sources.a.keyColumns element-wise, so every positional
     (a_keys[i] <-> b_keys[i]) assumption downstream (key building, timing, report field
-    mapping) holds. No-op when keyMap is absent or does not cover every A key column."""
+    mapping) holds. Reject malformed, incomplete, or non-bijective mappings explicitly rather
+    than silently falling back to the configured B key order."""
     m = config.get("matching", {})
     key_map = m.get("keyMap")
     if not key_map:
         return
     a_keys = config["sources"]["a"]["keyColumns"]
+    b_keys_cfg = config["sources"]["b"]["keyColumns"]
     mapping = {}
+    seen_a = set()
     for pair in key_map:
-        if isinstance(pair, (list, tuple)) and len(pair) == 2:
-            mapping[pair[0]] = pair[1]
-    if a_keys and all(k in mapping for k in a_keys):
-        config["sources"]["b"]["keyColumns"] = [mapping[k] for k in a_keys]
+        if not (isinstance(pair, (list, tuple)) and len(pair) == 2):
+            raise ValueError("matching.keyMap must be a list of [aKey, bKey] pairs.")
+        a_key, b_key = pair[0], pair[1]
+        if a_key in seen_a:
+            raise ValueError(f"matching.keyMap maps A key '{a_key}' more than once.")
+        seen_a.add(a_key)
+        mapping[a_key] = b_key
+
+    unknown_a = [k for k in mapping if k not in a_keys]
+    if unknown_a:
+        raise ValueError(f"matching.keyMap references unknown A key(s): {unknown_a}. "
+                         f"Expected from sources.a.keyColumns: {a_keys}")
+    missing_a = [k for k in a_keys if k not in mapping]
+    if missing_a:
+        raise ValueError(f"matching.keyMap must map every A key column; missing: {missing_a}.")
+
+    b_values = [mapping[k] for k in a_keys]
+    if len(set(b_values)) != len(b_values):
+        raise ValueError("matching.keyMap must be bijective across key columns; duplicate B targets found.")
+    missing_b_cols = [k for k in b_values if k not in b_keys_cfg]
+    if missing_b_cols:
+        raise ValueError(f"matching.keyMap points to B key column(s) not present in "
+                         f"sources.b.keyColumns: {missing_b_cols}. Available B keys: {b_keys_cfg}")
+
+    config["sources"]["b"]["keyColumns"] = b_values
 
 
 # ----------------------------- matching -----------------------------
@@ -760,6 +784,32 @@ def _xl_within_tolerance(diff_ref, a_ref, b_ref, abs_tol, pct_tol):
     return absok
 
 
+def _xl_normalized_amount_formula(cell_ref, norm, sign):
+    """Excel formula mirroring normalize_amount/apply_sign from the visible source amount cell.
+
+    The helper must be formula-driven (not a static number) so editing the visible source cell
+    recomputes downstream SUMIF/controls when the workbook is opened in Excel.
+    """
+    # Base text normalization from the visible cell.
+    txt = f'TRIM(TEXT({cell_ref},"@"))'
+    cleaned = txt
+    if norm.get("stripCurrencySymbols", True):
+        # Keep this explicit and deterministic (no locale-dependent regex equivalent in Excel).
+        for token in [",", "$", "€", "£", "¥", "USD", "EUR", "GBP", "INR", " "]:
+            cleaned = f'SUBSTITUTE({cleaned},"{token}","")'
+        cleaned = f"SUBSTITUTE({cleaned},CHAR(160),\"\")"
+    if norm.get("parenthesesMeanNegative", True):
+        core = f'SUBSTITUTE(SUBSTITUTE({cleaned},"(",""),")","")'
+        parsed = (f'IF(AND(ISNUMBER(SEARCH("(",{cleaned})),ISNUMBER(SEARCH(")",{cleaned}))),'
+                  f'-ABS(NUMBERVALUE({core})),NUMBERVALUE({cleaned}))')
+    else:
+        parsed = f"NUMBERVALUE({cleaned})"
+    base = f'IF(ISNUMBER({cell_ref}),{cell_ref},IFERROR({parsed},""))'
+    if sign == "flip":
+        return f'=IF({base}="","",-1*({base}))'
+    return f"={base}"
+
+
 def _xl_key_formula(cell_refs, norm):
     """Excel formula that concatenates key cell references into a Matching Key, mirroring
     join_key_parts()/norm_key(): each component is wrapped in TRIM() when trimWhitespace is on and
@@ -869,7 +919,11 @@ def _write_source_tab(ws, df, meta, sheet_title, sign="asIs", norm=None):
                     if isinstance(v, (int, float)) and not pd.isna(v):
                         cell.number_format = ACCT2
                     cell.font = f_body
-                ncell = ws.cell(row=r, column=amt_norm_c, value=apply_sign(normalize_amount(v, norm), sign))
+                ncell = ws.cell(
+                    row=r,
+                    column=amt_norm_c,
+                    value=_xl_normalized_amount_formula(f"{_CL(c)}{r}", norm, sign),
+                )
                 ncell.number_format = ACCT2
                 ncell.font = f_body
             elif name in text_cols:
@@ -2588,7 +2642,10 @@ def main():
         config["sources"]["b"]["label"] = default_label(args.source_b, sheet_b)
 
     # Align B's key columns to A's per matching.keyMap so differently-named keys reconcile.
-    align_key_columns(config)
+    try:
+        align_key_columns(config)
+    except ValueError as e:
+        sys.exit(f"Key mapping validation failed: {e}")
 
     la = config["sources"]["a"]["label"]
     lb = config["sources"]["b"]["label"]
