@@ -20,6 +20,7 @@ import csv
 import json
 import re
 import sys
+from datetime import datetime
 from difflib import SequenceMatcher
 
 import pandas as pd
@@ -123,18 +124,27 @@ def _parse_dateish(value):
         s = value.strip()
         if not s:
             return pd.NaT
-        # Detect locale-ambiguous numeric dates by trying both month-first and day-first parsing.
-        dt_month_first = pd.to_datetime(s, errors="coerce", dayfirst=False)
-        dt_day_first = pd.to_datetime(s, errors="coerce", dayfirst=True)
-        if not pd.isna(dt_month_first) and not pd.isna(dt_day_first):
-            if dt_month_first.normalize() != dt_day_first.normalize():
+        token = s.split()[0]
+        # Year-first numeric dates (YYYY-MM-DD or YYYY/MM/DD) are unambiguous; parse directly.
+        if re.match(r"^\d{4}[-/]\d{1,2}[-/]\d{1,2}$", token):
+            return pd.to_datetime(s, errors="coerce", dayfirst=False)
+        # Day/month numeric dates are ambiguous when both components are <= 12.
+        m = re.match(r"^(\d{1,2})([-/])(\d{1,2})\2(\d{2,4})$", token)
+        if m:
+            part1, part2, year = int(m.group(1)), int(m.group(3)), m.group(4)
+            if part1 <= 12 and part2 <= 12:
                 return pd.NaT
-            return dt_month_first
-        if not pd.isna(dt_month_first):
-            return dt_month_first
-        if not pd.isna(dt_day_first):
-            return dt_day_first
-        return pd.NaT
+            if part1 > 12 and part2 > 12:
+                return pd.NaT
+            sep = m.group(2)
+            yfmt = "%Y" if len(year) == 4 else "%y"
+            fmt = f"%d{sep}%m{sep}{yfmt}" if part1 > 12 else f"%m{sep}%d{sep}{yfmt}"
+            try:
+                return pd.Timestamp(datetime.strptime(token, fmt))
+            except ValueError:
+                return pd.NaT
+        # Textual months / other shapes: best-effort parse.
+        return pd.to_datetime(s, errors="coerce")
     return pd.to_datetime(value, errors="coerce")
 
 
