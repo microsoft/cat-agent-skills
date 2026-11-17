@@ -1,0 +1,54 @@
+{
+  "language": "en",
+  "slides": [
+    {
+      "layout": "cover",
+      "title": "Knowledge\nsharing pilot",
+      "subtitle": "A fictional departmental pilot"
+    },
+    {
+      "layout": "three-cards",
+      "title": "Our agenda",
+      "cards": [
+        {"heading": "The challenge", "body": "Where can sharing knowledge help?"},
+        {"heading": "The approach", "body": "A focused, phased departmental pilot."},
+        {"heading": "The decisions", "body": "Agree ownership and success measures."}
+      ]
+    },
+    {
+      "layout": "three-cards",
+      "title": "One department. Three priorities.",
+      "cards": [
+        {"heading": "Find knowledge", "body": "Identify the most important information gaps."},
+        {"heading": "Share expertise", "body": "Support contributors and gather feedback."},
+        {"heading": "Learn and improve", "body": "Review evidence before expanding the pilot."}
+      ]
+    },
+    {
+      "layout": "roadmap",
+      "title": "A proposed path forward",
+      "steps": [
+        {"when": "PHASE 1", "heading": "Discover", "body": "Choose a use case.\nConfirm the baseline."},
+        {"when": "PHASE 2", "heading": "Pilot", "body": "Support the team.\nCapture real feedback."},
+        {"when": "PHASE 3", "heading": "Review", "body": "Evaluate the evidence.\nAgree the next step."}
+      ]
+    },
+    {
+      "layout": "table",
+      "title": "Decisions needed",
+      "rows": [
+        ["Decision", "Status", "Next step"],
+        ["Department", "Agreed", "One department"],
+        ["Owner", "Not agreed", "Confirm owner"],
+        ["Launch date", "Not agreed", "Agree later"]
+      ],
+      "footnote": "Proposed next steps. No dates or numerical targets are agreed."
+    },
+    {
+      "layout": "closing",
+      "title": "Agree the\nnext step.",
+      "subtitle": "Start with one use case and a clear success measure.",
+      "cta": "Choose the first use case."
+    }
+  ]
+}
