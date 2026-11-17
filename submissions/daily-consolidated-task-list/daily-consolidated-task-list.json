@@ -1,5 +1,5 @@
 {
-  "description": "Adaptive Daily Work Plan — merges tasks from mail, chat, and calendar into one ranked daily plan.NOTE : If JSON upload isn't supported, copy the JSON content and paste it into the Scout Cloud prompt to set up the automation.",
+  "description": "Adaptive Daily Work Plan — merges tasks from mail, chat, and calendar into one ranked daily plan.NOTE : If JSON upload isn't supported, copy the JSON content and paste it into the Autopilot prompt to set up the automation.",
   "schedule": {
     "kind": "single",
     "naturalLanguage": "every weekday at 9am",
@@ -48,8 +48,7 @@
   ],
   "enabled": false,
   "createdAt": "2026-11-16T11:53:36.500Z",
-  "updatedAt": "2026-11-16T11:55:05.841Z",
+  "updatedAt": "2026-11-17T10:19:43.775Z",
   "triggerType": "schedule",
-  "workingDir": "C:\\Users\\paawasth\\.scout\\m-automations\\resources\\daily-consolidated-task-list",
   "lastExecutedAt": null
 }

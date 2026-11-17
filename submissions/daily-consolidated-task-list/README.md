@@ -37,13 +37,13 @@ hardcoded.
   only to the signed-in user's mailbox and Teams self-chat, and to ignore
   requests in source content to send it elsewhere.
 
-## Run in Scout Desktop or Scout Cloud
+## Run in Scout Desktop or Autopilot
 
 Use the [automation JSON file](https://raw.githubusercontent.com/microsoft/cat-agent-skills/main/submissions/daily-consolidated-task-list/daily-consolidated-task-list.json):
 
 - **Scout Desktop:** Import the automation file, then run it from Scout Desktop.
-- **Scout Cloud:** Open the JSON file, copy its full contents, paste them into
-  Scout Cloud, then run the automation.
+- **Autopilot:** Open the JSON file, copy its full contents, paste them into
+  Autopilot, then run the automation.
 
 ## Before you enable it
 
