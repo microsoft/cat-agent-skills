@@ -112,8 +112,28 @@ def apply_sign(amount, convention):
 
 
 def _parse_dateish(value):
-    """Best-effort scalar date parse for timing heuristics. Returns pandas NaT on failure."""
+    """Best-effort scalar date parse for timing heuristics. Returns pandas NaT on failure.
+
+    For numeric day/month strings, reject ambiguous values (e.g. 01/02/2026) instead of silently
+    inferring locale, so date-proximity matching never depends on parser guesswork.
+    """
     if _is_missing(value):
+        return pd.NaT
+    if isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return pd.NaT
+        # Detect locale-ambiguous numeric dates by trying both month-first and day-first parsing.
+        dt_month_first = pd.to_datetime(s, errors="coerce", dayfirst=False)
+        dt_day_first = pd.to_datetime(s, errors="coerce", dayfirst=True)
+        if not pd.isna(dt_month_first) and not pd.isna(dt_day_first):
+            if dt_month_first.normalize() != dt_day_first.normalize():
+                return pd.NaT
+            return dt_month_first
+        if not pd.isna(dt_month_first):
+            return dt_month_first
+        if not pd.isna(dt_day_first):
+            return dt_day_first
         return pd.NaT
     return pd.to_datetime(value, errors="coerce")
 
@@ -474,13 +494,13 @@ def reconcile(df_a, df_b, config):
                     continue
                 if not within_tolerance(ra["_amt"], rb["_amt"], abs_tol, pct_tol):
                     continue
-                da, db = ra.get(date_a), rb.get(date_b)
-                try:
-                    delta_days = abs((pd.to_datetime(da) - pd.to_datetime(db)).total_seconds()) / 86400.0
-                except Exception:
-                    # A date could not be parsed: the proximity rule cannot be satisfied, so this
+                da = _parse_dateish(ra.get(date_a))
+                db = _parse_dateish(rb.get(date_b))
+                if pd.isna(da) or pd.isna(db):
+                    # A date is invalid/ambiguous: the proximity rule cannot be satisfied, so this
                     # pair is not eligible for similarity.
                     continue
+                delta_days = abs((da - db).total_seconds()) / 86400.0
                 if delta_days > window:
                     continue
                 sim = similarity(ra["_key"], rb["_key"])
