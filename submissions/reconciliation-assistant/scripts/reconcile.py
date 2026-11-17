@@ -1726,12 +1726,14 @@ def control_total_tieout(df_a, df_b, config):
     detail_total = round(sum(r["detail"] for r in rows), 2)
     variance = round(control_total - detail_total, 2)
     total_missing = missing_control + missing_detail
+    all_rows_tied = all(r.get("tied") for r in rows) if rows else False
     return {"mode": "control-total", "control_label": clabel, "detail_label": dlabel,
             "grouped": bool(cgroup and dgroup), "rows": rows, "detail_rows": detail_rows,
             "control_total": control_total, "detail_total": detail_total,
             "variance": variance,
             "tied_out": (total_missing == 0 and not orphans_control and not orphans_detail
-                         and is_tied(control_total, detail_total)),
+                         and is_tied(control_total, detail_total)
+                         and (not (cgroup and dgroup) or all_rows_tied)),
             "orphans_control": orphans_control, "orphans_detail": orphans_detail,
             "missing_control": missing_control, "missing_detail": missing_detail}
 
