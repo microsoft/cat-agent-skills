@@ -1,0 +1,11 @@
+{
+  "name": "Copilot Studio Content Safety Scanner",
+  "description": "From Scout, run an external content-safety scan of a published Copilot Studio agent across Violence, Hate/Unfairness, Sexual and Self-Harm. Report scoped Attack Success Rates, thresholds and evidence completeness. Not an authentication, oversharing, tool-permission or agent-security assessment.",
+  "platforms": ["Scout"],
+  "tags": ["content-safety", "red-teaming", "responsible-ai", "evaluation", "pyrit", "azure-ai-foundry"],
+  "author": "Swarup Mishra",
+  "authorUrl": "https://github.com/1999Swarup",
+  "version": "1.1.0",
+  "createdAt": "2026-08-14",
+  "updatedAt": "2026-11-04"
+}
