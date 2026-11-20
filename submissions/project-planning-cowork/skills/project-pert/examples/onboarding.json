@@ -1,0 +1,13 @@
+{
+  "project": "Example · Service onboarding",
+  "duration_unit": "working days",
+  "calendar_assumption": "Relative working-day offsets; no conversion to dates or calculation of weekends or holidays.",
+  "tasks": [
+    {"id": "T-01", "title": "Confirm scope", "optimistic": 1, "most_likely": 2, "pessimistic": 3, "work_mode": "human", "owner": "Project lead", "predecessors": []},
+    {"id": "T-02", "title": "Check access", "optimistic": 1, "most_likely": 1, "pessimistic": 4, "work_mode": "human", "owner": "Operations", "predecessors": ["T-01"]},
+    {"id": "T-03", "title": "Draft the onboarding guide", "optimistic": 2, "most_likely": 3, "pessimistic": 4, "work_mode": "ai-prep", "owner": "Documentation lead", "predecessors": ["T-01"], "notes": "Human owner verifies the generated draft."},
+    {"id": "T-04", "title": "Review and approve guide", "optimistic": 1, "most_likely": 2, "pessimistic": 3, "work_mode": "human-review", "owner": "Service lead", "predecessors": ["T-02", "T-03"]},
+    {"id": "T-05", "title": "Launch", "type": "milestone", "optimistic": 0, "most_likely": 0, "pessimistic": 0, "work_mode": "human", "owner": "Operations", "predecessors": ["T-04"]},
+    {"id": "T-06", "title": "Collect feedback", "optimistic": 1, "most_likely": 1, "pessimistic": 1, "work_mode": "human", "predecessors": ["T-05"]}
+  ]
+}

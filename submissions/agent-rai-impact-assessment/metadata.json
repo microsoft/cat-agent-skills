@@ -1,0 +1,11 @@
+{
+  "name": "Agent RAI Impact Assessment",
+  "description": "Draft a Responsible AI impact assessment for an AI agent, covering affected people, action authority, harm scenarios, controls, and residual risk.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["responsible-ai", "agents", "architecture", "risk-assessment", "governance"],
+  "author": "Arindam Choudhury",
+  "authorUrl": "https://github.com/ari20089",
+  "version": "1.0.0",
+  "createdAt": "2026-10-15",
+  "updatedAt": "2026-10-15"
+}

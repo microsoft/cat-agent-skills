@@ -1,0 +1,12 @@
+{
+  "name": "Commercial Banking",
+  "description": "Spreads, credit memos, annual review packets, covenant checks, borrower research, and RM call prep for commercial banking credit and coverage teams.",
+  "platforms": ["Cowork"],
+  "tags": ["financial-services", "commercial-banking", "credit", "covenants", "spreading"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.1",
+  "createdAt": "2026-10-28",
+  "category": "financial-services",
+  "builtByMicrosoft": true
+}
