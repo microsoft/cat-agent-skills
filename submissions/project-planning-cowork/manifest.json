@@ -6,8 +6,8 @@
   "developer": {
     "name": "Andrew Hess",
     "websiteUrl": "https://github.com/AndrewHessMSFT",
-    "privacyUrl": "https://example.org/privacy",
-    "termsOfUseUrl": "https://example.org/terms"
+    "privacyUrl": "https://github.com/microsoft/cat-agent-skills/blob/main/submissions/project-planning-cowork/README.md#privacy",
+    "termsOfUseUrl": "https://github.com/microsoft/cat-agent-skills/blob/main/LICENSE"
   },
   "name": {
     "short": "Project Planning",
