@@ -1,0 +1,12 @@
+{
+  "name": "Reconciliation Assistant",
+  "description": "Reconcile two datasets from different systems - GL vs sub-ledger, bank statement vs ledger, invoices vs payments, a register vs an external report, system-of-record vs export - into a clear report of matches, differences, and unmatched items. A short setup confirms how strict to be: exact-to-the-cent or a tolerance, and whether to allow optional similarity matching (amount + date + name) for records with no shared ID. Proves the control totals tie out (the control-account check for GL work), surfaces timing differences and posting errors, sends weak or suggested matches to a Needs Review list instead of guessing, and never edits your source data.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["reconciliation", "finance", "data", "spreadsheet", "audit", "productivity"],
+  "author": "Jagmeet Chabra (Microsoft)",
+  "authorUrl": "https://github.com/jchha001",
+  "authorGithub": "jchha001",
+  "version": "1.0.0",
+  "createdAt": "2026-08-11",
+  "updatedAt": "2026-08-13"
+}
