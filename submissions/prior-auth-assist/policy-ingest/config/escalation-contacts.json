@@ -1,0 +1,6 @@
+{
+  "_comment": "CUSTOMER-EDITABLE. Escalation routing for prior-auth-assist (base/references/prior-auth-rules.md #7). Replace every [TO CONFIGURE: ...] value before production use. Skills name the role and this file; they never invent a person.",
+  "payer_relations_contact": "[TO CONFIGURE: payer-relations contact for services missing from the policy library]",
+  "prior_auth_coordinator": "[TO CONFIGURE: prior-auth coordinator contact for evidence retrieval and clause questions]",
+  "clinical_reviewer": "[TO CONFIGURE: clinician who reviews the necessity narrative before any submission]"
+}

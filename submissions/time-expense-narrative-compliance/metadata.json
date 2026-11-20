@@ -1,0 +1,22 @@
+{
+  "name": "Time & Expense Narrative Check",
+  "description": "Pre-bill-ready time narratives: gather cited calendar and document activity, draft grounded narratives, recommend phase and task codes, check entries against client billing guidelines and missing time, and build the pre-bill exception packet. Time entries only.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "professional-services",
+    "time-entry",
+    "billing",
+    "pre-bill",
+    "billing-guidelines",
+    "wip"
+  ],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.13",
+  "createdAt": "2026-11-06",
+  "updatedAt": "2026-11-06",
+  "category": "professional-services",
+  "builtByMicrosoft": true
+}

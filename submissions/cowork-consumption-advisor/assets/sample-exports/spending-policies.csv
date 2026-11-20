@@ -1,0 +1,5 @@
+﻿Spending policy,Applies to,Active users,Credits used,Current spending limit,Credit usage rate,Billing method,Policy status
+Heavy users,Group: ‎GRP-Cowork-Heavy‎,5,"11,000","‎100,000‎/month",11%,Pay-as-you-go (‎Azure-Sub-Copilot‎),Active
+Medium users,Group: ‎GRP-Cowork-Medium‎,16,"7,333",No limit,—,Pay-as-you-go (‎Azure-Sub-Copilot‎),Active
+Low users,Group: ‎GRP-Cowork-Low‎,24,"3,666","‎30,000‎/month",12%,Pay-as-you-go (‎Azure-Sub-Copilot‎),Active
+Work IQ pilot,All users,0,0,"‎10,000‎/month",0%,Pay-as-you-go (‎Azure-Sub-Copilot‎),Active

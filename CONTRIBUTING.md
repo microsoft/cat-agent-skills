@@ -17,6 +17,7 @@ optional `README.md`, and **exactly one** payload. This section covers the commo
 payload — a **skill**, as an **unpacked** folder. Scout submissions can instead
 ship a single automation `.json` (covered just below). `.zip` payloads are **no
 longer accepted** — submit your skill unpacked.
+Cowork plugins are also submitted unpacked (see below).
 
 ```
 submissions/<slug>/
@@ -41,14 +42,18 @@ Copy [`submissions/_template/`](submissions/_template) to get started. The
 > bundled**: the `metadata.json` sidecar and an optional
 > [`README.md`](#what-visitors-see). Don't leave other docs (CHANGELOG, personal
 > notes) next to your payload — they'd ship to the agent and waste its context;
-> put those in your pull request description instead.
+> put those in your pull request description instead. An optional root
+> `LICENSE` / `NOTICE` file is fine: it is bundled with the download and linked
+> from the detail page (see [`submissions/README.md`](submissions/README.md)).
 
-### Cowork plugins (no longer accepted)
+### Cowork plugins
 
 Cowork **plugin** packages — an M365 app `.zip` with a root `manifest.json`
-bundling one or more skills (plus optional MCP connectors) — are **no longer
-accepted** as new submissions, because the gallery no longer takes `.zip`
-payloads. Existing plugin submissions stay published.
+bundling one or more skills (plus optional MCP connectors) — are submitted
+**unpacked**, alongside the usual `metadata.json` and optional `README.md`.
+CI validates the package and generates the downloadable `.zip`. The gallery no
+longer takes `.zip` payloads. See the
+[Cowork plugins section](submissions/README.md#cowork-plugins) for details.
 
 ### Scout automations
 
@@ -112,12 +117,22 @@ the download bundle):
 | `author`      | yes      | Person or team who wrote the skill.                 |
 
 Optional: `authorUrl`, `authorGithub`, `version`, `createdAt`, `updatedAt`,
-`coverColor`, `featured`. (`bundle` is set automatically when your skill ships
+`coverColor`, `featured`, `category`, `builtByMicrosoft`. (`bundle` is set automatically when your skill ships
 files beyond `SKILL.md`. `authorGithub` — the author's GitHub login — is
 normally derived from an `authorUrl` that points to a GitHub profile
 (`https://github.com/<login>`); the *skillbot* uses it to @-mention the author
 on the first comment of the skill's discussion. Set it explicitly only when your
 only link isn't a GitHub profile, e.g. LinkedIn.)
+
+`category` is `manufacturing`, `retail-cpg`, `financial-services`, `healthcare`,
+`professional-services`, `productivity` (the default), `agent-development`, `education`, `legal`, `sales`,
+`service`, or `finance`. Visitors can select multiple categories; a submission
+matches any selected category and must also match the product and other filters.
+
+`builtByMicrosoft` defaults to `false`. Set it to `true` only for verified
+Microsoft-built submissions. These appear in the Microsoft preview and collection
+instead of the community grid, without changing author attribution or plugin
+handling. Keep both fields in `metadata.json`, not agent-facing instructions.
 
 ## Validate locally
 
