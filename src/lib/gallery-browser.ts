@@ -1,17 +1,21 @@
-import { compareNewest, compareRecentlyUpdated } from "./gallery-sort";
+import { compareCategoryThenName, compareNewest, compareRecentlyUpdated, defaultGallerySort } from "./gallery-sort";
 import { GalleryHistory } from "./gallery-history";
 import { PLATFORMS } from "./skills";
+import { CATEGORIES, CATEGORY_LABELS } from "./categories";
 import {
   copyGalleryFilters, countFacet, FORMAT_LABELS, galleryFilterParams, matchesFilters, parseGalleryFilters, sameGalleryFilters,
   type FilterableSubmission, type GalleryFilters,
 } from "./gallery-filters";
 
-const SORTS = ["featured", "rating", "downloads", "name", "newest", "updated"] as const;
+const SORTS = ["category", "featured", "rating", "downloads", "name", "newest", "updated"] as const;
 type SortMode = (typeof SORTS)[number];
 type Refinement = "types" | "tags" | "authors";
 const BATCH = 12;
+const categoryNames = new Map<string, string>(CATEGORIES.map((category) => [category, CATEGORY_LABELS[category]]));
 
 export function initGalleryBrowser(root: HTMLElement) {
+  const defaultSort = defaultGallerySort(root.dataset.scope);
+  const availableSorts = SORTS.filter((sort) => sort !== "category" || defaultSort === "category");
   function get<T extends Element>(selector: string): T {
     const element = root.querySelector<T>(selector);
     if (!element) throw new Error(`Missing gallery element: ${selector}`);
@@ -19,13 +23,28 @@ export function initGalleryBrowser(root: HTMLElement) {
   }
   const gallery = get<HTMLElement>("#gallery");
   const items = Array.from(gallery.querySelectorAll<HTMLElement>(".submission-item"));
-  const data = new Map<HTMLElement, FilterableSubmission>(items.map((element) => {
+  const preview = root.querySelector<HTMLElement>("#microsoft-preview-grid");
+  const microsoft = preview ? {
+    grid: preview,
+    items: Array.from(preview.querySelectorAll<HTMLElement>(".submission-item")),
+    count: get<HTMLElement>("#microsoft-count"),
+    empty: get<HTMLElement>("#microsoft-empty"),
+    viewAll: get<HTMLAnchorElement>("#microsoft-view-all"),
+  } : null;
+  const collectionLinks = Array.from(root.querySelectorAll<HTMLAnchorElement>("[data-gallery-link]")).map((link) => {
+    const destination = link.dataset.destination;
+    if (!destination) throw new Error("Missing gallery link destination");
+    return { link, destination };
+  });
+  const data = new Map<HTMLElement, FilterableSubmission>([...items, ...(microsoft?.items ?? [])].map((element) => {
     const d = element.dataset;
     return [element, {
       name: d.name ?? "", description: d.desc ?? "",
       tags: (d.tags ?? "").split(",").filter(Boolean),
       platforms: (d.platforms ?? "").split(",").filter(Boolean),
       type: d.type ?? "skill",
+      category: d.category ?? "productivity",
+      builtByMicrosoft: d.microsoft === "true",
       authorName: d.authorName ?? "", authorLogin: d.authorLogin ?? "", authorKey: d.authorKey ?? "",
     }];
   }));
@@ -34,6 +53,7 @@ export function initGalleryBrowser(root: HTMLElement) {
   const filterOptions = get<HTMLElement>("#filter-options");
   const appliedChips = get<HTMLElement>("#applied-filters");
   const platformPills = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-platform]"));
+  const categoryPills = Array.from(root.querySelectorAll<HTMLButtonElement>("button[data-category]"));
   const sortSelect = get<HTMLSelectElement>("#sort-select");
   const count = get<HTMLElement>("#result-count");
   const empty = get<HTMLElement>("#empty-state");
@@ -56,9 +76,10 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   let applied = copyGalleryFilters(parseGalleryFilters(new URLSearchParams(location.search)));
   let draft = copyGalleryFilters(applied);
-  let sortMode: SortMode = "featured";
+  let sortMode: SortMode = defaultSort;
   let shown = BATCH;
   let matched: HTMLElement[] = [];
+  let microsoftMatched: HTMLElement[] = [];
   let searchTimer = 0;
   let savedOverflow = "";
   let savedGutter = "";
@@ -66,7 +87,7 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function queryString() {
     const params = galleryFilterParams(applied);
-    if (sortMode !== "featured") params.set("sort", sortMode);
+    if (sortMode !== defaultSort) params.set("sort", sortMode);
     const query = params.toString();
     return query ? `?${query}` : "";
   }
@@ -81,7 +102,13 @@ export function initGalleryBrowser(root: HTMLElement) {
   const number = (element: HTMLElement, key: string) => Number(element.dataset[key] ?? "0") || 0;
   function sorted(list: HTMLElement[]) {
     const byName = (a: HTMLElement, b: HTMLElement) => (a.dataset.name ?? "").localeCompare(b.dataset.name ?? "");
+    const categorized = (element: HTMLElement) => {
+      const category = CATEGORIES.find((value) => value === element.dataset.category);
+      if (!category) throw new Error(`Unknown gallery category: ${element.dataset.category}`);
+      return { category, name: element.dataset.name ?? "" };
+    };
     return [...list].sort((a, b) => {
+      if (sortMode === "category") return compareCategoryThenName(categorized(a), categorized(b));
       const sampleDiff = number(a, "sample") - number(b, "sample");
       if (sampleDiff) return sampleDiff;
       switch (sortMode) {
@@ -98,6 +125,18 @@ export function initGalleryBrowser(root: HTMLElement) {
     matched.slice(0, shown).forEach((element) => { element.hidden = false; });
     count.textContent = `(${matched.length})`;
     empty.hidden = matched.length > 0;
+  }
+
+  function renderMicrosoft() {
+    if (!microsoft) return;
+    microsoft.grid.hidden = microsoftMatched.length === 0;
+    const columns = getComputedStyle(microsoft.grid).gridTemplateColumns.split(/\s+/).length;
+    microsoft.items.forEach((element) => { element.hidden = true; });
+    microsoftMatched.slice(0, columns).forEach((element) => { element.hidden = false; });
+    microsoft.count.textContent = String(microsoftMatched.length);
+    microsoft.empty.hidden = microsoftMatched.length > 0;
+    microsoft.viewAll.hidden = microsoftMatched.length <= columns;
+    microsoft.viewAll.setAttribute("aria-label", `View all ${microsoftMatched.length} Microsoft skills & plugins`);
   }
 
   function fill() {
@@ -142,9 +181,10 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function paintApplied() {
     platformPills.forEach((button) => {
-      const selected = applied.platform === button.dataset.platform;
-      button.setAttribute("aria-checked", String(selected));
-      button.tabIndex = selected ? 0 : -1;
+      button.setAttribute("aria-pressed", String(applied.platforms.has(button.dataset.platform ?? "")));
+    });
+    categoryPills.forEach((button) => {
+      button.setAttribute("aria-pressed", String(applied.categories.has(button.dataset.category ?? "")));
     });
     const total = renderRefinements(appliedChips, applied, (field, value) => {
       const buttons = Array.from(appliedChips.querySelectorAll<HTMLButtonElement>("button"));
@@ -166,7 +206,7 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function revealCurrentFilter() {
     const firstApplied = appliedChips.querySelector<HTMLButtonElement>("button");
-    const selected = platformPills.find((button) => button.getAttribute("aria-checked") === "true");
+    const selected = [...platformPills, ...categoryPills].find((button) => button.getAttribute("aria-pressed") === "true");
     const button = firstApplied ?? selected;
     if (button) revealFilter(button);
   }
@@ -183,12 +223,17 @@ export function initGalleryBrowser(root: HTMLElement) {
 
   function refilter(fillViewport = true) {
     matched = sorted(items.filter((item) => matchesFilters(data.get(item)!, applied)));
+    microsoftMatched = microsoft?.items.filter((item) => matchesFilters(data.get(item)!, applied)) ?? [];
     const matchingSet = new Set(matched);
     gallery.append(...matched, ...items.filter((item) => !matchingSet.has(item)));
     shown = BATCH;
+    renderMicrosoft();
     renderGrid();
     if (fillViewport) fill();
-    status.textContent = `${matched.length} submissions match.`;
+    status.textContent = microsoft
+      ? `${microsoftMatched.length} Microsoft skills & plugins and ${matched.length} community submissions match.`
+      : `${matched.length} submissions match.`;
+    collectionLinks.forEach(({ link, destination }) => { link.href = `${destination}${queryString()}`; });
     paintApplied();
   }
 
@@ -248,7 +293,8 @@ export function initGalleryBrowser(root: HTMLElement) {
     filterPicker(tagOptions, "", "tagOption", get("#tag-search-empty"));
     filterPicker(authorOptions, "", "authorSearch", get("#author-search-empty"));
     get<HTMLElement>("#filters-context").textContent = [
-      applied.platform || "All platforms",
+      [...applied.platforms].join(" or ") || "All products",
+      [...applied.categories].map((category) => categoryNames.get(category) ?? category).join(" or "),
       applied.query ? `Search: ${search.value}` : "",
     ].filter(Boolean).join(" \u00b7 ");
     paintDraft();
@@ -329,22 +375,26 @@ export function initGalleryBrowser(root: HTMLElement) {
     const button = event.target;
     if (button instanceof HTMLButtonElement && button.matches(":focus-visible")) revealFilter(button);
   });
-  platformPills.forEach((button, index) => {
+  platformPills.forEach((button) => {
+    const platform = PLATFORMS.find((value) => value === button.dataset.platform);
+    if (!platform) throw new Error(`Unknown gallery product: ${button.dataset.platform}`);
     button.addEventListener("click", () => {
-      if (button.dataset.platform === applied.platform) return;
       flushSearch();
-      applied.platform = PLATFORMS.find((platform) => platform === button.dataset.platform) ?? "";
+      if (applied.platforms.has(platform)) applied.platforms.delete(platform);
+      else applied.platforms.add(platform);
       commit();
       revealFilter(button);
     });
-    button.addEventListener("keydown", (event) => {
-      const direction = ["ArrowRight", "ArrowDown"].includes(event.key) ? 1
-        : ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 0;
-      if (!direction) return;
-      event.preventDefault();
-      const next = platformPills[(index + direction + platformPills.length) % platformPills.length];
-      next.focus({ preventScroll: true });
-      next.click();
+  });
+  categoryPills.forEach((button) => {
+    const category = button.dataset.category;
+    if (!category || !categoryNames.has(category)) throw new Error(`Unknown gallery category: ${category}`);
+    button.addEventListener("click", () => {
+      flushSearch();
+      if (applied.categories.has(category)) applied.categories.delete(category);
+      else applied.categories.add(category);
+      commit();
+      revealFilter(button);
     });
   });
   get<HTMLButtonElement>("[data-clear-filters]").addEventListener("click", () => {
@@ -355,7 +405,7 @@ export function initGalleryBrowser(root: HTMLElement) {
     search.focus({ preventScroll: true });
   });
   sortSelect.addEventListener("change", () => {
-    const selected = SORTS.find((sort) => sort === sortSelect.value);
+    const selected = availableSorts.find((sort) => sort === sortSelect.value);
     if (!selected) throw new Error(`Unknown gallery sort: ${sortSelect.value}`);
     sortMode = selected;
     flushSearch();
@@ -366,7 +416,9 @@ export function initGalleryBrowser(root: HTMLElement) {
     if (entries.some((entry) => entry.isIntersecting)) fill();
   }, { rootMargin: "400px" });
   observer.observe(sentinel);
-  new ResizeObserver(() => { revealCurrentFilter(); fill(); }).observe(filterOptions);
+  const resizeObserver = new ResizeObserver(() => { renderMicrosoft(); revealCurrentFilter(); fill(); });
+  resizeObserver.observe(filterOptions);
+  if (microsoft) resizeObserver.observe(microsoft.grid);
   document.fonts.ready.then(revealCurrentFilter);
 
   function initFromUrl(restorePosition = false) {
@@ -375,14 +427,14 @@ export function initGalleryBrowser(root: HTMLElement) {
     const params = new URLSearchParams(location.search);
     applied = copyGalleryFilters(parseGalleryFilters(params));
     const previous = params.toString();
-    if (applied.platform) params.set("platform", applied.platform);
+    if (applied.platforms.size) params.set("platform", [...applied.platforms].join(","));
     else params.delete("platform");
     if (params.toString() !== previous) {
       const query = params.toString();
       history.replaceState(history.state, "", `${location.pathname}${query ? `?${query}` : ""}${location.hash}`);
     }
     draft = copyGalleryFilters(applied);
-    sortMode = SORTS.find((sort) => sort === params.get("sort")) ?? "featured";
+    sortMode = availableSorts.find((sort) => sort === params.get("sort")) ?? defaultSort;
     sortSelect.value = sortMode;
     search.value = applied.query;
     refilter(false);

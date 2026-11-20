@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.0",
+  "id": "f043d068-d669-4c87-892f-64d01f800594",
+  "developer": {
+    "name": "Andrew Hess",
+    "websiteUrl": "https://github.com/AndrewHessMSFT",
+    "privacyUrl": "https://github.com/microsoft/cat-agent-skills/blob/main/submissions/project-planning-cowork/README.md#privacy",
+    "termsOfUseUrl": "https://github.com/microsoft/cat-agent-skills/blob/main/LICENSE"
+  },
+  "name": {
+    "short": "Project Planning",
+    "full": "Project Planning for Microsoft 365 Copilot Cowork"
+  },
+  "description": {
+    "short": "Create Gantt charts, risk matrices, PERT networks, and RAID registers.",
+    "full": "Turn project data into four self-contained HTML visuals with supporting tables: Gantt schedules, qualitative risk matrices, PERT dependency networks, and RAID registers. Use your own project data or try the included synthetic examples."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#2764E7",
+  "agentSkills": [
+    { "folder": "./skills/project-gantt" },
+    { "folder": "./skills/project-risk-matrix" },
+    { "folder": "./skills/project-pert" },
+    { "folder": "./skills/project-raid" }
+  ]
+}

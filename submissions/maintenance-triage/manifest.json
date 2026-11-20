@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.3.1",
+  "id": "f3f95967-2197-4957-b258-695f71c46575",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/servicesagreement"
+  },
+  "name": {
+    "short": "Maintenance Triage",
+    "full": "Maintenance Triage for Cowork"
+  },
+  "description": {
+    "short": "Rank fault causes and maintenance priorities; draft work-order updates.",
+    "full": "Maintenance Triage organizes fault evidence, retrieves supplied history, ranks likely causes and priorities, and drafts work-order updates. The bundled CP-200 pump rules are limited and require applicable OEM/domain review. No predictive maintenance, live CMMS connector, dispatch, notifications or repair authorization.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0F6CBD",
+  "agentSkills": [
+    {
+      "folder": "criticality-rank"
+    },
+    {
+      "folder": "failure-mode-rank"
+    },
+    {
+      "folder": "fault-intake"
+    },
+    {
+      "folder": "history-retrieve"
+    },
+    {
+      "folder": "work-order-update"
+    }
+  ]
+}

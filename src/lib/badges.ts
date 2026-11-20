@@ -202,6 +202,10 @@ export function computeStats(login: string, skills: BadgeSkill[]): ContributorSt
       ? []
       : skills.filter((s) => normalizeLogin(s.authorGithub) === norm);
 
+  return summarizeStats(norm, mine, login);
+}
+
+function summarizeStats(norm: string, mine: BadgeSkill[], fallbackName: string): ContributorStats {
   let featuredCount = 0;
   let automationCount = 0;
   let totalRating = 0;
@@ -237,7 +241,7 @@ export function computeStats(login: string, skills: BadgeSkill[]): ContributorSt
   );
   return {
     login: norm,
-    displayName: displayName || login,
+    displayName: displayName || fallbackName,
     skillCount,
     featuredCount,
     automationCount,
@@ -250,6 +254,23 @@ export function computeStats(login: string, skills: BadgeSkill[]): ContributorSt
     newestCreatedAtMs: newest,
     skills: list,
   };
+}
+
+/** Directory identities include authors without logins, but never award them GitHub badges. */
+export function directoryAuthors(skills: BadgeSkill[]): Array<ContributorStats & { key: string }> {
+  const groups = new Map<string, BadgeSkill[]>();
+  for (const skill of skills) {
+    const key = authorKey(skill.authorGithub, skill.author);
+    if (!key) continue;
+    const group = groups.get(key);
+    if (group) group.push(skill);
+    else groups.set(key, [skill]);
+  }
+  return [...groups].map(([key, mine]) => ({
+    ...summarizeStats(normalizeLogin(mine[0].authorGithub), mine, key),
+    key,
+  })).sort((a, b) => b.skillCount - a.skillCount ||
+    b.featuredCount - a.featuredCount || a.key.localeCompare(b.key));
 }
 
 /** Every author's stats, sorted as a "top contributors" list. */

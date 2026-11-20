@@ -1,0 +1,88 @@
+{
+  "inspect": {
+    "blocked": false,
+    "paragraph_texts": {
+      "word/document.xml": [
+        "Client agreement",
+        "The fee is now payable monthly.",
+        "Client: {{ client_name }}",
+        "Added clause for {{ client_name }}"
+      ],
+      "word/header1.xml": [
+        "Confidential"
+      ],
+      "word/footer1.xml": [
+        "Page footer"
+      ]
+    },
+    "candidates": [
+      {
+        "id": "f:word/document.xml#p2#8-25",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": true,
+        "decision_required": true,
+        "name_guess": "client_name"
+      },
+      {
+        "id": "f:word/document.xml#p3#17-34",
+        "kind": "field",
+        "pattern": "double_brace",
+        "confidence": "high",
+        "eligible": false,
+        "decision_required": false,
+        "name_guess": "client_name"
+      }
+    ],
+    "findings": [
+      "tracked_changes"
+    ]
+  },
+  "runs": [
+    {
+      "name": "preserve revisions and leave tracked paragraph unfilled",
+      "plan": {
+        "decisions": [
+          {
+            "candidate_id": "f:word/document.xml#p2#8-25",
+            "decision": "field",
+            "field": "client_name"
+          }
+        ],
+        "fields": [
+          {
+            "name": "client_name",
+            "type": "string",
+            "source": "client_name"
+          }
+        ]
+      },
+      "values": {
+        "client_name": "Acme"
+      },
+      "expect": {
+        "result": "needs_review",
+        "output_texts": {
+          "word/document.xml": [
+            "Client agreement",
+            "The fee is now payable monthly.",
+            "Client: Acme",
+            "Added clause for {{ client_name }}"
+          ],
+          "word/header1.xml": [
+            "Confidential"
+          ],
+          "word/footer1.xml": [
+            "Page footer"
+          ]
+        },
+        "review_codes": [
+          "template_finding",
+          "unfillable"
+        ]
+      },
+      "rerun": false
+    }
+  ]
+}

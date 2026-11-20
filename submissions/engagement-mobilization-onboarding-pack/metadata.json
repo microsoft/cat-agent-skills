@@ -1,0 +1,22 @@
+{
+  "name": "Engagement Mobilization Pack",
+  "description": "A cited onboarding pack for a new engagement joiner: digest the SOW scope, separate confirmed from proposed staff, match only released prior knowledge, apply the ethical-wall register and draft least-privilege access requests and a first-week plan.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "professional-services",
+    "onboarding",
+    "mobilization",
+    "ethical-walls",
+    "access",
+    "knowledge-reuse"
+  ],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.7",
+  "createdAt": "2026-11-06",
+  "updatedAt": "2026-11-06",
+  "category": "professional-services",
+  "builtByMicrosoft": true
+}

@@ -3,6 +3,7 @@ name: Agent Performance Triage
 description: "Turn a live agent's analytics and transcripts into a diagnosis and a prioritized improvement backlog."
 agentDescription: "Diagnose a live Microsoft Copilot Studio agent from its analytics and transcripts, find why it is underperforming, and produce a prioritized improvement backlog tied to specific topics, knowledge sources and tools. Use when an agent is already in production and someone asks why resolution or engagement is low, why users escalate or abandon, what the top unanswered questions are, how to improve an agent's containment or CSAT, or wants a post-launch review, health check or optimization sprint for a deployed agent."
 platforms: [Copilot Studio, Cowork]
+category: agent-development
 tags: [copilot-studio, analytics, optimization, operations, post-launch, backlog, assessment, monitoring]
 author: Marco Zama
 version: 1.0.0

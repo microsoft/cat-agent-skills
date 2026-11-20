@@ -1,0 +1,8 @@
+{
+  "project": "Example · Service onboarding",
+  "risks": [
+    {"id": "R-01", "title": "Wider review access could be delayed", "likelihood": "Likely", "severity": "Severe", "owner": "Operations", "mitigation": "Preflight permissions with each reviewer.", "details": "Blocked access could delay approval.", "task_ids": ["T-02", "T-04"], "status": "Monitoring", "due_date": "2026-07-08"},
+    {"id": "R-02", "title": "The draft could omit an exception case", "likelihood": "Possible", "severity": "Significant", "owner": "Documentation lead", "mitigation": "Use a scenario checklist at human review.", "task_ids": ["T-03", "T-04"], "status": "Mitigating", "due_date": "2026-07-14"},
+    {"id": "R-03", "title": "Feedback participation could be low", "severity": "Moderate", "details": "Likelihood and response owner are not yet assessed.", "task_ids": ["T-06"], "status": "Needs assessment"}
+  ]
+}

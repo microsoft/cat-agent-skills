@@ -1,0 +1,12 @@
+{
+  "name": "KQL Grounded Queries",
+  "description": "Writes KQL for Sentinel, Log Analytics and Defender XDR without inventing table or column names — checks every identifier against its real source, Microsoft documentation or your own tenant's schema, and stops instead of guessing.",
+  "platforms": ["Cowork", "Copilot Studio"],
+  "tags": ["kql", "sentinel", "defender-xdr", "log-analytics", "security", "threat-hunting", "detection-engineering", "grounding"],
+  "author": "Shashank Raina",
+  "authorUrl": "https://shashankraina.substack.com",
+  "authorGithub": "shashank-raina",
+  "version": "1.0.0",
+  "createdAt": "2026-09-15",
+  "updatedAt": "2026-09-15"
+}
