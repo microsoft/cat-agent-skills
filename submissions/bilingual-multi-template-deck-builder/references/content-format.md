@@ -21,6 +21,10 @@ The shipped profiles expose these fields:
 cleared; only supplied notes are added to generated output.
 Optional text fields are removed from the generated slide when omitted.
 Required text must be non-empty. Unknown/unbound fields are errors.
+Literal dots in input object keys are rejected at every nesting level. Write
+structured objects/arrays (for example, a `cards` array), not keys such as
+`"cards.0.heading"` or `"subtitle.text"`. Dotted strings in `templates.json`
+remain supported binding paths; they are not literal input keys.
 
 ## Example plan
 
@@ -77,6 +81,11 @@ The format above treats `20` as a displayed `20%`; use `0%` for fractional
 values such as `0.2`. Do not reuse the sample percentages as real evidence.
 Chart categories retain their supplied chronological order, also in Hebrew.
 Repeated chart slides have independent chart parts and embedded workbooks.
+Additional series receive distinct accents from the selected template's theme,
+while the first series keeps its authored style.
+Multi-series legends use native bottom layout with reserved plot space and the
+authored axis-text styling; they must not cover bars or use indistinguishable
+legend swatches.
 The supplied renderer supports category charts with a value axis, such as the
 demo's column chart; unsupported chart families fail rather than being recast.
 
@@ -135,3 +144,6 @@ Character limits are content-density guards, not a proof of visual fit.
 Keep text concise, split dense slides and inspect actual rendered output when
 the host supports rendering. The helper does not flatten charts/tables,
 redraw logos, install fonts, download assets or silently discard content.
+Directional formatting preserves the supplied text exactly, including adjacent
+Hebrew/Latin letters, hashtags and product prefixes. Supply desired spaces in
+the plan; the renderer does not insert them automatically.

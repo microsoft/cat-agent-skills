@@ -4,7 +4,7 @@ description: "Use when asked to create a new editable English or Hebrew PowerPoi
 license: MIT
 metadata:
   author: "Ofir Gavish"
-  version: "1.1.1"
+  version: "1.1.2"
 ---
 # Bilingual Multi-Template Deck Builder
 
@@ -47,15 +47,18 @@ Do not invent tool names, asset locations, probe receipts or download URLs.
 3. If native presentation tools accept that actual template through a supported
    file reference, use `references/native-workflow.md`. **Python is not required
    for this route**, and no Python probe is needed.
-4. Otherwise, try the bundled direct builder only if its prerequisites below
-   are available. An isolated Python runtime is not proof of template access,
-   just as available presentation tools are not proof of a native handoff.
+4. Otherwise, select the Python route only after confirming access to the
+   COMPLETE installed or staged skill bundle: the builder, manifest, and ALL
+   FOUR templates at their original relative paths. Finding just the selected
+   PPTX is insufficient. An isolated Python runtime is not proof of bundle
+   access, just as native presentation tools are not proof of template handoff.
 
 A host may store imported skill resources in the user's OneDrive. If it exposes
-that location and a supported import/copy operation, staging the original bundled
-file through that operation is valid. Discover the real file reference from
-metadata; do not guess a personal path/URL, search unrelated workplace files,
-or require a separately downloaded or manually attached template.
+that location and a supported import/copy operation, a native workflow may stage
+the selected original PPTX. The Python workflow must stage the complete bundle,
+not only that selected file. Discover actual resource references from metadata;
+do not guess a personal path/URL, search unrelated workplace files, or require a
+separately downloaded or manually attached template.
 
 Never bypass sandbox or file-scope restrictions, convert a local path into a
 fake attachment URL, or reconstruct the design from screenshots. If neither
@@ -66,7 +69,23 @@ success. Do not silently substitute generic slides.
 ## Direct Python route
 
 Use this route only when native template handoff is unavailable or unsuitable
-and code execution can access the installed scripts AND selected binary asset.
+and code execution can access the complete installed or faithfully staged bundle.
+Preserve the relative directory structure of scripts, references and assets.
+Required generation resources include:
+
+```text
+scripts/build_presentation.py
+references/templates.json
+assets/templates/NOVA-EN-DARK.pptx
+assets/templates/NOVA-EN-LIGHT.pptx
+assets/templates/NOVA-HE-DARK.pptx
+assets/templates/NOVA-HE-LIGHT.pptx
+```
+
+The probe AND every build resolve and verify all four manifest entries, even
+when generating from one selected profile. A selected-template-only copy cannot
+pass this gate. Keep the other bundled references and examples accessible when
+reading or using them; never retype missing scripts or reconstruct assets.
 
 Confirm Python 3.10+ with `python-pptx>=1.0.2,<2`, `defusedxml>=0.7.1,<1` and
 `lxml>=4.9,<7` is already available. The packaged `requirements.txt` is for an
@@ -79,7 +98,9 @@ dependency availability and template hashes, not file delivery. Do not invent
 a probe result for a native-tool run or a missing execution capability.
 
 Read `references/content-format.md`. Write a UTF-8 plan with `language` and
-`slides`, using only supported fields and the user's facts. Packaged examples
+`slides`, using only supported fields and the user's facts. Input object keys
+must not contain literal dots; dotted paths belong to manifest bindings, not
+literal keys in the user's plan. Packaged examples
 in `examples/` illustrate six-slide stories and all eight layouts in each
 language; never present their synthetic content as the user's facts.
 
@@ -118,6 +139,9 @@ cards/steps. Keep Latin product names, URLs, emails and signed numbers internall
 LTR. Never reverse characters or mirror logos. The Python builder handles native
 direction; do not run a separate XML rewrite on its output. With native tools,
 verify actual paragraph and run direction as well as visual mixed-script spacing.
+Preserve the user's exact characters when splitting directional runs; do not
+automatically add spaces, rewrite hashtags, alter product prefixes, or absorb
+adjacent Hebrew text into an email address.
 
 Inspect the generated slide content and chart/table data. Check for leftover
 sample text and notes. Render and inspect for overflow and clipping when a

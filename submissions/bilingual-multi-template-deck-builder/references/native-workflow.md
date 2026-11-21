@@ -23,8 +23,10 @@ alone does not establish that capability.
    is not evidence that the file was used.
 
 If there is no supported handoff, return to SKILL.md and check whether the direct
-Python route can actually access its own resources. Removing the Python
-requirement does not cure missing binary-resource access.
+Python route can access the COMPLETE bundle: the builder, manifest and all four
+template assets at their original relative paths. A successful single-template
+native handoff is not proof that this full-bundle Python gate is satisfied.
+Removing the Python requirement does not cure missing binary-resource access.
 
 ## Populate without approximating
 
@@ -52,6 +54,9 @@ Hebrew uses genuine paragraph RTL, right alignment, right-to-left card/step
 order, and internally LTR Latin names, URLs, emails and signed numbers. Inspect
 spaces at Hebrew/Latin boundaries: correctly extracted text alone does not
 prove the native rendering is correct.
+Keep the supplied characters unchanged while applying direction; do not insert
+spaces into hashtags or product prefixes, or include Hebrew prefixes/suffixes
+inside an email's LTR token.
 
 ## Verify and deliver
 

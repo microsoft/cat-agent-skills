@@ -24,10 +24,12 @@ R = "http://schemas.openxmlformats.org/package/2006/relationships"
 OFFICE_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 CT = "http://schemas.openxmlformats.org/package/2006/content-types"
 MISSING = object()
-BOUNDARY = re.compile(r"(?<=[\u0590-\u05ff])(?=[A-Za-z])|(?<=[A-Za-z])(?=[\u0590-\u05ff])")
-PROTECTED = re.compile(r"(https?://\S+|www\.\S+|[^\s@]+@[^\s@]+)", re.I)
+# Common ASCII addresses only; adjacent Hebrew and sentence punctuation are not email text.
+EMAIL = (r"[A-Za-z0-9_+-]+(?:\.[A-Za-z0-9_+-]+)*@"
+         r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+"
+         r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?")
 # Boundary spaces belong to the surrounding RTL text, not the LTR phrase.
-LTR = re.compile(r"https?://\S+|www\.\S+|[^\s@]+@[^\s@]+|"
+LTR = re.compile(r"https?://\S+|www\.\S+|" + EMAIL + r"|"
                  r"[+-]?[A-Za-z0-9][A-Za-z0-9 \t%+:/@&()_'=.,-]*(?<![ \t])", re.I)
 MUTABLE = ("ppt/slides/", "ppt/notesSlides/", "ppt/charts/",
            "ppt/embeddings/", "ppt/diagrams/")
@@ -259,7 +261,19 @@ def leaves(data, prefix=""):
         yield prefix
 
 
+def validate_input_keys(data, path="$"):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            require(isinstance(key, str), f"Input object key at {path} must be text")
+            require("." not in key, f"Literal dots are not allowed in input object keys at {path}[{key!r}]")
+            validate_input_keys(value, f"{path}[{key!r}]")
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            validate_input_keys(value, f"{path}[{index}]")
+
+
 def validate_plan(plan, profile):
+    validate_input_keys(plan)
     require(isinstance(plan, dict) and set(plan) == {"language", "slides"},
             "Plan needs exactly language and slides")
     require(plan["language"] == profile["language"], "Plan language does not match the template")
@@ -291,8 +305,6 @@ def validate_plan(plan, profile):
 def display_runs(text, rtl):
     if not rtl:
         return [(text, True)]
-    text = "".join(part if index % 2 else BOUNDARY.sub(" ", part)
-                   for index, part in enumerate(PROTECTED.split(text)))
     output, start = [], 0
     for match in LTR.finditer(text):
         if match.start() > start:
@@ -345,10 +357,80 @@ def fill_text(frame, value, rtl):
             direction.set("val", "0" if ltr else "1")
 
 
+def chart_series_accents(shape, count):
+    """Resolve authored colors before choosing distinct accents from this slide's theme."""
+    from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+    chart = shape.chart
+    slide = shape.part.slide
+    master = slide.slide_layout.slide_master
+    require(any(relationship.reltype == RT.THEME for relationship in master.part.rels.values()),
+            "Chart template master must provide a theme")
+    theme = parseString(master.part.part_related_by(RT.THEME).blob)
+    schemes = children(theme, A, "clrScheme")
+    require(len(schemes) == 1, "Chart theme must provide a color scheme")
+    palette = {}
+    for node in schemes[0].childNodes:
+        if node.nodeType != node.ELEMENT_NODE:
+            continue
+        colors = [child for child in node.childNodes if child.nodeType == child.ELEMENT_NODE]
+        require(len(colors) == 1 and colors[0].localName in {"srgbClr", "sysClr"},
+                "Chart theme uses an unsupported color")
+        color = colors[0].getAttribute("val" if colors[0].localName == "srgbClr" else "lastClr")
+        require(re.fullmatch(r"[0-9A-Fa-f]{6}", color) is not None,
+                "Chart theme must provide explicit RGB colors")
+        palette[node.localName] = color.upper()
+    mapping = master._element.find(f"{{{P}}}clrMap")
+    require(mapping is not None, "Chart template master must provide a color map")
+    color_map = dict(mapping.attrib)
+    for owner in (slide.slide_layout, slide):
+        override = owner._element.find(f"{{{P}}}clrMapOvr/{{{A}}}overrideClrMapping")
+        if override is not None:
+            color_map.update(override.attrib)
+    require(not any(relationship.reltype.endswith("/themeOverride")
+                    for part in (master.part, slide.slide_layout.part, slide.part, chart.part)
+                    for relationship in part.rels.values()),
+            "Chart theme overrides require explicit palette support")
+
+    def resolve_color(color):
+        require(color is not None and len(color) == 0,
+                "Chart series fill requires an unmodified RGB or theme color")
+        if color.tag == f"{{{A}}}srgbClr":
+            rgb = color.get("val", "").upper()
+        elif color.tag == f"{{{A}}}schemeClr":
+            name = color.get("val")
+            rgb = palette.get(color_map.get(name, name))
+        else:
+            rgb = None
+        require(rgb is not None and re.fullmatch(r"[0-9A-F]{6}", rgb) is not None,
+                "Chart series fill could not be resolved from the template theme")
+        return rgb
+
+    first = chart.series[0]._element
+    fills = first.xpath("./c:spPr/a:solidFill/*")
+    require(len(fills) == 1, "Chart first series must have an explicit solid fill")
+    used = {resolve_color(fills[0])}
+    for color in first.xpath("./c:dPt/c:spPr/a:solidFill/*"):
+        used.add(resolve_color(color))
+    accents = []
+    for index in range(1, 7):
+        name = f"accent{index}"
+        rgb = palette.get(color_map.get(name, name))
+        require(rgb is not None, "Chart theme must provide all six accent colors")
+        if rgb not in used:
+            accents.append(name)
+            used.add(rgb)
+    require(len(accents) >= count - 1,
+            "Chart theme does not provide enough distinct series accent colors")
+    return accents[:count - 1]
+
+
 def update_chart(shape, value):
     from pptx.chart.axis import ValueAxis
     from pptx.chart.data import CategoryChartData
     from pptx.chart.datalabel import DataLabels
+    from pptx.enum.dml import MSO_THEME_COLOR
+    from pptx.enum.chart import XL_LEGEND_POSITION
+    from pptx.dml.fill import FillFormat
     require(shape.has_chart and isinstance(value, dict), "Chart binding requires a chart payload")
     require(set(value) == {"categories", "series", "number_format"},
             "Chart requires categories, series and explicit number_format")
@@ -372,9 +454,30 @@ def update_chart(shape, value):
                 and all(isinstance(item, (int, float)) and not isinstance(item, bool)
                         and math.isfinite(item) for item in values), "Invalid chart values")
         data.add_series(entry["name"], values)
+    accents = chart_series_accents(shape, len(series)) if len(series) > 1 else []
     shape.chart.replace_data(data)
     if len(series) > 1:
+        added_legend = not shape.chart.has_legend
         shape.chart.has_legend = True
+        legend = shape.chart.legend
+        legend.position = XL_LEGEND_POSITION.BOTTOM
+        # python-pptx's include_in_layout writes c:overlay; False reserves plot space.
+        legend.include_in_layout = False
+        if added_legend:
+            axis_style = shape.chart._chartSpace.plotArea.valAx_lst[0].find(
+                f"{{http://schemas.openxmlformats.org/drawingml/2006/chart}}txPr")
+            if axis_style is not None:
+                legend._element.append(copy.deepcopy(axis_style))
+        for index, accent in enumerate(accents, 1):
+            entry = shape.chart.series[index]
+            fill = entry.format.fill
+            fill.solid()
+            fill.fore_color.theme_color = getattr(MSO_THEME_COLOR, f"ACCENT_{accent[-1]}")
+            # Cloned point fills outrank the series fill; keep other point styling intact.
+            for properties in entry._element.xpath("./c:dPt/c:spPr"):
+                point_fill = FillFormat.from_fill_parent(properties)
+                point_fill.solid()
+                point_fill.fore_color.theme_color = fill.fore_color.theme_color
     for element in shape.chart._chartSpace.plotArea.valAx_lst:
         axis = ValueAxis(element)
         axis.minimum_scale = None
