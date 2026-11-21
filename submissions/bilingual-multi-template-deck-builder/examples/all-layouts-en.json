@@ -1,0 +1,30 @@
+{
+  "language": "en",
+  "slides": [
+    {"layout":"cover","title":"Ideas into\nmomentum.","subtitle":"A fictional NOVA WORKS demonstration"},
+    {"layout":"section","title":"From ideas\nto action.","subtitle":"Focus on outcomes, ownership and evidence.","section_number":"01"},
+    {"layout":"three-cards","title":"Three priorities","cards":[
+      {"heading":"Align","body":"Agree on the outcome and the evidence of success."},
+      {"heading":"Activate","body":"Choose one focused use case and a small pilot."},
+      {"heading":"Review","body":"Learn from feedback before deciding what to scale."}
+    ]},
+    {"layout":"metrics","title":"Synthetic example targets","metrics":[
+      {"value":"72%","label":"Illustrative weekly participation"},
+      {"value":"24","label":"Illustrative pilot participants"},
+      {"value":"6","label":"Illustrative review period"}
+    ],"footnote":"All values are synthetic examples, not real targets or results."},
+    {"layout":"chart","title":"An illustrative trend","subtitle":"Synthetic weekly participation (%)",
+      "chart":{"categories":["W1","W2","W3","W4","W5","W6"],"series":[{"name":"Synthetic participation","values":[10,20,30,40,50,60]}],"number_format":"0\"%\""},
+      "callout":"+50","callout_label":"Illustrative percentage points","footnote":"Synthetic demonstration only; not a forecast."},
+    {"layout":"roadmap","title":"Three proposed phases","steps":[
+      {"when":"PHASE 1","heading":"Discover","body":"Choose a use case.\nConfirm the baseline."},
+      {"when":"PHASE 2","heading":"Pilot","body":"Enable the team.\nCapture real feedback."},
+      {"when":"PHASE 3","heading":"Review","body":"Evaluate evidence.\nAgree the next step."}
+    ]},
+    {"layout":"table","title":"Decisions needed","rows":[
+      ["Decision","Status","Next step"],["Department","Agreed","One department"],
+      ["Owner","Not agreed","Confirm owner"],["Launch date","Not agreed","Agree later"]
+    ],"footnote":"Proposed next steps, not agreed commitments."},
+    {"layout":"closing","title":"Make the\nnext move.","subtitle":"Agree one use case and one success measure.","cta":"Start a focused conversation."}
+  ]
+}

@@ -1,0 +1,1293 @@
+{
+  "schema_version": 1,
+  "templates": {
+    "en-dark": {
+      "asset": "assets/templates/NOVA-EN-DARK.pptx",
+      "sha256": "0b3f4ec9c9f80fff33b5f4ed3b9361455c59379a6ee590c30088577ab2192677",
+      "language": "en",
+      "direction": "ltr",
+      "layouts": {
+        "cover": {
+          "reference_slide": 1,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "meta": {
+              "shape": "content.meta",
+              "type": "text",
+              "required": false,
+              "max_length": 100
+            }
+          }
+        },
+        "section": {
+          "reference_slide": 2,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "section_number": {
+              "shape": "content.section_number",
+              "type": "text",
+              "required": false,
+              "max_length": 8
+            }
+          }
+        },
+        "three-cards": {
+          "reference_slide": 3,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.0.heading": {
+              "shape": "content.cards.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.0.body": {
+              "shape": "content.cards.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.1.heading": {
+              "shape": "content.cards.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.1.body": {
+              "shape": "content.cards.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.2.heading": {
+              "shape": "content.cards.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.2.body": {
+              "shape": "content.cards.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "metrics": {
+          "reference_slide": 4,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "metrics.0.value": {
+              "shape": "content.metrics.0.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.0.label": {
+              "shape": "content.metrics.0.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.1.value": {
+              "shape": "content.metrics.1.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.1.label": {
+              "shape": "content.metrics.1.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.2.value": {
+              "shape": "content.metrics.2.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.2.label": {
+              "shape": "content.metrics.2.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            }
+          }
+        },
+        "chart": {
+          "reference_slide": 5,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 120
+            },
+            "callout": {
+              "shape": "content.callout",
+              "type": "text",
+              "required": false,
+              "max_length": 12
+            },
+            "callout_label": {
+              "shape": "content.callout_label",
+              "type": "text",
+              "required": false,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "chart": {
+              "shape": "content.chart",
+              "type": "chart",
+              "required": true
+            }
+          }
+        },
+        "roadmap": {
+          "reference_slide": 6,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.0.when": {
+              "shape": "content.steps.0.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.heading": {
+              "shape": "content.steps.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.body": {
+              "shape": "content.steps.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.1.when": {
+              "shape": "content.steps.1.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.heading": {
+              "shape": "content.steps.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.body": {
+              "shape": "content.steps.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.2.when": {
+              "shape": "content.steps.2.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.heading": {
+              "shape": "content.steps.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.body": {
+              "shape": "content.steps.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "table": {
+          "reference_slide": 7,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "rows": {
+              "shape": "content.rows",
+              "type": "table",
+              "required": true
+            }
+          }
+        },
+        "closing": {
+          "reference_slide": 8,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "cta": {
+              "shape": "content.cta",
+              "type": "text",
+              "required": true,
+              "max_length": 55
+            }
+          }
+        }
+      }
+    },
+    "en-light": {
+      "asset": "assets/templates/NOVA-EN-LIGHT.pptx",
+      "sha256": "4999888146b809aa4ba969c113babeb1266f3044250140ac9ca088b3e4f41956",
+      "language": "en",
+      "direction": "ltr",
+      "layouts": {
+        "cover": {
+          "reference_slide": 1,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "meta": {
+              "shape": "content.meta",
+              "type": "text",
+              "required": false,
+              "max_length": 100
+            }
+          }
+        },
+        "section": {
+          "reference_slide": 2,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "section_number": {
+              "shape": "content.section_number",
+              "type": "text",
+              "required": false,
+              "max_length": 8
+            }
+          }
+        },
+        "three-cards": {
+          "reference_slide": 3,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.0.heading": {
+              "shape": "content.cards.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.0.body": {
+              "shape": "content.cards.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.1.heading": {
+              "shape": "content.cards.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.1.body": {
+              "shape": "content.cards.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.2.heading": {
+              "shape": "content.cards.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.2.body": {
+              "shape": "content.cards.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "metrics": {
+          "reference_slide": 4,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "metrics.0.value": {
+              "shape": "content.metrics.0.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.0.label": {
+              "shape": "content.metrics.0.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.1.value": {
+              "shape": "content.metrics.1.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.1.label": {
+              "shape": "content.metrics.1.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.2.value": {
+              "shape": "content.metrics.2.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.2.label": {
+              "shape": "content.metrics.2.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            }
+          }
+        },
+        "chart": {
+          "reference_slide": 5,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 120
+            },
+            "callout": {
+              "shape": "content.callout",
+              "type": "text",
+              "required": false,
+              "max_length": 12
+            },
+            "callout_label": {
+              "shape": "content.callout_label",
+              "type": "text",
+              "required": false,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "chart": {
+              "shape": "content.chart",
+              "type": "chart",
+              "required": true
+            }
+          }
+        },
+        "roadmap": {
+          "reference_slide": 6,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.0.when": {
+              "shape": "content.steps.0.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.heading": {
+              "shape": "content.steps.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.body": {
+              "shape": "content.steps.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.1.when": {
+              "shape": "content.steps.1.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.heading": {
+              "shape": "content.steps.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.body": {
+              "shape": "content.steps.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.2.when": {
+              "shape": "content.steps.2.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.heading": {
+              "shape": "content.steps.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.body": {
+              "shape": "content.steps.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "table": {
+          "reference_slide": 7,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "rows": {
+              "shape": "content.rows",
+              "type": "table",
+              "required": true
+            }
+          }
+        },
+        "closing": {
+          "reference_slide": 8,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "cta": {
+              "shape": "content.cta",
+              "type": "text",
+              "required": true,
+              "max_length": 55
+            }
+          }
+        }
+      }
+    },
+    "he-dark": {
+      "asset": "assets/templates/NOVA-HE-DARK.pptx",
+      "sha256": "1d80fa281792942e7a5c0ab6e2c2bc276bf8c1ba0f7a7057b7c3ea1d4f6be74c",
+      "language": "he",
+      "direction": "rtl",
+      "layouts": {
+        "cover": {
+          "reference_slide": 1,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "meta": {
+              "shape": "content.meta",
+              "type": "text",
+              "required": false,
+              "max_length": 100
+            }
+          }
+        },
+        "section": {
+          "reference_slide": 2,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "section_number": {
+              "shape": "content.section_number",
+              "type": "text",
+              "required": false,
+              "max_length": 8
+            }
+          }
+        },
+        "three-cards": {
+          "reference_slide": 3,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.0.heading": {
+              "shape": "content.cards.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.0.body": {
+              "shape": "content.cards.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.1.heading": {
+              "shape": "content.cards.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.1.body": {
+              "shape": "content.cards.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.2.heading": {
+              "shape": "content.cards.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.2.body": {
+              "shape": "content.cards.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "metrics": {
+          "reference_slide": 4,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "metrics.0.value": {
+              "shape": "content.metrics.0.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.0.label": {
+              "shape": "content.metrics.0.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.1.value": {
+              "shape": "content.metrics.1.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.1.label": {
+              "shape": "content.metrics.1.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.2.value": {
+              "shape": "content.metrics.2.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.2.label": {
+              "shape": "content.metrics.2.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            }
+          }
+        },
+        "chart": {
+          "reference_slide": 5,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 120
+            },
+            "callout": {
+              "shape": "content.callout",
+              "type": "text",
+              "required": false,
+              "max_length": 12
+            },
+            "callout_label": {
+              "shape": "content.callout_label",
+              "type": "text",
+              "required": false,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "chart": {
+              "shape": "content.chart",
+              "type": "chart",
+              "required": true
+            }
+          }
+        },
+        "roadmap": {
+          "reference_slide": 6,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.0.when": {
+              "shape": "content.steps.0.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.heading": {
+              "shape": "content.steps.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.body": {
+              "shape": "content.steps.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.1.when": {
+              "shape": "content.steps.1.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.heading": {
+              "shape": "content.steps.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.body": {
+              "shape": "content.steps.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.2.when": {
+              "shape": "content.steps.2.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.heading": {
+              "shape": "content.steps.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.body": {
+              "shape": "content.steps.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "table": {
+          "reference_slide": 7,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "rows": {
+              "shape": "content.rows",
+              "type": "table",
+              "required": true
+            }
+          }
+        },
+        "closing": {
+          "reference_slide": 8,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "cta": {
+              "shape": "content.cta",
+              "type": "text",
+              "required": true,
+              "max_length": 55
+            }
+          }
+        }
+      }
+    },
+    "he-light": {
+      "asset": "assets/templates/NOVA-HE-LIGHT.pptx",
+      "sha256": "3c71f4bb48382ea2ffc49f06ca9b504b5f8e06d49a157990aa83f37b92256a0c",
+      "language": "he",
+      "direction": "rtl",
+      "layouts": {
+        "cover": {
+          "reference_slide": 1,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "meta": {
+              "shape": "content.meta",
+              "type": "text",
+              "required": false,
+              "max_length": 100
+            }
+          }
+        },
+        "section": {
+          "reference_slide": 2,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "section_number": {
+              "shape": "content.section_number",
+              "type": "text",
+              "required": false,
+              "max_length": 8
+            }
+          }
+        },
+        "three-cards": {
+          "reference_slide": 3,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.0.heading": {
+              "shape": "content.cards.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.0.body": {
+              "shape": "content.cards.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.1.heading": {
+              "shape": "content.cards.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.1.body": {
+              "shape": "content.cards.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "cards.2.heading": {
+              "shape": "content.cards.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "cards.2.body": {
+              "shape": "content.cards.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "metrics": {
+          "reference_slide": 4,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "metrics.0.value": {
+              "shape": "content.metrics.0.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.0.label": {
+              "shape": "content.metrics.0.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.1.value": {
+              "shape": "content.metrics.1.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.1.label": {
+              "shape": "content.metrics.1.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "metrics.2.value": {
+              "shape": "content.metrics.2.value",
+              "type": "text",
+              "required": true,
+              "max_length": 12
+            },
+            "metrics.2.label": {
+              "shape": "content.metrics.2.label",
+              "type": "text",
+              "required": true,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            }
+          }
+        },
+        "chart": {
+          "reference_slide": 5,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 120
+            },
+            "callout": {
+              "shape": "content.callout",
+              "type": "text",
+              "required": false,
+              "max_length": 12
+            },
+            "callout_label": {
+              "shape": "content.callout_label",
+              "type": "text",
+              "required": false,
+              "max_length": 60
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "chart": {
+              "shape": "content.chart",
+              "type": "chart",
+              "required": true
+            }
+          }
+        },
+        "roadmap": {
+          "reference_slide": 6,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.0.when": {
+              "shape": "content.steps.0.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.heading": {
+              "shape": "content.steps.0.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.0.body": {
+              "shape": "content.steps.0.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.1.when": {
+              "shape": "content.steps.1.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.heading": {
+              "shape": "content.steps.1.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.1.body": {
+              "shape": "content.steps.1.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "steps.2.when": {
+              "shape": "content.steps.2.when",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.heading": {
+              "shape": "content.steps.2.heading",
+              "type": "text",
+              "required": true,
+              "max_length": 35
+            },
+            "steps.2.body": {
+              "shape": "content.steps.2.body",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            }
+          }
+        },
+        "table": {
+          "reference_slide": 7,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "footnote": {
+              "shape": "content.footnote",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "rows": {
+              "shape": "content.rows",
+              "type": "table",
+              "required": true
+            }
+          }
+        },
+        "closing": {
+          "reference_slide": 8,
+          "fields": {
+            "title": {
+              "shape": "content.title",
+              "type": "text",
+              "required": true,
+              "max_length": 100
+            },
+            "subtitle": {
+              "shape": "content.subtitle",
+              "type": "text",
+              "required": false,
+              "max_length": 150
+            },
+            "eyebrow": {
+              "shape": "content.eyebrow",
+              "type": "text",
+              "required": false,
+              "max_length": 80
+            },
+            "cta": {
+              "shape": "content.cta",
+              "type": "text",
+              "required": true,
+              "max_length": 55
+            }
+          }
+        }
+      }
+    }
+  }
+}
