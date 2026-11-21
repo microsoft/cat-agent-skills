@@ -1,0 +1,25 @@
+{
+  "project": "Example · Service onboarding",
+  "as_of": "2026-07-07",
+  "risks": [
+    {"id": "R-01", "title": "Wider review access could be delayed", "likelihood": "Likely", "severity": "Severe", "owner": "Operations", "mitigation": "Preflight permissions with each reviewer.", "details": "Blocked access could delay approval.", "task_ids": ["T-02", "T-04"], "status": "Monitoring", "due_date": "2026-07-08"},
+    {"id": "R-02", "title": "The draft could omit an exception case", "likelihood": "Possible", "severity": "Significant", "owner": "Documentation lead", "mitigation": "Use a scenario checklist at human review.", "task_ids": ["T-03", "T-04"], "status": "Mitigating", "due_date": "2026-07-14"},
+    {"id": "R-03", "title": "Feedback participation could be low", "severity": "Moderate", "details": "Likelihood and response owner are not yet assessed.", "task_ids": ["T-06"], "status": "Needs assessment"}
+  ],
+  "assumptions": [
+    {"id": "A-01", "title": "A reviewer is available during the approval window", "status": "Unvalidated", "validation_action": "Confirm review coverage with the service lead.", "due_date": "2026-07-10", "task_ids": ["T-04"]}
+  ],
+  "issues": [
+    {"id": "I-01", "title": "A test reviewer received an access error", "owner": "Operations", "status": "Open", "resolution_action": "Restore test access and rerun the check.", "due_date": "2026-07-08", "task_ids": ["T-02"], "risk_ids": ["R-01"]}
+  ],
+  "dependencies": [
+    {"id": "D-01", "title": "The service lead must approve the guide before launch", "owner": "Service lead", "status": "Pending", "next_action": "Collect a decision and record any conditions.", "due_date": "2026-07-14", "task_ids": ["T-04", "T-05"]}
+  ],
+  "tasks": [
+    {"id": "T-02", "title": "Check access"},
+    {"id": "T-03", "title": "Draft the onboarding guide"},
+    {"id": "T-04", "title": "Review and approve guide"},
+    {"id": "T-05", "title": "Launch"},
+    {"id": "T-06", "title": "Collect feedback"}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "project": "Example · Service onboarding",
+  "tasks": [
+    {"id": "T-01", "title": "Confirm scope", "workstream": "Project readiness", "start": "2026-07-06", "end": "2026-07-17", "date_status": "confirmed", "work_mode": "human", "owner": "Project lead", "predecessors": []},
+    {"id": "T-02", "title": "Check access", "workstream": "Project readiness", "start": "2026-07-20", "end": "2026-08-03", "date_status": "confirmed", "work_mode": "human", "owner": "Operations", "predecessors": ["T-01"]},
+    {"id": "T-03", "title": "Draft the onboarding guide", "workstream": "Guide production", "start": "2026-07-20", "end": "2026-08-14", "date_status": "confirmed", "work_mode": "ai-prep", "owner": "Documentation lead", "predecessors": ["T-01"], "notes": "Human owner verifies the generated draft."},
+    {"id": "T-04", "title": "Review and approve guide", "workstream": "Guide production", "start": "2026-08-17", "end": "2026-09-04", "date_status": "tentative", "work_mode": "human-review", "owner": "Service lead", "predecessors": ["T-02", "T-03"]},
+    {"id": "T-05", "title": "Launch", "workstream": "Release and feedback", "type": "milestone", "start": "2026-09-18", "date_status": "tentative", "work_mode": "human", "owner": "Operations", "predecessors": ["T-04"]},
+    {"id": "T-06", "title": "Collect feedback", "workstream": "Release and feedback", "work_mode": "human", "predecessors": ["T-05"], "notes": "Timing and owner not confirmed."}
+  ]
+}
