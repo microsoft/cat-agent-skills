@@ -1,0 +1,9 @@
+{
+  "name": "Project Planning",
+  "description": "Turn project data into Gantt charts, risk matrices, PERT dependency networks, and RAID registers with a four-skill Cowork plugin.",
+  "platforms": ["Cowork"],
+  "tags": ["project-planning", "project-management", "gantt", "risk", "productivity"],
+  "author": "Andrew Hess",
+  "authorUrl": "https://github.com/AndrewHessMSFT",
+  "version": "1.0.0"
+}
