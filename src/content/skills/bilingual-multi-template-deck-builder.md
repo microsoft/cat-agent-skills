@@ -8,7 +8,7 @@ tags: [powerpoint, presentations, templates, hebrew, rtl]
 author: Ofir Gavish
 authorUrl: "https://github.com/OfirGavish"
 authorGithub: OfirGavish
-version: 1.1.2
+version: 1.1.3
 createdAt: 2026-11-17
 updatedAt: 2026-11-21
 bundle: bundles/bilingual-multi-template-deck-builder.zip

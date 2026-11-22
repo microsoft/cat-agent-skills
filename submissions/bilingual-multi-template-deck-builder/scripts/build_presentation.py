@@ -29,8 +29,9 @@ EMAIL = (r"[A-Za-z0-9_+-]+(?:\.[A-Za-z0-9_+-]+)*@"
          r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+"
          r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?")
 # Boundary spaces belong to the surrounding RTL text, not the LTR phrase.
-LTR = re.compile(r"https?://\S+|www\.\S+|" + EMAIL + r"|"
-                 r"[+-]?[A-Za-z0-9][A-Za-z0-9 \t%+:/@&()_'=.,-]*(?<![ \t])", re.I)
+LTR = re.compile(r'(?P<url>(?:https?://|www\.)[^\s<>"`]+)|' + EMAIL + r"|"
+                 r"[+-]?[A-Za-z0-9](?:(?!https?://|www\.)"
+                 r"[A-Za-z0-9 \t%+:/@&()_'=.,-])*(?<![ \t])", re.I)
 MUTABLE = ("ppt/slides/", "ppt/notesSlides/", "ppt/charts/",
            "ppt/embeddings/", "ppt/diagrams/")
 DESIGN = ("ppt/slideMasters/", "ppt/slideLayouts/", "ppt/theme/", "ppt/fonts/")
@@ -265,6 +266,7 @@ def validate_input_keys(data, path="$"):
     if isinstance(data, dict):
         for key, value in data.items():
             require(isinstance(key, str), f"Input object key at {path} must be text")
+            require(key != "", f"Empty input object keys are not allowed at {path}[{key!r}]")
             require("." not in key, f"Literal dots are not allowed in input object keys at {path}[{key!r}]")
             validate_input_keys(value, f"{path}[{key!r}]")
     elif isinstance(data, list):
@@ -302,15 +304,51 @@ def validate_plan(plan, profile):
             require(isinstance(specification["notes"], str), "notes must be text")
 
 
+def url_run_end(text, start, end):
+    # Punctuation before attached RTL prose is a boundary, not an IRI script filter.
+    value = text[start:end]
+    prefix = re.match(r"https?://|www\.", value, re.I).end()
+    brackets = []
+    pairs = {")": "(", "]": "["}
+    for index in range(prefix, len(value)):
+        char = value[index]
+        if char in "([":
+            brackets.append(char)
+        elif char in pairs:
+            if not brackets or brackets[-1] != pairs[char]:
+                end = start + index
+                break
+            brackets.pop()
+        elif not brackets:
+            if char in ",;" and (
+                    index + 1 < len(value)
+                    and unicodedata.bidirectional(value[index + 1]) in {"R", "AL"}):
+                end = start + index
+                break
+    while end > start + prefix and text[end - 1] in ".,;!:":
+        end -= 1
+    quote_pairs = {"'": "'", "\u2018": "\u2019", "\u201c": "\u201d",
+                   "\u00ab": "\u00bb"}
+    if start and text[start - 1] in quote_pairs and end > start + prefix:
+        if text[end - 1] == quote_pairs[text[start - 1]]:
+            end -= 1
+    return end
+
+
 def display_runs(text, rtl):
     if not rtl:
         return [(text, True)]
     output, start = [], 0
-    for match in LTR.finditer(text):
+    while start < len(text):
+        match = LTR.search(text, start)
+        if match is None:
+            break
         if match.start() > start:
             output.append((text[start:match.start()], False))
-        output.append((match.group(0), True))
-        start = match.end()
+        end = (url_run_end(text, match.start(), match.end())
+               if match.group("url") is not None else match.end())
+        output.append((text[match.start():end], True))
+        start = end
     if start < len(text):
         output.append((text[start:], False))
     return output or [("", False)]

@@ -21,7 +21,9 @@ The shipped profiles expose these fields:
 cleared; only supplied notes are added to generated output.
 Optional text fields are removed from the generated slide when omitted.
 Required text must be non-empty. Unknown/unbound fields are errors.
-Literal dots in input object keys are rejected at every nesting level. Write
+Empty input object keys and literal dots in keys are rejected at every nesting
+level, before binding paths are flattened. Errors identify the offending JSON
+path; empty text values remain valid for optional fields and table cells. Write
 structured objects/arrays (for example, a `cards` array), not keys such as
 `"cards.0.heading"` or `"subtitle.text"`. Dotted strings in `templates.json`
 remain supported binding paths; they are not literal input keys.
@@ -147,3 +149,12 @@ redraw logos, install fonts, download assets or silently discard content.
 Directional formatting preserves the supplied text exactly, including adjacent
 Hebrew/Latin letters, hashtags and product prefixes. Supply desired spaces in
 the plan; the renderer does not insert them automatically.
+
+URLs in Hebrew text retain internationalized hosts, paths, queries and fragments
+in native LTR runs. Surrounding quotes, unmatched closing brackets and terminal
+sentence punctuation stay outside the URL. A comma or semicolon outside balanced
+brackets immediately followed by RTL text is treated as a prose boundary, even
+after a path, query or fragment. For ambiguous literal URL punctuation, supply
+percent-encoded punctuation (for example `%2C` or `%3B`), or separate surrounding
+prose with whitespace. This is a display-boundary convention, not URL validation
+or normalization: every supplied character is preserved.
