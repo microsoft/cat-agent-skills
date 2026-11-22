@@ -1,0 +1,9 @@
+{
+  "name": "Idea Backlog Dashboard",
+  "description": "Capture ideas with a Copilot Studio agent, store them in Dataverse, and track them by status (New, In Progress, Completed) in a Power Apps canvas dashboard with a detail view.",
+  "platforms": ["Copilot Studio"],
+  "tags": ["power-apps", "dataverse", "copilot-studio", "idea-management", "backlog", "dashboard"],
+  "author": "Suneetha Akula",
+  "version": "1.0.0",
+  "category": "productivity"
+}

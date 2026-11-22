@@ -1,0 +1,5 @@
+[
+  { "title": "Self-service password reset portal", "description": "Let employees reset passwords without calling the help desk.", "submittedBy": "Alex Morgan", "submitterEmail": "alex.morgan@contoso.com", "category": "Technology", "priority": "High", "status": "New", "businessValue": "Cuts help desk tickets by ~20%." },
+  { "title": "Automate expense approvals", "description": "Route expenses under 100 USD for auto-approval.", "submittedBy": "Priya Shah", "submitterEmail": "priya.shah@contoso.com", "category": "Process", "priority": "Medium", "status": "In Progress", "businessValue": "Saves finance 10 hours per week." },
+  { "title": "Customer feedback widget", "description": "In-app one-click feedback.", "submittedBy": "Jordan Lee", "submitterEmail": "jordan.lee@contoso.com", "category": "Customer Experience", "priority": "Low", "status": "Completed", "businessValue": "Improves NPS visibility." }
+]
