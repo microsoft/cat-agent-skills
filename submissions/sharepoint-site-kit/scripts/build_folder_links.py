@@ -117,7 +117,10 @@ def cmd_check(a) -> int:
             guess = lower[top.lower()]
         else:
             close = difflib.get_close_matches(top, folders, n=1, cutoff=0.6)
-            guess = close[0] if close else None
+            if close:
+                report["broken"].append({"link_folder": rel, "href": href, "suggested_folder": close[0]})
+                continue
+            guess = None
         entry = {"link_folder": rel, "href": href}
         if guess:
             entry["suggested_folder"] = guess
