@@ -1,0 +1,13 @@
+{
+  "name": "Accounting",
+  "description": "Reconcile accounts, prepare journal entries, analyze variances, and report.",
+  "platforms": ["Cowork"],
+  "category": "accounting",
+  "builtByMicrosoft": true,
+  "tags": ["accounting", "reconciliation", "financial-reporting"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.2",
+  "createdAt": "2026-10-31",
+  "updatedAt": "2026-11-23"
+}
