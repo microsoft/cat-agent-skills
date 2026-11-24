@@ -149,10 +149,20 @@ redraw logos, install fonts, download assets or silently discard content.
 Directional formatting preserves the supplied text exactly, including adjacent
 Hebrew/Latin letters, hashtags and product prefixes. Supply desired spaces in
 the plan; the renderer does not insert them automatically.
+Unicode Latin letters and combining marks attached to them stay in the same LTR
+run, as does U+2212 MINUS SIGN in a signed value (for example `Café −12%`).
+Unicode decomposition is used only to classify letters, never to rewrite text;
+precomposed/decomposed accents, compatibility letters and signs retain their
+original code points. Hebrew letters and their marks stay RTL.
 
 URLs in Hebrew text retain internationalized hosts, paths, queries and fragments
 in native LTR runs. Surrounding quotes, unmatched closing brackets and terminal
-sentence punctuation stay outside the URL. A comma or semicolon outside balanced
+sentence punctuation stay outside the URL. When a URL follows an opening quote,
+the matching closing quote ends its run even with no whitespace before following
+prose, such as `“https://example.com”שלום`. Apostrophes and other quote characters
+inside an otherwise unquoted URL remain unchanged; percent-encode a literal
+matching delimiter if needed inside a quoted URL.
+A comma or semicolon outside balanced
 brackets immediately followed by RTL text is treated as a prose boundary, even
 after a path, query or fragment. For ambiguous literal URL punctuation, supply
 percent-encoded punctuation (for example `%2C` or `%3B`), or separate surrounding

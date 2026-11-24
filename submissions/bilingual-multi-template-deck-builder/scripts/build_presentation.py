@@ -28,10 +28,8 @@ MISSING = object()
 EMAIL = (r"[A-Za-z0-9_+-]+(?:\.[A-Za-z0-9_+-]+)*@"
          r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+"
          r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?")
-# Boundary spaces belong to the surrounding RTL text, not the LTR phrase.
-LTR = re.compile(r'(?P<url>(?:https?://|www\.)[^\s<>"`]+)|' + EMAIL + r"|"
-                 r"[+-]?[A-Za-z0-9](?:(?!https?://|www\.)"
-                 r"[A-Za-z0-9 \t%+:/@&()_'=.,-])*(?<![ \t])", re.I)
+URL_PREFIX = re.compile(r"https?://|www\.", re.I)
+LTR_ADDRESS = re.compile(r'(?P<url>(?:https?://|www\.)[^\s<>"`]+)|' + EMAIL, re.I)
 MUTABLE = ("ppt/slides/", "ppt/notesSlides/", "ppt/charts/",
            "ppt/embeddings/", "ppt/diagrams/")
 DESIGN = ("ppt/slideMasters/", "ppt/slideLayouts/", "ppt/theme/", "ppt/fonts/")
@@ -307,11 +305,18 @@ def validate_plan(plan, profile):
 def url_run_end(text, start, end):
     # Punctuation before attached RTL prose is a boundary, not an IRI script filter.
     value = text[start:end]
-    prefix = re.match(r"https?://|www\.", value, re.I).end()
+    prefix = URL_PREFIX.match(value).end()
+    quote_pairs = {"'": "'", "\u2018": "\u2019", "\u201c": "\u201d",
+                   "\u00ab": "\u00bb", "\u2039": "\u203a",
+                   "\u201e": "\u201c", "\u201a": "\u2018"}
+    closing_quote = quote_pairs.get(text[start - 1]) if start else None
     brackets = []
     pairs = {")": "(", "]": "["}
     for index in range(prefix, len(value)):
         char = value[index]
+        if char == closing_quote:
+            end = start + index
+            break
         if char in "([":
             brackets.append(char)
         elif char in pairs:
@@ -327,28 +332,54 @@ def url_run_end(text, start, end):
                 break
     while end > start + prefix and text[end - 1] in ".,;!:":
         end -= 1
-    quote_pairs = {"'": "'", "\u2018": "\u2019", "\u201c": "\u201d",
-                   "\u00ab": "\u00bb"}
-    if start and text[start - 1] in quote_pairs and end > start + prefix:
-        if text[end - 1] == quote_pairs[text[start - 1]]:
-            end -= 1
     return end
+
+
+def is_latin_letter(char):
+    return char.isalpha() and any("LATIN" in unicodedata.name(base, "")
+                                  for base in unicodedata.normalize("NFKD", char))
+
+
+def latin_run_end(text, start):
+    end = start + (text[start] in "+-\u2212")
+    if end == len(text) or not (is_latin_letter(text[end]) or text[end] in "0123456789"):
+        return start
+    latin_base = False
+    while end < len(text):
+        if end > start and URL_PREFIX.match(text, end):
+            break
+        char = text[end]
+        if is_latin_letter(char):
+            latin_base = True
+        elif latin_base and unicodedata.category(char).startswith("M"):
+            pass
+        elif char in "0123456789 \t%+:/@&()_'=.,-\u2212":
+            latin_base = False
+        else:
+            break
+        end += 1
+    # Boundary spaces belong to the surrounding RTL text, not the LTR phrase.
+    return start + len(text[start:end].rstrip(" \t"))
 
 
 def display_runs(text, rtl):
     if not rtl:
         return [(text, True)]
-    output, start = [], 0
-    while start < len(text):
-        match = LTR.search(text, start)
-        if match is None:
-            break
-        if match.start() > start:
-            output.append((text[start:match.start()], False))
-        end = (url_run_end(text, match.start(), match.end())
-               if match.group("url") is not None else match.end())
-        output.append((text[match.start():end], True))
-        start = end
+    output, start, cursor = [], 0, 0
+    while cursor < len(text):
+        match = LTR_ADDRESS.match(text, cursor)
+        if match is not None:
+            end = (url_run_end(text, cursor, match.end())
+                   if match.group("url") is not None else match.end())
+        else:
+            end = latin_run_end(text, cursor)
+        if end == cursor:
+            cursor += 1
+            continue
+        if cursor > start:
+            output.append((text[start:cursor], False))
+        output.append((text[cursor:end], True))
+        start = cursor = end
     if start < len(text):
         output.append((text[start:], False))
     return output or [("", False)]
