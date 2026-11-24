@@ -9,6 +9,26 @@ A Microsoft 365 Copilot Cowork plugin by [Andrew Hess](https://github.com/Andrew
 | Project PERT | Three-point duration estimates, dependency networks, critical paths, and float. |
 | Project RAID | Risks, assumptions, issues, dependencies, and follow-up actions. |
 
+## Example outputs
+
+Screenshots from the included synthetic service-onboarding examples.
+
+### Gantt chart
+
+![Gantt chart showing service-onboarding workstreams, overlapping tasks, and a launch milestone.](https://github.com/user-attachments/assets/7a8a1701-ef97-4734-b4e3-ed930f50c845)
+
+### Risk assessment matrix
+
+![Five-by-five likelihood and severity matrix with two plotted risks and one unassessed risk.](https://github.com/user-attachments/assets/aac820bc-d713-42a2-9be3-1170df61f44d)
+
+### PERT dependency network
+
+![PERT critical-path summary showing eight working days and a dependency network with critical tasks and float.](https://github.com/user-attachments/assets/b09f640d-5007-4df4-86a2-a402839a8abc)
+
+### RAID register
+
+![RAID register preview showing three risks with owners, mitigations, ratings, and linked task IDs, followed by the assumptions section.](https://github.com/user-attachments/assets/56fba0dd-f1e2-4b31-bebd-316e5be4e955)
+
 ## Install
 
 Download the plugin ZIP from this gallery page and upload it using Cowork's plugin installation flow. Keep the downloaded package intact: it contains the manifest, icons, and all four skills.
