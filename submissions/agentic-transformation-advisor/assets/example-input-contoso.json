@@ -1,0 +1,27 @@
+{
+  "organization": "Contoso (fictional)",
+  "scope": "Customer Service",
+  "current": {
+    "ai_strategy": 200,
+    "business_strategy": 200,
+    "governance_security": 300,
+    "technology_data": 200,
+    "organization_culture": 200
+  },
+  "confidence": {
+    "ai_strategy": "Medium",
+    "business_strategy": "Medium",
+    "governance_security": "High",
+    "technology_data": "Medium",
+    "organization_culture": "Low"
+  },
+  "evidence": {
+    "ai_strategy": "Service AI vision slide (draft, Q3); no executive sponsor named for agents",
+    "business_strategy": "Two pilots improve single steps (reply drafting); no baselines captured",
+    "governance_security": "Documented AI policy and DLP; separate dev, test, prod for Copilot Studio",
+    "technology_data": "Copilot Studio standardized; knowledge base split across three sites",
+    "organization_culture": "Ad hoc training; no champions network (estimate from interview)"
+  },
+  "patterns": ["employee_ai_enablement", "business_expert_empowerment", "external_engagement"],
+  "target_source": "summary"
+}

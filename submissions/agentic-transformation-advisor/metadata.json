@@ -1,0 +1,22 @@
+{
+  "name": "Agentic Transformation Advisor",
+  "description": "Build a leader-ready agent adoption pack from Microsoft Learn's transformation patterns, maturity model and agentic Center of Excellence guidance.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "agents",
+    "adoption",
+    "maturity-model",
+    "center-of-excellence",
+    "transformation",
+    "strategy",
+    "microsoft-learn"
+  ],
+  "author": "Manuela Pichler",
+  "authorUrl": "https://github.com/manuelap-msft",
+  "createdAt": "2026-11-24",
+  "updatedAt": "2026-11-24",
+  "version": "1.0.0",
+  "category": "agent-development"
+}
