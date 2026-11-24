@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
+<title>{{PAGE_TITLE}}</title>
+<script>
+(() => {
+  /* Theme bootstrap: ?theme=dark|light wins, else the OS setting. */
+  let t = null; try { t = new URLSearchParams(window.location.search).get("theme"); } catch { /* ignore */ }
+  if (t !== "dark" && t !== "light") t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
+<script type="application/json" class="ka-livedata-manifest">[{"kind":"list","spItemUrl":"list:{{WEB_URL}}/{{LIST_ID}}","webUrl":"{{WEB_URL}}","listId":"{{LIST_ID}}","label":"{{LIST_DISPLAY_NAME}}"}]</script>
+<script type="application/json" id="site-page-config">{"schemaVersion":1,"mode":"preview","siteUrl":"{{WEB_URL}}","page":{"slug":"{{SLUG}}","file":"{{SLUG}}-preview.html","title":"{{PAGE_TITLE}}","expectedUniqueId":"{{PAGE_UNIQUE_ID_OR_EMPTY}}"},"publicationSource":{"kind":"list","spItemUrl":"list:{{WEB_URL}}/{{LIST_ID}}","webUrl":"{{WEB_URL}}","listId":"{{LIST_ID}}","label":"{{LIST_DISPLAY_NAME}}"}}</script>
+<!-- optional static fallback, written by scripts/allowlist_from_list.py --snapshot; null means no fallback -->
+<script type="application/json" id="snapshot-data">null</script>
+<style>
+/* sharepoint-site-kit section styles
+   Tokens live between brand:start and brand:end. Replace that block with the
+   output of scripts/extract_brand.py (or edit it by hand). Every rule below
+   reads tokens only, so a new brand never needs edits outside the block.
+   Static pages: keep this CSS in one style element, no scripts.
+   Live pages: the theme bootstrap sets data-theme on <html>; the same tokens apply. */
+
+/* brand:start */
+:root{
+  color-scheme:light;
+  --ground:#F7F8FA;--ground2:#EEF1F5;--card:#FFFFFF;
+  --ink:#16181D;--body:#3A3F47;--muted:#5F6670;--line:rgba(22,24,29,.10);
+  --accent:#2563EB;--accent-ink:#1D4ED8;--accent2:#0D9488;--accent3:#7C3AED;
+  --pale:#E0EAFD;--navy:#101A2E;--band-ink:#D6DEEA;--band-muted:#A9B6C8;
+  --on-accent:#FFFFFF;
+  --grad:linear-gradient(90deg,#2563EB,#0D9488 60%,#7C3AED);
+  --shadow:0 10px 30px rgba(16,26,46,.10);
+  --fd:"Segoe Sans Display","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --ft:"Segoe Sans Text","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ground:#111418;--ground2:#191D23;--card:#1A1F26;
+  --ink:#F1F3F6;--body:#D3D8DF;--muted:#A3ABB6;--line:rgba(255,255,255,.10);
+  --accent:#60A5FA;--accent-ink:#93C5FD;--pale:#16294A;--navy:#0B1220;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#111418;--ground2:#191D23;--card:#1A1F26;
+  --ink:#F1F3F6;--body:#D3D8DF;--muted:#A3ABB6;--line:rgba(255,255,255,.10);
+  --accent:#60A5FA;--accent-ink:#93C5FD;--pale:#16294A;--navy:#0B1220;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+/* brand:end */
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--ft);background:var(--ground);color:var(--body);line-height:1.55;font-size:16px}
+a{color:var(--accent-ink)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+img{max-width:100%;height:auto}
+.wrap{max-width:1180px;margin-inline:auto;padding-inline:40px}
+h1,h2,h3{font-family:var(--fd);color:var(--ink)}
+h2{font-weight:700;font-size:clamp(26px,3.2vw,34px);letter-spacing:-.02em;line-height:1.1;margin:8px 0 0}
+h3{margin:0;font-size:20px;letter-spacing:-.01em}
+.visually-hidden{position:absolute!important;inline-size:1px;block-size:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* eyebrow label */
+.kick{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.kick i{display:inline-block;inline-size:30px;block-size:4px;border-radius:999px;background:var(--grad)}
+
+/* 1. hero */
+.hero{position:relative;overflow:hidden;color:var(--band-ink);background:radial-gradient(900px 520px at 92% -10%,color-mix(in srgb,var(--accent) 40%,transparent),transparent 60%),radial-gradient(700px 480px at 75% 120%,color-mix(in srgb,var(--accent2) 45%,transparent),transparent 60%),var(--navy);padding-block:56px 72px}
+.hero .wrap{position:relative;z-index:1}
+.hero .kick{color:var(--band-ink)}
+.hero h1{font-weight:700;font-size:clamp(34px,5.4vw,64px);line-height:1.04;letter-spacing:-.025em;color:#fff;margin:18px 0;max-width:720px}
+.hero h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{font-size:19px;max-width:620px;margin:0}
+.shape{position:absolute;border-radius:48px;transform:skewX(-14deg);z-index:0;pointer-events:none}
+.shape.s1{inline-size:280px;block-size:340px;inset-block-start:-60px;inset-inline-end:160px;background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 80%,transparent),transparent)}
+.shape.s2{inline-size:240px;block-size:280px;inset-block-end:-90px;inset-inline-end:10px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent2) 85%,transparent),color-mix(in srgb,var(--accent3) 60%,transparent))}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:11px 20px;font-weight:600;text-decoration:none;font-size:15px;transition:transform .15s,box-shadow .15s}
+.btn.pri{background:#fff;color:var(--navy)}
+.btn.sec{border:1px solid rgba(255,255,255,.4);color:#fff}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.25)}
+.stats{display:flex;gap:36px;flex-wrap:wrap;margin:40px 0 0;padding:0;list-style:none}
+.stats li{border-inline-start:3px solid var(--accent);padding-inline-start:12px}
+.stats b{display:block;font-family:var(--fd);font-size:30px;color:#fff;line-height:1}
+.stats span{font-size:13px;color:var(--band-muted)}
+
+/* 2. executive summary (sits over the hero edge) */
+.summary{margin-top:-36px;position:relative;z-index:2;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:28px 32px;display:grid;grid-template-columns:200px 1fr;gap:28px;align-items:start}
+.summary p{margin:0 0 10px}.summary p:last-child{margin:0}
+
+/* section header */
+section{padding-block:56px 8px}
+.sh{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:22px;flex-wrap:wrap}
+.sh p{margin:0;max-width:440px;color:var(--muted)}
+
+/* 3. at a glance / purpose */
+.glance{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.glance article{position:relative;background:var(--card);border-radius:20px;padding:28px;box-shadow:var(--shadow);overflow:hidden}
+.glance article::before{content:"";position:absolute;inset-block-start:0;inset-inline:0;block-size:5px;background:var(--grad)}
+.glance p{margin:8px 0 0}
+.pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:4px 12px;margin-bottom:12px;background:var(--pale);color:var(--accent-ink)}
+
+/* 4. program documents */
+.docs{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:20px}
+.doc{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:var(--body);background:var(--card);border-radius:20px;padding:24px;box-shadow:var(--shadow);border:1px solid var(--line);transition:transform .18s}
+.doc.feat{background:linear-gradient(150deg,var(--pale),var(--card) 70%);border:none}
+.doc .ty{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink)}
+.doc p{margin:0;color:var(--muted)}
+.doc:hover,.ws:hover,.sub:hover{transform:translateY(-3px)}
+.open{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--accent-ink);font-size:14px;margin-top:auto}
+.open svg{inline-size:16px;block-size:16px}
+
+/* 5. workstream cards */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.ws{position:relative;display:flex;flex-direction:column;gap:10px;text-decoration:none;color:var(--body);background:var(--card);border-radius:20px;padding:26px;box-shadow:var(--shadow);border:1px solid var(--line);transition:transform .18s;overflow:hidden}
+.ws::after{content:"";position:absolute;inset-inline-end:-40px;inset-block-start:-40px;inline-size:110px;block-size:110px;border-radius:28px;transform:skewX(-14deg);background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 18%,transparent),color-mix(in srgb,var(--accent2) 18%,transparent))}
+.num{font-family:var(--fd);font-weight:700;font-size:14px;letter-spacing:.06em;color:var(--accent-ink)}
+.ws p{margin:0;color:var(--muted);flex:1}
+.wsf{display:flex;justify-content:space-between;align-items:center;gap:10px;border-block-start:1px solid var(--line);padding-block-start:14px;margin-top:6px}
+.ld{font-size:14px;color:var(--ink);font-weight:600}
+.ld em{display:block;font-style:normal;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ld.tbc{color:var(--muted);font-style:italic;font-weight:500}
+.wsf .open{margin-top:0}
+
+/* 6. dark band for shared or supporting streams */
+.band{margin-top:56px;background:radial-gradient(600px 300px at 0% 0%,color-mix(in srgb,var(--accent) 28%,transparent),transparent 60%),radial-gradient(600px 320px at 100% 100%,color-mix(in srgb,var(--accent2) 32%,transparent),transparent 60%),var(--navy);color:var(--band-ink);padding-block:56px}
+.band section{padding:0}
+.band h2,.band h3{color:#fff}
+.band .sh p,.band .kick{color:var(--band-muted)}
+.sub{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:var(--band-ink);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:20px;padding:26px;transition:transform .18s}
+.sub p{margin:0;flex:1}
+.sub .open{color:#fff}
+.verb{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:999px;background:#fff;color:var(--navy)}
+
+/* 7. role lanes */
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;list-style:none;margin:0;padding:0}
+.lane{--lc:var(--accent);background:var(--card);border-radius:18px;padding:18px;border:1px solid var(--line);border-block-start:5px solid var(--lc)}
+.lane:nth-child(3n+2){--lc:var(--accent2)}.lane:nth-child(3n){--lc:var(--accent3)}
+.lane h3{font-size:17px}
+.lane ul{margin:10px 0 0;padding-inline-start:18px;color:var(--muted);font-size:15px}
+
+/* 8. timeline / run of show */
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.slot{display:grid;grid-template-columns:120px 1fr auto;gap:20px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 22px}
+.slot time{font-family:var(--fd);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.slot p{margin:4px 0 0;color:var(--muted)}
+.slot .dur{font-size:13px;font-weight:700;color:var(--accent-ink);background:var(--pale);border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+/* 9. rhythm (meeting cadence) */
+.rhythm{display:grid;grid-template-columns:repeat(3,1fr);position:relative;list-style:none;margin:0;padding:0}
+.rhythm::before{content:"";position:absolute;inset-block-start:11px;inset-inline:12px;block-size:3px;background:var(--grad);border-radius:999px;opacity:.6}
+.step{position:relative;padding:36px 24px 0 0}
+.step::before{content:"";position:absolute;inset-block-start:2px;inset-inline-start:0;inline-size:22px;block-size:22px;border-radius:50%;background:var(--ground);border:4px solid var(--accent)}
+.step b{display:block;font-family:var(--fd);color:var(--ink);font-size:18px}
+.step span{display:block;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);margin:4px 0}
+.step p{margin:0;color:var(--muted)}
+
+/* 10. principles */
+.princ{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 40px;list-style:none;margin:0;padding:0;counter-reset:pr}
+.princ li{counter-increment:pr;display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.princ li::before{content:counter(pr,decimal-leading-zero);font-family:var(--fd);font-weight:700;font-size:20px;color:var(--accent-ink)}
+.princ b{color:var(--ink)}
+
+/* 11. team */
+.people{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.people li{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.avatar{flex:none;display:grid;place-items:center;inline-size:40px;block-size:40px;border-radius:50%;background:var(--grad);color:var(--on-accent);font-weight:700;font-size:14px}
+.people b{display:block;color:var(--ink);font-size:15px}
+.people span{font-size:13px;color:var(--muted)}
+
+/* 12. feedback / call to action */
+.ask{margin-top:56px;background:linear-gradient(135deg,var(--pale),var(--card));border-radius:24px;padding:36px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;border:1px solid var(--line)}
+.ask h2{margin:0}
+.ask p{margin:8px 0 0;max-width:560px}
+.ask .btn{background:var(--accent-ink);color:#fff}
+
+/* 13. footer */
+.foot{margin-top:56px;padding-block:28px;border-block-start:1px solid var(--line);color:var(--muted);font-size:14px}
+.foot .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* responsive */
+@media (max-width:980px){.grid,.docs{grid-template-columns:repeat(2,1fr)}.rhythm{grid-template-columns:1fr;gap:8px}.rhythm::before{display:none}}
+@media (max-width:640px){
+  .wrap{padding-inline:20px}
+  .grid,.docs,.princ{grid-template-columns:1fr}
+  .summary{grid-template-columns:1fr;gap:10px;padding:22px}
+  .slot{grid-template-columns:1fr;gap:6px}
+  .shape{opacity:.45}
+  .ask{padding:24px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* live gallery */
+.g-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.g-search{flex:1 1 280px}
+.g-tools input[type=search],.g-tools select{inline-size:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 16px}
+.g-tools select{inline-size:auto}
+.g-toggle{display:inline-flex;gap:6px;align-items:center;font-size:14px}
+.g-clear{font:inherit;font-size:14px;border:0;background:none;color:var(--accent-ink);text-decoration:underline;cursor:pointer}
+.g-count,.g-note{font-size:14px;color:var(--muted);margin:0 0 12px}
+.g-note{color:var(--accent-ink)}
+.g-status{padding:24px;border:1px dashed var(--line);border-radius:16px;text-align:center;color:var(--muted)}
+.g-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.g-card{display:flex;flex-direction:column;gap:8px;block-size:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.g-card h3 a{color:var(--ink);text-decoration:none}.g-card h3 a:hover{text-decoration:underline}
+.g-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.g-meta .pill{margin:0}
+.g-date{font-size:13px;color:var(--muted);margin-inline-start:auto}
+.g-desc{margin:0;color:var(--body);flex:1}
+.g-people,.g-nolink{margin:0;font-size:14px;color:var(--muted)}
+.g-hit .g-card{outline:3px solid var(--accent);outline-offset:2px}
+mark{background:var(--pale);color:var(--ink);border-radius:3px}
+.lh-pop{position:fixed;z-index:2147483000;inset-block-start:50%;inset-inline-start:50%;transform:translate(-50%,-50%);inline-size:min(480px,calc(100vw - 24px));background:var(--card);color:var(--body);border-radius:16px;padding:22px;box-shadow:0 20px 48px rgba(0,0,0,.32);border-block-start:6px solid var(--accent)}
+.lh-pop h2{font-size:22px;margin:0 0 8px}
+.lh-row{display:flex;gap:8px}.lh-row input{flex:1;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
+.lh-pop button{font:inherit;border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:var(--ground2);color:var(--ink);cursor:pointer}
+</style>
+</head>
+<body>
+<!-- sharepoint-site-kit live list template.
+     How it works (inferred from a working page; no public documentation found, verify on your site):
+     1. The ka-livedata-manifest block declares which SharePoint list this page reads.
+     2. The SharePoint HTML viewer injects window.__LD_RESULTS__ keyed by spItemUrl, format "rows",
+        content = JSON string {"headers":[...],"rows":[[...]]}.
+     3. site-page-config.publicationSource must match the manifest entry exactly, or the page refuses to render.
+     4. The hidden link allowlist holds static copies of every list link, because the viewer only lets
+        links open when they appear statically in the page. Regenerate it with scripts/allowlist_from_list.py
+        whenever list items change.
+     5. If __LD_RESULTS__ is missing, the page renders the optional snapshot-data block, else an error state. -->
+<header class="hero"><span class="shape s1" aria-hidden="true"></span><span class="shape s2" aria-hidden="true"></span>
+<div class="wrap">
+<div class="kick"><i></i>{{EYEBROW}}</div>
+<h1>{{H1_MAIN}} <span>{{H1_ACCENT}}</span></h1>
+<p class="lead">{{LEAD}}</p>
+<div class="cta"><button type="button" id="theme-toggle" class="btn sec" aria-pressed="false">Dark mode</button></div>
+</div></header>
+<main>
+<div class="wrap">
+<div class="summary"><div class="kick"><i></i>In short</div><div><p>{{SUMMARY_P1}}</p></div></div>
+
+<section id="gallery" aria-labelledby="h-gallery" data-state="loading">
+<div class="sh"><div><div class="kick"><i></i>{{GALLERY_EYEBROW}}</div><h2 id="h-gallery">{{GALLERY_H2}}</h2></div><p>{{GALLERY_INTRO}}</p></div>
+<form id="gallery-tools" class="g-tools" role="search">
+  <label class="g-search"><span class="visually-hidden">Search</span><input id="g-q" type="search" placeholder="Search titles, descriptions and people" autocomplete="off"></label>
+  <div id="g-filters" class="g-filters"></div>
+  <label id="g-scope-wrap" class="g-toggle" hidden><input id="g-scope" type="checkbox"> <span>Internal only</span></label>
+  <select id="g-sort" aria-label="Sort"><option value="newest">Newest first</option><option value="title">Title A to Z</option></select>
+  <button type="button" id="g-clear" class="g-clear" hidden>Clear filters</button>
+</form>
+<p id="g-count" class="g-count" aria-live="polite"></p>
+<p id="g-note" class="g-note" hidden></p>
+<p id="g-status" class="g-status" role="status">Loading items...</p>
+<ul id="gallery-list" class="g-list" aria-busy="true"></ul>
+</section>
+</div>
+</main>
+<footer class="foot"><div class="wrap"><span>{{PROGRAM_NAME}}</span><span>Data from the list "{{LIST_DISPLAY_NAME}}"</span></div></footer>
+
+<script>
+(() => {
+  "use strict";
+  /* ---- 1. Column mapping: edit this object only. Each entry lists candidate
+     column names (internal name first, then display name). id and title are required. */
+  const COLUMN_MAP = {
+    id: ["ID"],
+    title: ["Title", "LinkTitle"],
+    description: ["{{DESCRIPTION_COLUMN}}", "Description"],
+    url: ["{{URL_COLUMN}}", "Link", "URL"],
+    people: ["{{PEOPLE_COLUMN}}", "Owner"],
+    date: ["{{DATE_COLUMN}}", "Modified", "Created"],
+    internal: [],                     /* optional yes/no column, e.g. ["InternalOnly"] */
+    filters: [                        /* select filters; multi: true for multi-value columns */
+      { key: "category", label: "Category", columns: ["{{FILTER_1_COLUMN}}"], multi: false },
+      { key: "topic", label: "Topic", columns: ["{{FILTER_2_COLUMN}}"], multi: true },
+    ],
+  };
+  const EXTERNAL_HOSTS = []; /* e.g. ["learn.microsoft.com", "github.com"]; used for the scope toggle when no internal column exists */
+  const ITEM_NOUN = ["item", "items"];
+
+  const $ = id => document.getElementById(id);
+  const section = $("gallery"), list = $("gallery-list"), status = $("g-status"), countEl = $("g-count");
+  const form = $("gallery-tools"), q = $("g-q"), sort = $("g-sort"), clearBtn = $("g-clear"), note = $("g-note");
+  const scope = $("g-scope"), scopeWrap = $("g-scope-wrap"), filterBox = $("g-filters");
+  const selects = {};
+
+  const str = v => v === null || v === undefined ? "" : String(v).trim();
+  function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+  function htmlToText(v) { const t = document.createElement("template"); t.innerHTML = str(v); return t.content.textContent.replace(/\s+/g, " ").trim(); }
+  function safeUrl(v) {
+    let markup = str(v); if (!markup) return "";
+    if (markup.startsWith("{")) { try { const o = JSON.parse(markup); markup = str(o.Url || o.url); } catch { /* not JSON */ } }
+    const t = document.createElement("template"); t.innerHTML = markup;
+    const a = t.content.querySelector("a[href]");
+    let candidate = (a ? a.getAttribute("href") : t.content.textContent).trim();
+    candidate = candidate.split(", ")[0]; /* URL columns can arrive as "url, description" */
+    try { const u = new URL(candidate); return u.protocol === "https:" && !u.username && !u.password ? u.href : ""; } catch { return ""; }
+  }
+  function multi(v) {
+    if (Array.isArray(v)) return v.map(x => str(typeof x === "string" ? x : x?.Value || x?.LookupValue || x?.Title)).filter(Boolean);
+    const raw = str(v); if (!raw) return [];
+    try { const p = JSON.parse(raw); if (Array.isArray(p)) return multi(p); } catch { /* plain text */ }
+    return raw.replace(/^;#|;#$/g, "").split(/;#|;|\n/).map(x => x.trim()).filter(Boolean);
+  }
+  const people = multi; /* person fields arrive as JSON arrays of {LookupValue|Title} or as text */
+
+  function decode(payload) {
+    if (!payload || payload.format !== "rows" || typeof payload.content !== "string") throw new Error("No list data was supplied.");
+    const data = JSON.parse(payload.content);
+    if (!data || !Array.isArray(data.headers) || !Array.isArray(data.rows)) throw new Error("Malformed list data.");
+    const col = names => { for (const n of names || []) { const i = data.headers.indexOf(n); if (i >= 0) return i; } return undefined; };
+    const idx = { id: col(COLUMN_MAP.id), title: col(COLUMN_MAP.title), description: col(COLUMN_MAP.description), url: col(COLUMN_MAP.url),
+      people: col(COLUMN_MAP.people), date: col(COLUMN_MAP.date), internal: col(COLUMN_MAP.internal) };
+    if (idx.id === undefined || idx.title === undefined) throw new Error("Required columns (ID, Title) are missing.");
+    const fIdx = COLUMN_MAP.filters.map(f => col(f.columns));
+    const get = (row, i) => i === undefined ? "" : row[i];
+    const items = [], seen = new Set();
+    for (const row of data.rows) {
+      if (!Array.isArray(row)) continue;
+      const id = Number(str(get(row, idx.id))), title = htmlToText(get(row, idx.title));
+      if (!Number.isSafeInteger(id) || id < 1 || seen.has(id) || !title) continue;
+      seen.add(id);
+      const url = safeUrl(get(row, idx.url));
+      const d = new Date(str(get(row, idx.date)));
+      const item = { id, title, description: htmlToText(get(row, idx.description)), url,
+        people: people(get(row, idx.people)), date: Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 10) : "", facets: {} };
+      COLUMN_MAP.filters.forEach((f, n) => { item.facets[f.key] = f.multi ? multi(get(row, fIdx[n])) : [htmlToText(get(row, fIdx[n]))].filter(Boolean); });
+      const flag = str(get(row, idx.internal)).toLowerCase();
+      if (/^(yes|true|1)$/.test(flag)) item.scope = "internal";
+      else if (/^(no|false|0)$/.test(flag)) item.scope = "external";
+      else if (EXTERNAL_HOSTS.length && url) { const h = new URL(url).hostname; item.scope = EXTERNAL_HOSTS.some(x => h === x || h.endsWith("." + x)) ? "external" : "internal"; }
+      else item.scope = "";
+      items.push(item);
+    }
+    return items;
+  }
+
+  const fmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  function mark(node, text, terms) {
+    if (!terms.length) { node.textContent = text; return; }
+    const re = new RegExp(`(${terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+    node.replaceChildren(...text.split(re).map((p, i) => i % 2 ? el("mark", "", p) : document.createTextNode(p)));
+  }
+  function card(item, terms) {
+    const li = el("li"); li.id = `item-${item.id}`;
+    const art = el("article", "g-card");
+    const meta = el("div", "g-meta");
+    for (const f of COLUMN_MAP.filters) for (const v of item.facets[f.key]) meta.append(el("span", "pill", v));
+    if (item.date) { const t = el("time", "g-date", fmt.format(new Date(`${item.date}T12:00:00Z`))); t.dateTime = item.date; meta.append(t); }
+    const h3 = el("h3");
+    if (item.url) { const a = el("a"); a.href = item.url; a.target = "_blank"; a.rel = "noopener noreferrer"; mark(a, item.title, terms); h3.append(a); }
+    else mark(h3, item.title, terms);
+    art.append(meta, h3);
+    if (item.description) { const p = el("p", "g-desc"); mark(p, item.description, terms); art.append(p); }
+    if (item.people.length) { const p = el("p", "g-people"); mark(p, item.people.join(", "), terms); art.append(p); }
+    if (item.url) { const a = el("a", "open", "Open"); a.href = item.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.setAttribute("aria-label", `Open: ${item.title}`); art.append(a); }
+    else art.append(el("p", "g-nolink", "No link yet."));
+    li.append(art); return li;
+  }
+
+  let items = [];
+  function buildFilters() {
+    for (const f of COLUMN_MAP.filters) {
+      const values = [...new Set(items.flatMap(i => i.facets[f.key]))].sort((a, b) => a.localeCompare(b));
+      if (!values.length) continue;
+      const lab = el("label", "g-filter"); lab.append(el("span", "visually-hidden", f.label));
+      const s = el("select"); s.setAttribute("aria-label", f.label);
+      const all = el("option", "", `All ${f.label.toLowerCase()}`); all.value = ""; s.append(all);
+      for (const v of values) { const o = el("option", "", v); o.value = v; s.append(o); }
+      s.addEventListener("change", apply); lab.append(s); filterBox.append(lab); selects[f.key] = s;
+    }
+    scopeWrap.hidden = !items.some(i => i.scope);
+  }
+  function readUrl() {
+    let p; try { p = new URLSearchParams(window.location.search); } catch { return; }
+    if (p.get("q")) q.value = p.get("q");
+    for (const [k, s] of Object.entries(selects)) { const v = p.get(k); if (v && [...s.options].some(o => o.value === v)) s.value = v; }
+    if (p.get("scope") === "internal") scope.checked = true;
+  }
+  function writeUrl() {
+    try {
+      const u = new URL(window.location.href);
+      const set = (k, v) => v ? u.searchParams.set(k, v) : u.searchParams.delete(k);
+      set("q", q.value.trim()); for (const [k, s] of Object.entries(selects)) set(k, s.value); set("scope", scope.checked ? "internal" : "");
+      window.history.replaceState(null, "", u);
+    } catch { /* sandboxed frames can block history updates */ }
+  }
+  function focusAnchor(anchor) {
+    const m = /^#?item-(\d+)$/.exec(str(anchor)); if (!m) return;
+    const node = $(`item-${m[1]}`); if (node) { node.scrollIntoView({ behavior: "smooth", block: "center" }); node.classList.add("g-hit"); }
+  }
+  function apply() {
+    const terms = q.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    const shown = items.filter(i => {
+      if (scope.checked && i.scope !== "internal") return false;
+      for (const [k, s] of Object.entries(selects)) if (s.value && !i.facets[k].includes(s.value)) return false;
+      const hay = [i.title, i.description, i.people.join(" "), ...Object.values(i.facets).flat()].join(" ").toLocaleLowerCase();
+      return terms.every(t => hay.includes(t));
+    });
+    shown.sort(sort.value === "title" ? (a, b) => a.title.localeCompare(b.title) : (a, b) => (b.date || "").localeCompare(a.date || "") || b.id - a.id);
+    list.replaceChildren(...shown.map(i => card(i, terms)));
+    const filtered = Boolean(terms.length || scope.checked || Object.values(selects).some(s => s.value));
+    clearBtn.hidden = !filtered;
+    const noun = n => `${n} ${ITEM_NOUN[n === 1 ? 0 : 1]}`;
+    countEl.textContent = filtered ? `Showing ${noun(shown.length)} of ${items.length}` : `Showing all ${noun(items.length)}`;
+    status.hidden = shown.length > 0;
+    if (!shown.length) status.textContent = filtered ? "Nothing matches. Try other words or clear the filters." : "The list has no items yet.";
+    writeUrl();
+  }
+
+  function bindingSource() {
+    const manifest = JSON.parse(document.querySelector("script.ka-livedata-manifest").textContent);
+    const config = JSON.parse($("site-page-config").textContent);
+    const expected = config && config.publicationSource;
+    const src = Array.isArray(manifest) && expected ? manifest.find(m => m && m.spItemUrl === expected.spItemUrl) : null;
+    if (!src || ["kind", "spItemUrl", "webUrl", "listId", "label"].some(k => src[k] !== expected[k])) throw new Error("The list binding is invalid: manifest and page config disagree.");
+    return src;
+  }
+
+  function start() {
+    try {
+      const src = bindingSource();
+      const live = window.__LD_RESULTS__ && window.__LD_RESULTS__[src.spItemUrl];
+      if (live) items = decode(live);
+      else {
+        const snap = JSON.parse(($("snapshot-data") || {}).textContent || "null");
+        if (!snap || !snap.payload) throw new Error("Live list data is not available on this page.");
+        items = decode(snap.payload);
+        note.hidden = false; note.textContent = `Showing a saved copy of the list from ${snap.savedOn || "an earlier date"}.`;
+      }
+      buildFilters(); readUrl();
+      section.dataset.state = "ready"; list.setAttribute("aria-busy", "false");
+      apply(); focusAnchor(window.location.hash);
+      q.addEventListener("input", (() => { let t; return () => { clearTimeout(t); t = setTimeout(apply, 120); }; })());
+      scope.addEventListener("change", apply); sort.addEventListener("change", apply);
+      form.addEventListener("submit", e => { e.preventDefault(); apply(); });
+      clearBtn.addEventListener("click", () => { q.value = ""; scope.checked = false; for (const s of Object.values(selects)) s.value = ""; apply(); q.focus(); });
+      window.addEventListener("hashchange", () => focusAnchor(window.location.hash));
+      window.addEventListener("message", e => { const d = e.data; focusAnchor(typeof d === "string" ? d : d && (d.anchor || d.hash || d.id)); });
+    } catch (err) {
+      section.dataset.state = "unavailable"; list.setAttribute("aria-busy", "false"); form.hidden = true;
+      status.hidden = false; status.textContent = "This list couldn't be loaded. Reload the page, or open the list in SharePoint.";
+      console.error("[site-kit gallery]", err);
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true }); else start();
+})();
+</script>
+<script>
+(() => {
+  const b = document.getElementById("theme-toggle");
+  const sync = () => { const dark = document.documentElement.dataset.theme === "dark"; b.setAttribute("aria-pressed", String(dark)); b.textContent = dark ? "Light mode" : "Dark mode"; };
+  sync();
+  b.addEventListener("click", () => { document.documentElement.dataset.theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; sync(); });
+})();
+</script>
+
+<!-- link-allowlist:start (static copies of list links so the SharePoint viewer lets them open; regenerate with scripts/allowlist_from_list.py when list items change) -->
+<nav id="link-allowlist" hidden aria-hidden="true" style="display:none">
+</nav>
+<!-- link-allowlist:end -->
+
+<script id="link-helper">
+(() => {
+  /* Links built from list data that are not in the allowlist: try window.open, else show a copy popover. */
+  const DYNAMIC = "#gallery-list";
+  let pop = null;
+  const close = () => { if (pop) { pop.remove(); pop = null; } };
+  const allowed = url => [...document.querySelectorAll("#link-allowlist a[href]")].some(a => a.href === url);
+  function show(url) {
+    close();
+    pop = document.createElement("div"); pop.className = "lh-pop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-modal", "true"); pop.setAttribute("aria-labelledby", "lh-title");
+    pop.innerHTML = '<h2 id="lh-title">Open this link in a new tab</h2><p>The SharePoint page viewer blocked this link. Copy it and paste it into a new browser tab, or right-click the link and choose "Open link in new tab".</p><div class="lh-row"><input type="text" readonly aria-label="Link address"><button type="button" class="lh-copy">Copy link</button></div><p class="lh-done" aria-live="polite"></p><button type="button" class="lh-close">Close</button>';
+    const input = pop.querySelector("input"), done = pop.querySelector(".lh-done"); input.value = url;
+    pop.querySelector(".lh-copy").addEventListener("click", () => { input.select(); try { navigator.clipboard.writeText(url).then(() => { done.textContent = "Link copied."; }, () => { done.textContent = "Press Ctrl+C to copy."; }); } catch { done.textContent = "Press Ctrl+C to copy."; } });
+    pop.querySelector(".lh-close").addEventListener("click", close);
+    document.body.append(pop); pop.querySelector(".lh-copy").focus();
+  }
+  document.addEventListener("click", e => {
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest && e.target.closest("a[href]");
+    if (!a || !a.closest(DYNAMIC) || !/^https?:/i.test(a.href) || allowed(a.href)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    let w = null; try { w = window.open(a.href, "_blank", "noopener"); } catch { w = null; }
+    if (!w) show(a.href);
+  }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+})();
+</script>
+</body>
+</html>
