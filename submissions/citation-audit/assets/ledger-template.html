@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Citation audit ledger</title>
+  <style>
+    body { font-family: Georgia, "Times New Roman", serif; margin: 2rem; background: #ffffff; color: #1a1a1a; line-height: 1.4; color-scheme: light; }
+    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    p { max-width: 46rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0 2rem; }
+    th, td { border: 1px solid #c8c8c8; padding: 0.4rem 0.5rem; vertical-align: top; text-align: left; }
+    th { background: #f3f3f3; }
+    td.verdict { font-weight: 700; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <h1>Citation audit ledger</h1>
+  <p>{{SUMMARY}}</p>
+  <p>Verdicts certify overlap with the supplied corpus only. They do not certify that a claim is true outside that corpus.</p>
+  <h2>Blockers</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Claim</th><th>Draft location</th><th>Type</th><th>Verdict</th><th>Score</th><th>Source span</th><th>Source location</th><th>Revision</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{BLOCKERS}}
+    </tbody>
+  </table>
+  <h2>All claims</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Claim</th><th>Draft location</th><th>Type</th><th>Verdict</th><th>Score</th><th>Source span</th><th>Source location</th><th>Revision</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ROWS}}
+    </tbody>
+  </table>
+</body>
+</html>

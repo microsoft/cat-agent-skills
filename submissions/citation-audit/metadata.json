@@ -1,0 +1,11 @@
+{
+  "name": "Citation Audit",
+  "description": "Check each factual claim in a draft against the source files you supply, and return a cited ledger of what those sources support.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["audit", "content", "documents", "governance", "grounding", "quality"],
+  "author": "N-Garai",
+  "version": "1.0.0",
+  "createdAt": "2026-11-24",
+  "updatedAt": "2026-11-24",
+  "category": "productivity"
+}
