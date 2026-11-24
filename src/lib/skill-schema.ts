@@ -65,6 +65,13 @@ export const skillSchema = z.object({
   // Path (relative to /public) of a bundled .zip of the skill's files, when the
   // skill ships more than its SKILL.md (scripts, references, assets).
   bundle: z.string().optional(),
+  // Optional license info, detected by the importer from a root LICENSE /
+  // NOTICE file in the submission (never authored in metadata). `licenseName`
+  // is set only when the text is recognized (currently Microsoft's MIT text).
+  // Paths are relative to the submission folder.
+  licenseName: z.string().optional(),
+  licenseFile: z.string().optional(),
+  noticeFile: z.string().optional(),
   // Optional override for the auto-generated cover color (any CSS color).
   coverColor: z.string().optional(),
   featured: z.boolean().default(false),

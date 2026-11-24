@@ -12,6 +12,8 @@ authorGithub: microsoft
 version: 1.0.7
 createdAt: 2026-10-31
 bundle: bundles/finance-for-cowork.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Helps you run your finance calendar and the evidence work around it: close status, work-back plans, budget consolidation, variance narrative, review prep and stakeholder Q&A, executive updates, dataset analysis, audit packages, expense reconciliation, completing existing three-statement (income statement, balance sheet, cash flow) model templates, DCF valuation, and LBO returns models. Every skill shows its sources, marks what is missing instead of guessing, and never sends email or calendar invites without your confirmation. 
 Sign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise

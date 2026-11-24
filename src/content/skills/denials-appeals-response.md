@@ -13,6 +13,8 @@ version: 1.0.3
 createdAt: 2026-10-28
 updatedAt: 2026-10-28
 bundle: bundles/denials-appeals-response.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Denials & Appeals Response works a denied claim from the remittance to a draft appeal. It classifies the denial and its reason codes, attaches the governing payer policy and chart evidence, ranks the queue by deadline then recoverable value and drafts the appeal at the right level. It never recodes a claim the chart does not support and never submits an appeal.
 

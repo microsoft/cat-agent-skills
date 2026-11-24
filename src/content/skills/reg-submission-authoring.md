@@ -13,6 +13,8 @@ version: 1.0.3
 createdAt: 2026-10-28
 updatedAt: 2026-10-28
 bundle: bundles/reg-submission-authoring.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Reg Submission Authoring turns a locked protocol, statistical analysis plan and tables, listings and figures into a cited first draft of a clinical study report or 510(k) section set. It plans the sections, drafts each one from source facts, checks every number and population against the sources and assembles the draft with its open items. It never files or submits anything.
 

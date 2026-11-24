@@ -45,6 +45,15 @@ stripped; they are sidecars and never land inside the bundle.
 > `CONTRIBUTING` next to your payload — they'd just waste the agent's context. Put
 > those in your PR description.
 
+> ⚖️ **Optional `LICENSE` / `NOTICE`.** A submission may include a root-level
+> `LICENSE` (or `LICENSE.md` / `LICENSE.txt`) and, when it redistributes
+> third-party material, a `NOTICE` (or `NOTICE.md` / `NOTICE.txt`). Unlike
+> `README.md`, these **are bundled** so the terms travel with the download. When
+> present, the detail page shows a **License** (and **Notice**) row linking to
+> the file; the license is named only when it is Microsoft's standard MIT text,
+> otherwise the row reads "See LICENSE". A plugin can also place a `LICENSE` in
+> each skill folder.
+
 ## Two descriptions — they are different on purpose
 
 | | Lives in | Who reads it |

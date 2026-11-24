@@ -13,6 +13,8 @@ version: 4.0.1
 createdAt: 2026-08-01
 updatedAt: 2026-11-06
 bundle: bundles/work-order-assist.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Work Order Assist assembles cited work-order evidence, ranks similar prior work, checks parts snapshots and drafts technician/planner notes. Offline drafting only; no scheduling, assignment, reservations, purchasing, closure or CMMS writes. Human maintenance and safety review is required.
 

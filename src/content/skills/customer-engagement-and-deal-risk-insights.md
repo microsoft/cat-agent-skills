@@ -11,6 +11,8 @@ authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
 createdAt: 2026-10-31
 bundle: bundles/customer-engagement-and-deal-risk-insights.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 # Customer Engagement and Deal Risk Insights
 

@@ -13,6 +13,8 @@ version: 1.4.3
 createdAt: 2026-08-01
 updatedAt: 2026-11-06
 bundle: bundles/supplier-disruption.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Supplier Disruption Assist organizes supplied supplier notices and planning evidence, maps shortage impact, recommends draft mitigation and prepares unsent follow-ups. Single-component, single-receipt local planning only; freshness, units, usable stock and demand attestations are mandatory. No live ERP, supplier contact, purchasing, spending or schedule writes.
 

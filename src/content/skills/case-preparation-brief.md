@@ -11,6 +11,8 @@ authorUrl: "https://github.com/microsoft"
 authorGithub: microsoft
 createdAt: 2026-10-31
 bundle: bundles/case-preparation-brief.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 # Case Preparation Brief
 
