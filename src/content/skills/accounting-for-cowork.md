@@ -13,6 +13,8 @@ version: 1.0.2
 createdAt: 2026-10-31
 updatedAt: 2026-11-23
 bundle: bundles/accounting-for-cowork.zip
+licenseName: MIT
+licenseFile: LICENSE
 ---
 Reconcile accounts, prepare journal entries, analyze variances, and report results.
 
