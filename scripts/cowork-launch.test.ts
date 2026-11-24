@@ -15,13 +15,9 @@ const plugins = [
   ["finance-for-cowork", "finance", 13],
   ["capital-markets-for-cowork", "financial-services", 10],
   ["accounting-for-cowork", "accounting", 7],
+  ["sales-for-cowork", "sales", 19],
+  ["service-for-cowork", "service", 5],
 ] as const;
-const sales = [
-  "business-case-composer", "competitive-strategy", "customer-engagement-and-deal-risk-insights",
-  "deal-catchup", "meeting-prep", "pipeline-prioritizer", "post-meeting-follow-up",
-  "sales-progress-update", "stakeholder-and-decision-map",
-];
-const service = ["answer-research", "case-preparation-brief", "case-triage", "draft-customer-reply", "knowledge-harvest"];
 
 test("every category has a label, color, icon, and schema support", () => {
   assert.equal(new Set(CATEGORIES).size, 13);
@@ -36,13 +32,9 @@ test("every category has a label, color, icon, and schema support", () => {
   }
 });
 
-test("launch submissions are five complete plugins and fourteen individual Cowork skills", () => {
-  const entries = [
-    ...plugins.map(([slug, category]) => ({ slug, category, kind: "plugin" })),
-    ...sales.map((slug) => ({ slug, category: "sales", kind: "skill" })),
-    ...service.map((slug) => ({ slug, category: "service", kind: "skill" })),
-  ];
-  assert.equal(entries.length, 19);
+test("launch submissions are seven complete Cowork plugins", () => {
+  const entries = plugins.map(([slug, category]) => ({ slug, category, kind: "plugin" }));
+  assert.equal(entries.length, 7);
   for (const { slug, category, kind } of entries) {
     const path = `submissions/${slug}`;
     const sub = loadSubmission(path);

@@ -1,0 +1,13 @@
+{
+  "name": "Service",
+  "description": "Investigate, respond, and resolve customer needs faster.",
+  "platforms": ["Cowork"],
+  "category": "service",
+  "builtByMicrosoft": true,
+  "tags": ["customer-service", "case-management", "knowledge"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.1",
+  "createdAt": "2026-10-31",
+  "updatedAt": "2026-11-24"
+}
