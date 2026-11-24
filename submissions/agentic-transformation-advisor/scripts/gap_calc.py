@@ -176,7 +176,8 @@ def analyze(profile_targets, current, named=None):
         "rows": rows,
         "pillars_short_of_min": [r["pillar_name"] for r in short],
         "computed_scale_breaker": sb,
-        "verdict": verdict(len(short)),
+        "verdict": ("Readiness undetermined: collect evidence for unknown pillars before "
+                    "deciding whether to proceed or scale.") if unknown else verdict(len(short)),
         "unknown_pillars": [PILLAR_NAMES[k] for k in unknown],
         "verdict_note": ("Verdict excludes unknown pillars; collect evidence before "
                          "relying on it.") if unknown else "",
