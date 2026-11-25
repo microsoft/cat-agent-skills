@@ -325,11 +325,25 @@ def insert_into(page: str, key: str, source: dict, section: str, pt: dict[str, s
     sm = re.search(rf"<!-- list-view:{re.escape(key)}:start -->.*?<!-- list-view:{re.escape(key)}:end -->\n?", page, re.S)
     if sm:
         old_snap = re.search(r'<script type="application/json" class="lv-snapshot">(.*?)</script>', sm.group(0), re.S)
-        if old_snap:
+        config_pattern = r'<script type="application/json" class="lv-config">(.*?)</script>'
+        old_config = re.search(config_pattern, sm.group(0), re.S)
+        new_config = re.search(config_pattern, section, re.S)
+        compatible = False
+        if old_config and new_config:
+            try:
+                old_cfg = json.loads(old_config.group(1))
+                new_cfg = json.loads(new_config.group(1))
+                compatible = isinstance(old_cfg, dict) and isinstance(new_cfg, dict) and all(
+                    old_cfg.get(k) == new_cfg.get(k) for k in ("source", "columns", "filters", "sensitive")
+                )
+            except ValueError:
+                pass
+        if old_snap and compatible:
             section = re.sub(r'(<script type="application/json" class="lv-snapshot">).*?(</script>)',
                              lambda mm: mm.group(1) + old_snap.group(1) + mm.group(2), section, count=1, flags=re.S)
         page = page[:sm.start()] + section + page[sm.end():]
-        done.append(f"section {key} replaced (snapshot kept)")
+        status = "snapshot kept" if old_snap and compatible else "snapshot cleared; regenerate before upload"
+        done.append(f"section {key} replaced ({status})")
     elif "<!-- list-view:insert -->" in page:
         page = page.replace("<!-- list-view:insert -->", section + "<!-- list-view:insert -->", 1)
         done.append(f"section {key} added at the list-view:insert marker")
