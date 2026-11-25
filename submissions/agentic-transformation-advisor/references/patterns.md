@@ -69,7 +69,7 @@ The deep-dive pages (verified 2026-11-24) state a single target per pillar, and 
 
 How to handle this:
 - Default to the summary table and say so in the pack.
-- Offer the deep-dive figures (`--target-source deep-dive`) when the user wants the stricter view, and show both when the gap verdict changes.
+- Offer the deep-dive figures when the user wants the stricter view, and show both when the gap verdict changes. Set `target_source` to `deep-dive` in the shared input JSON, or pass `--target-source deep-dive` to both `gap_calc.py` and `radar_chart.py`, so the analysis and chart agree.
 - Re-check both pages at run time; Learn may reconcile them.
 
 ## Start from intent, not technology

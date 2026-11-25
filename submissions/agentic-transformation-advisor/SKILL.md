@@ -3,7 +3,7 @@ name: agentic-transformation-advisor
 description: |
   Guides one organization, business function or industry through Microsoft's three public agent adoption frameworks on Microsoft Learn (transformation patterns, adoption maturity model, agentic Center of Excellence) and produces a leader-ready pack: pattern map, maturity radar, gap and scale-breaker analysis, roadmap, CoE blueprint and leader decisions, all cited to Learn. Use when the user asks for an "agent adoption strategy for <function>", "which transformation pattern fits", "assess our agentic AI maturity", "design an agent CoE", "find our scale-breaker" or an "agent adoption pack for sales, customer service, IT or HR". Do NOT use to score a single use case idea, analyze Copilot usage exports, pick a build platform, or build an agent.
 license: MIT
-compatibility: Needs web fetch access to learn.microsoft.com and Python 3 with matplotlib for the radar chart. Word or PowerPoint output uses the docx or pptx skill where available. Optional M365 search or file read tools for evidence the user points to.
+compatibility: Needs web fetch access to learn.microsoft.com and Python 3 with matplotlib for the radar chart. Word output uses the optional docx skill, or requires python-docx installed as a fallback. PowerPoint output requires the pptx skill; no standalone fallback is provided. Optional M365 search or file read tools for evidence the user points to.
 metadata:
   category: productivity
   icon: Map
@@ -14,9 +14,11 @@ metadata:
 
 # Agentic Transformation Advisor
 
-## Overview
+## Scope and framework sources
 
-Microsoft Learn publishes three connected frameworks for adopting agents at scale. Each answers one question:
+Assess one scope: a whole organization, one business function, or one industry. Use only public learn.microsoft.com guidance for framework facts and user-supplied evidence for the current state. Never rely on internal or non-public framework material.
+
+Use these three frameworks together:
 
 | Question | Framework | Learn hub |
 |---|---|---|
@@ -25,8 +27,6 @@ Microsoft Learn publishes three connected frameworks for adopting agents at scal
 | How do we get there? | Agentic Center of Excellence (CoE) | https://learn.microsoft.com/en-us/agents/center-of-excellence/ |
 
 The overview page (https://learn.microsoft.com/en-us/agents/adopt-overview) describes a loop: name each initiative by pattern, compare current maturity with the pattern's target profile, use the gaps to prioritize investment through the CoE, and reassess as gaps close.
-
-This skill runs that loop as a guided advisory session for one scope (a whole organization, one business function, or one industry) and produces a pack a sponsoring leader can act on. It works only from public learn.microsoft.com guidance plus evidence the user supplies. It never relies on internal or non-public material.
 
 ## When to Use
 
@@ -46,19 +46,6 @@ This skill runs that loop as a guided advisory session for one scope (a whole or
 - Building, configuring or testing an agent
 - Licensing quotes or pricing: point to official Microsoft licensing pages
 - Evaluating, ranking or scoring individual employees: decline (see Guardrails)
-
-## Quick Start
-
-```
-User: "Agent adoption pack for Contoso Customer Service. Leader is the VP of Service."
-1. Intake: ask the batched questions in Step 1 (one message), read any docs the user points to
-2. Fetch live Learn pages (Step 0) and note anything that changed since 2026-11-24
-3. Classify each initiative into a pattern (Step 2)
-4. Rate each pillar 100-500 with evidence and confidence (Step 3)
-5. Write assets/input.json, run scripts/gap_calc.py and scripts/radar_chart.py (Step 4)
-6. Sequence, design the CoE, list leader decisions, tailor examples (Steps 5-8)
-7. Produce the Word report (default), deck or HTML page, executive summary first (Step 9)
-```
 
 See [references/worked-example.md](references/worked-example.md) for a full run with the fictional Contoso.
 
@@ -127,10 +114,10 @@ Use the question bank in [references/maturity-model.md](references/maturity-mode
 3. In the pack, explain for each pattern:
    - the **Learn-named scale-breaker** for that pattern (where the pattern concentrates demand)
    - the **computed scale-breaker** for this organization (largest gap against the target)
-   - the **weakest pillar**, which caps the ceiling regardless of the others
+   - the **weakest pillar**, which caps the ceiling regardless of the others; when any pillar is Unknown, report the ceiling as undetermined
    - **dependencies** between pillars (for example scaling technology without matching governance), drawn from the pillar pages
 4. Unknown pillars are listed as open evidence gaps, never silently treated as zero or as met.
-5. Learn's per-pattern deep-dive pages state single target levels that differ in places from the summary table on `choose-pattern` (see [references/patterns.md](references/patterns.md)). Use the summary table by default, and state which source you used. Use `--target-source deep-dive` when the user wants the deep-dive figures.
+5. Learn's per-pattern deep-dive pages state single target levels that differ in places from the summary table on `choose-pattern` (see [references/patterns.md](references/patterns.md)). Use the summary table by default, and state which source you used. Set `target_source` to `deep-dive` in the shared input JSON when the user wants the deep-dive figures, so both scripts use the same targets. If using the CLI override instead, pass the same `--target-source deep-dive` option to both commands.
 
 ### Step 5: Sequencing and roadmap
 
@@ -191,8 +178,8 @@ Follow [assets/report-outline.md](assets/report-outline.md). Every document star
 10. Sources (Learn URLs with access date)
 
 Format routing:
-- **Word report (default):** use the `docx` skill when available, else python-docx. Title: "Agent adoption at scale: <scope>".
-- **PowerPoint deck:** use the `pptx` skill. Title slide "Agent adoption at scale: <scope>", then one slide per section, executive summary second.
+- **Word report (default):** use the `docx` skill when available, else use the installed `python-docx` package. If neither is available, explain the missing dependency and ask the user to enable it or choose HTML. Title: "Agent adoption at scale: <scope>".
+- **PowerPoint deck:** requires the `pptx` skill; no standalone fallback is provided. If unavailable, explain the prerequisite and ask the user to enable it or choose Word or HTML. Title slide "Agent adoption at scale: <scope>", then one slide per section, executive summary second.
 - **HTML page:** use [assets/html-section-template.html](assets/html-section-template.html). If the user has a SharePoint page skill (for example `sharepoint-site-kit`), offer to hand the HTML to it for publishing; otherwise save the file.
 
 Cite Learn inline after each framework statement, for example "(Learn: Choose the right transformation pattern)". Cite user documents by file name.

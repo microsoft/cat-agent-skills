@@ -205,7 +205,7 @@ def run(data):
 
     known = {k: v for k, v in current.items() if v is not None}
     weakest = None
-    if known:
+    if len(known) == len(PILLAR_KEYS):
         low = min(known.values())
         weakest = {"level": low,
                    "pillars": [PILLAR_NAMES[k] for k in PILLAR_KEYS if known.get(k) == low]}
@@ -253,6 +253,8 @@ def to_markdown(r):
         w = r["weakest_pillar"]
         out.append(f"Weakest pillar (ceiling): {', '.join(w['pillars'])} at {w['level']}")
         out.append("")
+    else:
+        out += ["Weakest pillar (ceiling): undetermined until all pillars have evidence.", ""]
 
     def table(res):
         lines = ["| Pillar | Current | Target | Gap to min (levels) | Gap to target max (levels) |",

@@ -2,6 +2,8 @@
 
 Turn Microsoft's public guidance on adopting agents into a plan a leader can act on. The advisor walks one organization, business function or industry through three connected frameworks on Microsoft Learn and produces a pack with clear recommendations, all cited to Learn.
 
+The advisor runs the adoption loop as a guided advisory session for one scope (a whole organization, one business function, or one industry) and produces a pack a sponsoring leader can act on.
+
 | Question | Framework on Microsoft Learn |
 |---|---|
 | Where are we? | [Agentic AI adoption maturity model](https://learn.microsoft.com/en-us/agents/adoption-maturity-model/): five pillars, levels 100 to 500 |
@@ -26,11 +28,19 @@ The pack comes as a Word document by default, a PowerPoint deck on request, or a
 - "Assess our agentic AI maturity and find our scale-breaker."
 - "Design an agent CoE for a 20,000-person retail bank. Centralized, hybrid or federated?"
 
+## Quick start
+
+Try: "Agent adoption pack for Contoso Customer Service. Leader is the VP of Service."
+
+The advisor asks for scope, outcomes, initiatives and evidence, checks the current Learn guidance, then builds the pattern map, maturity diagnostic, gap analysis, roadmap and CoE blueprint. Choose a Word report (the default), a PowerPoint deck or an HTML page.
+
 ## What you need
 
 - Web access to learn.microsoft.com, so the advisor can check the current guidance.
 - Python 3 with matplotlib for the radar chart.
-- Optional: document skills for Word or PowerPoint output, and search tools for evidence you point it to.
+- **Word output:** the `docx` skill is optional. Without it, the Python environment must have `python-docx` installed for the fallback.
+- **PowerPoint output:** the `pptx` skill is required. There is no standalone deck-generation fallback.
+- Optional: search or file-read tools for evidence you point it to.
 
 ## Good to know
 
