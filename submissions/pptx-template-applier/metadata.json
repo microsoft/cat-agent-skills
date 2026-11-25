@@ -1,0 +1,22 @@
+{
+  "name": "PowerPoint Template Applier",
+  "description": "Move an existing deck onto your brand template: every slide mapped to the right layout, theme colors and fonts applied, content and notes kept intact, and a visual check before you get the file.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "powerpoint",
+    "branding",
+    "template",
+    "slides",
+    "design",
+    "rebrand",
+    "visual-qa"
+  ],
+  "author": "Manuela Pichler",
+  "authorUrl": "https://github.com/manuelap-msft",
+  "createdAt": "2026-11-25",
+  "updatedAt": "2026-11-25",
+  "version": "1.0.0",
+  "category": "productivity"
+}
