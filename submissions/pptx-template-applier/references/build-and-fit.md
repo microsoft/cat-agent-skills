@@ -28,6 +28,13 @@ What `apply_template.py` does with each kind of content, the text-fit rules, and
 | Links to other slides | Removed, because slide numbers change. Web links are kept. |
 
 Unused empty placeholders are removed so no "Click to add" prompt is left.
+Soft line breaks stay in order with ordinary runs. Fields are rebuilt as their current displayed
+text, not live fields. Chart labels retain visibility flags, number formats and custom text at both
+plot and series level. Workbook-linked labels use cached display text when available and are
+reported; missing caches or extended label settings require a manual check. Copied group descendants
+receive fresh shape IDs and connector endpoints are translated after all copied shapes are placed.
+Endpoints whose targets were not carried over are detached and reported rather than attached to an
+unrelated shape.
 
 ## 3. Color mapping
 
@@ -54,6 +61,11 @@ The map is in `build.json` under `color_map` and in the summary.
   Continuation slides use the same layout, the title plus "(continued)", and a short note.
 - Only a slide with one body placeholder and no other items can be split. Otherwise the slide is
   reported for a manual edit.
+- Every continuation chunk must fit, including a top-level bullet with all its sub-bullets. If a
+  group is too large to split safely, the original slide and its overflow warning are retained.
+- Table row heights account for wrapped text, explicit line breaks and merged cells at the selected
+  font size. A table that is still too tall at the floor retains its required height and is reported
+  for a manual edit; rows are not silently compressed.
 
 ## 5. Slide size
 

@@ -4,8 +4,9 @@
 Fallback mode (the template has no usable layouts, for example a brand deck
 that is only a color sheet): copy the source deck, replace its theme colors
 and fonts with the brand values from extract_brand.py, map hard-coded RGB
-colors in shapes and text to theme slots, and drop hard-coded font faces so
-the theme fonts apply. Layouts, positions and content stay as they are.
+colors in shapes and text to theme slots, and drop hard-coded font faces from
+slides, layouts, masters and charts so the theme fonts apply. Layouts,
+positions and content stay as they are.
 
   python extract_brand.py brand-sheet.pptx --json-out brand.json
   python restyle.py --source deck.pptx --brand brand.json --out restyled.pptx --report-out restyle.json
@@ -162,7 +163,7 @@ def restyle(source, brand_path, out):
                 charts.append(sh.chart)
     cmap = build_color_map(elements + [c._chartSpace for c in charts], src_colors)
     recolored = sum(remap_colors(e, cmap) for e in elements + [c._chartSpace for c in charts])
-    fonts = sum(strip_fonts(s._element) for s in prs.slides)
+    fonts = sum(strip_fonts(e) for e in elements + [c._chartSpace for c in charts])
     set_theme(prs, brand)
     fit_fixes, overflow = fit_text(prs, brand)
     prs.save(out)

@@ -51,6 +51,8 @@ Write one line per slide that needs attention. If the sheets are hard to read, r
 
 Fix, rebuild, rerun the QA. At most two passes. If a FAIL is still standing, report it with the slide
 number and do not call the deck ready.
+Each render removes the previous generated PDF and preview images before conversion. A nonzero
+converter exit or a missing new PDF is a failed render, never a successful check of the old deck.
 
 ## 5. Without rendering tools
 

@@ -15,8 +15,9 @@ Rules (first match wins, see references/mapping-rules.md):
   title_only    -> title only layout, else content (placeholder removed), else blank
   blank         -> blank layout, else title only
 When a kind matches several layouts, the one whose type attribute matches and
-whose name is shortest wins. --override SLIDE=LAYOUT takes a layout index or
-exact name and is recorded as "user override". You can also edit the JSON.
+whose name is shortest wins. --override SLIDE=LAYOUT takes a global layout index,
+MASTER:LAYOUT pair or unique exact name and is recorded as "user override".
+Indexes are zero-based; layouts from all masters are included. You can also edit the JSON.
 
 The plan sets "mode": "rebuild", or "restyle" when the template has no usable
 layouts (no layout with a title and a body or content placeholder).
@@ -32,7 +33,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from deck_model import read_slide  # noqa: E402
-from pptx_common import classify_layout, open_deck  # noqa: E402
+from pptx_common import classify_layout, iter_layouts, open_deck  # noqa: E402
 
 CHAIN = {
     "title": ["title", "section", "title_only"],
@@ -53,9 +54,10 @@ PREFERRED_TYPE = {"title": "title", "section": "secHead", "content": "obj", "two
 def layout_table(prs):
     W, H = prs.slide_width, prs.slide_height
     rows = []
-    for i, l in enumerate(prs.slide_layouts):
+    for i, master_index, layout_index, l in iter_layouts(prs):
         kind, why = classify_layout(l, W, H)
-        rows.append({"index": i, "name": l.name, "kind": kind, "type": l._element.get("type"), "why": why})
+        rows.append({"index": i, "master_index": master_index, "layout_index": layout_index,
+                     "name": l.name, "kind": kind, "type": l._element.get("type"), "why": why})
     return rows
 
 
@@ -75,9 +77,11 @@ def resolve_override(val, layouts):
         i = int(val)
         if 0 <= i < len(layouts):
             return layouts[i]
-    for l in layouts:
-        if l["name"] == val:
-            return l
+    matches = [l for l in layouts if l["name"] == val or f"{l['master_index']}:{l['layout_index']}" == val]
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        raise ValueError(f"ambiguous template layout '{val}': use its global index or MASTER:LAYOUT")
     raise ValueError(f"no template layout '{val}'")
 
 
@@ -96,7 +100,8 @@ def plan(template, source, overrides):
             lay, note = pick(m["kind"], layouts)
             if str(i) in overrides:
                 lay, note = resolve_override(overrides[str(i)], layouts), "user override"
-            entry.update({"target_layout": lay["name"], "target_layout_index": lay["index"],
+            entry.update({"target_layout": lay["name"], "target_master_index": lay["master_index"],
+                          "target_layout_index": lay["layout_index"],
                           "target_kind": lay["kind"], "reason": note})
         slides.append(entry)
     return {
@@ -116,7 +121,8 @@ def table_md(p):
     out = ["| # | Source slide | Source layout | Template layout | Why |", "|---|---|---|---|---|"]
     for s in p["slides"]:
         out.append(f"| {s['slide']} | {s['title'][:40] or '(no title)'} | {s['source_layout']} | "
-                   f"{s['target_layout']} | {s['reason']}; {s['kind_reason']} |")
+                   f"{s['target_layout']} ({s['target_master_index']}:{s['target_layout_index']}) | "
+                   f"{s['reason']}; {s['kind_reason']} |")
     return "\n".join(out)
 
 

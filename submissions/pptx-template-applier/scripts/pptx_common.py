@@ -110,6 +110,15 @@ def role_of(pt):
     return "other"
 
 
+def iter_layouts(prs):
+    """Yield (global index, master index, local layout index, layout) for every master."""
+    index = 0
+    for master_index, master in enumerate(prs.slide_masters):
+        for layout_index, layout in enumerate(master.slide_layouts):
+            yield index, master_index, layout_index, layout
+            index += 1
+
+
 def layout_placeholders(layout):
     """List of dicts for the non-meta placeholders of a layout, left to right then top to bottom."""
     out = []

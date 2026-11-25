@@ -28,7 +28,7 @@ from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from deck_model import model_summary, read_slide  # noqa: E402
-from pptx_common import (classify_layout, layout_placeholders, open_deck, text_of,  # noqa: E402
+from pptx_common import (classify_layout, iter_layouts, layout_placeholders, open_deck, text_of,  # noqa: E402
                          theme_colors, theme_fonts)
 
 EMU_IN = 914400
@@ -55,9 +55,10 @@ def inspect_template(path):
     prs = open_deck(path)
     W, H = prs.slide_width, prs.slide_height
     layouts = []
-    for i, l in enumerate(prs.slide_layouts):
+    for i, master_index, layout_index, l in iter_layouts(prs):
         kind, why = classify_layout(l, W, H)
-        layouts.append({"index": i, "name": l.name, "type": l._element.get("type"), "kind": kind, "why": why,
+        layouts.append({"index": i, "master_index": master_index, "layout_index": layout_index,
+                        "name": l.name, "type": l._element.get("type"), "kind": kind, "why": why,
                         "placeholders": [{"idx": p["idx"], "type": p["type"], "role": p["role"],
                                           "box_in": _in(p["box"])} for p in layout_placeholders(l)]})
     usable = [x for x in layouts if x["kind"] in ("content", "two_content", "comparison", "caption_content")]
@@ -86,9 +87,10 @@ def summary_md(t, s):
     out = [f"Template: {os.path.basename(t['file'])} | {t['slide_size_in'][0]} x {t['slide_size_in'][1]} in | "
            f"{len(t['layouts'])} layouts | {len(t['sample_slides'])} sample slides | fonts "
            f"{t['theme_fonts'].get('major')} / {t['theme_fonts'].get('minor')} | accent1 #{t['theme_colors'].get('accent1')}",
-           f"Recommended mode: {t['recommended_mode']}", "", "| # | Layout | Kind | Placeholders |", "|---|---|---|---|"]
+           f"Recommended mode: {t['recommended_mode']}", "", "| # (master:layout) | Layout | Kind | Placeholders |", "|---|---|---|---|"]
     for l in t["layouts"]:
-        out.append(f"| {l['index']} | {l['name']} | {l['kind']} | {', '.join(p['role'] for p in l['placeholders']) or 'none'} |")
+        out.append(f"| {l['index']} ({l['master_index']}:{l['layout_index']}) | {l['name']} | {l['kind']} | "
+                   f"{', '.join(p['role'] for p in l['placeholders']) or 'none'} |")
     out += ["", f"Source: {os.path.basename(s['file'])} | {s['slide_size_in'][0]} x {s['slide_size_in'][1]} in | "
             f"{len(s['slides'])} slides", "", "| # | Title | Source layout | Kind | Blocks |", "|---|---|---|---|---|"]
     for m in s["slides"]:

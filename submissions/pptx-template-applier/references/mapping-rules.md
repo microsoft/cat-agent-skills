@@ -21,6 +21,8 @@ layouts or drop the type.
 | blank | no placeholders besides date, footer and slide number |
 
 Date, footer, slide number and header placeholders never count.
+Layouts from every slide master are included. Inspection shows a global index and a zero-based
+`master:layout` pair, so identically named layouts on different masters can be distinguished.
 
 ## 2. What a source slide holds can change its kind
 
@@ -63,9 +65,11 @@ Keep it to the table and the question. Do not explain the rules unless asked.
 
 - By index: `--override 5=3` puts source slide 5 on template layout 3 (indexes are in the inspect
   summary).
-- By name: `--override "10=Contoso Clean"`. The name must match exactly.
+- By master and local layout index: `--override 5=1:2` selects layout 2 on master 1.
+- By name: `--override "10=Contoso Clean"`. The name must match exactly and be unique.
 - Several: repeat `--override`.
-- The JSON can also be edited by hand: change `target_layout_index` and `target_layout` for a slide.
+- The JSON can also be edited by hand: change `target_master_index`, `target_layout_index` (local to
+  that master) and `target_layout` for a slide. Older plans without `target_master_index` use master 0.
 
 An override is recorded with the reason `user override`. Re-run the plan with all overrides at once,
 show the changed rows and build.

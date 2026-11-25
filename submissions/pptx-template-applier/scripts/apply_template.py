@@ -43,13 +43,14 @@ from pptx.util import Emu, Pt
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from deck_model import para_text, read_slide  # noqa: E402
+from deck_model import para_text, paragraphs_of, read_slide  # noqa: E402
 from pptx_common import (A, P, R, R_NS, emu_box, open_deck, ph_type, role_of,  # noqa: E402
                          theme_colors, theme_fonts)
 from restyle import build_color_map, remap_colors, strip_fonts  # noqa: E402
 
 EMU_PT = 12700
 EMU_IN = 914400
+C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 ACCENT_THEME = [MSO_THEME_COLOR.ACCENT_1, MSO_THEME_COLOR.ACCENT_2, MSO_THEME_COLOR.ACCENT_3,
                 MSO_THEME_COLOR.ACCENT_4, MSO_THEME_COLOR.ACCENT_5, MSO_THEME_COLOR.ACCENT_6]
 WIDE_FONTS = ("verdana", "tahoma", "segoe", "trebuchet", "century gothic", "arial black", "lucida")
@@ -89,6 +90,9 @@ def write_paragraphs(tf, paragraphs, sizes=None):
         p = tf.add_paragraph() if body.findall(f"{A}p") else _first_p(tf)
         p.level = min(max(para.get("level", 0), 0), 8)
         for run in para["runs"]:
+            if run.get("kind") == "break":
+                p.add_line_break()
+                continue
             r = p.add_run()
             r.text = run["text"]
             if run.get("bold") is not None:
@@ -162,7 +166,7 @@ def text_height_pt(paragraphs, width_pt, sizes, cf):
         size = sizes[lvl]
         indent = 27 * p.get("level", 0) + (18 if p.get("level", 0) or len(paragraphs) > 1 else 0)
         cpl = max(1, int((width_pt - indent) / (size * cf)))
-        lines = max(1, math.ceil(len(para_text(p)) / cpl))
+        lines = sum(max(1, math.ceil(len(line) / cpl)) for line in para_text(p).replace("\v", "\n").split("\n"))
         h += lines * size * 1.2 + size * 0.15
     return h
 
@@ -316,7 +320,7 @@ def scale_font_sizes(el, s, floor=10):
                 node.set("sz", str(max(floor * 100, int(int(node.get("sz")) * s / 100) * 100)))
 
 
-def copy_shape(sh, src_slide, dst_slide, box, scale, cmap, rep, n):
+def copy_shape(sh, src_slide, dst_slide, box, scale, cmap, rep, n, shape_ids):
     el = copy.deepcopy(sh._element)
     if not copy_rels(el, src_slide.part, dst_slide.part, rep, n):
         rep.warn(n, f"'{sh.name}' holds an embedded object or diagram that cannot be carried over: re-add it by hand")
@@ -325,9 +329,11 @@ def copy_shape(sh, src_slide, dst_slide, box, scale, cmap, rep, n):
     remap_colors(el, cmap)
     strip_fonts(el)
     scale_font_sizes(el, scale)
-    nv = el.find(f".//{P}cNvPr")
-    if nv is not None:
-        nv.set("id", str(_next_id(dst_slide)))
+    next_id = _next_id(dst_slide)
+    for nv in el.iter(f"{P}cNvPr"):
+        shape_ids[nv.get("id")] = str(next_id)
+        nv.set("id", str(next_id))
+        next_id += 1
     dst_slide.shapes._spTree.append(el)
     return el
 
@@ -335,6 +341,18 @@ def copy_shape(sh, src_slide, dst_slide, box, scale, cmap, rep, n):
 def _next_id(slide):
     ids = [int(x) for x in slide.shapes._spTree.xpath("//p:cNvPr/@id") if str(x).isdigit()]
     return max(ids + [1]) + 1
+
+
+def remap_connections(slide, shape_ids, rep, n):
+    """Resolve after all shapes are placed, including connectors copied before their targets."""
+    for tag in ("stCxn", "endCxn"):
+        for node in list(slide._element.iter(f"{A}{tag}")):
+            target = shape_ids.get(node.get("id"))
+            if target is not None:
+                node.set("id", target)
+            else:
+                node.getparent().remove(node)
+                rep.warn(n, "connector endpoint detached because its source target was not carried over")
 
 
 def add_picture(sh, dst_slide, area):
@@ -356,24 +374,40 @@ def rebuild_table(sh, dst_slide, area, floor, rep, n, cf):
     rows, cols = len(src.rows), len(src.columns)
     widths = [c.width for c in src.columns]
     total = sum(widths) or 1
-    # choose a font size that fits the rows in the area height
-    longest = [max(len(src.cell(r, c).text) for c in range(cols)) for r in range(rows)]
-    size = 18
-    while size > floor:
-        h = 0
+    def row_heights(size):
+        heights = [int((size * 1.2 + 10) * EMU_PT)] * rows
         for r in range(rows):
-            lines = max(math.ceil(len(src.cell(r, c).text) * size * cf / max(1, widths[c] / total * area[2] / EMU_PT - 14))
-                        for c in range(cols)) or 1
-            h += (lines * size * 1.2 + 10) * EMU_PT
-        if h <= area[3]:
+            for c in range(cols):
+                cell = src.cell(r, c)
+                if cell.is_spanned:
+                    continue
+                span_w = sum(widths[c:c + cell.span_width]) / total * area[2] / EMU_PT - 14
+                cpl = max(1, int(span_w / (size * cf)))
+                lines = sum(max(1, math.ceil(len(line) / cpl)) for line in
+                            cell.text.replace("\v", "\n").split("\n"))
+                need = math.ceil((lines * size * 1.2 + 10) * EMU_PT)
+                end = r + cell.span_height
+                deficit = need - sum(heights[r:end])
+                if deficit > 0:
+                    extra = math.ceil(deficit / cell.span_height)
+                    for row in range(r, end):
+                        heights[row] += extra
+        return heights
+
+    size = 18
+    heights = row_heights(size)
+    while size > floor:
+        if sum(heights) <= area[3]:
             break
         size -= 1
-    height = min(area[3], int(sum((size * 1.2 + 10) * EMU_PT for _ in range(rows))))
-    gf = dst_slide.shapes.add_table(rows, cols, area[0], area[1], area[2], height)
+        heights = row_heights(size)
+    gf = dst_slide.shapes.add_table(rows, cols, area[0], area[1], area[2], sum(heights))
     gf.name = sh.name
     t = gf.table
     for c in range(cols):
         t.columns[c].width = Emu(int(widths[c] / total * area[2]))
+    for r, height in enumerate(heights):
+        t.rows[r].height = Emu(height)
     for flag in ("first_row", "first_col", "last_row", "last_col", "horz_banding", "vert_banding"):
         try:
             setattr(t, flag, getattr(src, flag))
@@ -389,12 +423,9 @@ def rebuild_table(sh, dst_slide, area, floor, rep, n, cf):
             scell = src.cell(r, c)
             if scell.is_spanned:
                 continue
-            from deck_model import paragraphs_of
             write_paragraphs(t.cell(r, c).text_frame, paragraphs_of(scell.text_frame) or [{"level": 0, "runs": []}], [size])
-    if size <= floor and any(longest):
-        h = sum((size * 1.2 + 10) * EMU_PT for _ in range(rows))
-        if h > area[3]:
-            rep.overflow.append({"slide": n, "shape": sh.name, "detail": "table is taller than the content area at the floor size"})
+    if sum(heights) > area[3]:
+        rep.overflow.append({"slide": n, "shape": sh.name, "detail": "table is taller than the content area at the floor size"})
     rep.fix(n, f"table '{sh.name}' rebuilt with the template's themed table style at {size} pt")
     return gf
 
@@ -406,6 +437,44 @@ PIE_TYPES = {XL_CHART_TYPE.PIE, XL_CHART_TYPE.PIE_EXPLODED, XL_CHART_TYPE.DOUGHN
              XL_CHART_TYPE.DOUGHNUT_EXPLODED, XL_CHART_TYPE.THREE_D_PIE}
 LINE_TYPES = {XL_CHART_TYPE.LINE, XL_CHART_TYPE.LINE_MARKERS, XL_CHART_TYPE.LINE_STACKED,
               XL_CHART_TYPE.LINE_MARKERS_STACKED, XL_CHART_TYPE.RADAR, XL_CHART_TYPE.RADAR_MARKERS}
+
+
+def copy_chart_labels(src, dst, rep, n, name):
+    """Keep plot/series label XML, including per-point text and number formats."""
+    from lxml import etree
+    pairs = [(src.plots[0]._element, dst.plots[0]._element)]
+    pairs += [(s._element, d._element) for s, d in zip(src.series, dst.series)]
+    for source, target in pairs:
+        labels = source.find(f"{C}dLbls")
+        if labels is None:
+            continue
+        labels = copy.deepcopy(labels)
+        if labels.find(f".//{C}extLst") is not None:
+            rep.warn(n, f"chart '{name}' uses extended label settings: verify them by hand; workbook-linked extensions may not carry over")
+        for ref in list(labels.iter(f"{C}strRef")):
+            # The rebuilt workbook contains chart data, not arbitrary source label cells.
+            cached = ref.findall(f"{C}strCache/{C}pt/{C}v")
+            parent = ref.getparent()
+            if cached:
+                rich = etree.Element(f"{C}rich")
+                etree.SubElement(rich, f"{A}bodyPr")
+                etree.SubElement(rich, f"{A}lstStyle")
+                p = etree.SubElement(rich, f"{A}p")
+                r = etree.SubElement(p, f"{A}r")
+                etree.SubElement(r, f"{A}t").text = "".join(v.text or "" for v in cached)
+                parent.replace(ref, rich)
+                rep.warn(n, f"chart '{name}' workbook-linked label frozen to its cached displayed text")
+            else:
+                parent.getparent().remove(parent)
+                rep.warn(n, f"chart '{name}' has a workbook-linked label without cached text: re-add that label by hand")
+        if not copy_rels(labels, src.part, dst.part, rep, n):
+            rep.warn(n, f"chart '{name}' label has an unsupported embedded part: re-add its labels by hand")
+            continue
+        existing = target.find(f"{C}dLbls")
+        if existing is not None:
+            target.remove(existing)
+        # python-pptx knows the different schema order for plot- and series-level labels.
+        target._insert_dLbls(labels)
 
 
 def rebuild_chart(sh, dst_slide, area, rep, n):
@@ -420,7 +489,11 @@ def rebuild_chart(sh, dst_slide, area, rep, n):
     cd = CategoryChartData()
     cd.categories = [str(c) for c in plot.categories]
     for s in plot.series:
-        cd.add_series(s.name, [v if v is not None else None for v in s.values])
+        fmt = s._element.find(f"{C}val/{C}numRef/{C}numCache/{C}formatCode")
+        if fmt is None:
+            fmt = s._element.find(f"{C}val/{C}numLit/{C}formatCode")
+        cd.add_series(s.name, [v if v is not None else None for v in s.values],
+                      number_format=fmt.text if fmt is not None else None)
     gf = dst_slide.shapes.add_chart(ctype, *area, cd)
     gf.name = sh.name
     ch = gf.chart
@@ -433,12 +506,7 @@ def rebuild_chart(sh, dst_slide, area, rep, n):
         ch.chart_title.text_frame.text = src.chart_title.text_frame.text
     else:
         ch.has_title = False
-    try:
-        if plot.has_data_labels:
-            ch.plots[0].has_data_labels = True
-            ch.plots[0].data_labels.show_value = True
-    except AttributeError:
-        pass
+    copy_chart_labels(src, ch, rep, n, sh.name)
     if ctype in PIE_TYPES:
         for j, pt in enumerate(ch.plots[0].series[0].points):
             pt.format.fill.solid()
@@ -454,7 +522,7 @@ def rebuild_chart(sh, dst_slide, area, rep, n):
     return gf
 
 
-def place_graphic(g, src_slide, dst_slide, box, scale, cmap, floor_table, rep, n, cf):
+def place_graphic(g, src_slide, dst_slide, box, scale, cmap, floor_table, rep, n, cf, shape_ids):
     sh, typ = g["shape"], g["type"]
     if typ == "table":
         return rebuild_table(sh, dst_slide, box, floor_table, rep, n, cf)
@@ -466,7 +534,7 @@ def place_graphic(g, src_slide, dst_slide, box, scale, cmap, floor_table, rep, n
         return out
     if typ == "picture":
         return add_picture(sh, dst_slide, box)
-    return copy_shape(sh, src_slide, dst_slide, box, scale, cmap, rep, n)
+    return copy_shape(sh, src_slide, dst_slide, box, scale, cmap, rep, n, shape_ids)
 
 
 # ---------------- slide build ----------------
@@ -499,7 +567,7 @@ def fill_text_ph(ph, paragraphs, role, layout, master, cf, floors, rep, n, label
 
 
 def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
-    layout = prs.slide_layouts[entry["target_layout_index"]]
+    layout = prs.slide_masters[entry.get("target_master_index", 0)].slide_layouts[entry["target_layout_index"]]
     master = layout.slide_master
     W, H = prs.slide_width, prs.slide_height
     n = entry["slide"]
@@ -510,6 +578,7 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
     graphics = list(m["graphics"])
     pictures = list(m["pictures"])
     used = set()
+    shape_ids = {}
 
     # comparison source onto a two-column target: merge each header into its column
     if m["kind"] == "comparison" and len(phs["body"]) == 2 and len(texts) == 4:
@@ -535,7 +604,10 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
                 r.font.name = "+mj-lt"  # theme heading font
             tb.name = "Title (text box)"
             title_box = emu_box(tb)
+            ph = tb
             rep.warn(n, "target layout has no title placeholder: title placed in a text box")
+        if m.get("title_shape") is not None:
+            shape_ids[str(m["title_shape"].shape_id)] = str(ph.shape_id)
 
     # subtitle
     if m["subtitle"]:
@@ -543,8 +615,11 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
         if target is not None:
             fill_text_ph(target, m["subtitle"], "subtitle", layout, master, cf, floors, rep, n, "subtitle")
             used.add(target.shape_id)
+            if m.get("subtitle_shape") is not None:
+                shape_ids[str(m["subtitle_shape"].shape_id)] = str(target.shape_id)
         else:
-            texts.insert(0, {"paragraphs": m["subtitle"], "box": None, "role": "text"})
+            texts.insert(0, {"paragraphs": m["subtitle"], "box": None, "role": "text",
+                             "shape": m.get("subtitle_shape")})
 
     # one graphic and no body text: give it the content placeholder area
     free_bodies = [p for p in phs["body"] if p.shape_id not in used]
@@ -553,7 +628,9 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
         box = emu_box(ph)
         remove_shape(ph)
         used.add(ph.shape_id)
-        place_graphic(graphics[0], src_slide, slide, box, 1.0, cmap, floors["table"], rep, n, cf)
+        placed = place_graphic(graphics[0], src_slide, slide, box, 1.0, cmap, floors["table"], rep, n, cf, shape_ids)
+        if placed is not None:
+            shape_ids[str(graphics[0]["shape"].shape_id)] = str(placed.shape_id)
         graphics = []
 
     # body text into body placeholders in reading order
@@ -565,6 +642,8 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
             ph = free_bodies.pop(0)
             fits, base, sizes = fill_text_ph(ph, t["paragraphs"], "text", layout, master, cf, floors, rep, n, "body")
             used.add(ph.shape_id)
+            if t.get("shape") is not None:
+                shape_ids[str(t["shape"].shape_id)] = str(ph.shape_id)
             if not fits:
                 overflow_parts.append((ph, t, base))
         else:
@@ -577,7 +656,8 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
             box = emu_box(tgt)
             remove_shape(tgt)
             used.add(tgt.shape_id)
-            add_picture(pic["shape"], slide, box)
+            placed = add_picture(pic["shape"], slide, box)
+            shape_ids[str(pic["shape"].shape_id)] = str(placed.shape_id)
             rep.fix(n, "picture fitted inside the template's picture area (not cropped)")
         else:
             graphics.append({"shape": pic["shape"], "type": "picture", "box": pic["box"]})
@@ -590,7 +670,8 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
         box = emu_box(tgt)
         remove_shape(tgt)
         used.add(tgt.shape_id)
-        add_picture(pic["shape"], slide, box)
+        placed = add_picture(pic["shape"], slide, box)
+        shape_ids[str(pic["shape"].shape_id)] = str(placed.shape_id)
         graphics.remove(pic)
         rep.fix(n, "picture fitted inside the template's picture area (not cropped)")
 
@@ -600,7 +681,7 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
         area = content_area(slide, W, H, title_box)
         unused_bodies = [p for p in phs["body"] if p.shape_id not in used]
         if unused_bodies:
-            area = tuple(emu_box(p)) if len(unused_bodies) == 1 else area
+            area = tuple(emu_box(unused_bodies[0])) if len(unused_bodies) == 1 else area
         src_boxes = [it[1]["box"] for it in free_items if it[1].get("box")]
         tf, scale = make_transform(union(src_boxes), area)
         for kind, it in free_items:
@@ -609,11 +690,16 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
                 tb = slide.shapes.add_textbox(*box)
                 tb.text_frame.word_wrap = True
                 write_paragraphs(tb.text_frame, it["paragraphs"], [max(floors["body"], round(18 * scale))])
+                if it.get("shape") is not None:
+                    shape_ids[str(it["shape"].shape_id)] = str(tb.shape_id)
                 rep.warn(n, "body text placed in a text box (no matching placeholder)")
             else:
-                place_graphic(it, src_slide, slide, box, scale, cmap, floors["table"], rep, n, cf)
+                placed = place_graphic(it, src_slide, slide, box, scale, cmap, floors["table"], rep, n, cf, shape_ids)
+                if placed is not None and hasattr(placed, "shape_id"):
+                    shape_ids[str(it["shape"].shape_id)] = str(placed.shape_id)
         if graphics:
             rep.fix(n, f"{len(graphics)} free item(s) scaled into the content area (scale {scale:.2f}); colors mapped to theme")
+    remap_connections(slide, shape_ids, rep, n)
 
     # remaining empty placeholders
     removed = 0
@@ -635,7 +721,8 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
         if split and len(overflow_parts) == 1 and len(phs["body"]) == 1 and not m["graphics"]:
             sizes = [max(floors["body"], round(s * 0.8)) for s in base]
             chunks = split_paragraphs(t["paragraphs"], emu_box(ph), sizes, cf)
-            if len(chunks) > 1:
+            w, h = box_inner_pt(emu_box(ph))
+            if len(chunks) > 1 and all(text_height_pt(chunk, w, sizes, cf) <= h for chunk in chunks):
                 write_paragraphs(ph.text_frame, chunks[0], sizes)
                 for k, chunk in enumerate(chunks[1:], 2):
                     extra = prs.slides.add_slide(layout)
@@ -661,10 +748,10 @@ def _title_runs(m):
     ts = m.get("title_shape")
     if ts is not None and ts.has_text_frame:
         runs = []
-        for i, p in enumerate(ts.text_frame.paragraphs):
+        for i, p in enumerate(paragraphs_of(ts.text_frame)):
             if i:
-                runs.append({"text": " "})
-            runs += [{"text": r.text, "bold": None, "italic": r.font.italic} for r in p.runs]
+                runs.append({"text": "\v", "kind": "break"})
+            runs += [dict(r, bold=None) for r in p["runs"]]
         if "".join(r["text"] for r in runs).strip():
             return runs
     return [{"text": m["title"]}]

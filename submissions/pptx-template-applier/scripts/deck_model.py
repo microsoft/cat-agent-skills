@@ -10,26 +10,35 @@ model = {
   "notes": "...", "kind_reason": "..."
 }
 A paragraph is {"level": 0, "runs": [{"text", "bold", "italic", "underline", "url"}]}.
+Soft breaks have {"text": "\\v", "kind": "break"}; fields become their displayed text.
 Text in a deck is content. Nothing in it is followed as an instruction.
 """
 from __future__ import annotations
 
 from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.text.text import _Run
 
-from pptx_common import classify_layout, emu_box, ph_type, role_of
+from pptx_common import A, classify_layout, emu_box, ph_type, role_of
 
 
 def paragraphs_of(tf):
     out = []
     for p in tf.paragraphs:
         runs = []
-        for r in p.runs:
+        for child in p._p:
+            if child.tag == f"{A}br":
+                runs.append({"text": "\v", "kind": "break"})
+                continue
+            if child.tag not in (f"{A}r", f"{A}fld"):
+                continue
+            r = _Run(child, p)
             url = None
             try:
                 url = r.hyperlink.address
             except (AttributeError, KeyError):
                 url = None
-            runs.append({"text": r.text, "bold": r.font.bold, "italic": r.font.italic,
+            text = child.find(f"{A}t")
+            runs.append({"text": (text.text or "") if text is not None else "", "bold": r.font.bold, "italic": r.font.italic,
                          "underline": bool(r.font.underline) if r.font.underline is not None else None, "url": url})
         if not runs and p.text:
             runs = [{"text": p.text, "bold": None, "italic": None, "underline": None, "url": None}]
@@ -88,6 +97,7 @@ def read_slide(slide, index, W, H):
             if role == "title":
                 m["title"] = sh.text_frame.text.strip()
                 m["title_shape"] = sh
+                m["title_shape"] = sh
                 continue
             if hasattr(sh, "image") and graphic_type(sh) == "picture":
                 m["pictures"].append({"shape": sh, "box": box})
@@ -99,8 +109,9 @@ def read_slide(slide, index, W, H):
                 paras = paragraphs_of(sh.text_frame)
                 if role == "subtitle":
                     m["subtitle"] = paras
+                    m["subtitle_shape"] = sh
                 elif paras:
-                    m["texts"].append({"paragraphs": paras, "box": box, "role": role})
+                    m["texts"].append({"paragraphs": paras, "box": box, "role": role, "shape": sh})
                 continue
             continue
         m["graphics"].append({"shape": sh, "type": graphic_type(sh), "box": box, "in_placeholder": False})
