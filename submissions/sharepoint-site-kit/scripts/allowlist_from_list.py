@@ -225,6 +225,8 @@ def refresh_page(page: str | None, item_paths: list[str], keys: list[str | None]
         else:
             used = set(columns)
         require_expanded_values(headers, rows, used)
+        if not headers and not rows:
+            headers = sorted(used)
         keep = [i for i, h in enumerate(headers) if h in used]
         headers, rows = [headers[i] for i in keep], [[r[i] if i < len(r) else None for i in keep] for r in rows]
         found = collect(headers, rows, link_cols)
