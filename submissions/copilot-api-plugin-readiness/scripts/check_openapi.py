@@ -77,6 +77,9 @@ def walk_schema(doc, schema, seen, report, depth=0):
     child_seen = seen
     for prop in (schema.get("properties") or {}).values():
         walk_schema(doc, prop, child_seen, report, depth + (1 if is_object else 0))
+    extra = schema.get("additionalProperties")
+    if isinstance(extra, dict):
+        walk_schema(doc, extra, child_seen, report, depth + (1 if is_object else 0))
     if "items" in schema:
         walk_schema(doc, schema["items"], child_seen, report, depth)
     for key in POLY:
@@ -101,6 +104,27 @@ def check_schemas(doc, op_name, label, schema, request_side):
     walk_schema(doc, schema, set(), report)
 
 
+def path_items(doc):
+    """Yield (path, item) with local Path Item references resolved."""
+    for path, item in (doc.get("paths") or {}).items():
+        item, _, _ = resolve(doc, item, set())
+        if isinstance(item, dict):
+            yield path, item
+
+
+def referenced_schemes(doc):
+    """Names of security schemes that some operation's effective requirement uses."""
+    names = set()
+    global_security = doc.get("security") or []
+    for _, item in path_items(doc):
+        for method in METHODS:
+            op = item.get(method)
+            if isinstance(op, dict):
+                for requirement in op.get("security", global_security) or []:
+                    names.update(requirement)
+    return names
+
+
 def check_openapi(doc):
     swagger2 = "swagger" in doc
     version = doc.get("swagger") or doc.get("openapi") or "missing"
@@ -120,10 +144,14 @@ def check_openapi(doc):
 
     schemes = (doc.get("components") or {}).get("securitySchemes") or doc.get("securityDefinitions") or {}
     kinds = {}
+    used_schemes = referenced_schemes(doc)
     for name, scheme in schemes.items():
         scheme, _, _ = resolve(doc, scheme, set())
         stype = (scheme or {}).get("type")
         where = f"securityScheme {name}"
+        if name not in used_schemes:
+            add("INFO", "Security scheme", where, "declared but no operation requires it, so it is not checked", SRC_AUTH)
+            continue
         if stype == "apiKey":
             location = scheme.get("in")
             kinds[name] = "apikey"
@@ -157,9 +185,7 @@ def check_openapi(doc):
 
     global_security = doc.get("security")
     operation_ids = {}
-    for path, item in (doc.get("paths") or {}).items():
-        if not isinstance(item, dict):
-            continue
+    for path, item in path_items(doc):
         shared_params = item.get("parameters") or []
         for method in METHODS:
             op = item.get(method)
@@ -237,16 +263,25 @@ def check_manifest(manifest, operations):
     for runtime in runtimes:
         auth_type = (runtime.get("auth") or {}).get("type")
         if auth_type not in ("None", "OAuthPluginVault", "ApiKeyPluginVault"):
-            add("FIX", "Runtime auth type", f"runtime {runtime.get('type')}", f"'{auth_type}' is not one of None, OAuthPluginVault, ApiKeyPluginVault", SRC_MANIFEST)
+            add("BLOCKER", "Runtime auth type", f"runtime {runtime.get('type')}", f"'{auth_type}' is not one of None, OAuthPluginVault, ApiKeyPluginVault", SRC_MANIFEST)
         elif auth_type != "None" and not (runtime.get("auth") or {}).get("reference_id"):
             add("FIX", "Auth config reference", f"runtime {runtime.get('type')}", f"{auth_type} with no reference_id", SRC_MANIFEST)
+
+    openapi_runtimes = [r for r in runtimes if r.get("type") == "OpenApi"]
+    bound_to_openapi = set()
+    for runtime in openapi_runtimes:
+        listed = runtime.get("run_for_functions")
+        if not listed or "*" in listed:
+            bound_to_openapi = {f.get("name", "") for f in functions}
+            break
+        bound_to_openapi.update(listed)
 
     for function in functions:
         name = function.get("name", "")
         where = f"function {name}"
         if not NAME_RE.match(name):
             add("BLOCKER", "Function name", where, "does not match ^[A-Za-z0-9_]+$", SRC_MANIFEST)
-        if operations and name not in operations:
+        if name in bound_to_openapi and name not in operations:
             add("BLOCKER", "Function binding", where, "no operationId with this name in the OpenAPI description", SRC_MANIFEST)
         capabilities = function.get("capabilities") or {}
         confirmation = capabilities.get("confirmation") or {}
