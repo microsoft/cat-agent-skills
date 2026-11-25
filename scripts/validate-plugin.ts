@@ -46,8 +46,8 @@ const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const GUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 // Cowork's agentSkills/agentConnectors are a preview manifest feature, so the
 // conversion script and real-world packages emit "devPreview"; the published
-// docs reference the stable "1.28". Accept either.
-const ACCEPTED_MANIFEST_VERSIONS = ["1.28", "devPreview"];
+// docs reference the stable "1.28"; production Microsoft packages ship "1.29".
+const ACCEPTED_MANIFEST_VERSIONS = ["1.28", "1.29", "devPreview"];
 // Companion-file limits (per skill), from the Cowork plugin docs.
 const MAX_COMPANION_FILES = 20;
 const MAX_COMPANION_BYTES = 5 * 1024 * 1024;
