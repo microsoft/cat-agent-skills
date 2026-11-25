@@ -4,6 +4,9 @@ These apply to every word in the pack: slides, speaker notes, documents, handout
 
 ## Grounding
 
+- Use `source_map.md` as an index, not as the source text. Read each unit's `text` and `notes` in
+  `source_map.json`; consult the original file for any unit marked `[truncated]` before deriving claims
+  or checking conflicts.
 - Every factual claim on a slide or handout comes from the user's sources and carries a source ref
   (`S1.slide4`, `S2.sec3`, `S3.page7`). The deck shows it in the slide footer; the facilitator guide shows
   it after each key point.

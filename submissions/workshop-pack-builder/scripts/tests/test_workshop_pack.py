@@ -18,6 +18,8 @@ import build_docs
 import build_source_map
 import check_pack
 import deck_preview
+import extract_brand
+import timing
 from pypdf import PdfWriter
 
 SKILL = Path(__file__).resolve().parents[2]
@@ -122,6 +124,126 @@ class WorkshopPackTests(unittest.TestCase):
         self.assertNotIn("S1: Pilot results", sheets[1])
         self.assertIn("Grounded in: (S1: Finding pain points; S1: Moments that matter; S1: Pilot results)",
                       sheets[2])
+
+    def test_source_map_creates_missing_output_directories(self):
+        json_path = self.root / "working" / "source_map.json"
+        md_path = self.root / "separate" / "index" / "source_map.md"
+        with redirect_stdout(io.StringIO()):
+            code = build_source_map.main([
+                str(EXAMPLE / "contoso-journey-mapping-guide.md"),
+                "--json-out", str(json_path), "--md-out", str(md_path)])
+        self.assertEqual(code, 0)
+        self.assertEqual(len(json.loads(json_path.read_text(encoding="utf-8"))["sources"]), 1)
+        self.assertIn("S1.sec8", md_path.read_text(encoding="utf-8"))
+
+    def test_blank_only_template_is_rejected_for_all_slide_types(self):
+        template = self.root / "blank-only.pptx"
+        prs = build_deck.Presentation()
+        master = prs.slide_masters[0]
+        layout_ids = master.slide_layouts._sldLayoutIdLst
+        for layout_id in list(layout_ids):
+            if master.part.related_slide_layout(layout_id.rId).name != "Blank":
+                master.part.drop_rel(layout_id.rId)
+                layout_ids.remove(layout_id)
+        prs.save(template)
+        for kind in ("title", "section", "content", "titleonly"):
+            with self.subTest(kind=kind):
+                deck = build_deck.Deck(self.spec, self.smap, None, str(template))
+                with self.assertRaisesRegex(ValueError, "layout 'Blank'.*omit --template"):
+                    deck._new(kind)
+        spec_path = self.root / "workshop.json"
+        spec_path.write_text(json.dumps(self.spec), encoding="utf-8")
+        out = self.root / "deck.pptx"
+        error = io.StringIO()
+        with redirect_stderr(error):
+            self.assertEqual(build_deck.main(
+                [str(spec_path), "--out", str(out), "--template", str(template)]), 1)
+        self.assertIn("missing required text placeholder", error.getvalue())
+        self.assertFalse(out.exists())
+
+    def test_standard_template_preserves_required_slide_text(self):
+        template = self.root / "standard.pptx"
+        build_deck.Presentation().save(template)
+        path = self.root / "deck.pptx"
+        build_deck.Deck(self.spec, self.smap, None, str(template)).build(str(path))
+        slides = build_deck.Presentation(path).slides
+        texts = ["\n".join(sh.text for sh in slide.shapes if sh.has_text_frame) for slide in slides]
+        self.assertIn(self.spec["title"], texts[0])
+        self.assertIn(self.spec["subtitle"], texts[0])
+        self.assertTrue(any("Agenda" in text for text in texts))
+        self.assertTrue(any("Break: 5 min" in text and "Back at 11:00" in text for text in texts))
+        for i, module in enumerate((m for m in self.spec["modules"] if m["type"] != "break"), 1):
+            self.assertTrue(any(f"{i}. {module['title']}" in text
+                                and f"{module['minutes']} min" in text for text in texts))
+
+    def test_closing_only_mentions_requested_optional_outputs(self):
+        for survey, email in ((False, False), (False, True), (True, False), (True, True)):
+            with self.subTest(survey=survey, email=email):
+                spec = copy.deepcopy(self.spec)
+                if not survey:
+                    spec.pop("survey")
+                if not email:
+                    spec.pop("follow_up_email")
+                deck = build_deck.Deck(spec, self.smap, None, None)
+                deck.closing()
+                slide = deck.prs.slides[0]
+                text = "\n".join(sh.text for sh in slide.shapes if sh.has_text_frame)
+                notes = slide.notes_slide.notes_text_frame.text
+                for content in (text, notes):
+                    self.assertEqual("survey" in content, survey)
+                    self.assertEqual("follow-up" in content, email)
+                self.assertIn("Check your commitment", text)
+
+    def test_html_uses_readable_header_and_chip_foregrounds(self):
+        for background in ("#FFFFFF", "#FFFFDD", "#777777", "#000000", "#0F2A44"):
+            with self.subTest(background=background):
+                path = build_docs.build_html(
+                    self.spec, build_docs.Cite(self.spec, self.smap),
+                    {"colors": {"dk2": background, "accent1": background}}, str(self.root))[0]
+                page = Path(path).read_text(encoding="utf-8")
+                for selector in ("header", r"\.chip"):
+                    match = re.search(selector + r"\{background:(#[0-9A-Fa-f]{6});color:(#[0-9A-Fa-f]{6});", page)
+                    self.assertIsNotNone(match)
+                    bg, fg = match.groups()
+                    self.assertEqual(bg, background)
+                    self.assertGreaterEqual(extract_brand.contrast(bg, fg), 4.5)
+                    if background == "#FFFFFF":
+                        self.assertEqual(fg, "#000000")
+                    elif background == "#000000":
+                        self.assertEqual(fg, "#FFFFFF")
+
+    def test_preread_validates_supplied_refs_but_allows_preparation_without_sources(self):
+        for refs, valid in ((["S99.sec1"], False), (["S1.missing"], False),
+                            (["S1.sec2"], True), (["S1"], True), ([], True)):
+            with self.subTest(refs=refs):
+                self.spec["pre_read"]["items"][0]["sources"] = refs
+                findings = check_pack.check(self.spec, self.smap, None, None)
+                citations = [r for r in findings if r["check"] == "citations"
+                             and r["where"].startswith("pre_read.")]
+                self.assertEqual(not citations, valid)
+                if not valid:
+                    self.assertEqual(citations[0]["where"], "pre_read.item1")
+        self.spec.pop("pre_read")
+        self.assertFalse(any(r["check"] == "citations" for r in
+                             check_pack.check(self.spec, self.smap, None, None)))
+
+    def test_fractional_draft_minutes_return_validation_findings_from_both_clis(self):
+        self.spec["total_minutes"] = 15
+        self.spec["modules"] = [self.spec["modules"][0]]
+        self.spec["modules"][0]["minutes"] = 12.5
+        spec_path = self.root / "workshop.json"
+        spec_path.write_text(json.dumps(self.spec), encoding="utf-8")
+        for main, args in ((timing.main, ["check", str(spec_path), "--json"]),
+                           (check_pack.main, [str(spec_path), "--json"])):
+            with self.subTest(cli=main.__module__):
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    self.assertEqual(main(args), 1)
+                result = json.loads(output.getvalue())
+                self.assertFalse(result["passed"])
+                details = "\n".join(r["detail"] for r in result["results"])
+                self.assertIn("use 15", details)
+                self.assertIn("diff -2.5", details)
 
     def test_html_font_names_cannot_escape_style_or_css_strings(self):
         payload = 'A";}body{background:url(https://example.invalid)}/*\n</style><script>alert(1)</script><style>\\'

@@ -142,6 +142,16 @@ class Deck:
         else:
             layout = self.prs.slide_layouts[6]  # Blank
         s = self.prs.slides.add_slide(layout)
+        if self.templated:
+            required = {"title": ((1, 3), (2, 4)), "section": ((1, 3), (2, 7)),
+                        "content": ((1, 3),), "titleonly": ((1, 3),)}[kind]
+            for types in required:
+                if not any(ph.has_text_frame and ph.placeholder_format.type in types
+                           for ph in s.placeholders):
+                    raise ValueError(
+                        f"template layout '{layout.name}' cannot render a {kind} slide: "
+                        f"missing required text placeholder {types}. Add a title and subtitle/body "
+                        "placeholder to the layout, or omit --template and use --brand instead.")
         self.n += 1
         return s
 
@@ -406,10 +416,15 @@ class Deck:
         self._notes(s, f"{m.get('talk_track', '')}\nTiming: {m['minutes']} minutes.")
 
     def closing(self):
-        pts = ["Complete the feedback survey.", "Check your commitment on the date you picked."]
+        pts = ["Check your commitment on the date you picked."]
+        notes = ["Thank the group."]
+        if self.spec.get("survey"):
+            pts.insert(0, "Complete the feedback survey.")
+            notes.append("Point to the feedback survey.")
         if self.spec.get("follow_up_email"):
             pts.insert(0, "Watch for the follow-up email with the materials.")
-        self._title_body("Next steps", pts, notes="Thank the group. Point to the survey and the follow-up.")
+            notes.append("Point to the follow-up email.")
+        self._title_body("Next steps", pts, notes=" ".join(notes))
 
     def sources(self):
         lines = []
@@ -458,7 +473,11 @@ def main(argv=None):
     if a.template and not os.path.exists(a.template):
         print(f"ERROR: template not found: {a.template}", file=sys.stderr)
         return 1
-    n = Deck(spec, smap, brand, a.template).build(a.out)
+    try:
+        n = Deck(spec, smap, brand, a.template).build(a.out)
+    except ValueError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
     print(json.dumps({"deck": a.out, "slides": n, "template": a.template or None}))
     return 0
 

@@ -161,6 +161,9 @@ def check(spec, smap, pack_dir, deck, require_html=False):
             if missing:
                 res.append(R("FAIL", aid, "exercise", "missing " + ", ".join(missing)))
             check_refs(aid, a.get("sources"))
+    for i, item in enumerate((spec.get("pre_read") or {}).get("items", []), 1):
+        if item.get("sources"):
+            check_refs(f"pre_read.item{i}", item["sources"])
     if not spec.get("executive_summary"):
         res.append(R("FAIL", "spec", "writing", "no executive_summary"))
     if "gaps" not in spec:

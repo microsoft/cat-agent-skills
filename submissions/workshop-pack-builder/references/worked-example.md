@@ -12,6 +12,8 @@ Source: `assets/example/contoso-journey-mapping-guide.md` (a fictional internal 
 
 ## 1. Source map
 
+The mapper creates parent directories for both output paths, including `working/` on a fresh run.
+
 ```bash
 python scripts/build_source_map.py assets/example/contoso-journey-mapping-guide.md \
   --json-out working/source_map.json --md-out working/source_map.md
@@ -19,6 +21,9 @@ python scripts/build_source_map.py assets/example/contoso-journey-mapping-guide.
 
 Result: one source (S1), eight sections (`S1.sec1` to `S1.sec8`). Numbers to cite exactly: the 2025 pilot,
 11 pain points, 18 percent fewer contacts over eight weeks.
+
+Use the Markdown map as an index, then read the full text and notes in `working/source_map.json`.
+Read the original guide for any unit marked `[truncated]`.
 
 ## 2. Intake
 

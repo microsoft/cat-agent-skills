@@ -75,8 +75,11 @@ hands-on or discussion activity. The skill writes files and drafts only.
    python SKILL_DIR/scripts/build_source_map.py working/<slug>/sources \
      --json-out working/<slug>/source_map.json --md-out working/<slug>/source_map.md
    ```
-3. Read `source_map.md`. Summarize each source in two lines with its ID. List files under "Could not
-   read" and go on with the rest. Note conflicts between sources.
+3. Use `source_map.md` only as an index: its unit previews are shortened and do not include all speaker
+   notes. Read every unit's full `text` and `notes` in `source_map.json` before designing the pack.
+   For any unit marked `[truncated]`, read the original source to recover the omitted content.
+   Summarize each source in two lines with its ID. List files under "Could not read" and go on with the
+   rest. Note conflicts between sources, including content in notes.
 4. Run the intake (one message, defaults included). Then read `references/grounding-and-writing.md`.
 
 ### 2. Derive learning objectives
@@ -132,7 +135,8 @@ python SKILL_DIR/scripts/deck_preview.py working/<slug>/pack/deck.pptx --out-dir
 - Visual check: open every contact sheet `deck_preview.py` writes and look at every slide for clipped or
   overlapping text, empty areas, unreadable contrast and leftover template content. Fix and re-render.
   If rendering is not available, say so and list the lint result.
-- Read the deck and the guide once against `source_map.md`: no fact, number, quote or link without a ref.
+- Read the deck and guide against the full text and notes in `source_map.json` (and original sources
+  for truncated units): no fact, number, quote or link without a ref.
 
 ### 8. Deliver
 Publish each file in `working/<slug>/pack/` to the output folder and check each result. If the user has a

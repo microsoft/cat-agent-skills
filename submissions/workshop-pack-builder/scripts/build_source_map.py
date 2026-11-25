@@ -272,6 +272,9 @@ def main(argv=None):
     urls = dict(u.split("=", 1) for u in a.url)
     smap = build(files, urls, a.max_chars)
     js = json.dumps(smap, indent=1, ensure_ascii=False)
+    for path in (a.json_out, a.md_out):
+        if path:
+            os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     if a.json_out:
         open(a.json_out, "w", encoding="utf-8").write(js)
     if a.md_out:

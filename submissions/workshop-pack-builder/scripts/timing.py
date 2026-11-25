@@ -116,7 +116,7 @@ def check_spec(spec: dict) -> list[dict]:
             res.append(_res("FAIL", mid, "activity_fit", f"activity timeboxes ({used}) exceed module minutes ({mins})"))
     if total is not None:
         if s != total:
-            res.append(_res("FAIL", "spec", "sum", f"modules add up to {s} minutes, session is {total} (diff {s - total:+d})"))
+            res.append(_res("FAIL", "spec", "sum", f"modules add up to {s} minutes, session is {total} (diff {s - total:+g})"))
         else:
             res.append(_res("INFO", "spec", "sum", f"modules add up to {s} minutes = session length"))
     return res

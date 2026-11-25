@@ -38,6 +38,8 @@ from docx.enum.section import WD_ORIENT
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.shared import Pt, RGBColor, Inches
 
+from extract_brand import contrast
+
 NEUTRAL = {"colors": {"dk1": "#1F2937", "dk2": "#0F2A44", "accent1": "#2563EB", "lt2": "#F1F4F8"},
            "fonts": {"major": "Segoe UI Semibold", "minor": "Segoe UI"}}
 
@@ -342,6 +344,8 @@ def build_html(spec, cite, brand, out_dir):
     for name, value in c.items():
         if not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
             raise ValueError(f"invalid HTML brand color {name}: expected #RRGGBB")
+    header_text = max(("#000000", "#FFFFFF"), key=lambda fg: contrast(fg, c["dk2"]))
+    chip_text = max(("#000000", "#FFFFFF"), key=lambda fg: contrast(fg, c["accent1"]))
     f = {name: _css_string(value) for name, value in f.items()}
     e = html.escape
     rows = "".join(f"<tr><td>{e(t)}</td><td>{e(m['title'])}</td><td>{m['minutes']} min</td></tr>"
@@ -361,10 +365,10 @@ def build_html(spec, cite, brand, out_dir):
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(spec['title'])}</title>
 <style>
 body{{font-family:{f['minor']},system-ui,sans-serif;color:{c['dk1']};margin:0;line-height:1.5}}
-header{{background:{c['dk2']};color:#fff;padding:48px 8vw}} header h1{{margin:0 0 8px;font-family:{f['major']},system-ui,sans-serif}}
+header{{background:{c['dk2']};color:{header_text};padding:48px 8vw}} header h1{{margin:0 0 8px;font-family:{f['major']},system-ui,sans-serif}}
 main{{padding:24px 8vw;max-width:960px}} h2{{color:{c['dk2']};border-bottom:3px solid {c['accent1']};padding-bottom:4px}}
 table{{border-collapse:collapse;width:100%}} td,th{{border-bottom:1px solid #d5dbe3;padding:8px;text-align:left}}
-.chip{{background:{c['accent1']};color:#fff;border-radius:12px;padding:2px 10px;font-size:.8em}}
+.chip{{background:{c['accent1']};color:{chip_text};border-radius:12px;padding:2px 10px;font-size:.8em}}
 .src{{color:#5b6573;font-size:.85em}} section{{background:{c.get('lt2', '#F1F4F8')};padding:12px 20px;margin:12px 0;border-radius:8px}}
 @media print{{header{{background:none;color:{c['dk2']}}}}}
 </style></head><body>

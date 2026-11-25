@@ -46,7 +46,9 @@ hold the debrief questions and the fallback.
 - With the pptx skill: hand it the same slide plan and the template path, and follow that skill's
   template workflow.
 - If the template has no layout with a body placeholder, the fallback adds text boxes; check the result
-  in the visual check.
+  in the visual check. Selected layouts must still have title placeholders, and title/section layouts
+  need subtitle/body placeholders for session details and duration labels. Incompatible layouts are
+  rejected with an actionable error; repair the template or omit `--template` and use `--brand`.
 
 ## Handing off the HTML page
 
