@@ -1,0 +1,454 @@
+<!-- sharepoint-site-kit list view block.
+     A self-contained, reusable section that renders items from a SharePoint list on the SAME site as the page.
+     Drop it into the static template, the live template or an existing page. scripts/build_list_view.py does
+     this for you (--into page.html): it fills the placeholders, merges the parts below and keeps one copy of
+     the shared parts per page.
+
+     Parts (each starts with a part: marker comment; the build script splits on them):
+       css        goes inside the page's single <style> element, once per page
+       manifest   one entry per list in the page's ka-livedata-manifest array (in <head>), keyed by spItemUrl
+       section    the visible section with its lv-config and lv-snapshot JSON; one per list view
+       allowlist  the hidden link allowlist, once per page (shared by every list view and the live gallery)
+       runtime    the one script that drives every [data-list-view] section on the page, once per page
+
+     Adding a list view makes a static page script-dependent: the publish probe must confirm that scripts run.
+     The manifest and __LD_RESULTS__ injection are inferred from a working page, not documented. Verify on the site. -->
+
+<!-- part:css -->
+/* list-view:css:start */
+.lv-vh{position:absolute!important;inline-size:1px;block-size:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lv-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.lv-search{flex:1 1 260px}
+.lv-tools input[type=search],.lv-tools select{inline-size:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 16px}
+.lv-tools select{inline-size:auto;max-inline-size:240px}
+.lv-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lv-ms{position:relative}
+.lv-ms>summary,.lv-more>summary{list-style:none;cursor:pointer;font-size:15px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:10px 16px}
+.lv-ms>summary::-webkit-details-marker,.lv-more>summary::-webkit-details-marker{display:none}
+.lv-ms>summary::after,.lv-more>summary::after{content:"";display:inline-block;margin-inline-start:8px;inline-size:7px;block-size:7px;border-inline-end:2px solid currentColor;border-block-end:2px solid currentColor;transform:translateY(-3px) rotate(45deg)}
+.lv-ms[open]>summary,.lv-more[open]>summary{border-color:var(--accent)}
+.lv-ms fieldset{position:absolute;z-index:5;inset-block-start:calc(100% + 6px);inset-inline-start:0;min-inline-size:220px;max-block-size:280px;overflow:auto;margin:0;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.lv-ms legend{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.lv-ms label,.lv-bool{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:15px;color:var(--body);cursor:pointer}
+.lv-bool{padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+.lv-more{flex-basis:100%}
+.lv-more>div{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.lv-more:not([open])>div{display:none}
+.lv-switch{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+.lv-switch button{font:inherit;font-size:14px;border:0;background:none;color:var(--body);padding:9px 14px;cursor:pointer}
+.lv-switch button[aria-pressed="true"]{background:var(--accent-ink);color:var(--on-accent)}
+.lv-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px;padding:0;list-style:none}
+.lv-chip{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:999px;background:var(--pale);color:var(--ink);padding:4px 10px 4px 12px;cursor:pointer}
+.lv-chip span[aria-hidden]{font-weight:700}
+.lv-clear{font:inherit;font-size:14px;border:0;background:none;color:var(--accent-ink);text-decoration:underline;cursor:pointer}
+.lv-count,.lv-note{font-size:14px;color:var(--muted);margin:0 0 12px}
+.lv-note{color:var(--accent-ink)}
+.lv-status{padding:24px;border:1px dashed var(--line);border-radius:16px;text-align:center;color:var(--muted)}
+.lv-cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.lv-card{display:flex;flex-direction:column;gap:8px;block-size:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.lv-card h3{font-size:19px}
+.lv-card h3 a,.lv-table th[scope=row] a{color:var(--ink);text-decoration:none}
+.lv-card h3 a:hover,.lv-table th[scope=row] a:hover{text-decoration:underline}
+.lv-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lv-date{font-size:13px;color:var(--muted);margin-inline-start:auto}
+.lv-desc{margin:0;color:var(--body);flex:1}
+.lv-people,.lv-nolink{margin:0;font-size:14px;color:var(--muted)}
+.lv-pill{--pc:var(--accent);display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;color:var(--ink);background:color-mix(in srgb,var(--pc) 16%,var(--card));border:1px solid color-mix(in srgb,var(--pc) 45%,transparent)}
+.lv-c1{--pc:var(--accent2)}.lv-c2{--pc:var(--accent3)}.lv-c3{--pc:var(--navy)}
+.lv-c4{--pc:color-mix(in srgb,var(--accent) 50%,var(--accent2))}.lv-c5{--pc:color-mix(in srgb,var(--accent2) 50%,var(--accent3))}
+.lv-tablewrap{max-block-size:70vh;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+.lv-table{inline-size:100%;border-collapse:collapse;font-size:15px}
+.lv-table th,.lv-table td{text-align:start;vertical-align:top;padding:10px 14px;border-block-end:1px solid var(--line)}
+.lv-table thead th{position:sticky;inset-block-start:0;z-index:1;background:var(--ground2);color:var(--ink);font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.lv-table thead button{font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.lv-table thead button::after{content:"\2195";opacity:.45}
+.lv-table th[aria-sort=ascending] button::after{content:"\2191";opacity:1}
+.lv-table th[aria-sort=descending] button::after{content:"\2193";opacity:1}
+.lv-table tbody tr:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.lv-table td .lv-pill{margin:0 4px 4px 0}
+.lv-hit .lv-card,.lv-hit th,.lv-hit td{outline:3px solid var(--accent);outline-offset:-3px}
+.lv mark{background:var(--pale);color:var(--ink);border-radius:3px}
+.lv :focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+.lv-pop{position:fixed;z-index:2147483000;inset-block-start:50%;inset-inline-start:50%;transform:translate(-50%,-50%);inline-size:min(480px,calc(100vw - 24px));background:var(--card);color:var(--body);border-radius:16px;padding:22px;box-shadow:0 20px 48px rgba(0,0,0,.32);border-block-start:6px solid var(--accent)}
+.lv-pop h2{font-size:22px;margin:0 0 8px}
+.lv-pop .lv-row{display:flex;gap:8px}.lv-pop input{flex:1;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink)}
+.lv-pop button{font:inherit;border-radius:999px;padding:8px 14px;border:1px solid var(--line);background:var(--ground2);color:var(--ink);cursor:pointer}
+@media (max-width:640px){.lv-switch{display:none}.lv-tools select{max-inline-size:none;inline-size:100%}.lv-cards{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.lv *{transition:none!important}}
+/* list-view:css:end */
+
+<!-- part:manifest -->
+{"kind":"list","spItemUrl":"list:{{WEB_URL}}/{{LIST_ID}}","webUrl":"{{WEB_URL}}","listId":"{{LIST_ID}}","label":"{{LIST_DISPLAY_NAME}}"}
+
+<!-- part:section -->
+<!-- list-view:{{LV_KEY}}:start -->
+<section class="lv" id="lv-{{LV_KEY}}" data-list-view="{{LV_KEY}}" data-state="loading" aria-labelledby="h-lv-{{LV_KEY}}">
+<div class="sh"><div><div class="kick"><i></i>{{LV_EYEBROW}}</div><h2 id="h-lv-{{LV_KEY}}">{{LV_H2}}</h2></div><p>{{LV_INTRO}}</p></div>
+<script type="application/json" class="lv-config">{{LV_CONFIG_JSON}}</script>
+<!-- saved copy for when live data is not injected; written by scripts/allowlist_from_list.py --snapshot --view {{LV_KEY}}; null means none -->
+<script type="application/json" class="lv-snapshot">null</script>
+<form class="lv-tools" role="search" aria-label="Search and filter {{LIST_DISPLAY_NAME}}" data-lv="tools">
+<label class="lv-search"><span class="lv-vh">Search {{LIST_DISPLAY_NAME}}</span><input type="search" data-lv="q" placeholder="Search" autocomplete="off"></label>
+<div class="lv-filters" data-lv="filters"></div>
+<label><span class="lv-vh">Sort</span><select data-lv="sort"></select></label>
+<div class="lv-switch" role="group" aria-label="Layout" data-lv="layout"><button type="button" data-layout="cards" aria-pressed="true">Cards</button><button type="button" data-layout="table" aria-pressed="false">Table</button></div>
+<details class="lv-more" data-lv="more" hidden><summary>More filters</summary><div data-lv="more-body"></div></details>
+</form>
+<ul class="lv-chips" data-lv="chips" aria-label="Active filters" hidden></ul>
+<p class="lv-count" data-lv="count" aria-live="polite"></p>
+<p class="lv-note" data-lv="note" hidden></p>
+<p class="lv-status" data-lv="status" role="status">Loading items...</p>
+<div data-lv="results" aria-busy="true"></div>
+</section>
+<!-- list-view:{{LV_KEY}}:end -->
+
+<!-- part:allowlist -->
+<!-- link-allowlist:start (static copies of list links so the SharePoint viewer lets them open; regenerate with scripts/allowlist_from_list.py when list items change) -->
+<nav id="link-allowlist" hidden aria-hidden="true" style="display:none">
+</nav>
+<!-- link-allowlist:end -->
+
+<!-- part:runtime -->
+<script id="list-view-runtime">
+(() => {
+  "use strict";
+  /* sharepoint-site-kit list view runtime. Drives every [data-list-view] section on the page.
+     Data: window.__LD_RESULTS__[spItemUrl] (format "rows", content = JSON {"headers":[...],"rows":[[...]]}),
+     else the section's lv-snapshot, else an error state. Edit lv-config, not this script. */
+  const views = Array.from(document.querySelectorAll("[data-list-view]"));
+  if (!views.length) return;
+  const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+  const str = v => (v === null || v === undefined ? "" : String(v).trim());
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+  const decodeEntities = s => s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => {
+    if (e[0] === "#") { const n = e[1].toLowerCase() === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10); return n > 0 && n < 0x110000 ? String.fromCodePoint(n) : m; }
+    const k = ENT[e.toLowerCase()]; return k === undefined ? m : k;
+  });
+  const htmlToText = v => decodeEntities(str(v).replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<br\s*\/?>|<\/(p|div|li)>/gi, " ").replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim();
+  function safeUrl(v) {
+    let s = str(v); if (!s) return "";
+    if (s.startsWith("{")) { try { const o = JSON.parse(s); s = str(o.Url || o.url); } catch { /* not JSON */ } }
+    const m = /href\s*=\s*["']([^"']+)["']/i.exec(s);
+    const c = (m ? decodeEntities(m[1]) : htmlToText(s)).split(", ")[0].trim();
+    try { const u = new URL(c); return u.protocol === "https:" && !u.username && !u.password ? u.href : ""; } catch { return ""; }
+  }
+  function multi(v) {
+    if (Array.isArray(v)) return v.map(x => (typeof x === "string" || typeof x === "number" ? str(x) : str(x && (x.LookupValue || x.Value || x.Label || x.Title || x.title || x.displayName)))).filter(Boolean);
+    if (v && typeof v === "object") return multi([v]);
+    const raw = str(v); if (!raw) return [];
+    if (/^[[{]/.test(raw)) { try { return multi(JSON.parse(raw)); } catch { /* plain text */ } }
+    if (/^\d+;#/.test(raw)) return raw.split(";#").filter((_, i) => i % 2 === 1).map(htmlToText).filter(Boolean);
+    return raw.replace(/^;#|;#$/g, "").split(/;#|;|\n/).map(htmlToText).filter(Boolean);
+  }
+  const bool = v => { const s = str(v).toLowerCase(); return /^(yes|true|1)$/.test(s) ? true : /^(no|false|0)$/.test(s) ? false : null; };
+  const fmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  const narrowQ = window.matchMedia ? window.matchMedia("(max-width: 640px)") : { matches: false, addEventListener() {} };
+  let manifest = [];
+  try { const m = document.querySelector("script.ka-livedata-manifest"); manifest = m ? JSON.parse(m.textContent) : []; } catch { manifest = []; }
+  const allowed = url => Array.from(document.querySelectorAll("#link-allowlist a[href]")).some(a => a.getAttribute("href") === url || a.href === url);
+
+  function decode(payload, cfg) {
+    if (!payload || payload.format !== "rows" || typeof payload.content !== "string") throw new Error("No list data was supplied.");
+    const data = JSON.parse(payload.content);
+    if (!data || !Array.isArray(data.headers) || !Array.isArray(data.rows)) throw new Error("Malformed list data.");
+    const col = names => { for (const n of names || []) { const i = data.headers.indexOf(n); if (i >= 0) return i; } return -1; };
+    const c = cfg.columns || {};
+    const ix = { id: col(c.id || ["ID"]), title: col(c.title || ["Title"]), description: col(c.description), url: col(c.url), people: col(c.people), date: col(c.date) };
+    if (ix.id < 0 || ix.title < 0) throw new Error("Required columns (ID, Title) are missing.");
+    const fx = cfg.filters.map(f => col(f.columns));
+    const get = (row, i) => (i < 0 ? "" : row[i]);
+    const out = [], seen = new Set();
+    for (const row of data.rows) {
+      if (!Array.isArray(row)) continue;
+      const id = Number(str(get(row, ix.id))), title = htmlToText(get(row, ix.title));
+      if (!Number.isSafeInteger(id) || id < 1 || seen.has(id) || !title) continue;
+      seen.add(id);
+      const d = new Date(str(get(row, ix.date)));
+      const item = { id, title, description: htmlToText(get(row, ix.description)), url: safeUrl(get(row, ix.url)), people: multi(get(row, ix.people)),
+        date: str(get(row, ix.date)) && Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 10) : "", facets: {}, flags: {} };
+      cfg.filters.forEach((f, n) => {
+        const v = get(row, fx[n]);
+        if (f.type === "boolean") item.flags[f.key] = bool(v) === true;
+        else item.facets[f.key] = f.multi ? multi(v) : multi(v).slice(0, 1);
+      });
+      out.push(item);
+    }
+    return out;
+  }
+
+  function bindingSource(cfg) {
+    const s = cfg.source || {};
+    const src = Array.isArray(manifest) ? manifest.find(m => m && m.spItemUrl === s.spItemUrl) : null;
+    if (!src || ["kind", "spItemUrl", "webUrl", "listId", "label"].some(k => src[k] !== s[k])) throw new Error("The list binding is invalid: manifest and lv-config disagree.");
+    return src;
+  }
+
+  function initView(root) {
+    const $ = name => root.querySelector(`[data-lv="${name}"]`);
+    const ui = { tools: $("tools"), q: $("q"), filters: $("filters"), more: $("more"), moreBody: $("more-body"), sort: $("sort"), layout: $("layout"),
+      chips: $("chips"), count: $("count"), note: $("note"), status: $("status"), results: $("results") };
+    const key = root.getAttribute("data-list-view");
+    let cfg;
+    try {
+      cfg = JSON.parse(root.querySelector("script.lv-config").textContent);
+      cfg.filters = Array.isArray(cfg.filters) ? cfg.filters : [];
+      const src = bindingSource(cfg);
+      const live = window.__LD_RESULTS__ && window.__LD_RESULTS__[src.spItemUrl];
+      let items;
+      if (live) items = decode(live, cfg);
+      else {
+        const snapEl = root.querySelector("script.lv-snapshot");
+        const snap = snapEl ? JSON.parse(snapEl.textContent || "null") : null;
+        if (!snap || !snap.payload) throw new Error("Live list data is not available on this page.");
+        items = decode(snap.payload, cfg);
+        ui.note.hidden = false; ui.note.textContent = `Showing a saved copy of the list from ${snap.savedOn || "an earlier date"}.`;
+      }
+      run(root, key, cfg, items, ui);
+    } catch (err) {
+      root.setAttribute("data-state", "unavailable"); ui.results.setAttribute("aria-busy", "false"); ui.tools.hidden = true;
+      ui.status.hidden = false; ui.status.textContent = "This list couldn't be loaded. Reload the page, or open the list in SharePoint.";
+      if (window.console) console.error(`[site-kit list view ${key}]`, err);
+    }
+  }
+
+  function run(root, key, cfg, items, ui) {
+    const noun = cfg.itemNoun || ["item", "items"];
+    const nounN = n => `${n} ${noun[n === 1 ? 0 : 1]}`;
+    const layouts = cfg.layouts && cfg.layouts.length ? cfg.layouts : ["cards", "table"];
+    const state = { q: "", sel: {}, sort: "", layout: layouts.includes(cfg.layout) ? cfg.layout : layouts[0] };
+    const controls = {};
+    const colorIndex = {};
+    for (const f of cfg.filters) {
+      if (!f.pills) continue;
+      const order = (f.choices && f.choices.length ? f.choices : [...new Set(items.flatMap(i => i.facets[f.key] || []))].sort());
+      colorIndex[f.key] = new Map(order.map((v, i) => [v, i % 6]));
+    }
+    const pill = (f, v) => el("span", `lv-pill lv-c${(colorIndex[f.key] && colorIndex[f.key].get(v)) || 0}`, v);
+
+    /* sort options */
+    const sorts = [];
+    if (cfg.columns && cfg.columns.date && items.some(i => i.date)) sorts.push(["newest", "Newest first"], ["oldest", "Oldest first"]);
+    sorts.push(["title", "Title A to Z"]);
+    for (const [v, t] of sorts) { const o = el("option", "", t); o.value = v; ui.sort.append(o); }
+    const custom = el("option", "", "Table order"); custom.value = "custom"; custom.hidden = true; ui.sort.append(custom);
+    state.sort = sorts.some(s => s[0] === cfg.defaultSort) ? cfg.defaultSort : sorts[0][0];
+
+    /* filters: generated from cfg.filters; primary ones in the bar, the rest under More filters */
+    let moreCount = 0;
+    cfg.filters.forEach((f, n) => {
+      const host = (f.primary === undefined ? n < 3 : f.primary) ? ui.filters : (moreCount++, ui.moreBody);
+      if (f.type === "boolean") {
+        if (!items.some(i => i.flags[f.key])) return;
+        const lab = el("label", "lv-bool"); const cb = el("input"); cb.type = "checkbox";
+        cb.addEventListener("change", () => { state.sel[f.key] = cb.checked; apply(); });
+        const text = f.toggleLabel || `Only ${f.label.toLowerCase()}`;
+        lab.append(cb, el("span", "", text)); host.append(lab); controls[f.key] = { f, cb, text };
+        return;
+      }
+      const values = [...new Set(items.flatMap(i => i.facets[f.key] || []))];
+      const order = f.choices && f.choices.length ? f.choices : [];
+      values.sort((a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); return ia >= 0 && ib >= 0 ? ia - ib : ia >= 0 ? -1 : ib >= 0 ? 1 : a.localeCompare(b); });
+      if (values.length < 2) return;
+      if (f.multi) {
+        const det = el("details", "lv-ms"); const sum = el("summary", "", f.label); det.append(sum);
+        const fs = el("fieldset"); fs.append(el("legend", "", f.label));
+        const boxes = values.map(v => { const lab = el("label"); const cb = el("input"); cb.type = "checkbox"; cb.value = v;
+          cb.addEventListener("change", () => { state.sel[f.key] = boxes.filter(b => b.checked).map(b => b.value); apply(); });
+          lab.append(cb, el("span", "", v)); fs.append(lab); return cb; });
+        det.append(fs); host.append(det); controls[f.key] = { f, boxes, sum };
+      } else {
+        const lab = el("label"); lab.append(el("span", "lv-vh", f.label));
+        const s = el("select"); const all = el("option", "", `All ${f.label.toLowerCase()}`); all.value = ""; s.append(all);
+        for (const v of values) { const o = el("option", "", v); o.value = v; s.append(o); }
+        s.addEventListener("change", () => { state.sel[f.key] = s.value; apply(); });
+        lab.append(s); host.append(lab); controls[f.key] = { f, s };
+      }
+    });
+    if (moreCount && ui.moreBody.children.length) ui.more.hidden = false;
+    if (layouts.length < 2) ui.layout.hidden = true;
+
+    /* URL state: <key>-q, <key>-<filter>, <key>-sort, <key>-layout */
+    const pk = k => `${key}-${k}`;
+    function readUrl() {
+      let p; try { p = new URLSearchParams(window.location.search); } catch { return; }
+      if (p.get(pk("q"))) state.q = ui.q.value = p.get(pk("q"));
+      for (const [k, c] of Object.entries(controls)) {
+        const v = p.get(pk(k)); if (!v) continue;
+        if (c.cb) { c.cb.checked = v === "1"; state.sel[k] = c.cb.checked; }
+        else if (c.boxes) { const want = v.split("|"); c.boxes.forEach(b => { b.checked = want.includes(b.value); }); state.sel[k] = c.boxes.filter(b => b.checked).map(b => b.value); }
+        else if (Array.from(c.s.options).some(o => o.value === v)) { c.s.value = v; state.sel[k] = v; }
+      }
+      const s = p.get(pk("sort")); if (s && (sorts.some(x => x[0] === s) || /^(title|date|people|f:[\w-]+):(asc|desc)$/.test(s))) state.sort = s;
+      const l = p.get(pk("layout")); if (l && layouts.includes(l)) state.layout = l;
+    }
+    function writeUrl() {
+      try {
+        const u = new URL(window.location.href);
+        const set = (k, v) => (v ? u.searchParams.set(pk(k), v) : u.searchParams.delete(pk(k)));
+        set("q", state.q);
+        for (const [k, c] of Object.entries(controls)) { const v = state.sel[k]; set(k, c.cb ? (v ? "1" : "") : Array.isArray(v) ? v.join("|") : v || ""); }
+        set("sort", state.sort === sorts[0][0] ? "" : state.sort);
+        set("layout", state.layout === (layouts.includes(cfg.layout) ? cfg.layout : layouts[0]) ? "" : state.layout);
+        window.history.replaceState(null, "", u);
+      } catch { /* sandboxed frames can block history updates */ }
+    }
+
+    function mark(node, text, terms) {
+      if (!terms.length) { node.textContent = text; return; }
+      const re = new RegExp(`(${terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+      node.replaceChildren(...text.split(re).map((p, i) => (i % 2 ? el("mark", "", p) : document.createTextNode(p))));
+    }
+    const link = (item, terms, cls) => { const a = el("a", cls); a.href = item.url; a.target = "_blank"; a.rel = "noopener noreferrer"; mark(a, item.title, terms); return a; };
+    const dateEl = item => { const t = el("time", "lv-date", fmt.format(new Date(`${item.date}T12:00:00Z`))); t.setAttribute("datetime", item.date); return t; };
+    const facetFilters = cfg.filters.filter(f => f.type !== "boolean");
+
+    function card(item, terms) {
+      const li = el("li"); li.id = `${key}-item-${item.id}`;
+      const art = el("article", "lv-card"); const meta = el("div", "lv-meta");
+      for (const f of facetFilters) if (f.pills) for (const v of item.facets[f.key] || []) meta.append(pill(f, v));
+      if (item.date) meta.append(dateEl(item));
+      const h3 = el("h3"); if (item.url) h3.append(link(item, terms)); else mark(h3, item.title, terms);
+      art.append(meta, h3);
+      if (item.description) { const p = el("p", "lv-desc"); mark(p, item.description, terms); art.append(p); }
+      if (item.people.length) { const p = el("p", "lv-people"); mark(p, item.people.join(", "), terms); art.append(p); }
+      if (item.url) { const a = el("a", "open", "Open"); a.href = item.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.setAttribute("aria-label", `Open: ${item.title}`); art.append(a); }
+      else art.append(el("p", "lv-nolink", "No link yet."));
+      li.append(art); return li;
+    }
+    const tableCols = (cfg.table && cfg.table.length ? cfg.table : [{ field: "title", label: "Title" }]).filter(c => c.field !== "date" || items.some(i => i.date));
+    const fieldValue = (item, field) => field === "title" ? item.title : field === "date" ? item.date : field === "people" ? item.people.join(", ")
+      : field === "description" ? item.description : field.startsWith("f:") ? (item.facets[field.slice(2)] || []).join(", ") : "";
+    function table(rows, terms) {
+      const wrap = el("div", "lv-tablewrap"); wrap.tabIndex = 0; wrap.setAttribute("role", "region"); wrap.setAttribute("aria-label", `${cfg.source.label} table`);
+      const t = el("table", "lv-table"); t.append(el("caption", "lv-vh", `${cfg.source.label}. Select a column header to sort.`));
+      const head = el("thead"); const hr = el("tr");
+      const [sf, sd] = state.sort.includes(":") ? state.sort.split(":") : state.sort === "title" ? ["title", "asc"] : state.sort === "newest" ? ["date", "desc"] : state.sort === "oldest" ? ["date", "asc"] : ["", ""];
+      for (const c of tableCols) {
+        const th = el("th"); th.setAttribute("scope", "col"); th.setAttribute("aria-sort", c.field === sf ? (sd === "asc" ? "ascending" : "descending") : "none");
+        const b = el("button", "", c.label); b.type = "button";
+        b.addEventListener("click", () => { state.sort = `${c.field}:${c.field === sf && sd === "asc" ? "desc" : "asc"}`; apply(); const nb = ui.results.querySelector(`[data-col="${c.field}"]`); if (nb) nb.focus(); });
+        b.setAttribute("data-col", c.field); th.append(b); hr.append(th);
+      }
+      head.append(hr); t.append(head);
+      const body = el("tbody");
+      for (const item of rows) {
+        const tr = el("tr"); tr.id = `${key}-item-${item.id}`;
+        for (const c of tableCols) {
+          if (c.field === "title") { const th = el("th"); th.setAttribute("scope", "row"); if (item.url) th.append(link(item, terms)); else mark(th, item.title, terms); tr.append(th); continue; }
+          const td = el("td");
+          if (c.field === "date") { if (item.date) td.append(dateEl(item)); }
+          else if (c.field.startsWith("f:")) { const f = cfg.filters.find(x => x.key === c.field.slice(2)); for (const v of item.facets[f ? f.key : ""] || []) td.append(f && f.pills ? pill(f, v) : el("span", "", v)); }
+          else mark(td, fieldValue(item, c.field), terms);
+          tr.append(td);
+        }
+        body.append(tr);
+      }
+      t.append(body); wrap.append(t); return wrap;
+    }
+
+    function comparator() {
+      if (state.sort === "title") return (a, b) => a.title.localeCompare(b.title);
+      if (state.sort === "oldest") return (a, b) => (a.date || "9999").localeCompare(b.date || "9999") || a.id - b.id;
+      if (state.sort === "newest") return (a, b) => (b.date || "").localeCompare(a.date || "") || b.id - a.id;
+      const [f, d] = state.sort.split(":"); const dir = d === "desc" ? -1 : 1;
+      return (a, b) => { const x = fieldValue(a, f), y = fieldValue(b, f); if (!x && y) return 1; if (x && !y) return -1; return dir * x.localeCompare(y) || a.id - b.id; };
+    }
+
+    function chips() {
+      const list = [];
+      if (state.q) list.push([`Search: ${state.q}`, () => { state.q = ui.q.value = ""; }]);
+      for (const [k, c] of Object.entries(controls)) {
+        const v = state.sel[k];
+        if (c.cb && v) list.push([c.text, () => { c.cb.checked = false; state.sel[k] = false; }]);
+        else if (c.boxes && v && v.length) for (const one of v) list.push([`${c.f.label}: ${one}`, () => { c.boxes.forEach(b => { if (b.value === one) b.checked = false; }); state.sel[k] = c.boxes.filter(b => b.checked).map(b => b.value); }]);
+        else if (c.s && v) list.push([`${c.f.label}: ${v}`, () => { c.s.value = ""; state.sel[k] = ""; }]);
+      }
+      ui.chips.replaceChildren(); ui.chips.hidden = !list.length;
+      for (const [label, undo] of list) {
+        const li = el("li"); const b = el("button", "lv-chip"); b.type = "button"; b.setAttribute("aria-label", `Remove filter ${label}`);
+        b.append(el("span", "", label), (() => { const x = el("span", "", "\u00d7"); x.setAttribute("aria-hidden", "true"); return x; })());
+        b.addEventListener("click", () => { undo(); apply(); ui.q.focus(); }); li.append(b); ui.chips.append(li);
+      }
+      if (list.length) {
+        const li = el("li"); const b = el("button", "lv-clear", "Clear all"); b.type = "button"; b.setAttribute("data-lv-clear", "");
+        b.addEventListener("click", clearAll); li.append(b); ui.chips.append(li);
+      }
+      return list.length > 0;
+    }
+    function clearAll() {
+      state.q = ui.q.value = "";
+      for (const [k, c] of Object.entries(controls)) { if (c.cb) c.cb.checked = false; if (c.boxes) c.boxes.forEach(b => { b.checked = false; }); if (c.s) c.s.value = ""; state.sel[k] = c.boxes ? [] : c.cb ? false : ""; }
+      apply(); ui.q.focus();
+    }
+
+    function apply() {
+      const terms = state.q.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+      const shown = items.filter(i => {
+        for (const [k, c] of Object.entries(controls)) {
+          const v = state.sel[k];
+          if (c.cb) { if (v && !i.flags[k]) return false; }
+          else if (Array.isArray(v)) { if (v.length && !v.some(x => (i.facets[k] || []).includes(x))) return false; }
+          else if (v && !(i.facets[k] || []).includes(v)) return false;
+        }
+        const hay = [i.title, i.description, i.people.join(" "), ...Object.values(i.facets).flat()].join(" ").toLocaleLowerCase();
+        return terms.every(t => hay.includes(t));
+      }).sort(comparator());
+      for (const c of Object.values(controls)) if (c.boxes) { const n = c.boxes.filter(b => b.checked).length; c.sum.textContent = n ? `${c.f.label} (${n})` : c.f.label; }
+      custom.hidden = !state.sort.includes(":"); ui.sort.value = state.sort.includes(":") ? "custom" : state.sort;
+      const effective = state.layout === "table" && !narrowQ.matches ? "table" : "cards";
+      for (const b of Array.from(ui.layout.querySelectorAll("button"))) b.setAttribute("aria-pressed", String(b.getAttribute("data-layout") === state.layout));
+      root.setAttribute("data-layout", effective);
+      if (!shown.length) ui.results.replaceChildren();
+      else if (effective === "table") ui.results.replaceChildren(table(shown, terms));
+      else { const ul = el("ul", "lv-cards"); ul.append(...shown.map(i => card(i, terms))); ui.results.replaceChildren(ul); }
+      const filtered = chips();
+      ui.count.textContent = filtered ? `Showing ${nounN(shown.length)} of ${items.length}` : `Showing all ${nounN(items.length)}`;
+      ui.status.hidden = shown.length > 0;
+      if (!shown.length) ui.status.textContent = filtered ? "Nothing matches. Try other words or clear the filters." : "The list has no items yet.";
+      writeUrl();
+    }
+    function focusAnchor(anchor) {
+      const m = new RegExp(`^#?${key}-item-(\\d+)$`).exec(str(anchor)); if (!m) return;
+      const node = document.getElementById(`${key}-item-${m[1]}`); if (node) { node.scrollIntoView({ behavior: "smooth", block: "center" }); node.classList.add("lv-hit"); }
+    }
+
+    readUrl();
+    root.setAttribute("data-state", "ready"); ui.results.setAttribute("aria-busy", "false");
+    apply(); focusAnchor(window.location.hash);
+    let timer; ui.q.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => { state.q = ui.q.value.trim(); apply(); }, 120); });
+    ui.tools.addEventListener("submit", e => { e.preventDefault(); state.q = ui.q.value.trim(); apply(); });
+    ui.sort.addEventListener("change", () => { if (ui.sort.value !== "custom") { state.sort = ui.sort.value; apply(); } });
+    for (const b of Array.from(ui.layout.querySelectorAll("button"))) b.addEventListener("click", () => { state.layout = b.getAttribute("data-layout"); apply(); });
+    if (narrowQ.addEventListener) narrowQ.addEventListener("change", apply);
+    window.addEventListener("hashchange", () => focusAnchor(window.location.hash));
+    window.addEventListener("message", e => { const d = e.data; focusAnchor(typeof d === "string" ? d : d && (d.anchor || d.hash || d.id)); });
+  }
+
+  /* Link helper: list links not in the static allowlist open with window.open, else a copy popover. */
+  let pop = null;
+  const closePop = () => { if (pop) { pop.remove(); pop = null; } };
+  function showPop(url) {
+    closePop();
+    pop = el("div", "lv-pop"); pop.setAttribute("role", "dialog"); pop.setAttribute("aria-modal", "true"); pop.setAttribute("aria-labelledby", "lv-pop-title");
+    const h = el("h2", "", "Open this link in a new tab"); h.id = "lv-pop-title";
+    const p = el("p", "", 'The SharePoint page viewer blocked this link. Copy it and paste it into a new browser tab, or right-click the link and choose "Open link in new tab".');
+    const row = el("div", "lv-row"); const input = el("input"); input.type = "text"; input.readOnly = true; input.value = url; input.setAttribute("aria-label", "Link address");
+    const copy = el("button", "", "Copy link"); copy.type = "button"; const done = el("p"); done.setAttribute("aria-live", "polite");
+    copy.addEventListener("click", () => { input.select(); try { navigator.clipboard.writeText(url).then(() => { done.textContent = "Link copied."; }, () => { done.textContent = "Press Ctrl+C to copy."; }); } catch { done.textContent = "Press Ctrl+C to copy."; } });
+    const close = el("button", "", "Close"); close.type = "button"; close.addEventListener("click", closePop);
+    row.append(input, copy); pop.append(h, p, row, done, close); document.body.append(pop); copy.focus();
+  }
+  document.addEventListener("click", e => {
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    const a = e.target && e.target.closest && e.target.closest("a[href]");
+    if (!a || !a.closest("[data-lv=results]") || !/^https?:/i.test(a.href) || allowed(a.href)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    let w = null; try { w = window.open(a.href, "_blank", "noopener"); } catch { w = null; }
+    if (!w) showPop(a.href);
+  }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+
+  const start = () => views.forEach(initView);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true }); else start();
+})();
+</script>
