@@ -13,7 +13,8 @@ Use the agent's SharePoint tools where they exist; the Graph calls below are wha
 | Copy a file into 0 Program | upload file content or a copy call | `POST /drives/{drive-id}/items/{item-id}/copy` body `{"parentReference":{"driveId":"...","id":"<0 Program id>"}}` (async, returns a monitor URL) |
 | Find a list by name (list view) | list lists | `GET /sites/{site-id}/lists?$select=id,name,displayName,webUrl,list` then keep entries where `list.hidden` is false and `list.template` is `genericList` (or another non-library template); skip `documentLibrary` unless the user asked for a library. Match `displayName` case-insensitively; several matches: ask which |
 | List columns | list columns / list schema | `GET /sites/{site-id}/lists/{list-id}/columns` (input for `build_list_view.py --columns`) |
-| Sample items (list view proposal, allowlist, snapshot) | list items | `GET /sites/{site-id}/lists/{list-id}/items?$expand=fields&$top=200`; person and lookup fields come back as `<Name>LookupId` unless the tool expands them |
+| Sample items (list view proposal only) | list items | `GET /sites/{site-id}/lists/{list-id}/items?$expand=fields&$top=200`; person and lookup fields come back as `<Name>LookupId` unless the tool expands them |
+| Complete items (allowlist or snapshot) | list items with continuation | Start with the items call above, then follow every `@odata.nextLink` exactly (or the tool's continuation token) until none remains. Combine all `value` arrays into one `{"value":[...]}` payload; verify the total count. A 200-item sample is not a complete export. |
 | Add Lead column | update list schema | `POST /sites/{site-id}/lists/{list-id}/columns` body `{"name":"Lead","displayName":"Lead","personOrGroup":{"allowMultipleSelection":false,"chooseFromType":"peopleOnly"}}` |
 | Set folder Description / Lead | update list item | `PATCH /sites/{site-id}/lists/{list-id}/items/{item-id}/fields` body `{"_ExtendedDescription":"..."}`; person: `{"LeadLookupId":"<user id in the site's User Information List>"}` |
 | Create a view | (no Graph endpoint) | Use the list schema tool if it supports views, else the browser, else the manual steps in SKILL.md |
@@ -26,6 +27,7 @@ Use the agent's SharePoint tools where they exist; the Graph calls below are wha
 Notes:
 - The built-in Description column of a document library usually has the internal name `_ExtendedDescription`. Confirm it in the column listing before writing; if the library has no such column, ask before adding one.
 - Person fields are written through `<Column>LookupId`, which needs the person's ID in the site's User Information List. If that ID is not available, leave the field empty and add the person to the manual-steps list (Edit in grid view).
+- For proposals and page data, require an expanded tool payload or resolve person/lookup IDs against the site's User Information List or the referenced lookup list using authorized tools. Store only audience-approved display names/labels under the original mapped column names (for example `Owners`), not under `OwnersLookupId`. Never guess a display value or show a raw ID as a name. If resolution is unavailable, stop and request expanded data or explicitly exclude that column; verify the live viewer also supplies expanded values before publication.
 - Folder creation with `conflictBehavior: fail` never overwrites an existing folder; report existing folders as "already there".
 
 ## Site home page (no Graph endpoint)

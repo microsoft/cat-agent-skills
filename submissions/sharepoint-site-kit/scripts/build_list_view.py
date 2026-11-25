@@ -44,6 +44,8 @@ import re
 import sys
 from pathlib import Path
 
+from allowlist_from_list import require_expanded_values, to_rows
+
 HERE = Path(__file__).resolve().parent
 BLOCK = HERE.parent / "assets" / "list-view-block.html"
 
@@ -103,12 +105,14 @@ def load_columns(path: str) -> list[dict]:
     return [c for c in cols if isinstance(c, dict) and c.get("name")]
 
 
-def load_items(path: str | None) -> list[dict]:
+def load_items(path: str | None, complete: bool = False) -> list[dict]:
     if not path:
         return []
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if isinstance(data, dict) and "format" in data and "content" in data:
         data = json.loads(data["content"])
+    if complete and isinstance(data, dict) and data.get("@odata.nextLink"):
+        raise ValueError("Incomplete items: follow every @odata.nextLink and combine all items before building a static snapshot.")
     if isinstance(data, dict) and "headers" in data and "rows" in data:
         return [dict(zip(data["headers"], r)) for r in data["rows"]]
     items = data.get("value", data) if isinstance(data, dict) else data
@@ -123,8 +127,6 @@ def load_items(path: str | None) -> list[dict]:
 
 def values_of(item: dict, name: str) -> list[str]:
     v = item.get(name)
-    if v is None:
-        v = item.get(f"{name}LookupId")
     if v is None or v == "":
         return []
     if isinstance(v, str) and v[:1] in "[{":
@@ -138,7 +140,7 @@ def values_of(item: dict, name: str) -> list[str]:
         out = []
         for x in v:
             if isinstance(x, dict):
-                x = x.get("LookupValue") or x.get("Value") or x.get("Label") or x.get("Title") or x.get("displayName") or x.get("LookupId")
+                x = x.get("LookupValue") or x.get("Value") or x.get("Label") or x.get("Title") or x.get("displayName")
             if x not in (None, ""):
                 out.append(str(x))
         return out
@@ -183,6 +185,9 @@ def propose(cols: list[dict], items: list[dict], sensitive: set[str], exclude: s
             skipped.append((disp, "system"))
             continue
         usable.append((c, t))
+
+    display_columns = {c["name"] for c, t in usable if t in ("personOrGroup", "lookup")}
+    require_expanded_values(*to_rows(items), display_columns)
 
     def first(types, pred=lambda c: True):
         return next((c for c, t in usable if t in types and pred(c)), None)
@@ -479,9 +484,16 @@ def make_static(page: str, key: str, source: dict, section: str, pt: dict[str, s
         done.append(f"static section {key} added at the end of main")
     m = re.search(r'(<script type="application/json" class="ka-livedata-manifest">)(.*?)(</script>)', page, re.S)
     if m:
-        man = [x for x in json.loads(m.group(2) or "[]") if not (isinstance(x, dict) and x.get("spItemUrl") == source["spItemUrl"])]
-        page = page[:m.start()] + (m.group(1) + json.dumps(man, ensure_ascii=False) + m.group(3) if man else "") + page[m.end():]
-        done.append("manifest entry removed" + ("" if man else " (manifest now empty, removed)"))
+        references = []
+        for tag in re.finditer(r'<script type="application/json" (?:id="site-page-config"|class="lv-config")>(.*?)</script>', page, re.S):
+            config = json.loads(tag.group(1).replace("<\\/", "</"))
+            references.append((config.get("publicationSource") or config.get("source") or {}).get("spItemUrl"))
+        if source["spItemUrl"] not in references:
+            man = [x for x in json.loads(m.group(2) or "[]") if not (isinstance(x, dict) and x.get("spItemUrl") == source["spItemUrl"])]
+            page = page[:m.start()] + (m.group(1) + json.dumps(man, ensure_ascii=False).replace("</", "<\\/") + m.group(3) if man else "") + page[m.end():]
+            done.append("manifest entry removed" + ("" if man else " (manifest now empty, removed)"))
+        else:
+            done.append("manifest entry kept for another live consumer")
     if 'data-list-view="' not in page and 'id="site-page-config"' not in page:
         page, n = re.subn(r'<script id="list-view-runtime">.*?</script>\n?', "", page, flags=re.S)
         if n:
@@ -513,9 +525,13 @@ def main(argv=None) -> int:
     ap.add_argument("--static-snapshot", action="store_true", help="fallback: write a script-free, dated snapshot section from --items instead of the live section")
     a = ap.parse_args(argv)
 
-    cols = load_columns(a.columns)
-    items = load_items(a.items)
-    p = propose(cols, items, {s.lower() for s in a.sensitive}, {s.lower() for s in a.exclude}, a.filters, a.primary)
+    try:
+        cols = load_columns(a.columns)
+        items = load_items(a.items, complete=a.static_snapshot)
+        p = propose(cols, items, {s.lower() for s in a.sensitive}, {s.lower() for s in a.exclude}, a.filters, a.primary)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return 2
     if not p["has_title"]:
         print("The list has no Title column; pick the title column by hand (--filters does not change this).", file=sys.stderr)
         return 2

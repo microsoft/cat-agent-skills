@@ -12,7 +12,7 @@ Input (--items): list data in any of these shapes
   * [{"ID":1,"Title":...}, ...]                        (plain list of field dicts)
 
 What it does
-  * collects every https link from the chosen columns (default: all columns),
+  * collects every https link from the explicitly approved gallery columns,
     including hyperlink fields ({"Url":...}), HTML anchors and "url, description" text
   * rewrites the block between <!-- link-allowlist:start --> and <!-- link-allowlist:end -->
   * with --snapshot, also writes the data into <script id="snapshot-data"> so the
@@ -24,12 +24,17 @@ List view sections (scripts/build_list_view.py) on any page
   * --snapshot writes each list's rows into that section's lv-snapshot block, keeping only the columns
     the view maps (ID, title, description, link, people, date, filters); sensitive columns never enter it
   * the allowlist is the union of every list's links, so always pass every list view on the page together
+  * include the live gallery as --view @gallery with its matching --items file;
+    --columns is required for the gallery and limits BOTH snapshots and links
+  * inputs must contain all continuation pages and expanded person/lookup display values,
+    not just a proposal sample or unresolved <Name>LookupId fields
 
 Examples
-  python allowlist_from_list.py --items items.json --page gallery-preview.html
-  python allowlist_from_list.py --items items.json --page gallery-preview.html --snapshot
+  python allowlist_from_list.py --items items.json --columns ID Title Link --page gallery-preview.html
+  python allowlist_from_list.py --items items.json --columns ID Title Link --page gallery-preview.html --snapshot
   python allowlist_from_list.py --items items.json --columns Link --print
   python allowlist_from_list.py --items resources.json events.json --view resources events --page home-preview.html --snapshot
+  python allowlist_from_list.py --items gallery.json resources.json --view @gallery resources --columns ID Title Link --page home-preview.html --snapshot
 """
 from __future__ import annotations
 
@@ -46,6 +51,8 @@ HREF_RE = re.compile(r'href\s*=\s*["\']([^"\']+)["\']', re.I)
 
 
 def to_rows(data) -> tuple[list[str], list[list]]:
+    if isinstance(data, dict) and data.get("@odata.nextLink"):
+        raise ValueError("Incomplete items: follow every @odata.nextLink and combine all items before refreshing.")
     if isinstance(data, dict) and "headers" in data and "rows" in data:
         return list(data["headers"]), [list(r) for r in data["rows"]]
     if isinstance(data, dict) and "format" in data and "content" in data:
@@ -70,6 +77,37 @@ def to_rows(data) -> tuple[list[str], list[list]]:
     return headers, rows
 
 
+def require_expanded_values(headers, rows, columns) -> None:
+    """Reject unresolved IDs rather than proposing or saving unusable display values."""
+    def unresolved(value):
+        if isinstance(value, str) and value[:1] in "[{":
+            try:
+                value = json.loads(value)
+            except ValueError:
+                return False
+        if isinstance(value, list):
+            return any(unresolved(v) for v in value)
+        if isinstance(value, dict):
+            return ("LookupId" in value and not any(
+                value.get(k) for k in ("LookupValue", "Value", "Label", "Title", "displayName")
+            ))
+        return False
+
+    indexes = {h: i for i, h in enumerate(headers)}
+    for name in columns:
+        i, lookup = indexes.get(name), indexes.get(f"{name}LookupId")
+        for row in rows:
+            value = row[i] if i is not None and i < len(row) else None
+            lookup_value = row[lookup] if lookup is not None and lookup < len(row) else None
+            if (lookup_value not in (None, "", []) and value in (None, "", [])) or unresolved(value):
+                raise ValueError(
+                    f"{name}: unresolved lookup IDs; use an expanded tool payload or resolve IDs to "
+                    f"audience-approved display values under {name!r} before building or refreshing."
+                )
+        if name.endswith("LookupId") and i is not None:
+            raise ValueError(f"{name}: map the expanded display column, not a LookupId column.")
+
+
 def urls_in(value) -> list[str]:
     if value is None:
         return []
@@ -90,7 +128,7 @@ def urls_in(value) -> list[str]:
 
 
 def collect(headers, rows, columns) -> list[str]:
-    idx = [i for i, h in enumerate(headers) if not columns or h in columns]
+    idx = [i for i, h in enumerate(headers) if h in columns]
     seen, out = set(), []
     for r in rows:
         for i in idx:
@@ -142,8 +180,8 @@ def snapshot_json(headers, rows) -> str:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--items", required=True, nargs="+", help="list data JSON file(s); one per --view")
-    ap.add_argument("--view", nargs="*", default=[], help="list view section keys, same order as --items")
-    ap.add_argument("--columns", nargs="*", default=[], help="only take links from these columns")
+    ap.add_argument("--view", nargs="*", default=[], help="section keys or @gallery, same order as --items")
+    ap.add_argument("--columns", nargs="+", default=[], help="audience-approved gallery columns (snapshots AND links); optional link subset for section-only refreshes")
     ap.add_argument("--page", help="HTML page to update in place")
     ap.add_argument("--snapshot", action="store_true", help="also write the snapshot fallback(s)")
     ap.add_argument("--print", action="store_true", help="print the nav block")
@@ -163,13 +201,33 @@ def main(argv=None) -> int:
         print("--view needs --page.", file=sys.stderr)
         return 2
 
+    keys = [None if k == "@gallery" else k for k in a.view] if a.view else [None]
+    if len(set(keys)) != len(keys):
+        print("Each view (including @gallery) must appear only once.", file=sys.stderr)
+        return 2
+    if None in keys and not a.columns:
+        print("Gallery input requires --columns with the audience-approved column set for snapshots and links.", file=sys.stderr)
+        return 2
+    if page is not None:
+        expected = set(re.findall(r'data-list-view="([^"]+)"', page))
+        if 'id="site-page-config"' in page:
+            expected.add(None)
+        if set(keys) != expected:
+            print("Include every live section and the gallery (@gallery) in one refresh; "
+                  "the --view keys must match the page.", file=sys.stderr)
+            return 2
+
     urls: list[str] = []
     result: dict = {"lists": []}
     snapshots: list[tuple[str | None, list, list]] = []
     for n, path in enumerate(a.items):
         with open(path, encoding="utf-8") as fh:
-            headers, rows = to_rows(json.load(fh))
-        key = a.view[n] if a.view else None
+            try:
+                headers, rows = to_rows(json.load(fh))
+            except ValueError as e:
+                print(str(e), file=sys.stderr)
+                return 2
+        key = keys[n]
         link_cols = set(a.columns)
         if key:
             try:
@@ -178,9 +236,16 @@ def main(argv=None) -> int:
                 print(str(e), file=sys.stderr)
                 return 2
             used, links = view_columns(cfg)
-            link_cols = link_cols or links
-            keep = [i for i, h in enumerate(headers) if h in used]
-            headers, rows = [headers[i] for i in keep], [[r[i] if i < len(r) else None for i in keep] for r in rows]
+            link_cols = links if None in keys else (link_cols or links)
+        else:
+            used = set(a.columns)
+        try:
+            require_expanded_values(headers, rows, used)
+        except ValueError as e:
+            print(str(e), file=sys.stderr)
+            return 2
+        keep = [i for i, h in enumerate(headers) if h in used]
+        headers, rows = [headers[i] for i in keep], [[r[i] if i < len(r) else None for i in keep] for r in rows]
         found = collect(headers, rows, link_cols)
         urls += [u for u in found if u not in urls]
         result["lists"].append({"view": key, "items": len(rows), "links": len(found)})

@@ -81,7 +81,7 @@ The user asked: "Can the page also pull in the Resources list from the site, wit
 
 **Resolve the list.** The site's visible lists (hidden lists and document libraries skipped) held "Resources" and "Resources archive". Both matched "Resources", so the agent asked; the user chose "Resources".
 
-**Schema and sample.** 24 columns, 38 items. The user said the "Internal notes" column must never show, so it went to `--sensitive`.
+**Schema and sample.** 24 columns, 38 items. The user said the "Internal notes" column must never show, so it went to `--sensitive`. The tool expanded Owners into approved display names under `Owners`, rather than returning only `OwnersLookupId`. Before the allowlist/snapshot command, the agent confirmed that these 38 items were the complete export with no continuation token left; a larger list would need every remaining page fetched and combined first.
 
 **Proposal** (`build_list_view.py --columns columns.json --items items.json --label Resources --sensitive InternalNotes`), shown to the user:
 
