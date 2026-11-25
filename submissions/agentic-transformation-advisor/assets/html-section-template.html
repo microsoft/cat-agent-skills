@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent adoption at scale: {{SCOPE}}</title>
+<style>
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b1b; margin: 0; background: #f7f7f9; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 24px 64px; }
+  header h1 { font-size: 30px; margin: 0 0 4px; }
+  header p { color: #555; margin: 0 0 24px; }
+  section { background: #fff; border-radius: 8px; padding: 20px 24px; margin: 0 0 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  section h2 { font-size: 20px; margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border-bottom: 1px solid #e1e1e6; text-align: left; padding: 8px; vertical-align: top; }
+  th { background: #f0f2f5; }
+  .summary { border-left: 6px solid #1f618d; }
+  .note { font-size: 12px; color: #555; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; background: #eef3f8; }
+  img.radar { max-width: 560px; width: 100%; display: block; margin: 8px auto; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Agent adoption at scale: {{SCOPE}}</h1>
+    <p>{{ORGANIZATION}} | Prepared for {{SPONSOR_ROLE}} | {{DATE}}</p>
+  </header>
+
+  <section class="summary" id="executive-summary">
+    <h2>Executive summary</h2>
+    {{EXECUTIVE_SUMMARY_PARAGRAPHS}}
+  </section>
+
+  <section id="pattern-map">
+    <h2>Pattern map</h2>
+    <table>
+      <thead><tr><th>Initiative</th><th>Pattern</th><th>Serves</th><th>Assist or execute</th><th>Risk tier</th><th>Rationale</th></tr></thead>
+      <tbody>{{PATTERN_ROWS}}</tbody>
+    </table>
+  </section>
+
+  <section id="maturity">
+    <h2>Maturity diagnostic</h2>
+    <img class="radar" src="{{RADAR_PNG}}" alt="Radar chart of current maturity against target by pillar">
+    <table>
+      <thead><tr><th>Pillar</th><th>Level</th><th>Confidence</th><th>Evidence</th><th>Unknowns</th></tr></thead>
+      <tbody>{{MATURITY_ROWS}}</tbody>
+    </table>
+    <p class="note">Levels follow the Microsoft Learn agentic AI adoption maturity model. No overall score is shown, by design.</p>
+  </section>
+
+  <section id="gaps">
+    <h2>Gaps and scale-breakers</h2>
+    {{GAP_TABLES}}
+  </section>
+
+  <section id="roadmap">
+    <h2>Roadmap</h2>
+    <table>
+      <thead><tr><th>Horizon</th><th>Action</th><th>Pillar</th><th>Learn source</th></tr></thead>
+      <tbody>{{ROADMAP_ROWS}}</tbody>
+    </table>
+  </section>
+
+  <section id="coe">
+    <h2>Center of Excellence blueprint</h2>
+    {{COE_BLUEPRINT}}
+  </section>
+
+  <section id="decisions">
+    <h2>Leader decisions</h2>
+    <table>
+      <thead><tr><th>Decision</th><th>Options</th><th>Recommendation</th><th>Informed by</th></tr></thead>
+      <tbody>{{DECISION_ROWS}}</tbody>
+    </table>
+    <p class="note">Decision list is the advisor's synthesis of Microsoft Learn guidance, not an official Microsoft list.</p>
+  </section>
+
+  <section id="examples">
+    <h2>Illustrative use cases</h2>
+    <p><span class="tag">Illustrative examples, not Microsoft claims</span></p>
+    {{EXAMPLES}}
+  </section>
+
+  <section id="unknowns">
+    <h2>Assumptions and unknowns</h2>
+    {{UNKNOWNS}}
+  </section>
+
+  <section id="sources">
+    <h2>Sources</h2>
+    <ul>{{SOURCE_LIST_ITEMS}}</ul>
+    <p class="note">Microsoft Learn guidance is planning guidance, not certification. Accessed {{DATE}}.</p>
+  </section>
+</main>
+</body>
+</html>
