@@ -1,0 +1,12 @@
+{
+  "name": "Azure Calculator",
+  "description": "Azure cost estimation: requirements, architecture, service bill of materials, live retail prices (no app registration), monthly/annual costs, scenarios, FinOps, and JSON/CSV output.",
+  "platforms": ["Cowork"],
+  "tags": ["azure", "pricing", "finops", "cost-estimation", "tco", "sizing"],
+  "author": "Markus Bell",
+  "authorUrl": "https://github.com/markusbell",
+  "version": "1.0.0",
+  "createdAt": "2026-11-09",
+  "category": "productivity",
+  "coverColor": "#0078D4"
+}
