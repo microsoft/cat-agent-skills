@@ -169,7 +169,7 @@ submissions/<slug>/
 ├── metadata.json          # catalog sidecar (name/description fall back to the
 │                          #  manifest's short name/description)
 ├── README.md              # optional — detail-page overview (not bundled)
-├── manifest.json          # M365 app manifest (manifestVersion 1.28 or devPreview)
+├── manifest.json          # M365 app manifest (manifestVersion 1.28, 1.29, or devPreview)
 │   ├── agentSkills[]      # { folder } — one entry per skill folder
 │   └── agentConnectors[]  # optional MCP connectors
 ├── color.png              # 192×192 icon referenced by manifest.icons.color
