@@ -11,7 +11,9 @@ Prints a Markdown table of findings and exits 1 if any BLOCKER was found.
 """
 
 import argparse
+import fnmatch
 import json
+import os
 import re
 import sys
 
@@ -202,10 +204,12 @@ def check_openapi(doc):
             if not (op.get("description") or op.get("summary")):
                 add("FIX", "Operation description", label, "no summary or description to route on", SRC_GUIDE)
 
+            effective = {}
             for param in shared_params + (op.get("parameters") or []):
                 param, _, _ = resolve(doc, param, set())
-                if not isinstance(param, dict):
-                    continue
+                if isinstance(param, dict):
+                    effective[(param.get("name"), param.get("in"))] = param
+            for param in effective.values():
                 pname = param.get("name")
                 if param.get("in") == "body":
                     check_schemas(doc, label, "body", param.get("schema"), True)
@@ -214,6 +218,8 @@ def check_openapi(doc):
                     add("FIX", "Parameter description", label, f"parameter '{pname}' has no description", SRC_GUIDE)
                 if "schema" in param:
                     check_schemas(doc, label, f"parameter '{pname}'", param["schema"], True)
+                for media in (param.get("content") or {}).values():
+                    check_schemas(doc, label, f"parameter '{pname}'", (media or {}).get("schema"), True)
 
             body, _, _ = resolve(doc, op.get("requestBody"), set())
             for media in ((body or {}).get("content") or {}).values():
@@ -257,8 +263,22 @@ def long_strings(node, path=""):
             yield from long_strings(value, f"{path}[{index}]")
 
 
-def check_manifest(manifest, operations):
+def runtime_functions(runtime, names):
+    """Function names a runtime serves; run_for_functions entries may be wildcard patterns."""
+    listed = runtime.get("run_for_functions")
+    if not listed:
+        return set(names)
+    return {n for n in names if any(fnmatch.fnmatchcase(n, pattern) for pattern in listed)}
+
+
+def spec_name(runtime):
+    spec = runtime.get("spec") or {}
+    return os.path.basename(str(spec.get("url") or "").split("?")[0]).lower()
+
+
+def check_manifest(manifest, operations, openapi_path):
     functions = manifest.get("functions") or []
+    names = [f.get("name", "") for f in functions]
     runtimes = manifest.get("runtimes") or []
     for runtime in runtimes:
         auth_type = (runtime.get("auth") or {}).get("type")
@@ -268,21 +288,29 @@ def check_manifest(manifest, operations):
             add("FIX", "Auth config reference", f"runtime {runtime.get('type')}", f"{auth_type} with no reference_id", SRC_MANIFEST)
 
     openapi_runtimes = [r for r in runtimes if r.get("type") == "OpenApi"]
-    bound_to_openapi = set()
+    supplied = os.path.basename(openapi_path).lower()
+    if len(openapi_runtimes) == 1:
+        matching = openapi_runtimes
+    else:
+        matching = [r for r in openapi_runtimes if spec_name(r) == supplied]
+    bound_here, bound_elsewhere = set(), {}
     for runtime in openapi_runtimes:
-        listed = runtime.get("run_for_functions")
-        if not listed or "*" in listed:
-            bound_to_openapi = {f.get("name", "") for f in functions}
-            break
-        bound_to_openapi.update(listed)
+        served = runtime_functions(runtime, names)
+        if runtime in matching:
+            bound_here |= served
+        else:
+            for name in served:
+                bound_elsewhere.setdefault(name, spec_name(runtime) or "an unnamed spec")
 
     for function in functions:
         name = function.get("name", "")
         where = f"function {name}"
         if not NAME_RE.match(name):
             add("BLOCKER", "Function name", where, "does not match ^[A-Za-z0-9_]+$", SRC_MANIFEST)
-        if name in bound_to_openapi and name not in operations:
+        if name in bound_here and name not in operations:
             add("BLOCKER", "Function binding", where, "no operationId with this name in the OpenAPI description", SRC_MANIFEST)
+        elif name in bound_elsewhere and name not in bound_here:
+            add("UNKNOWN", "Function binding", where, f"bound to {bound_elsewhere[name]}, which was not supplied; run the checker on that file too", SRC_MANIFEST)
         capabilities = function.get("capabilities") or {}
         confirmation = capabilities.get("confirmation") or {}
         if confirmation.get("isNonConsequential") and operations.get(name, "").split(" ")[0] not in ("GET", ""):
@@ -307,7 +335,7 @@ def main():
 
     operations = check_openapi(load(args.openapi))
     if args.manifest:
-        check_manifest(load(args.manifest), operations)
+        check_manifest(load(args.manifest), operations, args.openapi)
 
     order = {"BLOCKER": 0, "FIX": 1, "WATCH": 2, "UNKNOWN": 3, "PASS": 4, "INFO": 5}
     print("| Verdict | Check | Where | Evidence | Source |")
