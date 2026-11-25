@@ -1,0 +1,44 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.29/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.29",
+    "version": "1.0.1",
+    "id": "1afdeb0b-6000-429b-a51b-8ebf10074dfb",
+    "developer": {
+        "name": "Microsoft Corporation",
+        "websiteUrl": "https://www.microsoft.com/",
+        "privacyUrl": "https://go.microsoft.com/fwlink/p/?linkid=521839",
+        "termsOfUseUrl": "https://www.microsoft.com/licensing/terms"
+    },
+    "name": {
+        "short": "Service for Cowork",
+        "full": "Service for Cowork"
+    },
+    "description": {
+        "short": "Investigate, respond, and resolve customer needs faster.",
+        "full": "The Service for Cowork helps service professionals get work done faster by bringing together the people, knowledge, communications, and business context needed to resolve customer needs and drive outcomes.\n\nWith Copilot Cowork, users can delegate complex service-related work using natural language and receive actionable results grounded in information from across their connected systems. Whether you're preparing for customer engagements, investigating issues, coordinating follow-ups, or uncovering insights, the Service for Cowork helps reduce manual effort, streamline workflows, and keep teams focused on delivering exceptional customer experiences.\n\nDesigned for service teams across industries, the Service for Cowork extends Copilot Cowork with service-focused intelligence that helps turn requests into results."
+    },
+    "icons": {
+        "outline": "monolineAppLogo_32.png",
+        "color": "appLogoServiceForCowork_192.png"
+    },
+    "accentColor": "#FFFFFF",
+    "permissions": [],
+    "validDomains": [],
+    "agentSkills": [
+        {
+            "folder": "skills/answer-research"
+        },
+        {
+            "folder": "skills/case-preparation-brief"
+        },
+        {
+            "folder": "skills/case-triage"
+        },
+        {
+            "folder": "skills/draft-customer-reply"
+        },
+        {
+            "folder": "skills/knowledge-harvest"
+        }
+    ]
+}
