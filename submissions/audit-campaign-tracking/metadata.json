@@ -1,0 +1,17 @@
+{
+  "name": "Audit Campaign Tracking",
+  "description": "Review supplied campaign URLs for missing UTM tags, check visible click IDs, and plan the next attribution test.",
+  "platforms": [
+    "Copilot Studio"
+  ],
+  "tags": [
+    "analytics",
+    "marketing",
+    "utm",
+    "google-ads",
+    "campaign-tracking"
+  ],
+  "author": "Qonvert Marketing AI",
+  "authorUrl": "https://github.com/Qonvert-Marketing-AI",
+  "category": "sales"
+}
