@@ -1,0 +1,234 @@
+{
+  "title": "Map the journey, fix what customers feel",
+  "subtitle": "A 90-minute virtual workshop on customer journey mapping",
+  "version": "1.0",
+  "organization": "Contoso Outdoor Gear (fictional)",
+  "audience": {
+    "who": "Contoso support and store team leads",
+    "level": "Beginner: no journey mapping experience",
+    "size": 16
+  },
+  "format": "virtual",
+  "total_minutes": 90,
+  "start_time": "10:00",
+  "constraints": [
+    "Microsoft Teams with breakout rooms",
+    "Shared whiteboard per breakout room",
+    "No access to live customer data during the session"
+  ],
+  "executive_summary": "In 90 minutes, 16 Contoso team leads learn to map one customer journey, find its pain points with evidence, and leave with one improvement that has an owner and a check date. The session is virtual and hands-on: two breakout exercises take 35 of the 90 minutes. Everything taught comes from the Contoso journey mapping guide (S1).",
+  "sources": [
+    {
+      "id": "S1",
+      "title": "Contoso Outdoor Gear: customer journey mapping guide",
+      "type": "text",
+      "location": "assets/example/contoso-journey-mapping-guide.md"
+    }
+  ],
+  "objectives": [
+    {"id": "O1", "text": "Explain the difference between a journey map and a process diagram."},
+    {"id": "O2", "text": "Map one customer journey across the five Contoso stages."},
+    {"id": "O3", "text": "Identify pain points and moments that matter using evidence."},
+    {"id": "O4", "text": "Commit to one improvement with a named owner and a check date."}
+  ],
+  "modules": [
+    {
+      "id": "M1",
+      "title": "Welcome and goals",
+      "type": "opening",
+      "minutes": 10,
+      "objectives": ["O1"],
+      "key_points": [
+        {"text": "A journey map shows one customer goal step by step, from the customer's point of view.", "sources": ["S1.sec2"]},
+        {"text": "Today you map one journey and leave with one owned improvement.", "sources": ["S1.sec8"]}
+      ],
+      "talk_track": "Welcome the group. State the promise: by the end you will have mapped one journey and picked one improvement with an owner. Ask people to post in chat one customer task that frustrates customers today.",
+      "setup": "Open the deck on slide 1. Have the chat visible. Breakout rooms created but not opened.",
+      "fallback": "If chat is slow, call on two people by name to share a task.",
+      "activities": [
+        {
+          "id": "A1",
+          "kind": "discussion",
+          "title": "One frustrating customer task",
+          "objective": "Surface real journeys the group cares about.",
+          "timebox": 5,
+          "instructions": ["Post one customer task that frustrates customers today.", "Read two others and add a reaction to the one you see most often."],
+          "materials": ["Meeting chat"],
+          "expected_output": "A list of candidate journeys in chat.",
+          "debrief": ["Which task came up most?", "Which one could we map today with evidence we have?"],
+          "fallback": "If chat is disabled, use the whiteboard sticky notes instead.",
+          "sources": ["S1.sec2"]
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "What a journey map is",
+      "type": "content",
+      "minutes": 15,
+      "objectives": ["O1", "O2"],
+      "key_points": [
+        {"text": "A journey map covers one persona and one goal at a time.", "sources": ["S1.sec2"]},
+        {"text": "A process diagram shows what the company does; a journey map shows what the customer experiences.", "sources": ["S1.sec2"]},
+        {"text": "Contoso maps journeys in five stages: Discover, Decide, Buy, Use and Get help.", "sources": ["S1.sec3"]},
+        {"text": "For each step, capture what the customer does, thinks and feels, and the channel.", "sources": ["S1.sec4"]}
+      ],
+      "talk_track": "Show the difference between a process diagram and a journey map with the online tent return example. Walk through the five stages. Stress one persona and one goal per map.",
+      "setup": "Slides 4 to 7. Example map on the whiteboard template.",
+      "fallback": "If the whiteboard does not load, show the example map on the slide instead.",
+      "activities": [
+        {
+          "id": "A2",
+          "kind": "discussion",
+          "title": "Journey map or process diagram?",
+          "objective": "Check that everyone can tell the two apart.",
+          "timebox": 5,
+          "instructions": ["Look at the two examples on the slide.", "Vote in the poll: which one is the journey map?", "Explain your vote in one sentence in chat."],
+          "materials": ["Poll in the meeting", "Slide with two examples"],
+          "expected_output": "Poll result and short explanations.",
+          "debrief": ["What gave it away?", "Where do teams usually slip back into process thinking?"],
+          "fallback": "If polls fail, ask for a show of hands with reactions.",
+          "sources": ["S1.sec2", "S1.sec8"]
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Map one journey",
+      "type": "exercise",
+      "minutes": 30,
+      "objectives": ["O2"],
+      "key_points": [
+        {"text": "Pick one persona and one goal, list the steps in order, then add doing, thinking, feeling and channel.", "sources": ["S1.sec4"]},
+        {"text": "Groups of four to six work best, with at least one person who talks to customers every week.", "sources": ["S1.sec4"]}
+      ],
+      "talk_track": "Explain the exercise in two minutes, open breakout rooms for 20 minutes, then bring everyone back for a short share-back.",
+      "setup": "Four breakout rooms of four people. One whiteboard per room, prepared with the five stage columns.",
+      "fallback": "If breakout rooms fail, run the exercise in the main room with one shared map and rotate who adds steps.",
+      "activities": [
+        {
+          "id": "A3",
+          "kind": "exercise",
+          "title": "Map the online returns journey",
+          "objective": "Produce a first journey map for one persona and one goal.",
+          "timebox": 20,
+          "instructions": [
+            "Agree the persona and goal: a customer returning a tent bought online.",
+            "List the customer's steps in order under the five stages.",
+            "For each step add does, thinks, feels and channel.",
+            "Mark each step positive, neutral or negative."
+          ],
+          "materials": ["Whiteboard with five stage columns", "Exercise sheet 1 in the participant workbook"],
+          "expected_output": "One map with at least eight steps, each with an emotion marker.",
+          "debrief": ["Which step was hardest to describe from the customer's view?", "Where did you disagree, and what evidence would settle it?"],
+          "fallback": "If the whiteboard fails, fill the table on exercise sheet 1 in a shared document.",
+          "sources": ["S1.sec3", "S1.sec4"]
+        }
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Break",
+      "type": "break",
+      "minutes": 5,
+      "objectives": [],
+      "key_points": [],
+      "talk_track": "Five-minute break. Keep the maps open.",
+      "setup": "Show the break slide with the return time.",
+      "fallback": "",
+      "activities": []
+    },
+    {
+      "id": "M5",
+      "title": "Find pain points and moments that matter",
+      "type": "exercise",
+      "minutes": 20,
+      "objectives": ["O3"],
+      "key_points": [
+        {"text": "A pain point is a step where the customer is confused, waits, repeats information or gives up.", "sources": ["S1.sec5"]},
+        {"text": "Use evidence such as support tickets, chat transcripts, store notes and survey comments. Mark steps without evidence as open questions.", "sources": ["S1.sec5"]},
+        {"text": "A moment that matters changes how the customer feels about Contoso, or what they do next.", "sources": ["S1.sec6"]},
+        {"text": "In the 2025 pilot, three teams found 11 pain points in the online returns journey (illustrative).", "sources": ["S1.sec7"]}
+      ],
+      "talk_track": "Share the pilot story briefly. Define pain points and moments that matter. Send groups back to their maps.",
+      "setup": "Same breakout rooms and whiteboards. Sample evidence cards on slide 12.",
+      "fallback": "If groups have no evidence, they use the sample evidence cards on slide 12 and mark the rest as open questions.",
+      "activities": [
+        {
+          "id": "A4",
+          "kind": "exercise",
+          "title": "Circle the pain points",
+          "objective": "Find the pain points and pick the moment that matters most.",
+          "timebox": 15,
+          "instructions": [
+            "Circle every negative step on your map.",
+            "For each circled step, write the evidence you have, or mark it as an open question.",
+            "Ask the two moment-that-matters questions and star one step."
+          ],
+          "materials": ["Your map from exercise 1", "Sample evidence cards (slide 12)", "Exercise sheet 2"],
+          "expected_output": "Circled pain points with evidence or open questions, and one starred moment that matters.",
+          "debrief": ["Which pain point had the strongest evidence?", "Which open question would you check first?"],
+          "fallback": "If time runs short, each group names one pain point and one moment that matters in chat.",
+          "sources": ["S1.sec5", "S1.sec6"]
+        }
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Commit to one improvement",
+      "type": "closing",
+      "minutes": 10,
+      "objectives": ["O4"],
+      "key_points": [
+        {"text": "Common mistakes: mapping the internal process, several personas on one map, opinions instead of evidence, and no owner.", "sources": ["S1.sec8"]},
+        {"text": "Each improvement needs one named owner and a date to check progress.", "sources": ["S1.sec8"]}
+      ],
+      "talk_track": "Recap the common mistakes. Ask each group to commit to one improvement with an owner and a check date. Point to the feedback survey.",
+      "setup": "Commitment slide with the three fields: improvement, owner, check date.",
+      "fallback": "If a group cannot agree an owner, the group lead owns it until the check date.",
+      "activities": [
+        {
+          "id": "A5",
+          "kind": "discussion",
+          "title": "One improvement, one owner, one date",
+          "objective": "Leave with an owned next step.",
+          "timebox": 5,
+          "instructions": ["Each group posts one improvement, one owner and one check date in chat."],
+          "materials": ["Exercise sheet 3"],
+          "expected_output": "One commitment per group.",
+          "debrief": ["What will you check on the date you picked?"],
+          "fallback": "If chat is busy, the facilitator reads each group's commitment aloud and records it.",
+          "sources": ["S1.sec8"]
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    "The guide does not say how long a journey mapping session should take; the 90-minute length comes from the user's intake.",
+    "The guide gives no template for the evidence cards; the sample cards on slide 12 need source material from the team."
+  ],
+  "pre_read": {
+    "minutes": 10,
+    "summary": "Read the Contoso journey mapping guide sections on what a journey map is and the five stages.",
+    "items": [
+      {"text": "Read 'What a journey map is' and 'The five stages'.", "sources": ["S1.sec2", "S1.sec3"]},
+      {"text": "Bring one customer task you think frustrates customers.", "sources": []}
+    ]
+  },
+  "survey": {
+    "questions": [
+      {"text": "How confident are you that you can map a customer journey now?", "type": "scale"},
+      {"text": "Which part of the session was most useful?", "type": "open"},
+      {"text": "What would you change about the session?", "type": "open"}
+    ]
+  },
+  "follow_up_email": {
+    "subject": "Your journey map and next step",
+    "summary": "Thank you for mapping the online returns journey with us. Here is what we covered and the commitments each group made.",
+    "points": [
+      "Every group mapped one journey across the five stages.",
+      "Each group picked one improvement with an owner and a check date.",
+      "The feedback survey takes three minutes."
+    ]
+  }
+}
