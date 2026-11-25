@@ -1,0 +1,22 @@
+{
+  "name": "Workshop Pack Builder",
+  "description": "Turn your decks, documents and URLs into a ready-to-run workshop on any topic: agenda, slide deck, facilitator guide and participant workbook, all grounded in your sources.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "workshop",
+    "training",
+    "facilitation",
+    "learning-design",
+    "slide-deck",
+    "exercises",
+    "branding"
+  ],
+  "author": "Manuela Pichler",
+  "authorUrl": "https://github.com/manuelap-msft",
+  "createdAt": "2026-11-24",
+  "updatedAt": "2026-11-24",
+  "version": "1.0.0",
+  "category": "productivity"
+}
