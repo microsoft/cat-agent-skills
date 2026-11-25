@@ -71,11 +71,57 @@ class ListDataTests(unittest.TestCase):
         path.write_text(json.dumps(data), encoding="utf-8")
         return str(path)
 
-    def refresh(self, *args):
+    def refresh(self, *args, approved=True):
         output = io.StringIO()
         with contextlib.redirect_stderr(output):
-            code = allowlist.main([*args, "--page", str(self.path)])
+            code = allowlist.main([*args, "--page", str(self.path),
+                                   *(["--publication-approved"] if approved else [])])
         return code, output.getvalue()
+
+    def test_row_approval_required_for_gallery_and_section_exports(self):
+        items = self.write_json("items.json", [{"ID": 1, "Title": "Restricted",
+                                               "Link": "https://example.com/restricted"}])
+        for gallery, configs, args in (
+                (True, [], ["--columns", "ID", "Title", "Link"]),
+                (False, [config()], ["--view", "resources"])):
+            with self.subTest(gallery=gallery):
+                original = page(gallery=gallery, configs=configs)
+                self.path.write_text(original, encoding="utf-8")
+                code, error = self.refresh("--items", items, *args, "--snapshot", approved=False)
+                self.assertEqual(code, 2)
+                self.assertIn("row/audience publication approval", error)
+                self.assertEqual(self.path.read_text(encoding="utf-8"), original)
+
+    def test_empty_unapproved_lists_remove_old_snapshots_and_links(self):
+        old_snapshot = allowlist.snapshot_json(
+            ["ID", "Title", "Link"], [[1, "Restricted", "https://example.com/restricted"]])
+        original = page(gallery=True, configs=[config()])
+        original = original.replace(">null</script>", f">{old_snapshot}</script>")
+        original = original.replace(allowlist.nav_block([]), allowlist.nav_block(["https://example.com/restricted"]))
+        self.path.write_text(original, encoding="utf-8")
+        empty = self.write_json("empty.json", [])
+        code, _ = self.refresh("--items", empty, empty, "--view", "@gallery", "resources",
+                               "--columns", "ID", "Title", "Link", "--snapshot", approved=False)
+        self.assertEqual(code, 0)
+        result = self.path.read_text(encoding="utf-8")
+        self.assertNotIn("Restricted", result)
+        self.assertNotIn("https://example.com/restricted", result)
+        for selector in ('id="snapshot-data"', 'class="lv-snapshot"'):
+            self.assertEqual(snapshot_rows(script_json(result, selector))["rows"], [])
+
+    def test_link_only_refresh_clears_previous_row_approval(self):
+        old_snapshot = allowlist.snapshot_json(["ID", "Title"], [[1, "Previously approved"]])
+        original = page(gallery=True).replace(
+            'id="snapshot-data">null', f'id="snapshot-data">{old_snapshot}')
+        self.path.write_text(original, encoding="utf-8")
+        items = self.write_json("approved.json", [{"ID": 2, "Title": "Approved now",
+                                                 "Link": "https://example.com/approved"}])
+        code, _ = self.refresh("--items", items, "--columns", "ID", "Title", "Link")
+        self.assertEqual(code, 0)
+        result = self.path.read_text(encoding="utf-8")
+        self.assertIsNone(script_json(result, 'id="snapshot-data"'))
+        self.assertNotIn("Previously approved", result)
+        self.assertIn('href="https://example.com/approved"', result)
 
     def test_gallery_requires_approved_columns_without_writing(self):
         original = page(gallery=True)
@@ -193,7 +239,7 @@ class ListDataTests(unittest.TestCase):
         self.path.write_text(template.read_text(encoding="utf-8"), encoding="utf-8")
         args = ["--columns", columns, "--items", items, "--label", "Resources",
                 "--web-url", SOURCE["webUrl"], "--list-id", SOURCE["listId"],
-                "--key", "resources", "--into", str(self.path)]
+                "--key", "resources", "--into", str(self.path), "--publication-approved", "--json"]
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(builder.main(args), 0)
         self.assertEqual(self.refresh("--items", items, "--view", "resources", "--snapshot")[0], 0)
@@ -208,6 +254,70 @@ class ListDataTests(unittest.TestCase):
         self.assertIn("Jordan", result)
         self.assertNotIn('class="ka-livedata-manifest"', result)
         self.assertNotIn('id="list-view-runtime"', result)
+
+    def test_static_snapshot_approval_is_checked_before_any_writes(self):
+        columns = self.write_json("columns.json", [{"name": "Title", "text": {}}])
+        items = self.write_json("items.json", [{"ID": 1, "Title": "Restricted"}])
+        original = page(configs=[config()])
+        self.path.write_text(original, encoding="utf-8")
+        output = self.root / "config.json"
+        args = ["--columns", columns, "--items", items, "--label", "Resources",
+                "--web-url", SOURCE["webUrl"], "--list-id", SOURCE["listId"], "--json",
+                "--into", str(self.path), "--config-out", str(output), "--static-snapshot"]
+        error = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+            self.assertEqual(builder.main(args), 2)
+        self.assertIn("row/audience publication approval", error.getvalue())
+        self.assertFalse(output.exists())
+        self.assertEqual(self.path.read_text(encoding="utf-8"), original)
+        Path(items).write_text("[]", encoding="utf-8")
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(builder.main(args), 0)
+        result = self.path.read_text(encoding="utf-8")
+        self.assertNotIn("Restricted", result)
+        self.assertIn('class="lv-count">0 items', result)
+
+    def test_shared_metadata_conflicts_rejected_before_writing(self):
+        cfg = config()
+        renamed = dict(SOURCE, label="Renamed resources")
+        for gallery, configs in ((True, [cfg]), (False, [cfg, config("other")])):
+            with self.subTest(gallery=gallery):
+                original = page(gallery, configs)
+                self.path.write_text(original, encoding="utf-8")
+                columns = self.write_json("columns.json", [{"name": "Title", "text": {}}])
+                config_out, section_out = self.root / "config.json", self.root / "section.html"
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    code = builder.main(["--columns", columns, "--label", renamed["label"],
+                                         "--key", "resources", "--web-url", SOURCE["webUrl"],
+                                         "--list-id", SOURCE["listId"], "--into", str(self.path), "--json",
+                                         "--config-out", str(config_out), "--section-out", str(section_out)])
+                self.assertEqual(code, 2)
+                self.assertEqual(self.path.read_text(encoding="utf-8"), original)
+                self.assertFalse(config_out.exists())
+                self.assertFalse(section_out.exists())
+
+    def test_single_consumer_metadata_can_change(self):
+        cfg = config()
+        cfg["source"]["label"] = "Renamed resources"
+        result, _ = builder.insert_into(page(configs=[config()]), "resources", cfg["source"],
+                                        section(cfg), builder.parts())
+        self.assertEqual(script_json(result, 'class="ka-livedata-manifest"'), [cfg["source"]])
+        self.assertEqual(script_json(result, 'class="lv-config"')["source"], cfg["source"])
+
+    def test_coordinated_shared_metadata_update_preserves_all_bindings(self):
+        cfg = config()
+        cfg["source"]["label"] = "Renamed resources"
+        other = config("other")
+        other["source"] = dict(cfg["source"])
+        original = page(gallery=True, configs=[config(), other])
+        old_page_config = json.dumps({"publicationSource": SOURCE})
+        new_page_config = json.dumps({"publicationSource": cfg["source"]})
+        original = original.replace(old_page_config, new_page_config)
+        result, _ = builder.insert_into(original, "resources", cfg["source"], section(cfg), builder.parts())
+        expected = script_json(result, 'class="ka-livedata-manifest"')[0]
+        self.assertEqual(script_json(result, 'id="site-page-config"')["publicationSource"], expected)
+        for match in re.finditer(r'class="lv-config">(.*?)</script>', result):
+            self.assertEqual(json.loads(match.group(1))["source"], expected)
 
     def test_static_conversion_keeps_shared_manifest_consumers(self):
         for gallery, configs, keep in ((True, [config()], True),
@@ -272,6 +382,22 @@ class ListDataTests(unittest.TestCase):
         self.assertEqual(code, 0)
         result = self.path.read_text(encoding="utf-8")
         self.assertEqual(len(snapshot_rows(script_json(result, 'id="snapshot-data"'))["rows"]), 201)
+        self.assertIn('href="https://example.com/items/201"', result)
+        self.path.write_text(page(configs=[config()]), encoding="utf-8")
+        self.assertEqual(self.refresh("--items", items, "--view", "resources", "--snapshot")[0], 0)
+        result = self.path.read_text(encoding="utf-8")
+        self.assertEqual(len(snapshot_rows(script_json(result, 'class="lv-snapshot"'))["rows"]), 201)
+        self.assertIn('href="https://example.com/items/201"', result)
+        columns = self.write_json("columns.json", [{"name": "Title", "text": {}},
+                                                   {"name": "Link", "hyperlinkOrPicture": {}}])
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            code = builder.main(["--columns", columns, "--items", items, "--label", "Resources",
+                                 "--web-url", SOURCE["webUrl"], "--list-id", SOURCE["listId"],
+                                 "--key", "resources", "--into", str(self.path), "--static-snapshot",
+                                 "--publication-approved", "--json"])
+        self.assertEqual(code, 0)
+        result = self.path.read_text(encoding="utf-8")
+        self.assertIn('class="lv-count">201 items', result)
         self.assertIn('href="https://example.com/items/201"', result)
 
 

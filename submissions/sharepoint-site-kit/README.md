@@ -38,6 +38,7 @@ Every page uses the same modern design: a gradient hero with a light or dark sty
 ## Good to know
 
 - **Your approval comes first.** The kit shows you the folder plan before it creates anything, and uploads the page unpublished so you can review it before it goes live.
+- **List permissions do not travel with copied data.** Before embedding saved rows or links, approve which rows may be republished to the page's audience. Access to an item, column approval, or a page preview approval alone is not enough. Without row/audience approval, the kit omits that list's saved data and links.
 - **Clean page names.** Pages are named after your program, for example `AI-FinOps-Cowork-Workshop.html`, never `-preview`.
 - **Publishing can be blocked by your tenant.** Some tenants block publishing HTML pages through baseline security settings. The kit runs a small probe first and falls back to SharePoint's own **Upload HTML page** command or a standard page.
 - **Some steps stay manual.** Setting the site logo (the kit draws one from your page colors), folder colors and deleting old files are done by you. The kit ends with a checklist.

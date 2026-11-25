@@ -8,6 +8,12 @@ Two ways to use it:
 
 Allowlist and snapshot tool for both: `scripts/allowlist_from_list.py`.
 
+## Row and audience publication approval
+
+Before embedding any list rows, titles, values or URLs, identify the page audience and obtain explicit approval to republish either the complete current export or specific row IDs. Item-level permissions do not travel with copied HTML; delegated caller access, approval of columns and approval of the page layout are not row approval. This gate applies equally to galleries, list sections, hidden allowlists and static fallbacks.
+
+Retrieve every continuation page, then export only the approved rows and columns. Use `--publication-approved` only to attest that every supplied row is approved for the identified audience. If a list has no row approval, supply `[]` for that view with `--snapshot` to clear its old saved data and shared allowlist contribution, or omit its static section. A refresh without `--snapshot` clears old snapshots so earlier approval cannot linger. Verify live injection uses the reader's authorized context; never preload an unapproved privileged payload.
+
 ## How it works
 
 1. **Theme bootstrap.** A small script in `<head>` sets `data-theme="light|dark"` on `<html>` from a `?theme=` URL parameter, else from `prefers-color-scheme`. A toggle button flips it.
@@ -27,7 +33,7 @@ Allowlist and snapshot tool for both: `scripts/allowlist_from_list.py`.
 
 **The allowlist goes stale.** Regenerate it every time list items are added or their links change:
 ```bash
-python scripts/allowlist_from_list.py --items all-items.json --columns ID Title AssetLink AssetDescription Owners PublishedOn Category Topic InternalOnly --page <Page-Name>.html
+python scripts/allowlist_from_list.py --items approved-items.json --publication-approved --columns ID Title AssetLink AssetDescription Owners PublishedOn Category Topic InternalOnly --page <Page-Name>.html
 ```
 The column names above are an example, not a default approval. Confirm the actual audience-approved set from `COLUMN_MAP`; `--columns` is required for gallery inputs and limits both links and snapshot fields. Fetch all continuation pages before generating either output, not just the proposal sample. Inputs with an outstanding `@odata.nextLink` are rejected.
 
@@ -86,23 +92,24 @@ Confirm the proposal with the user (or take their changes: `--filters A B C` set
 python scripts/build_list_view.py --columns columns.json --items items.json --label "Resources" \
   --web-url <site URL> --list-id <list GUID> --key resources --layout cards --noun resource,resources \
   --eyebrow Resources --h2 "<outcome-led h2>" --intro "<one sentence>" --into <Page-Name>.html
-python scripts/allowlist_from_list.py --items resources.json [events.json] --view resources [events] \
+python scripts/allowlist_from_list.py --items approved-resources.json [approved-events.json] --publication-approved --view resources [events] \
   --page <Page-Name>.html --snapshot
 ```
 `--into` adds, once per page, the list view CSS to the single style element, the hidden link allowlist and the runtime script; adds or merges the manifest entry; and inserts the section at `<!-- list-view:insert -->` (static template), else at the end of `<main>`. Running it again with the same key replaces that section and keeps its snapshot only if the source, mapped columns, filters and sensitive-column configuration are unchanged; otherwise the snapshot is cleared. Regenerate saved data before upload.
 
-Use complete exports for the refresh command, following every continuation page and resolving person/lookup IDs to approved display values. Pass every live list view on the page in one run: it rewrites the shared allowlist from all lists, takes links only from the columns each view maps, and writes each snapshot with the mapped columns only. If the page also has a live gallery, include it with the reserved `@gallery` key and its audience-approved columns:
+Fetch complete exports before selecting row-approved inputs for the refresh command, following every continuation page and resolving person/lookup IDs to approved display values. Pass every live list view on the page in one run: it rewrites the shared allowlist from approved rows, takes links only from the columns each view maps, and writes each snapshot with the mapped columns only. If the page also has a live gallery, include it with the reserved `@gallery` key and its audience-approved rows and columns:
 
 ```bash
-python scripts/allowlist_from_list.py --items all-gallery.json all-resources.json \
+python scripts/allowlist_from_list.py --items approved-gallery.json approved-resources.json --publication-approved \
   --view @gallery resources --columns ID Title AssetLink AssetDescription Owners PublishedOn Category Topic \
   --page <Page-Name>.html --snapshot
 ```
 
-In a combined refresh, `--columns` applies only to the gallery; each section uses its own mapped columns. Missing gallery or section inputs are rejected rather than silently dropping their links. Compare snapshot row counts against the complete retrieved counts, including items beyond the first page.
+In a combined refresh, `--columns` applies only to the gallery; each section uses its own mapped columns. Missing gallery or section inputs are rejected rather than silently dropping their links; supply `[]` for a list without row approval. Record retrieved/approved/omitted counts and require the snapshot row count to match the approved count, including approved items beyond the first page.
 
 ### How a list view binds
 - The page's single `ka-livedata-manifest` array gets one entry per list. Each section's `lv-config.source` must match its entry exactly (`kind`, `spItemUrl`, `webUrl`, `listId`, `label`), or that section shows the error state. Other sections are unaffected.
+- Rebuilding with changed shared metadata (for example a renamed list's label) is rejected before writing if a gallery or another section still has the old source config. Update all affected `publicationSource`/`source` configs together, then rebuild and verify every binding; do not update only the shared manifest.
 - The runtime reads `window.__LD_RESULTS__[spItemUrl]`, else the section's `lv-snapshot`, else shows the error state.
 - **Unverified:** the observed working page had one manifest entry and one list. That the viewer injects data for several entries in one manifest, and for a manifest on a page without `site-page-config`, is inferred from the array shape. Verify both on the target site; if only one list loads, keep one list view per page or fall back to a snapshot for the others.
 - Adding a list view makes a static page script-dependent. The script probe (SKILL.md 2.1) must pass first.
@@ -115,10 +122,10 @@ In a combined refresh, `--columns` applies only to the gallery; each section use
 2. Upload once as `<Page-Name>.html` (unpublished) to Site Pages and open it in the browser.
 3. Check the gallery section, and every list view section: `data-state="ready"` with items and no "saved copy" note means live data works. A "saved copy" note means `__LD_RESULTS__` was not injected and the snapshot rendered. An error message means no live data and no snapshot, or a binding mismatch.
 4. Click three item links: one in the allowlist (opens), one external, one SharePoint link.
-5. List views: apply one filter from the bar and one from "More filters", search a word, switch to Table and sort a column, then copy the URL into a new tab and confirm the same view opens. Confirm the allowlist was regenerated after the last list change (its link count matches the list).
+5. List views: apply one filter from the bar and one from "More filters", search a word, switch to Table and sort a column, then copy the URL into a new tab and confirm the same view opens. Confirm the allowlist was regenerated after the last list change and contains exactly the unique links from the approved rows.
 
 ## Fallbacks, in order
 
-1. **Snapshot inside the live page.** `allowlist_from_list.py --items all-items.json --columns <audience-approved columns...> --page <Page-Name>.html --snapshot` writes the complete approved rows into `<script id="snapshot-data">`; the page renders them with a "saved copy from <date>" note when live data is missing. Needs scripts to be allowed. Do not snapshot columns that hold data the page audience should not see.
-2. **Static snapshot page or section.** If scripts are blocked too, build the items as static HTML from the list items (cards from the doc card markup, or a plain table), add a dated note ("Saved copy of the <list> list from <date>. It does not update by itself.") and tell the user the page will not update by itself. For a list view on a static page this means removing the runtime and JSON blocks so the page is script-free again.
+1. **Snapshot inside the live page.** `allowlist_from_list.py --items approved-items.json --publication-approved --columns <audience-approved columns...> --page <Page-Name>.html --snapshot` writes the approved rows into `<script id="snapshot-data">`; the page renders them with a "saved copy from <date>" note when live data is missing. Needs scripts to be allowed. Do not snapshot columns or rows the page audience is not approved to see.
+2. **Static snapshot page or section.** If scripts are blocked too, use only row-approved items selected after fetching all continuation pages, never the proposal sample. Build static cards or a table with a dated note ("Saved copy of the <list> list from <date>. It does not update by itself.") and tell the user the page will not update by itself. For a list view use `build_list_view.py ... --items approved-items.json --publication-approved --static-snapshot` to remove its runtime and JSON blocks when no other live consumer remains. Without row approval, omit the section or supply `[]`.
 3. **Standard page.** If HTML pages cannot be published at all, use the standard modern page mode with a List web part added by the user (manual step) or a text web part with links.

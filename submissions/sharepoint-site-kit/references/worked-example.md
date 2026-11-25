@@ -81,7 +81,7 @@ The user asked: "Can the page also pull in the Resources list from the site, wit
 
 **Resolve the list.** The site's visible lists (hidden lists and document libraries skipped) held "Resources" and "Resources archive". Both matched "Resources", so the agent asked; the user chose "Resources".
 
-**Schema and sample.** 24 columns, 38 items. The user said the "Internal notes" column must never show, so it went to `--sensitive`. The tool expanded Owners into approved display names under `Owners`, rather than returning only `OwnersLookupId`. Before the allowlist/snapshot command, the agent confirmed that these 38 items were the complete export with no continuation token left; a larger list would need every remaining page fetched and combined first.
+**Schema and sample.** 24 columns, 38 items. The user said the "Internal notes" column must never show, so it went to `--sensitive`. The tool expanded Owners into approved display names under `Owners`, rather than returning only `OwnersLookupId`. Before the allowlist/snapshot command, the agent confirmed that these 38 items were the complete export with no continuation token left; a larger list would need every remaining page fetched and combined first. Separately, the list owner explicitly approved all 38 rows for the page's identified audience; column approval and the agent's read access were not treated as publication permission.
 
 **Proposal** (`build_list_view.py --columns columns.json --items items.json --label Resources --sensitive InternalNotes`), shown to the user:
 
@@ -112,7 +112,7 @@ python scripts/build_list_view.py --columns columns.json --items items.json --la
   --list-id <Resources list id> --key resources --noun resource,resources \
   --eyebrow Resources --h2 "Everything you need to get started." \
   --intro "Guides, templates and recordings, kept current by the program team." --into Contoso-Activation-Program-3.html
-python scripts/allowlist_from_list.py --items items.json --view resources --page Contoso-Activation-Program-3.html --snapshot
+python scripts/allowlist_from_list.py --items items.json --publication-approved --view resources --page Contoso-Activation-Program-3.html --snapshot
 ```
 The section went in after the workstreams. The page was static, so the agent told the user it now needs scripts and ran the script probe: `Contoso-Activation-Program-probe-script.html` showed "Scripts run" and the Resources rows were injected.
 

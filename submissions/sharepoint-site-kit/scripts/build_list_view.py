@@ -32,7 +32,8 @@ Examples
   # override the proposed filters (in order) or how many show in the bar
   ... --filters Category Audience Featured --primary 2
   # fallback when scripts are blocked: a static, dated snapshot of the same view (no scripts)
-  ... --static-snapshot --into Contoso-Activation-Program.html
+  # use all approved rows after following every continuation page, not the proposal sample
+  ... --items approved-items.json --publication-approved --static-snapshot --into Contoso-Activation-Program.html
 
 Exit codes: 0 ok, 2 bad input (no Title column, page markers missing, bad arguments)
 """
@@ -44,7 +45,7 @@ import re
 import sys
 from pathlib import Path
 
-from allowlist_from_list import require_expanded_values, to_rows
+from allowlist_from_list import require_expanded_values, require_publication_approval, to_rows
 
 HERE = Path(__file__).resolve().parent
 BLOCK = HERE.parent / "assets" / "list-view-block.html"
@@ -300,6 +301,16 @@ def esc(s: str) -> str:
 
 def insert_into(page: str, key: str, source: dict, section: str, pt: dict[str, str], replace_runtime: bool = True) -> tuple[str, list[str]]:
     done = []
+    others = re.sub(rf"<!-- list-view:{re.escape(key)}:start -->.*?<!-- list-view:{re.escape(key)}:end -->",
+                    "", page, flags=re.S)
+    for tag in re.finditer(r'<script type="application/json" (?:id="site-page-config"|class="lv-config")>(.*?)</script>', others, re.S):
+        config = json.loads(tag.group(1).replace("<\\/", "</"))
+        existing = config.get("publicationSource") or config.get("source") or {}
+        if existing.get("spItemUrl") == source["spItemUrl"] and any(
+            existing.get(k) != source.get(k) for k in ("kind", "spItemUrl", "webUrl", "listId", "label")
+        ):
+            raise ValueError("Conflicting shared list metadata: update the gallery and all other section "
+                             "source configs together before rebuilding. No page changes were written.")
     # 1. CSS, once, inside the page's single style element
     if "list-view:css:start" not in page:
         if "</style>" not in page:
@@ -522,12 +533,16 @@ def main(argv=None) -> int:
     ap.add_argument("--section-out", help="write the filled section markup here")
     ap.add_argument("--into", help="page to add or update the list view in (in place)")
     ap.add_argument("--json", action="store_true", help="print the proposal as JSON instead of the table")
-    ap.add_argument("--static-snapshot", action="store_true", help="fallback: write a script-free, dated snapshot section from --items instead of the live section")
+    ap.add_argument("--static-snapshot", action="store_true", help="fallback: write a script-free, dated snapshot from complete, row-approved --items (not a proposal sample)")
+    ap.add_argument("--publication-approved", action="store_true",
+                    help="attest that every static snapshot row is explicitly approved for the page audience")
     a = ap.parse_args(argv)
 
     try:
         cols = load_columns(a.columns)
         items = load_items(a.items, complete=a.static_snapshot)
+        if a.static_snapshot:
+            require_publication_approval(items, a.publication_approved)
         p = propose(cols, items, {s.lower() for s in a.sensitive}, {s.lower() for s in a.exclude}, a.filters, a.primary)
     except ValueError as e:
         print(str(e), file=sys.stderr)
@@ -563,16 +578,12 @@ def main(argv=None) -> int:
                                    "LIST_DISPLAY_NAME": esc(a.label), "LV_EYEBROW": esc(a.eyebrow or ""),
                                    "LV_H2": esc(a.h2 or ""), "LV_INTRO": esc(a.intro or "")})
     if a.static_snapshot:
-        if not items:
+        if not a.items:
             print("--static-snapshot needs --items (the current list items).", file=sys.stderr)
             return 2
         sensitive = {x.lower() for x in a.sensitive}
         items = [{k: v for k, v in it.items() if k.lower() not in sensitive} for it in items]
         section = static_section(key, a.label, cfg, items, a.layout, a.eyebrow or "{{LV_EYEBROW}}", a.h2 or "{{LV_H2}}", a.intro or "{{LV_INTRO}}")
-    if a.config_out:
-        Path(a.config_out).write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
-    if a.section_out:
-        Path(a.section_out).write_text(section, encoding="utf-8")
     if a.into:
         page_path = Path(a.into)
         page = page_path.read_text(encoding="utf-8")
@@ -581,10 +592,16 @@ def main(argv=None) -> int:
         except ValueError as e:
             print(str(e), file=sys.stderr)
             return 2
+    if a.config_out:
+        Path(a.config_out).write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
+    if a.section_out:
+        Path(a.section_out).write_text(section, encoding="utf-8")
+    if a.into:
         page_path.write_text(page, encoding="utf-8")
         print(json.dumps({"page": a.into, "key": key, "changes": done,
-                          "next": ["fill any {{LV_*}} placeholders left", "allowlist_from_list.py --items <items.json> --page "
-                                   f"{a.into} [--snapshot --view {key}]", "visual_check.py with --sample-data "
+                          "next": ["fill any {{LV_*}} placeholders left", "allowlist_from_list.py --items <approved-items.json> "
+                                   f"--publication-approved --page {a.into} --snapshot --view {key} "
+                                   "(include every live view and @gallery if present)", "visual_check.py with --sample-data "
                                    f"{key}=<rows.json>"]}, indent=2), file=sys.stderr)
     return 0
 

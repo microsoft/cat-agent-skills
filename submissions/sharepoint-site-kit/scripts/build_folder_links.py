@@ -32,7 +32,7 @@ import html
 import json
 import re
 import sys
-from urllib.parse import parse_qs, quote, unquote, urlsplit
+from urllib.parse import parse_qs, quote, urlsplit
 
 # Characters SharePoint and OneDrive reject in file and folder names.
 INVALID = '"*:<>?/\\|'
@@ -71,7 +71,7 @@ def folder_from_link(href: str, site: str, library: str) -> str | None:
         return None
     _, site_path = site_parts(site)
     prefix = f"{site_path}/{library}/".replace("//", "/")
-    path = unquote(ids[0]) if "%" in ids[0] else ids[0]
+    path = ids[0]
     if not path.lower().startswith(prefix.lower()):
         return None
     return path[len(prefix):].strip("/")
@@ -111,6 +111,7 @@ def cmd_check(a) -> int:
             report["ok"].append(rel)
             linked.add(top)
             continue
+        fixable = True
         if top in renames and renames[top] in folders:  # confirmed by the user
             guess = renames[top]
         elif top.lower() in lower:  # case-only change
@@ -118,13 +119,18 @@ def cmd_check(a) -> int:
         else:
             close = difflib.get_close_matches(top, folders, n=1, cutoff=0.6)
             guess = close[0] if close else None
+            fixable = False
         entry = {"link_folder": rel, "href": href}
         if guess:
             entry["suggested_folder"] = guess
             entry["new_href"] = html.escape(folder_link(a.site, guess + rel[len(top):], a.library), quote=True)
+            entry["fixable"] = fixable
             report["renamed"].append(entry)
-            replacements[href] = entry["new_href"]
-            linked.add(guess)
+            if fixable:
+                replacements[href] = entry["new_href"]
+                linked.add(guess)
+            else:
+                report["broken"].append(entry)
         else:
             report["broken"].append(entry)
     # The page may know a renamed folder only by its card title; the user confirms each suggestion.
@@ -141,6 +147,8 @@ def cmd_check(a) -> int:
         for old, new in replacements.items():
             fixed = fixed.replace(f'href="{old}"', f'href="{new}"')
         for e in report["renamed"]:
+            if not e["fixable"]:
+                continue
             old_top = e["link_folder"].split("/")[0]
             fixed = fixed.replace(f'data-folder="{html.escape(old_top, quote=True)}"',
                                   f'data-folder="{html.escape(e["suggested_folder"], quote=True)}"')
@@ -150,7 +158,8 @@ def cmd_check(a) -> int:
             fh.write(fixed)
         report["fixed_copy"] = a.fix_out
         report["changed_links"] = len(replacements)
-    report["note"] = ("Renamed matches are guesses by name similarity; confirm each with the user. "
+    report["note"] = ("Similarity matches are suggestions only. --fix-out applies only explicit --rename "
+                      "mappings and case-only changes; confirm other suggestions with the user first. "
                       "Card titles and descriptions are not changed; update them by hand if the rename changed meaning. "
                       "Click-test every link in a browser before handing over.")
     print(json.dumps(report, indent=2))

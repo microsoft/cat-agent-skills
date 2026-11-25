@@ -16,7 +16,8 @@ What it does
     including hyperlink fields ({"Url":...}), HTML anchors and "url, description" text
   * rewrites the block between <!-- link-allowlist:start --> and <!-- link-allowlist:end -->
   * with --snapshot, also writes the data into <script id="snapshot-data"> so the
-    page can render a saved copy when live data is not injected
+    page can render a saved copy when live data is not injected; without it,
+    clears previous saved rows so earlier publication approvals cannot linger
 
 List view sections (scripts/build_list_view.py) on any page
   * pass one items file per list view and the matching section keys with --view, in the same order
@@ -28,13 +29,17 @@ List view sections (scripts/build_list_view.py) on any page
     --columns is required for the gallery and limits BOTH snapshots and links
   * inputs must contain all continuation pages and expanded person/lookup display values,
     not just a proposal sample or unresolved <Name>LookupId fields
+  * --publication-approved attests that every supplied row is explicitly approved for
+    the page audience; caller access and column approval alone are NOT row approval.
+    For a list without approval, supply [] and --snapshot to remove its saved data and links.
 
 Examples
-  python allowlist_from_list.py --items items.json --columns ID Title Link --page gallery-preview.html
-  python allowlist_from_list.py --items items.json --columns ID Title Link --page gallery-preview.html --snapshot
-  python allowlist_from_list.py --items items.json --columns Link --print
-  python allowlist_from_list.py --items resources.json events.json --view resources events --page home-preview.html --snapshot
-  python allowlist_from_list.py --items gallery.json resources.json --view @gallery resources --columns ID Title Link --page home-preview.html --snapshot
+  # Only after explicit row/audience approval, using approved rows from the complete export:
+  python allowlist_from_list.py --items items.json --publication-approved --columns ID Title Link --page gallery-preview.html
+  python allowlist_from_list.py --items items.json --publication-approved --columns ID Title Link --page gallery-preview.html --snapshot
+  python allowlist_from_list.py --items items.json --publication-approved --columns Link --print
+  python allowlist_from_list.py --items resources.json events.json --publication-approved --view resources events --page home-preview.html --snapshot
+  python allowlist_from_list.py --items gallery.json resources.json --publication-approved --view @gallery resources --columns ID Title Link --page home-preview.html --snapshot
 """
 from __future__ import annotations
 
@@ -75,6 +80,13 @@ def to_rows(data) -> tuple[list[str], list[list]]:
     for d in dicts:
         rows.append([v if isinstance(v, (str, int, float, bool)) or v is None else json.dumps(v) for v in (d.get(h) for h in headers)])
     return headers, rows
+
+
+def require_publication_approval(rows, approved: bool) -> None:
+    if rows and not approved:
+        raise ValueError("Explicit row/audience publication approval is required (--publication-approved). "
+                         "Caller access and approved columns are not enough. Supply only approved rows, "
+                         "or an empty export to omit an unapproved list's saved data and links.")
 
 
 def require_expanded_values(headers, rows, columns) -> None:
@@ -184,6 +196,8 @@ def main(argv=None) -> int:
     ap.add_argument("--columns", nargs="+", default=[], help="audience-approved gallery columns (snapshots AND links); optional link subset for section-only refreshes")
     ap.add_argument("--page", help="HTML page to update in place")
     ap.add_argument("--snapshot", action="store_true", help="also write the snapshot fallback(s)")
+    ap.add_argument("--publication-approved", action="store_true",
+                    help="attest that every supplied row is explicitly approved for the page audience")
     ap.add_argument("--print", action="store_true", help="print the nav block")
     a = ap.parse_args(argv)
 
@@ -224,6 +238,7 @@ def main(argv=None) -> int:
         with open(path, encoding="utf-8") as fh:
             try:
                 headers, rows = to_rows(json.load(fh))
+                require_publication_approval(rows, a.publication_approved)
             except ValueError as e:
                 print(str(e), file=sys.stderr)
                 return 2
@@ -258,18 +273,17 @@ def main(argv=None) -> int:
         if n != 1:
             print("No link-allowlist:start ... link-allowlist:end markers in the page.", file=sys.stderr)
             return 2
-        if a.snapshot:
-            for key, headers, rows in snapshots:
-                text = snapshot_json(headers, rows)
-                if key:
-                    pat = rf'(<!-- list-view:{re.escape(key)}:start -->.*?<script type="application/json" class="lv-snapshot">).*?(</script>)'
-                else:
-                    pat = r'(<script type="application/json" id="snapshot-data">).*?(</script>)'
-                page, m = re.subn(pat, lambda mm: mm.group(1) + text + mm.group(2), page, count=1, flags=re.S)
-                if m != 1:
-                    print(f"No snapshot block for {key or 'the live gallery'} in the page.", file=sys.stderr)
-                    return 2
-            result["snapshot"] = True
+        for key, headers, rows in snapshots:
+            text = snapshot_json(headers, rows) if a.snapshot else "null"
+            if key:
+                pat = rf'(<!-- list-view:{re.escape(key)}:start -->.*?<script type="application/json" class="lv-snapshot">).*?(</script>)'
+            else:
+                pat = r'(<script type="application/json" id="snapshot-data">).*?(</script>)'
+            page, m = re.subn(pat, lambda mm: mm.group(1) + text + mm.group(2), page, count=1, flags=re.S)
+            if m != 1 and a.snapshot:
+                print(f"No snapshot block for {key or 'the live gallery'} in the page.", file=sys.stderr)
+                return 2
+        result["snapshot"] = a.snapshot
         with open(a.page, "w", encoding="utf-8") as fh:
             fh.write(page)
         result["page"] = a.page
