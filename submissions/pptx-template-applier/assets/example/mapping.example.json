@@ -1,0 +1,211 @@
+{
+ "_note": "Illustrative output of plan_mapping.py on the fictional Contoso sample files (scripts/make_samples.py).",
+ "source": "in/contoso-q3-review.pptx",
+ "template": "in/contoso-brand-template.potx",
+ "mode": "rebuild",
+ "mode_reason": "template has usable layouts",
+ "template_layouts": [
+  {
+   "index": 0,
+   "name": "Contoso Cover",
+   "kind": "title",
+   "type": "title",
+   "why": "title plus subtitle placeholders"
+  },
+  {
+   "index": 1,
+   "name": "Contoso Content",
+   "kind": "content",
+   "type": "obj",
+   "why": "title plus one content placeholder"
+  },
+  {
+   "index": 2,
+   "name": "Contoso Divider",
+   "kind": "section",
+   "type": "secHead",
+   "why": "title plus short text placeholder (section header)"
+  },
+  {
+   "index": 3,
+   "name": "Contoso Two Column",
+   "kind": "two_content",
+   "type": null,
+   "why": "two side-by-side content placeholders"
+  },
+  {
+   "index": 4,
+   "name": "Contoso Compare",
+   "kind": "comparison",
+   "type": "twoTxTwoObj",
+   "why": "2 text and 2 content placeholders"
+  },
+  {
+   "index": 5,
+   "name": "Contoso Headline Only",
+   "kind": "title_only",
+   "type": "titleOnly",
+   "why": "title placeholder only"
+  },
+  {
+   "index": 6,
+   "name": "Contoso Clean",
+   "kind": "blank",
+   "type": "blank",
+   "why": "no placeholders besides date, footer and slide number"
+  },
+  {
+   "index": 7,
+   "name": "Contoso Content and Caption",
+   "kind": "caption_content",
+   "type": "objTx",
+   "why": "content with caption"
+  },
+  {
+   "index": 8,
+   "name": "Contoso Photo",
+   "kind": "picture",
+   "type": "picTx",
+   "why": "picture placeholder"
+  }
+ ],
+ "slides": [
+  {
+   "slide": 1,
+   "title": "Contoso Field Services: Q3 Review",
+   "source_layout": "Title Slide",
+   "kind": "title",
+   "kind_reason": "title plus subtitle placeholders",
+   "split": false,
+   "target_layout": "Contoso Cover",
+   "target_layout_index": 0,
+   "target_kind": "title",
+   "reason": "exact match"
+  },
+  {
+   "slide": 2,
+   "title": "Results",
+   "source_layout": "Section Header",
+   "kind": "section",
+   "kind_reason": "title plus short text placeholder (section header)",
+   "split": false,
+   "target_layout": "Contoso Divider",
+   "target_layout_index": 2,
+   "target_kind": "section",
+   "reason": "exact match"
+  },
+  {
+   "slide": 3,
+   "title": "Quarter highlights",
+   "source_layout": "Title and Content",
+   "kind": "content",
+   "kind_reason": "title plus one content placeholder",
+   "split": false,
+   "target_layout": "Contoso Content",
+   "target_layout_index": 1,
+   "target_kind": "content",
+   "reason": "exact match"
+  },
+  {
+   "slide": 4,
+   "title": "Before and after the scheduling tool",
+   "source_layout": "Two Content",
+   "kind": "two_content",
+   "kind_reason": "two side-by-side content placeholders",
+   "split": false,
+   "target_layout": "Contoso Two Column",
+   "target_layout_index": 3,
+   "target_kind": "two_content",
+   "reason": "exact match"
+  },
+  {
+   "slide": 5,
+   "title": "Two options for Q4",
+   "source_layout": "Comparison",
+   "kind": "comparison",
+   "kind_reason": "2 text and 2 content placeholders",
+   "split": false,
+   "target_layout": "Contoso Compare",
+   "target_layout_index": 4,
+   "target_kind": "comparison",
+   "reason": "exact match"
+  },
+  {
+   "slide": 6,
+   "title": "Results by region",
+   "source_layout": "Title Only",
+   "kind": "content",
+   "kind_reason": "one table under a title: placed in the content area",
+   "split": false,
+   "target_layout": "Contoso Content",
+   "target_layout_index": 1,
+   "target_kind": "content",
+   "reason": "exact match"
+  },
+  {
+   "slide": 7,
+   "title": "Visits per month",
+   "source_layout": "Title and Content",
+   "kind": "content",
+   "kind_reason": "one chart under a title: placed in the content area",
+   "split": false,
+   "target_layout": "Contoso Content",
+   "target_layout_index": 1,
+   "target_kind": "content",
+   "reason": "exact match"
+  },
+  {
+   "slide": 8,
+   "title": "New service van",
+   "source_layout": "Picture with Caption",
+   "kind": "picture",
+   "kind_reason": "picture placeholder",
+   "split": false,
+   "target_layout": "Contoso Photo",
+   "target_layout_index": 8,
+   "target_kind": "picture",
+   "reason": "exact match"
+  },
+  {
+   "slide": 9,
+   "title": "Lessons learned from the pilot",
+   "source_layout": "Title and Content",
+   "kind": "content",
+   "kind_reason": "title plus one content placeholder",
+   "split": false,
+   "target_layout": "Contoso Content",
+   "target_layout_index": 1,
+   "target_kind": "content",
+   "reason": "exact match"
+  },
+  {
+   "slide": 10,
+   "title": "Rollout path",
+   "source_layout": "Blank",
+   "kind": "title_only",
+   "kind_reason": "blank slide with a large text box used as title; free content kept",
+   "split": false,
+   "target_layout": "Contoso Headline Only",
+   "target_layout_index": 5,
+   "target_kind": "title_only",
+   "reason": "exact match"
+  },
+  {
+   "slide": 11,
+   "title": "Next steps",
+   "source_layout": "Title and Content",
+   "kind": "content",
+   "kind_reason": "title plus one content placeholder",
+   "split": false,
+   "target_layout": "Contoso Content",
+   "target_layout_index": 1,
+   "target_kind": "content",
+   "reason": "exact match"
+  }
+ ],
+ "fit": {
+  "title_floor_pt": 24,
+  "body_floor_pt": 14,
+  "table_floor_pt": 10
+ }
+}
