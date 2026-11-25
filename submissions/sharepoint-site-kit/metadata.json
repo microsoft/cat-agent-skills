@@ -1,0 +1,24 @@
+{
+  "name": "SharePoint Site Kit",
+  "description": "Turn a program plan into a SharePoint team site: workstream folders, a modern branded HTML landing page styled from your PowerPoint template or a photo, filterable list views and simple upkeep.",
+  "platforms": [
+    "Cowork"
+  ],
+  "tags": [
+    "sharepoint",
+    "html",
+    "site-pages",
+    "branding",
+    "landing-page",
+    "list-view",
+    "program-management",
+    "design",
+    "dark-mode"
+  ],
+  "author": "Manuela Pichler",
+  "authorUrl": "https://github.com/manuelap-msft",
+  "createdAt": "2026-11-24",
+  "updatedAt": "2026-11-24",
+  "version": "1.3.0",
+  "category": "productivity"
+}
