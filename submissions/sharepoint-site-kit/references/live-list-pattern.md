@@ -129,3 +129,15 @@ In a combined refresh, `--columns` applies only to the gallery; each section use
 1. **Snapshot inside the live page.** `allowlist_from_list.py --items approved-items.json --publication-approved --columns <audience-approved columns...> --page <Page-Name>.html --snapshot` writes the approved rows into `<script id="snapshot-data">`; the page renders them with a "saved copy from <date>" note when live data is missing. Needs scripts to be allowed. Do not snapshot columns or rows the page audience is not approved to see.
 2. **Static snapshot page or section.** If scripts are blocked too, use only row-approved items selected after fetching all continuation pages, never the proposal sample. Build static cards or a table with a dated note ("Saved copy of the <list> list from <date>. It does not update by itself.") and tell the user the page will not update by itself. For a list view use `build_list_view.py ... --items approved-items.json --publication-approved --static-snapshot` to remove its runtime and JSON blocks when no other live consumer remains. Without row approval, omit the section or supply `[]`.
 3. **Standard page.** If HTML pages cannot be published at all, use the standard modern page mode with a List web part added by the user (manual step) or a text web part with links.
+
+When converting a section on a page that still has a live gallery or other live sections, supply their current approved inputs in the same builder command:
+
+```bash
+python scripts/build_list_view.py --columns columns.json --items empty.json --label Resources \
+  --web-url <site URL> --list-id <Resources list GUID> --key resources --static-snapshot \
+  --publication-approved --into <Page-Name>.html \
+  --remaining-items approved-gallery.json approved-events.json --remaining-view @gallery events \
+  --gallery-columns ID Title Link
+```
+
+Here `empty.json` contains `[]` because publication approval for Resources was withdrawn; the flag attests only to the nonempty remaining inputs. The builder converts Resources and rebuilds the remaining consumers' snapshots and shared allowlist in memory, then writes only after the full refresh succeeds. Missing inputs or approval abort without modifying the page or output files. This removes old hidden URLs while preserving currently approved links, including shared links still approved for another consumer. Omit the converted `resources` key from `--remaining-view` and every later standalone refresh. Without a remaining gallery, omit `@gallery` and `--gallery-columns`; without any live consumers, omit all three remaining-refresh options.

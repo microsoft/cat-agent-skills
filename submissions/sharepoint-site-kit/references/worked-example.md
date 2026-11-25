@@ -32,6 +32,7 @@ Plan shown to the user before any write:
 | Learn - Feedback Loop | Jamie Ortiz | Turns delivery feedback into play updates |
 
 Notes from this step:
+- The selected default drive's root `webUrl` ended in `/Shared%20Documents`, so its recorded URL name was `Shared Documents`. Both folder-link generation and upkeep passed `--library "Shared Documents"` explicitly; a localized library would use its own resolved URL name instead.
 - The plan named one stream "Plan/Build"; it was sanitized to "Plan - Build" and then merged into Activate at the user's request. The rename was reported.
 - "Expand" had no named lead in the plan, so the Lead column stays empty and the page shows "Lead to be confirmed".
 - Lead column: person, single value. Description: the library's built-in Description column.
@@ -57,7 +58,7 @@ Notes from this step:
 
 **Executive summary:** "The Contoso Activation Program helps customer teams get value from the licenses they already own. Six workstreams each own one part of the journey, and three shared streams supply data, delivery kits and feedback. This site holds the plan, each workstream's folder and the meeting rhythm. New here? Open the program plan first."
 
-**Folder link** for Activate (from `build_folder_links.py links`):
+**Folder link** for Activate (from `build_folder_links.py links --site https://contoso.sharepoint.com/sites/ContosoActivation --library "Shared Documents" --names Activate`):
 `https://contoso.sharepoint.com/sites/ContosoActivation/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FContosoActivation%2FShared%20Documents%2FActivate`
 
 **Workstream card markup:**

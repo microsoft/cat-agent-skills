@@ -45,7 +45,7 @@ import re
 import sys
 from pathlib import Path
 
-from allowlist_from_list import require_expanded_values, require_publication_approval, to_rows
+from allowlist_from_list import refresh_page, require_expanded_values, require_publication_approval, to_rows
 
 HERE = Path(__file__).resolve().parent
 BLOCK = HERE.parent / "assets" / "list-view-block.html"
@@ -476,7 +476,9 @@ def static_section(key: str, label: str, cfg: dict, items: list[dict], layout: s
     return "\n".join(out)
 
 
-def make_static(page: str, key: str, source: dict, section: str, pt: dict[str, str]) -> tuple[str, list[str]]:
+def make_static(page: str, key: str, source: dict, section: str, pt: dict[str, str], *,
+                remaining_items: list[str] | None = None, remaining_views: list[str] | None = None,
+                gallery_columns: list[str] | None = None, publication_approved: bool = False) -> tuple[str, list[str]]:
     done = []
     if "list-view:css:start" not in page:
         i = page.rindex("</style>")
@@ -505,7 +507,20 @@ def make_static(page: str, key: str, source: dict, section: str, pt: dict[str, s
             done.append("manifest entry removed" + ("" if man else " (manifest now empty, removed)"))
         else:
             done.append("manifest entry kept for another live consumer")
-    if 'data-list-view="' not in page and 'id="site-page-config"' not in page:
+    has_live_consumers = 'data-list-view="' in page or 'id="site-page-config"' in page
+    if has_live_consumers:
+        if not remaining_items:
+            raise ValueError("Static conversion with live consumers requires --remaining-items and --remaining-view "
+                             "to rebuild the shared allowlist from their approved inputs before writing. "
+                             f"Omit the converted key {key!r}; use @gallery for the live gallery and "
+                             "--gallery-columns for its approved columns.")
+        keys = [None if k == "@gallery" else k for k in remaining_views or []]
+        page, _, _ = refresh_page(page, remaining_items, keys, gallery_columns or [],
+                                  snapshot=True, publication_approved=publication_approved)
+        done.append("shared allowlist and snapshots rebuilt for remaining live consumers")
+    else:
+        if remaining_items or remaining_views or gallery_columns:
+            raise ValueError("No live consumers remain; omit --remaining-items, --remaining-view and --gallery-columns.")
         page, n = re.subn(r'<script id="list-view-runtime">.*?</script>\n?', "", page, flags=re.S)
         if n:
             done.append("runtime removed: no live list views left, the page is script-free again")
@@ -535,9 +550,18 @@ def main(argv=None) -> int:
     ap.add_argument("--json", action="store_true", help="print the proposal as JSON instead of the table")
     ap.add_argument("--static-snapshot", action="store_true", help="fallback: write a script-free, dated snapshot from complete, row-approved --items (not a proposal sample)")
     ap.add_argument("--publication-approved", action="store_true",
-                    help="attest that every static snapshot row is explicitly approved for the page audience")
+                    help="attest that every static snapshot and remaining-refresh row is approved for the page audience")
+    ap.add_argument("--remaining-items", nargs="+",
+                    help="static conversion: approved exports for every remaining live consumer (not the converted key)")
+    ap.add_argument("--remaining-view", nargs="+",
+                    help="static conversion: remaining section keys or @gallery, in --remaining-items order")
+    ap.add_argument("--gallery-columns", nargs="+",
+                    help="static conversion: audience-approved columns for a remaining gallery")
     a = ap.parse_args(argv)
 
+    if not a.static_snapshot and (a.remaining_items or a.remaining_view or a.gallery_columns):
+        print("--remaining-items, --remaining-view and --gallery-columns require --static-snapshot.", file=sys.stderr)
+        return 2
     try:
         cols = load_columns(a.columns)
         items = load_items(a.items, complete=a.static_snapshot)
@@ -588,7 +612,12 @@ def main(argv=None) -> int:
         page_path = Path(a.into)
         page = page_path.read_text(encoding="utf-8")
         try:
-            page, done = (make_static if a.static_snapshot else insert_into)(page, key, source, section, pt)
+            if a.static_snapshot:
+                page, done = make_static(page, key, source, section, pt,
+                                         remaining_items=a.remaining_items, remaining_views=a.remaining_view,
+                                         gallery_columns=a.gallery_columns, publication_approved=a.publication_approved)
+            else:
+                page, done = insert_into(page, key, source, section, pt)
         except ValueError as e:
             print(str(e), file=sys.stderr)
             return 2
@@ -598,11 +627,14 @@ def main(argv=None) -> int:
         Path(a.section_out).write_text(section, encoding="utf-8")
     if a.into:
         page_path.write_text(page, encoding="utf-8")
+        next_steps = ["fill any {{LV_*}} placeholders left"]
+        if not a.static_snapshot:
+            next_steps.append("allowlist_from_list.py --items <approved-items.json> "
+                              f"--publication-approved --page {a.into} --snapshot --view {key} "
+                              "(include every live view and @gallery if present)")
+        next_steps.append(f"visual_check.py {a.into} (sample data for live consumers only)")
         print(json.dumps({"page": a.into, "key": key, "changes": done,
-                          "next": ["fill any {{LV_*}} placeholders left", "allowlist_from_list.py --items <approved-items.json> "
-                                   f"--publication-approved --page {a.into} --snapshot --view {key} "
-                                   "(include every live view and @gallery if present)", "visual_check.py with --sample-data "
-                                   f"{key}=<rows.json>"]}, indent=2), file=sys.stderr)
+                          "next": next_steps}, indent=2), file=sys.stderr)
     return 0
 
 

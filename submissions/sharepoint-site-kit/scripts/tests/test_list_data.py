@@ -324,8 +324,15 @@ class ListDataTests(unittest.TestCase):
                                        (False, [config(), config("another")], True),
                                        (False, [config()], False)):
             with self.subTest(gallery=gallery, sections=len(configs)):
+                remaining = [c["key"] for c in configs if c["key"] != "resources"]
+                if gallery:
+                    remaining.insert(0, "@gallery")
+                empty = self.write_json("empty.json", [])
                 result, _ = builder.make_static(page(gallery, configs), "resources", SOURCE,
-                                               '<section class="lv-static">Saved</section>', builder.parts())
+                                               '<section class="lv-static">Saved</section>', builder.parts(),
+                                               remaining_items=[empty] * len(remaining) or None,
+                                               remaining_views=remaining or None,
+                                               gallery_columns=["ID", "Title"] if gallery else None)
                 if keep:
                     self.assertIn(SOURCE, script_json(result, 'class="ka-livedata-manifest"'))
                 else:
@@ -335,9 +342,77 @@ class ListDataTests(unittest.TestCase):
     def test_static_conversion_preserves_unrelated_manifest_entry(self):
         other = config("other")
         other["source"]["spItemUrl"] += "-other"
+        empty = self.write_json("empty.json", [])
         result, _ = builder.make_static(page(configs=[config(), other]), "resources", SOURCE,
-                                       '<section>Saved</section>', builder.parts())
+                                       '<section>Saved</section>', builder.parts(),
+                                       remaining_items=[empty], remaining_views=["other"])
         self.assertEqual(script_json(result, 'class="ka-livedata-manifest"'), [other["source"]])
+
+    def test_static_conversion_rebuilds_allowlist_without_revoked_links(self):
+        columns = self.write_json("columns.json", [{"name": "Title", "text": {}}])
+        empty = self.write_json("empty.json", [])
+        approved = self.write_json("approved.json", [
+            {"ID": 2, "Title": "Approved", "Link": "https://example.com/approved"},
+            {"ID": 3, "Title": "Shared approval", "Link": "https://example.com/shared"}])
+        old_snapshot = allowlist.snapshot_json(
+            ["ID", "Title", "Link"], [[1, "Revoked", "https://example.com/revoked"],
+                                     [3, "Shared approval", "https://example.com/shared"]])
+        for gallery in (True, False):
+            with self.subTest(gallery=gallery):
+                configs = [config()] if gallery else [config(), config("other")]
+                original = page(gallery=gallery, configs=configs)
+                original = original.replace(">null</script>", f">{old_snapshot}</script>")
+                original = original.replace(
+                    allowlist.nav_block([]),
+                    allowlist.nav_block(["https://example.com/revoked", "https://example.com/shared"]))
+                self.path.write_text(original, encoding="utf-8")
+                args = ["--columns", columns, "--items", empty, "--label", "Resources",
+                        "--web-url", SOURCE["webUrl"], "--list-id", SOURCE["listId"], "--key", "resources",
+                        "--static-snapshot", "--into", str(self.path), "--json",
+                        "--remaining-items", approved, "--remaining-view", "@gallery" if gallery else "other"]
+                if gallery:
+                    args += ["--gallery-columns", "ID", "Title", "Link"]
+                error = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+                    self.assertEqual(builder.main(args), 2)
+                self.assertIn("publication approval", error.getvalue())
+                self.assertEqual(self.path.read_text(encoding="utf-8"), original)
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(builder.main([*args, "--publication-approved"]), 0)
+                result = self.path.read_text(encoding="utf-8")
+                self.assertNotIn("Revoked", result)
+                self.assertNotIn("https://example.com/revoked", result)
+                self.assertNotIn('data-list-view="resources"', result)
+                self.assertIn('href="https://example.com/approved"', result)
+                self.assertIn('href="https://example.com/shared"', result)
+                selector = 'id="snapshot-data"' if gallery else 'class="lv-snapshot"'
+                self.assertEqual(len(snapshot_rows(script_json(result, selector))["rows"]), 2)
+                refresh_args = ["--items", approved, "--view", "@gallery" if gallery else "other", "--snapshot"]
+                if gallery:
+                    refresh_args += ["--columns", "ID", "Title", "Link"]
+                self.assertEqual(self.refresh(*refresh_args)[0], 0)
+                self.assertNotIn("https://example.com/revoked", self.path.read_text(encoding="utf-8"))
+
+    def test_static_conversion_rejects_missing_or_converted_refresh_keys_before_writing(self):
+        columns = self.write_json("columns.json", [{"name": "Title", "text": {}}])
+        empty = self.write_json("empty.json", [])
+        config_out, section_out = self.root / "config.json", self.root / "section.html"
+        original = page(gallery=True, configs=[config()])
+        original = original.replace(allowlist.nav_block([]), allowlist.nav_block(["https://example.com/revoked"]))
+        for refresh_args in ([], ["--remaining-items", empty, "--remaining-view", "resources"],
+                             ["--remaining-items", empty, "--remaining-view", "@gallery"]):
+            with self.subTest(refresh_args=refresh_args):
+                self.path.write_text(original, encoding="utf-8")
+                args = ["--columns", columns, "--items", empty, "--label", "Resources",
+                        "--web-url", SOURCE["webUrl"], "--list-id", SOURCE["listId"], "--key", "resources",
+                        "--static-snapshot", "--into", str(self.path), "--json",
+                        "--config-out", str(config_out), "--section-out", str(section_out), *refresh_args]
+                error = io.StringIO()
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+                    self.assertEqual(builder.main(args), 2)
+                self.assertEqual(self.path.read_text(encoding="utf-8"), original)
+                self.assertFalse(config_out.exists())
+                self.assertFalse(section_out.exists())
 
     def test_rebuild_keeps_snapshot_only_for_compatible_config(self):
         cfg = config()

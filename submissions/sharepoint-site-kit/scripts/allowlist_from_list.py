@@ -189,76 +189,42 @@ def snapshot_json(headers, rows) -> str:
     return json.dumps(snap).replace("</", "<\\/")
 
 
-def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--items", required=True, nargs="+", help="list data JSON file(s); one per --view")
-    ap.add_argument("--view", nargs="*", default=[], help="section keys or @gallery, same order as --items")
-    ap.add_argument("--columns", nargs="+", default=[], help="audience-approved gallery columns (snapshots AND links); optional link subset for section-only refreshes")
-    ap.add_argument("--page", help="HTML page to update in place")
-    ap.add_argument("--snapshot", action="store_true", help="also write the snapshot fallback(s)")
-    ap.add_argument("--publication-approved", action="store_true",
-                    help="attest that every supplied row is explicitly approved for the page audience")
-    ap.add_argument("--print", action="store_true", help="print the nav block")
-    a = ap.parse_args(argv)
-
-    if a.view and len(a.view) != len(a.items):
-        print("--view needs one key per --items file, in the same order.", file=sys.stderr)
-        return 2
-    if not a.view and len(a.items) > 1:
-        print("Several --items files need --view keys (list view sections).", file=sys.stderr)
-        return 2
-    page = None
-    if a.page:
-        with open(a.page, encoding="utf-8") as fh:
-            page = fh.read()
-    elif a.view:
-        print("--view needs --page.", file=sys.stderr)
-        return 2
-
-    keys = [None if k == "@gallery" else k for k in a.view] if a.view else [None]
+def refresh_page(page: str | None, item_paths: list[str], keys: list[str | None],
+                 columns: list[str], snapshot: bool = False,
+                 publication_approved: bool = False) -> tuple[str | None, dict, str]:
+    """Prepare a complete refresh in memory; callers write only after all inputs pass."""
+    if len(keys) != len(item_paths):
+        raise ValueError("Provide one view key per items file, in the same order.")
+    if page is None and any(key is not None for key in keys):
+        raise ValueError("List view keys need a page.")
     if len(set(keys)) != len(keys):
-        print("Each view (including @gallery) must appear only once.", file=sys.stderr)
-        return 2
-    if None in keys and not a.columns:
-        print("Gallery input requires --columns with the audience-approved column set for snapshots and links.", file=sys.stderr)
-        return 2
+        raise ValueError("Each view (including @gallery) must appear only once.")
+    if None in keys and not columns:
+        raise ValueError("Gallery input requires --columns with the audience-approved column set for snapshots and links.")
     if page is not None:
         expected = set(re.findall(r'data-list-view="([^"]+)"', page))
         if 'id="site-page-config"' in page:
             expected.add(None)
         if set(keys) != expected:
-            print("Include every live section and the gallery (@gallery) in one refresh; "
-                  "the --view keys must match the page.", file=sys.stderr)
-            return 2
+            raise ValueError("Include every live section and the gallery (@gallery) in one refresh; "
+                             "the --view keys must match the page.")
 
     urls: list[str] = []
     result: dict = {"lists": []}
     snapshots: list[tuple[str | None, list, list]] = []
-    for n, path in enumerate(a.items):
+    for n, path in enumerate(item_paths):
         with open(path, encoding="utf-8") as fh:
-            try:
-                headers, rows = to_rows(json.load(fh))
-                require_publication_approval(rows, a.publication_approved)
-            except ValueError as e:
-                print(str(e), file=sys.stderr)
-                return 2
+            headers, rows = to_rows(json.load(fh))
+            require_publication_approval(rows, publication_approved)
         key = keys[n]
-        link_cols = set(a.columns)
+        link_cols = set(columns)
         if key:
-            try:
-                cfg = view_config(page, key)
-            except ValueError as e:
-                print(str(e), file=sys.stderr)
-                return 2
+            cfg = view_config(page, key)
             used, links = view_columns(cfg)
             link_cols = links if None in keys else (link_cols or links)
         else:
-            used = set(a.columns)
-        try:
-            require_expanded_values(headers, rows, used)
-        except ValueError as e:
-            print(str(e), file=sys.stderr)
-            return 2
+            used = set(columns)
+        require_expanded_values(headers, rows, used)
         keep = [i for i, h in enumerate(headers) if h in used]
         headers, rows = [headers[i] for i in keep], [[r[i] if i < len(r) else None for i in keep] for r in rows]
         found = collect(headers, rows, link_cols)
@@ -271,19 +237,42 @@ def main(argv=None) -> int:
     if page is not None:
         page, n = re.subn(r"<!-- link-allowlist:start.*?<!-- link-allowlist:end -->", lambda _m: block, page, count=1, flags=re.S)
         if n != 1:
-            print("No link-allowlist:start ... link-allowlist:end markers in the page.", file=sys.stderr)
-            return 2
+            raise ValueError("No link-allowlist:start ... link-allowlist:end markers in the page.")
         for key, headers, rows in snapshots:
-            text = snapshot_json(headers, rows) if a.snapshot else "null"
+            text = snapshot_json(headers, rows) if snapshot else "null"
             if key:
                 pat = rf'(<!-- list-view:{re.escape(key)}:start -->.*?<script type="application/json" class="lv-snapshot">).*?(</script>)'
             else:
                 pat = r'(<script type="application/json" id="snapshot-data">).*?(</script>)'
             page, m = re.subn(pat, lambda mm: mm.group(1) + text + mm.group(2), page, count=1, flags=re.S)
-            if m != 1 and a.snapshot:
-                print(f"No snapshot block for {key or 'the live gallery'} in the page.", file=sys.stderr)
-                return 2
-        result["snapshot"] = a.snapshot
+            if m != 1 and snapshot:
+                raise ValueError(f"No snapshot block for {key or 'the live gallery'} in the page.")
+        result["snapshot"] = snapshot
+    return page, result, block
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--items", required=True, nargs="+", help="list data JSON file(s); one per --view")
+    ap.add_argument("--view", nargs="*", default=[], help="section keys or @gallery, same order as --items")
+    ap.add_argument("--columns", nargs="+", default=[], help="audience-approved gallery columns (snapshots AND links); optional link subset for section-only refreshes")
+    ap.add_argument("--page", help="HTML page to update in place")
+    ap.add_argument("--snapshot", action="store_true", help="also write the snapshot fallback(s)")
+    ap.add_argument("--publication-approved", action="store_true",
+                    help="attest that every supplied row is explicitly approved for the page audience")
+    ap.add_argument("--print", action="store_true", help="print the nav block")
+    a = ap.parse_args(argv)
+    page = None
+    if a.page:
+        with open(a.page, encoding="utf-8") as fh:
+            page = fh.read()
+    keys = [None if k == "@gallery" else k for k in a.view] if a.view else [None]
+    try:
+        page, result, block = refresh_page(page, a.items, keys, a.columns, a.snapshot, a.publication_approved)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return 2
+    if a.page:
         with open(a.page, "w", encoding="utf-8") as fh:
             fh.write(page)
         result["page"] = a.page

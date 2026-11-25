@@ -8,6 +8,7 @@ Use the agent's SharePoint tools where they exist; the Graph calls below are wha
 |---|---|---|
 | Resolve a site | site lookup / search sites | `GET /sites/{hostname}:/sites/{path}` (or `:/teams/{path}`) |
 | Default Documents drive | default drive / list site drives | `GET /sites/{site-id}/drive` |
+| Selected library root URL | get drive root | `GET /drives/{drive-id}/root?$select=webUrl`; derive the decoded library URL name relative to the site path, record it with the drive ID, and pass it as `--library` to both `build_folder_links.py links` and `check` |
 | List folders | drive children | `GET /drives/{drive-id}/root/children?$filter=folder ne null` (or filter client-side) |
 | Create folder | create folder | `POST /drives/{drive-id}/root/children` body `{"name":"Activate","folder":{},"@microsoft.graph.conflictBehavior":"fail"}` |
 | Copy a file into 0 Program | upload file content or a copy call | `POST /drives/{drive-id}/items/{item-id}/copy` body `{"parentReference":{"driveId":"...","id":"<0 Program id>"}}` (async, returns a monitor URL) |
@@ -30,6 +31,27 @@ Notes:
 - Person fields are written through `<Column>LookupId`, which needs the person's ID in the site's User Information List. If that ID is not available, leave the field empty and add the person to the manual-steps list (Edit in grid view).
 - For proposals and page data, require an expanded tool payload or resolve person/lookup IDs against the site's User Information List or the referenced lookup list using authorized tools. Store only audience-approved display names/labels under the original mapped column names (for example `Owners`), not under `OwnersLookupId`. Never guess a display value or show a raw ID as a name. If resolution is unavailable, stop and request expanded data or explicitly exclude that column; verify the live viewer also supplies expanded values before publication.
 - Folder creation with `conflictBehavior: fail` never overwrites an existing folder; report existing folders as "already there".
+
+## Library URL name for folder links
+
+Use the selected drive's root `webUrl`, not its display name. The default library may use `Dokumente`, `Documents partages` or another URL name instead of `Shared Documents`. Resolve it for page-only work as well as library setup, and re-read it for upkeep. Derive the argument in Python from the resolved `site_url` and `drive_root_web_url`:
+
+```python
+from urllib.parse import unquote, urlsplit
+
+site = urlsplit(site_url)
+root = urlsplit(drive_root_web_url)
+site_path = unquote(site.path).rstrip("/")
+root_path = unquote(root.path).rstrip("/")
+prefix = site_path + "/"
+if site.netloc.lower() != root.netloc.lower() or not root_path.lower().startswith(prefix.lower()):
+    raise ValueError("The selected drive root is not under the resolved site URL")
+library_url_name = root_path[len(prefix):]
+if not library_url_name:
+    raise ValueError("The selected drive root has no library URL name")
+```
+
+For a root URL ending in `/sites/Program%20Hub/Documents%20partages`, pass `--library "Documents partages"` and keep the resolved site URL as `--site`. The helper decodes the site path once before constructing and encoding the link; the library argument is already decoded and must not be URL-encoded again by the caller. Use the same argument for `links`, `check`, and any `--rename ... --fix-out ...` rerun.
 
 ## Site home page (no Graph endpoint)
 

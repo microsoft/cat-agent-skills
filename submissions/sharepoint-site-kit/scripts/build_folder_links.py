@@ -16,13 +16,16 @@ Subcommands
 
 Folder listings can be a JSON list of names, or the JSON from a drive children
 call ({"value":[{"name":..., "folder":{...}}]}) or a list of such items.
+Resolve --library from the selected drive root's webUrl relative to the site URL,
+decoding that relative library path once; do not infer it from the display name.
+The default Shared Documents is only for libraries with that actual URL name.
 
 Examples
   python build_folder_links.py sanitize "Plan / Build" "Q&A: Ops"
   python build_folder_links.py links --site https://contoso.sharepoint.com/sites/Program \
-      --names "0 Program" "Activate" "Adopt"
+      --library "Documents partages" --names "0 Program" "Activate" "Adopt"
   python build_folder_links.py check --site https://contoso.sharepoint.com/sites/Program \
-      --page page.html --folders children.json --fix-out page.fixed.html
+      --library "Documents partages" --page page.html --folders children.json --fix-out page.fixed.html
 """
 from __future__ import annotations
 
@@ -32,7 +35,7 @@ import html
 import json
 import re
 import sys
-from urllib.parse import parse_qs, quote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 # Characters SharePoint and OneDrive reject in file and folder names.
 INVALID = '"*:<>?/\\|'
@@ -52,7 +55,7 @@ def sanitize(name: str) -> str:
 
 def site_parts(site: str) -> tuple[str, str]:
     u = urlsplit(site.rstrip("/"))
-    return f"{u.scheme}://{u.netloc}", u.path  # origin, server-relative site path
+    return f"{u.scheme}://{u.netloc}", unquote(u.path)  # origin, decoded server-relative site path
 
 
 def folder_link(site: str, folder_path: str, library: str = "Shared Documents") -> str:
@@ -172,10 +175,10 @@ def main(argv=None) -> int:
     s = sub.add_parser("sanitize"); s.add_argument("names", nargs="+")
     l = sub.add_parser("links")
     l.add_argument("--site", required=True, help="site URL, e.g. https://contoso.sharepoint.com/sites/Program")
-    l.add_argument("--library", default="Shared Documents", help="library URL name (default: Shared Documents)")
+    l.add_argument("--library", default="Shared Documents", help="decoded URL name resolved from the selected drive root, not its display name (default: Shared Documents)")
     l.add_argument("--names", nargs="+", required=True, help="folder names or paths inside the library")
     c = sub.add_parser("check")
-    c.add_argument("--site", required=True); c.add_argument("--library", default="Shared Documents")
+    c.add_argument("--site", required=True); c.add_argument("--library", default="Shared Documents", help="same resolved decoded URL name used for links")
     c.add_argument("--page", required=True); c.add_argument("--folders", required=True)
     c.add_argument("--fix-out")
     c.add_argument("--rename", nargs="*", help="renames the user confirmed, e.g. Kickstarter=Activate")
