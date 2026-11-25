@@ -30,6 +30,8 @@ Contrast is computed only where the background is a known solid color (shape fil
 master background). Text on pictures or gradients is not measured: look at it on the render.
 Each slide uses its own master's theme colors, color map and font metrics. Picture bounds include
 rotation when checking slide edges and overlaps.
+Contrast checks resolve a run's explicit color first, then its paragraph default, before falling
+back to list and theme styles.
 
 ## 3. Look at every contact sheet
 

@@ -16,6 +16,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.dml import MSO_THEME_COLOR
 from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+from pptx.enum.text import MSO_TEXT_UNDERLINE_TYPE
 from pptx.opc.constants import CONTENT_TYPE as CT, RELATIONSHIP_TYPE as RT
 from pptx.opc.packuri import PackURI
 from pptx.oxml import parse_xml
@@ -167,6 +168,49 @@ class TemplateRegressions(unittest.TestCase):
         self.build_slide()
         saved = roundtrip(self.dst).slides[0]
         self.assertLess(saved.placeholders[1].top + saved.placeholders[1].height, saved.shapes[-1].top)
+
+    def test_two_text_columns_keep_positions_with_one_body_placeholder(self):
+        self.slide = self.src.slides.add_slide(self.src.slide_layouts[3])
+        self.slide.shapes.title.text = "Two columns"
+        self.slide.placeholders[1].text = "Left column"
+        self.slide.placeholders[2].text = "Right column"
+        self.build_slide(layout=1)
+        saved = roundtrip(self.dst).slides[0]
+        left = saved.placeholders[1]
+        right = next(s for s in saved.shapes if s.has_text_frame and s.text == "Right column")
+        self.assertEqual(left.text, "Left column")
+        self.assertLess(left.left + left.width, right.left)
+        self.assertEqual(left.top, right.top)
+
+    def test_paragraph_emphasis_survives_body_and_table_with_run_overrides(self):
+        table = self.slide.shapes.add_table(1, 1, 0, 0, Inches(4), Inches(1))
+        for tf in (self.slide.placeholders[1].text_frame, table.table.cell(0, 0).text_frame):
+            tf.clear()
+            para = tf.paragraphs[0]
+            para.font.bold = True
+            para.font.italic = True
+            para.font.underline = MSO_TEXT_UNDERLINE_TYPE.DOUBLE_LINE
+            para.add_run().text = "Inherited"
+            direct = para.add_run()
+            direct.text = "Direct"
+            direct.font.bold = False
+            direct.font.italic = False
+            direct.font.underline = False
+            para.add_line_break()
+            para._p.append(parse_xml('<a:fld ' + nsdecls("a") +
+                                    ' id="{00000000-0000-0000-0000-000000000001}" type="slidenum">'
+                                    '<a:t>42</a:t></a:fld>'))
+            dest = self.dst.slides.add_slide(self.dst.slide_layouts[1])
+            write_paragraphs(dest.placeholders[1].text_frame, paragraphs_of(tf))
+            saved = roundtrip(self.dst).slides[-1].placeholders[1].text_frame.paragraphs[0]
+            self.assertEqual(saved.text, "InheritedDirect\v42")
+            for run in (saved.runs[0], saved.runs[2]):
+                self.assertTrue(run.font.bold)
+                self.assertTrue(run.font.italic)
+                self.assertEqual(run.font.underline, MSO_TEXT_UNDERLINE_TYPE.DOUBLE_LINE)
+            self.assertFalse(saved.runs[1].font.bold)
+            self.assertFalse(saved.runs[1].font.italic)
+            self.assertFalse(saved.runs[1].font.underline)
 
     def test_picture_rotation_flips_and_transformed_bounds_survive(self):
         source = self.slide.shapes.add_picture(io.BytesIO(png_bytes(120, 60, "Photo")), 0, 0,
@@ -391,6 +435,73 @@ class TemplateRegressions(unittest.TestCase):
                 self.assertFalse(saved.value_axis.tick_labels.number_format_is_linked)
                 self.assertEqual(saved.category_axis.tick_labels.number_format, "0")
 
+    def test_chart_text_uses_template_colors_and_fonts_through_full_build(self):
+        source = chart_shape(self.slide, XL_CHART_TYPE.COLUMN_CLUSTERED).chart
+        source.has_title = True
+        source.chart_title.text_frame.text = "Chart heading"
+        source.value_axis.has_title = True
+        source.value_axis.axis_title.text_frame.text = "Axis heading"
+        source.plots[0].has_data_labels = True
+        source.plots[0].data_labels.font.name = "Arial"
+        source.plots[0].data_labels.font.color.rgb = RGBColor.from_string("FF0080")
+        for tf in (source.chart_title.text_frame, source.value_axis.axis_title.text_frame):
+            font = tf.paragraphs[0].runs[0].font
+            font.name = "Arial"
+            font.color.rgb = RGBColor.from_string("FF0080")
+        with tempfile.TemporaryDirectory() as td:
+            src, tpl, out = [Path(td) / name for name in ("source.pptx", "template.pptx", "out.pptx")]
+            self.src.save(src)
+            self.dst.save(tpl)
+            report = build(plan(str(tpl), str(src), {}), str(out), "", FLOORS)
+            saved = Presentation(out).slides[0].shapes[-1].chart
+        self.assertIn("#FF0080", report["color_map"])
+        self.assertFalse(saved._chartSpace.xpath('.//a:srgbClr[@val="FF0080"]'))
+        self.assertFalse(saved._chartSpace.xpath('.//a:latin[@typeface="Arial"]'))
+        self.assertTrue(saved._chartSpace.xpath('.//c:title//a:schemeClr'))
+        self.assertTrue(saved._chartSpace.xpath('.//c:dLbls//a:schemeClr'))
+
+    def test_chart_axis_scaling_retains_log_bounds_and_orientation(self):
+        source = chart_shape(self.slide, XL_CHART_TYPE.LINE)
+        source.chart.value_axis.minimum_scale = 1
+        source.chart.value_axis.maximum_scale = 1000
+        source.chart.value_axis.reverse_order = True
+        scaling = source.chart.value_axis._element.find(f"{C}scaling")
+        scaling.insert(0, etree.Element(f"{C}logBase", val="10"))
+        dest = self.dst.slides.add_slide(self.dst.slide_layouts[6])
+        rebuild_chart(source, dest, (0, 0, Inches(5), Inches(4)), self.report, 1)
+        saved = roundtrip(self.dst).slides[0].shapes[0].chart.value_axis
+        self.assertEqual(saved.minimum_scale, 1)
+        self.assertEqual(saved.maximum_scale, 1000)
+        self.assertTrue(saved.reverse_order)
+        self.assertEqual(saved._element.find(f"{C}scaling/{C}logBase").get("val"), "10")
+
+    def test_workbook_linked_chart_title_preserves_cache_or_warns(self):
+        for cached in (True, False):
+            with self.subTest(cached=cached):
+                source = chart_shape(self.slide, XL_CHART_TYPE.LINE)
+                source.chart.has_title = True
+                title = source.chart._chartSpace.chart.find(f"{C}title")
+                for child in list(title):
+                    title.remove(child)
+                tx = etree.SubElement(title, f"{C}tx")
+                ref = etree.SubElement(tx, f"{C}strRef")
+                etree.SubElement(ref, f"{C}f").text = "Sheet1!$Z$1"
+                if cached:
+                    cache = etree.SubElement(ref, f"{C}strCache")
+                    etree.SubElement(cache, f"{C}ptCount", val="1")
+                    pt = etree.SubElement(cache, f"{C}pt", idx="0")
+                    etree.SubElement(pt, f"{C}v").text = "Revenue by year"
+                dest = self.dst.slides.add_slide(self.dst.slide_layouts[6])
+                report = Report()
+                rebuild_chart(source, dest, (0, 0, Inches(5), Inches(4)), report, 1)
+                saved = roundtrip(self.dst).slides[-1].shapes[0].chart
+                self.assertEqual(saved.has_title, cached)
+                if cached:
+                    self.assertEqual(saved.chart_title.text_frame.text, "Revenue by year")
+                    self.assertIsNone(saved._chartSpace.chart.find(f"{C}title//{C}strRef"))
+                self.assertTrue(report.warnings)
+                self.assertIn("cached", report.warnings[0]["detail"])
+
     def test_multiline_table_rows_receive_required_height(self):
         source = self.slide.shapes.add_table(2, 1, 0, 0, Inches(3), Inches(1))
         source.table.cell(0, 0).text = "First\nSecond\vThird"
@@ -546,6 +657,35 @@ class MasterThemeRegressions(unittest.TestCase):
         size = saved.slides[0].placeholders[1].text_frame.paragraphs[0].runs[0].font.size
         self.assertIsNotNone(size)
         self.assertEqual(size.pt, 16)
+
+
+class ParagraphColorRegressions(unittest.TestCase):
+    def test_contrast_uses_paragraph_color_before_list_style_and_run_before_paragraph(self):
+        prs = Presentation()
+        for background, paragraph_color, run_color in (
+                ("000000", "FFFFFF", None),
+                ("FFFFFF", "FFFFFF", None),
+                ("FFFFFF", "FFFFFF", "000000")):
+            slide = prs.slides.add_slide(prs.slide_layouts[6])
+            slide.background.fill.solid()
+            slide.background.fill.fore_color.rgb = RGBColor.from_string(background)
+            box = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(5), Inches(2))
+            para = box.text_frame.paragraphs[0]
+            para.font.color.rgb = RGBColor.from_string(paragraph_color)
+            run = para.add_run()
+            run.text = "Paragraph color"
+            if run_color is not None:
+                run.font.color.rgb = RGBColor.from_string(run_color)
+            style = box.text_frame._txBody.find(f"{A}lstStyle")
+            props = etree.SubElement(style, f"{A}lvl1pPr")
+            defaults = etree.SubElement(props, f"{A}defRPr")
+            fill = etree.SubElement(defaults, f"{A}solidFill")
+            etree.SubElement(fill, f"{A}srgbClr", val="000000")
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "paragraph-colors.pptx"
+            prs.save(path)
+            _, findings = lint(str(path), require_notes=False)
+        self.assertEqual([f["slide"] for f in findings if f["check"] == "contrast"], [2])
 
 
 class PreviewRegressions(unittest.TestCase):

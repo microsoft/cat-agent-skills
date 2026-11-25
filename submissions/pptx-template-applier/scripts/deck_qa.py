@@ -115,6 +115,9 @@ def _text_color(sh, run_el, level, colors, cmap):
     rpr = run_el.find(f"{A}rPr")
     if rpr is not None and rpr.find(f"{A}solidFill") is not None:
         return resolve_color(first_color_child(rpr.find(f"{A}solidFill")), colors, cmap)
+    sf = run_el.getparent().find(f"{A}pPr/{A}defRPr/{A}solidFill")
+    if sf is not None:
+        return resolve_color(first_color_child(sf), colors, cmap)
     lst = sh._element.find(f"{P}txBody/{A}lstStyle")
     c = _lst_color(lst, level, colors, cmap)
     if c:

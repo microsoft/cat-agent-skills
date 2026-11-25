@@ -66,8 +66,11 @@ def paragraphs_of(tf):
             except (AttributeError, KeyError):
                 url = None
             text = child.find(f"{A}t")
-            runs.append({"text": (text.text or "") if text is not None else "", "bold": r.font.bold, "italic": r.font.italic,
-                         "underline": bool(r.font.underline) if r.font.underline is not None else None, "url": url})
+            style = {}
+            for name in ("bold", "italic", "underline"):
+                value = getattr(r.font, name)
+                style[name] = value if value is not None else getattr(p.font, name)
+            runs.append({"text": (text.text or "") if text is not None else "", **style, "url": url})
         if not runs and p.text:
             runs = [{"text": p.text, "bold": None, "italic": None, "underline": None, "url": None}]
         out.append({"level": p.level, "runs": runs, "bullet": _bullet_of(p, tf)})

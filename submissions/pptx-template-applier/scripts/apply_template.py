@@ -103,8 +103,8 @@ def write_paragraphs(tf, paragraphs, sizes=None):
                 r.font.bold = run["bold"]
             if run.get("italic") is not None:
                 r.font.italic = run["italic"]
-            if run.get("underline"):
-                r.font.underline = True
+            if run.get("underline") is not None:
+                r.font.underline = run["underline"]
             if run.get("url"):
                 r.hyperlink.address = run["url"]
             if sizes:
@@ -467,7 +467,7 @@ LINE_TYPES = {XL_CHART_TYPE.LINE, XL_CHART_TYPE.LINE_MARKERS, XL_CHART_TYPE.LINE
               XL_CHART_TYPE.LINE_MARKERS_STACKED, XL_CHART_TYPE.RADAR, XL_CHART_TYPE.RADAR_MARKERS}
 
 
-def copy_chart_text(root, src, dst, rep, n, context):
+def copy_chart_text(root, src, dst, rep, n, context, cmap):
     """Freeze workbook-linked text before carrying chart text into a new workbook."""
     from lxml import etree
     for ref in list(root.iter(f"{C}strRef")):
@@ -488,10 +488,12 @@ def copy_chart_text(root, src, dst, rep, n, context):
     if not copy_rels(root, src.part, dst.part, rep, n):
         rep.warn(n, f"{context} has an unsupported embedded part: re-add it by hand")
         return False
+    remap_colors(root, cmap)
+    strip_fonts(root)
     return True
 
 
-def copy_chart_labels(src, dst, rep, n, name):
+def copy_chart_labels(src, dst, rep, n, name, cmap):
     """Keep plot/series label XML, including per-point text and number formats."""
     pairs = [(src.plots[0]._element, dst.plots[0]._element)]
     pairs += [(s._element, d._element) for s, d in zip(src.series, dst.series)]
@@ -502,7 +504,7 @@ def copy_chart_labels(src, dst, rep, n, name):
         labels = copy.deepcopy(labels)
         if labels.find(f".//{C}extLst") is not None:
             rep.warn(n, f"chart '{name}' uses extended label settings: verify them by hand; workbook-linked extensions may not carry over")
-        if not copy_chart_text(labels, src, dst, rep, n, f"chart '{name}' label"):
+        if not copy_chart_text(labels, src, dst, rep, n, f"chart '{name}' label", cmap):
             continue
         existing = target.find(f"{C}dLbls")
         if existing is not None:
@@ -511,7 +513,7 @@ def copy_chart_labels(src, dst, rep, n, name):
         target._insert_dLbls(labels)
 
 
-def copy_chart_axes(src, dst, rep, n, name):
+def copy_chart_axes(src, dst, rep, n, name, cmap):
     source_area = src._chartSpace.find(f"{C}chart/{C}plotArea")
     target_area = dst._chartSpace.find(f"{C}chart/{C}plotArea")
     for tag in ("catAx", "dateAx", "valAx", "serAx"):
@@ -522,6 +524,9 @@ def copy_chart_axes(src, dst, rep, n, name):
                 rep.warn(n, f"chart '{name}' {tag} settings cannot be carried over: verify its axis title and number format")
                 continue
             target = targets[i]
+            scaling = source.find(f"{C}scaling")
+            if scaling is not None:
+                target.replace(target.find(f"{C}scaling"), copy.deepcopy(scaling))
             for setting in ("title", "numFmt"):
                 node = source.find(f"{C}{setting}")
                 if node is None:
@@ -531,7 +536,7 @@ def copy_chart_axes(src, dst, rep, n, name):
                     rep.warn(n, f"chart '{name}' {tag} {setting} is not supported: re-add it by hand")
                     continue
                 node = copy.deepcopy(node)
-                if setting == "title" and not copy_chart_text(node, src, dst, rep, n, f"chart '{name}' axis title"):
+                if setting == "title" and not copy_chart_text(node, src, dst, rep, n, f"chart '{name}' axis title", cmap):
                     continue
                 if setting == "title" and node.find(f"{C}tx") is None:
                     continue
@@ -541,8 +546,10 @@ def copy_chart_axes(src, dst, rep, n, name):
                 insert(node)
 
 
-def rebuild_chart(sh, dst_slide, area, rep, n):
+def rebuild_chart(sh, dst_slide, area, rep, n, cmap=None):
     src = sh.chart
+    if cmap is None:
+        cmap = build_color_map([src._chartSpace], {})
     try:
         ctype = src.chart_type
     except (NotImplementedError, KeyError, ValueError):
@@ -565,13 +572,14 @@ def rebuild_chart(sh, dst_slide, area, rep, n):
     if src.has_legend:
         ch.legend.position = src.legend.position
         ch.legend.include_in_layout = False
-    if src.has_title and src.chart_title.has_text_frame and src.chart_title.text_frame.text.strip():
-        ch.has_title = True
-        ch.chart_title.text_frame.text = src.chart_title.text_frame.text
-    else:
-        ch.has_title = False
-    copy_chart_labels(src, ch, rep, n, sh.name)
-    copy_chart_axes(src, ch, rep, n, sh.name)
+    ch.has_title = False
+    if src.has_title:
+        title = copy.deepcopy(src._chartSpace.chart.find(f"{C}title"))
+        if (copy_chart_text(title, src, ch, rep, n, f"chart '{sh.name}' title", cmap)
+                and title.find(f"{C}tx") is not None):
+            ch._chartSpace.chart._insert_title(title)
+    copy_chart_labels(src, ch, rep, n, sh.name, cmap)
+    copy_chart_axes(src, ch, rep, n, sh.name, cmap)
     if ctype in PIE_TYPES:
         for j, pt in enumerate(ch.plots[0].series[0].points):
             pt.format.fill.solid()
@@ -592,7 +600,7 @@ def place_graphic(g, src_slide, dst_slide, box, scale, cmap, floor_table, rep, n
     if typ == "table":
         return rebuild_table(sh, dst_slide, box, floor_table, rep, n, cf)
     if typ == "chart":
-        out = rebuild_chart(sh, dst_slide, box, rep, n)
+        out = rebuild_chart(sh, dst_slide, box, rep, n, cmap)
         if out is None:
             rep.warn(n, f"chart '{sh.name}' is a type this script does not rebuild (scatter, bubble or combo): "
                         "copied as a picture is not possible, re-insert it by hand from the source deck")
@@ -705,7 +713,7 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
     all_pictures = pictures + [g for g in graphics if g["type"] == "picture"]
     joint_graphics = [g for g in graphics if g["type"] != "picture"] + all_pictures[reserved_pictures:]
     joint_transform = None
-    if texts and joint_graphics and all(t.get("box") for t in texts):
+    if texts and (joint_graphics or len(texts) > len(free_bodies)) and all(t.get("box") for t in texts):
         area = union([emu_box(p) for p in free_bodies]) or content_area(slide, W, H, title_box)
         joint_transform = make_transform(union([it["box"] for it in texts + joint_graphics if it.get("box")]), area)
         rep.fix(n, "body text and extra graphics laid out together to preserve their relative positions")
@@ -844,7 +852,8 @@ def build(mapping, out, split_spec, floors):
         rep.fix(0, f"{removed} template sample slide(s) removed; masters and layouts kept")
     sprs = open_deck(src_path)
     SW, SH = sprs.slide_width, sprs.slide_height
-    cmap = build_color_map([s._element for s in sprs.slides], theme_colors(sprs))
+    chart_elements = [sh.chart._chartSpace for s in sprs.slides for sh in s.shapes if sh.has_chart]
+    cmap = build_color_map([s._element for s in sprs.slides] + chart_elements, theme_colors(sprs))
     split_all = split_spec == "all"
     split_set = set() if split_all or not split_spec else {int(x) for x in split_spec.split(",") if x.strip().isdigit()}
     out_no = 1
