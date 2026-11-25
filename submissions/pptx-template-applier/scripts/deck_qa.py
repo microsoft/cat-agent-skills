@@ -40,9 +40,9 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from apply_template import char_factor, default_sizes, text_height_pt  # noqa: E402
-from deck_model import paragraphs_of  # noqa: E402
+from deck_model import graphic_type, paragraphs_of  # noqa: E402
 from pptx_common import (A, P, clr_map, contrast, emu_box, first_color_child, open_deck,  # noqa: E402
-                         ph_type, resolve_color, role_of, text_of, theme_colors, theme_fonts)
+                         ph_type, picture_bounds, resolve_color, role_of, text_of, theme_colors, theme_fonts)
 
 PROMPTS = re.compile(r"click to (add|edit)|lorem ipsum|dolor sit amet|your (text|title|subtitle|logo) here|"
                      r"(title|headline|subtitle|text) goes here|replace (this|with)|sample (text|headline|title)|"
@@ -179,8 +179,6 @@ def _inter(a, b):
 def lint(path, template=None, require_notes=True, source=None):
     prs = open_deck(path)
     W, H = prs.slide_width, prs.slide_height
-    colors, cmap = theme_colors(prs), clr_map(prs)
-    cf = char_factor(theme_fonts(prs))
     own = deck_lines(source)
     leftovers = deck_lines(template) - own  # text the source also has is content, not leftover
     out = []
@@ -189,10 +187,13 @@ def lint(path, template=None, require_notes=True, source=None):
         out.append({"level": level, "slide": i, "check": check, "detail": detail})
 
     for i, s in enumerate(prs.slides, 1):
+        master = s.slide_layout.slide_master
+        colors, cmap = theme_colors(prs, master), clr_map(prs, master)
+        cf = char_factor(theme_fonts(prs, master))
         bg = _bg_color(s, colors, cmap)
         boxes = []
         for sh in s.shapes:
-            b = emu_box(sh)
+            b = picture_bounds(sh) if graphic_type(sh) == "picture" else emu_box(sh)
             if b:
                 if b[0] < -9525 or b[1] < -9525 or b[0] + b[2] > W + 9525 or b[1] + b[3] > H + 9525:
                     add("FAIL", i, "off_slide", f"'{sh.name}' runs outside the slide")

@@ -15,6 +15,7 @@ Standard library plus python-pptx. Never executes content from a deck.
 from __future__ import annotations
 
 import io
+import math
 import re
 import zipfile
 
@@ -85,6 +86,17 @@ def emu_box(shape):
         return (int(shape.left), int(shape.top), int(shape.width), int(shape.height))
     except (AttributeError, ValueError, KeyError):
         return None
+
+
+def picture_bounds(shape):
+    """Axis-aligned bounds after rotating a picture around its center."""
+    box = emu_box(shape)
+    if box is None:
+        return None
+    angle = math.radians(shape.rotation)
+    c, s = abs(math.cos(angle)), abs(math.sin(angle))
+    w, h = box[2] * c + box[3] * s, box[2] * s + box[3] * c
+    return (box[0] + (box[2] - w) / 2, box[1] + (box[3] - h) / 2, w, h)
 
 
 def ph_type(shape):
@@ -184,14 +196,14 @@ def text_of(shape) -> str:
 
 # ---------- theme helpers ----------
 
-def theme_part(prs):
-    return prs.slide_master.part.part_related_by(RT.THEME)
+def theme_part(prs, master=None):
+    return (master if master is not None else prs.slide_master).part.part_related_by(RT.THEME)
 
 
-def theme_colors(prs) -> dict:
-    """Theme color scheme of the first master as {'dk1': 'RRGGBB', ...}."""
+def theme_colors(prs, master=None) -> dict:
+    """Theme color scheme of the selected master (first master by default)."""
     from lxml import etree
-    root = etree.fromstring(theme_part(prs).blob, parser=etree.XMLParser(resolve_entities=False, no_network=True))
+    root = etree.fromstring(theme_part(prs, master).blob, parser=etree.XMLParser(resolve_entities=False, no_network=True))
     out = {}
     scheme = root.find(f".//{A}clrScheme")
     if scheme is None:
@@ -207,9 +219,9 @@ def theme_colors(prs) -> dict:
     return out
 
 
-def theme_fonts(prs) -> dict:
+def theme_fonts(prs, master=None) -> dict:
     from lxml import etree
-    root = etree.fromstring(theme_part(prs).blob, parser=etree.XMLParser(resolve_entities=False, no_network=True))
+    root = etree.fromstring(theme_part(prs, master).blob, parser=etree.XMLParser(resolve_entities=False, no_network=True))
     out = {}
     for key, tag in (("major", "majorFont"), ("minor", "minorFont")):
         el = root.find(f".//{A}fontScheme/{A}{tag}/{A}latin")
@@ -218,13 +230,11 @@ def theme_fonts(prs) -> dict:
     return out
 
 
-def clr_map(prs) -> dict:
-    el = prs.slide_master._element.find(f"{P}clrMap")
+def clr_map(prs, master=None) -> dict:
+    el = (master if master is not None else prs.slide_master)._element.find(f"{P}clrMap")
     m = {"bg1": "lt1", "tx1": "dk1", "bg2": "lt2", "tx2": "dk2"}
     if el is not None:
-        for k in ("bg1", "tx1", "bg2", "tx2"):
-            if el.get(k):
-                m[k] = el.get(k)
+        m.update(el.attrib)
     return m
 
 

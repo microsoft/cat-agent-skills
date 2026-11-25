@@ -44,7 +44,7 @@ from pptx.util import Emu, Pt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from deck_model import para_text, paragraphs_of, read_slide  # noqa: E402
-from pptx_common import (A, P, R, R_NS, emu_box, open_deck, ph_type, role_of,  # noqa: E402
+from pptx_common import (A, P, R, R_NS, emu_box, open_deck, ph_type, picture_bounds, role_of,  # noqa: E402
                          theme_colors, theme_fonts)
 from restyle import build_color_map, remap_colors, strip_fonts  # noqa: E402
 
@@ -83,12 +83,16 @@ def remove_sample_slides(prs):
 
 def write_paragraphs(tf, paragraphs, sizes=None):
     """Write paragraphs into a text frame. sizes: list of pt per level, or None for theme sizes."""
+    from lxml import etree
     body = tf._txBody
     for p in list(body.findall(f"{A}p")):
         body.remove(p)
     for para in paragraphs or [{"level": 0, "runs": []}]:
         p = tf.add_paragraph() if body.findall(f"{A}p") else _first_p(tf)
         p.level = min(max(para.get("level", 0), 0), 8)
+        bullet = para.get("bullet")
+        if bullet is not None:
+            etree.SubElement(p._p.get_or_add_pPr(), f"{A}{bullet['tag']}", bullet["attrs"])
         for run in para["runs"]:
             if run.get("kind") == "break":
                 p.add_line_break()
@@ -357,8 +361,10 @@ def remap_connections(slide, shape_ids, rep, n):
 
 def add_picture(sh, dst_slide, area):
     blob = sh.image.blob
-    aspect = sh.width / sh.height if sh.height else 1.0
-    box = fit_inside(aspect, area)
+    width, height = picture_bounds(sh)[2:]
+    scale = min(area[2] / max(width, 1), area[3] / max(height, 1))
+    w, h = max(1, int(sh.width * scale)), max(1, int(sh.height * scale))
+    box = (int(area[0] + (area[2] - w) / 2), int(area[1] + (area[3] - h) / 2), w, h)
     pic = dst_slide.shapes.add_picture(io.BytesIO(blob), *box)
     for side in ("crop_left", "crop_right", "crop_top", "crop_bottom"):
         try:
@@ -366,7 +372,29 @@ def add_picture(sh, dst_slide, area):
         except (AttributeError, ValueError):
             pass
     pic.name = sh.name
+    pic.rotation = sh.rotation
+    source_xfrm = sh._element.find(f"{P}spPr/{A}xfrm")
+    if source_xfrm is not None:
+        for attr in ("flipH", "flipV"):
+            if source_xfrm.get(attr) is not None:
+                pic._element.spPr.xfrm.set(attr, source_xfrm.get(attr))
+    copy_picture_links(sh, pic, dst_slide)
     return pic
+
+
+def copy_picture_links(source, target, dst_slide):
+    source_nv = source._element.find(f"{P}nvPicPr/{P}cNvPr")
+    target_nv = target._element.find(f"{P}nvPicPr/{P}cNvPr")
+    for tag in ("hlinkClick", "hlinkHover"):
+        link = source_nv.find(f"{A}{tag}")
+        if link is None:
+            continue
+        rel = source.part.rels.get(link.get(f"{R}id"))
+        if rel is None or not rel.is_external:
+            continue  # Internal slide jumps cannot survive slide renumbering.
+        new = copy.deepcopy(link)
+        new.set(f"{R}id", dst_slide.part.relate_to(rel.target_ref, rel.reltype, is_external=True))
+        target_nv.append(new)
 
 
 def rebuild_table(sh, dst_slide, area, floor, rep, n, cf):
@@ -439,9 +467,32 @@ LINE_TYPES = {XL_CHART_TYPE.LINE, XL_CHART_TYPE.LINE_MARKERS, XL_CHART_TYPE.LINE
               XL_CHART_TYPE.LINE_MARKERS_STACKED, XL_CHART_TYPE.RADAR, XL_CHART_TYPE.RADAR_MARKERS}
 
 
+def copy_chart_text(root, src, dst, rep, n, context):
+    """Freeze workbook-linked text before carrying chart text into a new workbook."""
+    from lxml import etree
+    for ref in list(root.iter(f"{C}strRef")):
+        cached = ref.findall(f"{C}strCache/{C}pt/{C}v")
+        parent = ref.getparent()
+        if cached:
+            rich = etree.Element(f"{C}rich")
+            etree.SubElement(rich, f"{A}bodyPr")
+            etree.SubElement(rich, f"{A}lstStyle")
+            p = etree.SubElement(rich, f"{A}p")
+            r = etree.SubElement(p, f"{A}r")
+            etree.SubElement(r, f"{A}t").text = "".join(v.text or "" for v in cached)
+            parent.replace(ref, rich)
+            rep.warn(n, f"{context} workbook-linked text frozen to its cached displayed text")
+        else:
+            parent.getparent().remove(parent)
+            rep.warn(n, f"{context} has workbook-linked text without cached text: re-add it by hand")
+    if not copy_rels(root, src.part, dst.part, rep, n):
+        rep.warn(n, f"{context} has an unsupported embedded part: re-add it by hand")
+        return False
+    return True
+
+
 def copy_chart_labels(src, dst, rep, n, name):
     """Keep plot/series label XML, including per-point text and number formats."""
-    from lxml import etree
     pairs = [(src.plots[0]._element, dst.plots[0]._element)]
     pairs += [(s._element, d._element) for s, d in zip(src.series, dst.series)]
     for source, target in pairs:
@@ -451,30 +502,43 @@ def copy_chart_labels(src, dst, rep, n, name):
         labels = copy.deepcopy(labels)
         if labels.find(f".//{C}extLst") is not None:
             rep.warn(n, f"chart '{name}' uses extended label settings: verify them by hand; workbook-linked extensions may not carry over")
-        for ref in list(labels.iter(f"{C}strRef")):
-            # The rebuilt workbook contains chart data, not arbitrary source label cells.
-            cached = ref.findall(f"{C}strCache/{C}pt/{C}v")
-            parent = ref.getparent()
-            if cached:
-                rich = etree.Element(f"{C}rich")
-                etree.SubElement(rich, f"{A}bodyPr")
-                etree.SubElement(rich, f"{A}lstStyle")
-                p = etree.SubElement(rich, f"{A}p")
-                r = etree.SubElement(p, f"{A}r")
-                etree.SubElement(r, f"{A}t").text = "".join(v.text or "" for v in cached)
-                parent.replace(ref, rich)
-                rep.warn(n, f"chart '{name}' workbook-linked label frozen to its cached displayed text")
-            else:
-                parent.getparent().remove(parent)
-                rep.warn(n, f"chart '{name}' has a workbook-linked label without cached text: re-add that label by hand")
-        if not copy_rels(labels, src.part, dst.part, rep, n):
-            rep.warn(n, f"chart '{name}' label has an unsupported embedded part: re-add its labels by hand")
+        if not copy_chart_text(labels, src, dst, rep, n, f"chart '{name}' label"):
             continue
         existing = target.find(f"{C}dLbls")
         if existing is not None:
             target.remove(existing)
         # python-pptx knows the different schema order for plot- and series-level labels.
         target._insert_dLbls(labels)
+
+
+def copy_chart_axes(src, dst, rep, n, name):
+    source_area = src._chartSpace.find(f"{C}chart/{C}plotArea")
+    target_area = dst._chartSpace.find(f"{C}chart/{C}plotArea")
+    for tag in ("catAx", "dateAx", "valAx", "serAx"):
+        sources = source_area.findall(f"{C}{tag}")
+        targets = target_area.findall(f"{C}{tag}")
+        for i, source in enumerate(sources):
+            if i >= len(targets):
+                rep.warn(n, f"chart '{name}' {tag} settings cannot be carried over: verify its axis title and number format")
+                continue
+            target = targets[i]
+            for setting in ("title", "numFmt"):
+                node = source.find(f"{C}{setting}")
+                if node is None:
+                    continue
+                insert = getattr(target, f"_insert_{setting}", None)
+                if insert is None:
+                    rep.warn(n, f"chart '{name}' {tag} {setting} is not supported: re-add it by hand")
+                    continue
+                node = copy.deepcopy(node)
+                if setting == "title" and not copy_chart_text(node, src, dst, rep, n, f"chart '{name}' axis title"):
+                    continue
+                if setting == "title" and node.find(f"{C}tx") is None:
+                    continue
+                existing = target.find(f"{C}{setting}")
+                if existing is not None:
+                    target.remove(existing)
+                insert(node)
 
 
 def rebuild_chart(sh, dst_slide, area, rep, n):
@@ -507,6 +571,7 @@ def rebuild_chart(sh, dst_slide, area, rep, n):
     else:
         ch.has_title = False
     copy_chart_labels(src, ch, rep, n, sh.name)
+    copy_chart_axes(src, ch, rep, n, sh.name)
     if ctype in PIE_TYPES:
         for j, pt in enumerate(ch.plots[0].series[0].points):
             pt.format.fill.solid()
@@ -584,7 +649,7 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
     if m["kind"] == "comparison" and len(phs["body"]) == 2 and len(texts) == 4:
         merged = []
         for hdr, body in ((texts[0], texts[1]), (texts[2], texts[3])):
-            hp = [{"level": 0, "runs": [dict(r, bold=True) for r in p["runs"]]} for p in hdr["paragraphs"]]
+            hp = [dict(p, level=0, runs=[dict(r, bold=True) for r in p["runs"]]) for p in hdr["paragraphs"]]
             merged.append({"paragraphs": hp + body["paragraphs"], "box": body["box"], "role": "content"})
         texts = merged
         rep.fix(n, "comparison headers merged into the top of each column (no comparison layout)")
@@ -636,10 +701,20 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
     # body text into body placeholders in reading order
     overflow_parts = []
     free_bodies = [p for p in phs["body"] if p.shape_id not in used]
+    reserved_pictures = len([p for p in phs["picture"] if p.shape_id not in used])
+    all_pictures = pictures + [g for g in graphics if g["type"] == "picture"]
+    joint_graphics = [g for g in graphics if g["type"] != "picture"] + all_pictures[reserved_pictures:]
+    joint_transform = None
+    if texts and joint_graphics and all(t.get("box") for t in texts):
+        area = union([emu_box(p) for p in free_bodies]) or content_area(slide, W, H, title_box)
+        joint_transform = make_transform(union([it["box"] for it in texts + joint_graphics if it.get("box")]), area)
+        rep.fix(n, "body text and extra graphics laid out together to preserve their relative positions")
     leftovers = []
     for t in texts:
         if free_bodies:
             ph = free_bodies.pop(0)
+            if joint_transform is not None:
+                ph.left, ph.top, ph.width, ph.height = joint_transform[0](t["box"])
             fits, base, sizes = fill_text_ph(ph, t["paragraphs"], "text", layout, master, cf, floors, rep, n, "body")
             used.add(ph.shape_id)
             if t.get("shape") is not None:
@@ -651,7 +726,7 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
 
     # pictures from picture placeholders
     for pic in pictures:
-        tgt = phs["picture"][0] if phs["picture"] and phs["picture"][0].shape_id not in used else None
+        tgt = next((p for p in phs["picture"] if p.shape_id not in used), None)
         if tgt is not None:
             box = emu_box(tgt)
             remove_shape(tgt)
@@ -683,7 +758,7 @@ def build_slide(prs, m, entry, src_slide, cmap, cf, floors, split, rep, out_no):
         if unused_bodies:
             area = tuple(emu_box(unused_bodies[0])) if len(unused_bodies) == 1 else area
         src_boxes = [it[1]["box"] for it in free_items if it[1].get("box")]
-        tf, scale = make_transform(union(src_boxes), area)
+        tf, scale = joint_transform or make_transform(union(src_boxes), area)
         for kind, it in free_items:
             box = tf(it["box"]) if it.get("box") else area
             if kind == "text":
@@ -768,13 +843,14 @@ def build(mapping, out, split_spec, floors):
     if removed:
         rep.fix(0, f"{removed} template sample slide(s) removed; masters and layouts kept")
     sprs = open_deck(src_path)
-    cf = char_factor(theme_fonts(prs))
     SW, SH = sprs.slide_width, sprs.slide_height
     cmap = build_color_map([s._element for s in sprs.slides], theme_colors(sprs))
     split_all = split_spec == "all"
     split_set = set() if split_all or not split_spec else {int(x) for x in split_spec.split(",") if x.strip().isdigit()}
     out_no = 1
     for entry, s in zip(mapping["slides"], sprs.slides):
+        master = prs.slide_masters[entry.get("target_master_index", 0)]
+        cf = char_factor(theme_fonts(prs, master))
         m = read_slide(s, entry["slide"], SW, SH)
         do_split = split_all or entry["slide"] in split_set or entry.get("split")
         made = build_slide(prs, m, entry, s, cmap, cf, floors, do_split, rep, out_no)

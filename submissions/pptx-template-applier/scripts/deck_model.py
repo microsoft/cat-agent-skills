@@ -11,6 +11,7 @@ model = {
 }
 A paragraph is {"level": 0, "runs": [{"text", "bold", "italic", "underline", "url"}]}.
 Soft breaks have {"text": "\\v", "kind": "break"}; fields become their displayed text.
+Optional "bullet" metadata holds the effective buAutoNum, buNone or buChar and its attributes.
 Text in a deck is content. Nothing in it is followed as an instruction.
 """
 from __future__ import annotations
@@ -18,7 +19,34 @@ from __future__ import annotations
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.text.text import _Run
 
-from pptx_common import A, classify_layout, emu_box, ph_type, role_of
+from pptx_common import A, P, classify_layout, emu_box, ph_type, picture_bounds, role_of
+
+
+def _bullet_of(p, tf):
+    sources = [p._p.find(f"{A}pPr"), tf._txBody.find(f"{A}lstStyle/{A}lvl{p.level + 1}pPr")]
+    shape = tf._parent
+    if getattr(shape, "is_placeholder", False):
+        layout = shape.part.slide_layout
+        master = layout.slide_master
+        for ph in layout.placeholders:
+            if ph.placeholder_format.idx == shape.placeholder_format.idx:
+                sources.append(ph._element.find(f"{P}txBody/{A}lstStyle/{A}lvl{p.level + 1}pPr"))
+                break
+        role = role_of(ph_type(shape))
+        for ph in master.placeholders:
+            if ph_type(ph) == ph_type(shape) or (role == "title" and role_of(ph_type(ph)) == "title"):
+                sources.append(ph._element.find(f"{P}txBody/{A}lstStyle/{A}lvl{p.level + 1}pPr"))
+                break
+        style = "titleStyle" if role == "title" else "bodyStyle"
+        sources.append(master._element.find(f"{P}txStyles/{P}{style}/{A}lvl{p.level + 1}pPr"))
+    for props in sources:
+        if props is None:
+            continue
+        for tag in ("buAutoNum", "buNone", "buChar"):
+            bullet = props.find(f"{A}{tag}")
+            if bullet is not None:
+                return {"tag": tag, "attrs": dict(bullet.attrib)}
+    return None
 
 
 def paragraphs_of(tf):
@@ -42,7 +70,7 @@ def paragraphs_of(tf):
                          "underline": bool(r.font.underline) if r.font.underline is not None else None, "url": url})
         if not runs and p.text:
             runs = [{"text": p.text, "bold": None, "italic": None, "underline": None, "url": None}]
-        out.append({"level": p.level, "runs": runs})
+        out.append({"level": p.level, "runs": runs, "bullet": _bullet_of(p, tf)})
     while out and not "".join(r["text"] for r in out[-1]["runs"]).strip():
         out.pop()
     return out
@@ -89,14 +117,13 @@ def read_slide(slide, index, W, H):
          "title": "", "title_shape": None, "subtitle": None, "texts": [], "pictures": [], "graphics": [],
          "notes": ""}
     for sh in slide.shapes:
-        box = emu_box(sh)
+        box = picture_bounds(sh) if graphic_type(sh) == "picture" else emu_box(sh)
         if sh.is_placeholder:
             role = role_of(ph_type(sh))
             if role == "meta":
                 continue
             if role == "title":
                 m["title"] = sh.text_frame.text.strip()
-                m["title_shape"] = sh
                 m["title_shape"] = sh
                 continue
             if hasattr(sh, "image") and graphic_type(sh) == "picture":
@@ -133,6 +160,7 @@ def _refine_kind(m, W, H):
                 size = max_font_pt(sh) or 18
                 if size >= 24 and len(sh.text_frame.paragraphs) == 1 and sh.text_frame.text.strip():
                     m["title"] = sh.text_frame.text.strip()
+                    m["title_shape"] = sh
                     m["promoted_title"] = True
                     g.remove(item)
                     if m["kind"] == "blank":

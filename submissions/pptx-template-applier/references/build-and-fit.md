@@ -17,11 +17,11 @@ What `apply_template.py` does with each kind of content, the text-fit rules, and
 |---|---|
 | Title | Into the title placeholder. Without one, a text box in the theme heading font, with a warning. |
 | Subtitle | Into the subtitle placeholder, else the first free body placeholder. |
-| Body text | Into body or content placeholders in reading order (left column first, then top to bottom). Bullet levels, bold, italic, underline and links are kept. Hard-coded fonts, sizes and colors are dropped so the template's styles apply. |
+| Body text | Into body or content placeholders in reading order (left column first, then top to bottom). Bullet levels, numbering types and starting numbers, explicit bullet suppression, bold, italic, underline and links are kept. Hard-coded fonts, sizes and colors are dropped so the template's styles apply. |
 | Comparison onto two columns | Each header is merged, in bold, at the top of its column. |
 | Table | Rebuilt with the same rows, columns, relative column widths, merged cells and text, using the themed table style (header and banding in the template's accent 1). Hard-coded cell fills are dropped. Font size is the largest from 18 pt down to the table floor that fits. |
-| Chart | Rebuilt from its data for category charts (column, bar, line, area, pie, doughnut, radar): categories, series names and values, legend and its position, chart title and data labels. Series use theme accents 1 to 6 in order. Scatter, bubble and combo charts are not rebuilt: they are listed as warnings. |
-| Picture | Same image, same crop, fitted inside the target area without stretching or extra cropping. Goes into a free picture placeholder first. |
+| Chart | Rebuilt from its data for category charts (column, bar, line, area, pie, doughnut, radar): categories, series names and values, legend and its position, chart title, data labels, axis titles and explicit tick-label number formats. Axis settings that cannot be carried over are reported. Series use theme accents 1 to 6 in order. Scatter, bubble and combo charts are not rebuilt: they are listed as warnings. |
+| Picture | Same image, crop, rotation and flips, fitted using its rotated bounds without stretching or extra cropping. External click and hover links are kept. Goes into a free picture placeholder first. |
 | Shapes, text boxes, groups, connectors | Copied with their pictures and links, scaled into the content area as a group so their layout holds. Hard-coded colors map to theme slots, hard-coded font faces are dropped, font sizes scale with the group (not below 10 pt). |
 | Embedded objects, SmartArt, video | Not carried over (the parts cannot move safely between files). Listed as warnings. |
 | Speaker notes | Copied as text. |
@@ -35,6 +35,10 @@ reported; missing caches or extended label settings require a manual check. Copi
 receive fresh shape IDs and connector endpoints are translated after all copied shapes are placed.
 Endpoints whose targets were not carried over are detached and reported rather than attached to an
 unrelated shape.
+Promoted title text boxes use the same rich-text and connector-ID mapping as title placeholders.
+When body text shares its content area with extra pictures or shapes, both use one geometric transform
+from the source arrangement, rather than recentering graphics over the body text. Existing source
+overlaps are preserved and remain subject to visual QA.
 
 ## 3. Color mapping
 
@@ -50,7 +54,8 @@ The map is in `build.json` under `color_map` and in the summary.
 ## 4. Text fit
 
 - The starting size comes from the template: the layout placeholder's list style, then the master
-  placeholder, then the master text styles.
+  placeholder, then the master text styles. Font-width estimates use the selected layout's master
+  theme, including when a template has several masters.
 - The script estimates the lines each paragraph needs from the box width, font size and indent level.
   The estimate assumes wider letters for fonts such as Verdana or Segoe.
 - If the text does not fit, every level shrinks in 2 pt steps (level ratios kept) down to the floor.
