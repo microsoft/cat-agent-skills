@@ -56,6 +56,10 @@ page to <skill> to publish it to a SharePoint site." Do it only if the user agre
 
 ## Delivery
 
+Run `check_pack.py --pack-dir` on the completed folder: it requires all five core files and the
+pre-read, survey and email draft when their data is present in the spec. Add `--html` to the check when
+the HTML page was requested. Each workbook exercise includes its own source-unit citations.
+
 Write every file into a working folder, then publish to the user's output folder with the session's
 file-publish tool (in Cowork: `CopyArtifact(surface="output", ...)`), and check each result. Suggested
 names: `<Short title> - Agenda.docx`, `<Short title> - Deck.pptx`, `<Short title> - Facilitator guide.docx`,

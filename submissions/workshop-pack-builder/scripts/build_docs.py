@@ -267,6 +267,8 @@ def build_workbook(spec, cite, brand, out_dir):
             d.bullets(a.get("instructions", []), numbered=True)
             d.p(", ".join(a.get("materials", [])) or "-", bold_lead="You need:")
             d.p(a.get("expected_output", ""), bold_lead="You produce:")
+            if a.get("sources"):
+                d.p(cite.short(a["sources"]), bold_lead="Grounded in:")
             d.h("Your work", 3)
             d.lines(8)
             d.h("Reflect", 3)

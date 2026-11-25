@@ -71,7 +71,7 @@ python scripts/build_deck.py assets/example/workshop.example.json --out working/
 python scripts/build_docs.py assets/example/workshop.example.json --out-dir working/pack \
   --source-map working/source_map.json --html
 python scripts/check_pack.py assets/example/workshop.example.json --source-map working/source_map.json \
-  --pack-dir working/pack --deck working/pack/deck.pptx
+  --pack-dir working/pack --deck working/pack/deck.pptx --html
 python scripts/deck_preview.py working/pack/deck.pptx --out-dir working/preview
 ```
 

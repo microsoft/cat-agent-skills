@@ -2,7 +2,7 @@
 """Quality gate for a workshop pack. Static: it reads files, it runs nothing.
 
   python check_pack.py workshop.json [--source-map source_map.json] \
-      [--pack-dir pack/] [--deck pack/deck.pptx] [--json]
+      [--pack-dir pack/] [--deck pack/deck.pptx] [--html] [--json]
 
 Checks (FAIL blocks delivery, WARN needs a look):
   timing        module labels and timeboxes are 5/10/15/20/30/45/60 and the
@@ -15,6 +15,8 @@ Checks (FAIL blocks delivery, WARN needs a look):
   citations     every key point and activity cites a source; with --source-map,
                 every cited ref exists in the map
   gaps          spec.gaps exists (an empty list is fine; a missing key is a WARN)
+  pack          with --pack-dir: all five core files and optional outputs with
+                data in the spec exist; --html also requires workshop.html
   placeholders  no TODO, TBD, XXX, lorem ipsum, [insert ...], {{...}}, <field> tokens
                 tokens in the spec or in any .docx/.pptx/.md/.html in --pack-dir
   writing       no em dashes, no filler words, "understand" not used as an
@@ -104,7 +106,7 @@ def pptx_text(path):
     return out
 
 
-def check(spec, smap, pack_dir, deck):
+def check(spec, smap, pack_dir, deck, require_html=False):
     res = []
     # timing
     for r in timing.check_spec(spec):
@@ -168,7 +170,20 @@ def check(spec, smap, pack_dir, deck):
         for f in text_findings(where, t):
             res.append(f)
     # pack files
+    if require_html and not pack_dir:
+        res.append(R("FAIL", "pack", "pack", "--html requires --pack-dir to check workshop.html"))
     if pack_dir:
+        required = ["agenda.docx", "agenda-one-page.docx", "deck.pptx",
+                    "facilitator-guide.docx", "participant-workbook.docx"]
+        for key, name in (("pre_read", "pre-read.docx"), ("survey", "feedback-survey.docx"),
+                          ("follow_up_email", "follow-up-email-draft.md")):
+            if spec.get(key):
+                required.append(name)
+        if require_html:
+            required.append("workshop.html")
+        for name in required:
+            if not os.path.isfile(os.path.join(pack_dir, name)):
+                res.append(R("FAIL", name, "pack", "missing required deliverable"))
         files = sorted(glob.glob(os.path.join(pack_dir, "*")))
         if not files:
             res.append(R("FAIL", pack_dir, "pack", "no files in the pack folder"))
@@ -224,11 +239,12 @@ def main(argv=None):
     ap.add_argument("--source-map")
     ap.add_argument("--pack-dir")
     ap.add_argument("--deck")
+    ap.add_argument("--html", action="store_true", help="require the requested workshop.html in --pack-dir")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
     spec = json.load(open(a.spec, encoding="utf-8"))
     smap = json.load(open(a.source_map, encoding="utf-8")) if a.source_map else None
-    res = check(spec, smap, a.pack_dir, a.deck)
+    res = check(spec, smap, a.pack_dir, a.deck, require_html=a.html)
     fails = [r for r in res if r["level"] == "FAIL"]
     warns = [r for r in res if r["level"] == "WARN"]
     if a.json:

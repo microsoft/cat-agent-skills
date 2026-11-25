@@ -124,6 +124,8 @@ python SKILL_DIR/scripts/check_pack.py working/<slug>/workshop.json --source-map
   --pack-dir working/<slug>/pack --deck working/<slug>/pack/deck.pptx
 python SKILL_DIR/scripts/deck_preview.py working/<slug>/pack/deck.pptx --out-dir working/<slug>/preview
 ```
+- Add `--html` to the quality-gate command when the user requested the HTML page. The gate requires
+  all five core deliverables and the optional files whose content is present in `workshop.json`.
 - `check_pack.py` covers timing math, objective-to-module coverage, an activity in every module, complete
   exercise fields, sources cited and present in the map, no unresolved placeholders, no em dashes, filler
   words and an executive summary at the top of every document.

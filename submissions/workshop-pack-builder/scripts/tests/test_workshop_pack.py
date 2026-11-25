@@ -2,6 +2,7 @@
 import copy
 import io
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -47,8 +48,12 @@ class WorkshopPackTests(unittest.TestCase):
         self.assertTrue(deck.is_file())
         self.assertEqual(len(build_deck.Presentation(deck).slides), count)
         cite = build_docs.Cite(self.spec, self.smap)
+        build_docs.build_agenda(self.spec, cite, None, str(deck.parent))
         build_docs.build_guide(self.spec, cite, None, str(deck.parent))
         build_docs.build_workbook(self.spec, cite, None, str(deck.parent))
+        build_docs.build_preread(self.spec, cite, None, str(deck.parent))
+        build_docs.build_survey(self.spec, cite, None, str(deck.parent))
+        build_docs.build_email(self.spec, str(deck.parent))
         guide = "\n".join(check_pack.docx_text(deck.parent / "facilitator-guide.docx"))
         workbook = "\n".join(check_pack.docx_text(deck.parent / "participant-workbook.docx"))
         slides = "\n".join(check_pack.pptx_text(deck))
@@ -65,6 +70,58 @@ class WorkshopPackTests(unittest.TestCase):
         self.assertIn("Your work", workbook)
         findings = check_pack.check(self.spec, self.smap, str(deck.parent), str(deck))
         self.assertEqual([r for r in findings if r["level"] == "FAIL"], [])
+
+    def test_gate_rejects_missing_core_and_requested_optional_files(self):
+        spec_path = self.root / "workshop.json"
+        spec_path.write_text(json.dumps(self.spec), encoding="utf-8")
+        pack = self.root / "pack"
+        deck = pack / "deck.pptx"
+        build_deck.Deck(self.spec, self.smap, None, None).build(str(deck))
+        with redirect_stdout(io.StringIO()):
+            build_docs.main([str(spec_path), "--out-dir", str(pack), "--html"])
+            self.assertEqual(check_pack.main(
+                [str(spec_path), "--pack-dir", str(pack), "--deck", str(deck), "--html"]), 0)
+        for path in sorted(pack.iterdir()):
+            with self.subTest(missing=path.name):
+                content = path.read_bytes()
+                path.unlink()
+                findings = check_pack.check(self.spec, self.smap, str(pack), None, require_html=True)
+                self.assertTrue(any(r["level"] == "FAIL" and r["check"] == "pack"
+                                    and r["where"] == path.name for r in findings))
+                with redirect_stdout(io.StringIO()):
+                    self.assertEqual(check_pack.main(
+                        [str(spec_path), "--pack-dir", str(pack), "--html"]), 1)
+                path.write_bytes(content)
+        for name in ("pre-read.docx", "feedback-survey.docx", "follow-up-email-draft.md", "workshop.html"):
+            (pack / name).unlink()
+        core_spec = copy.deepcopy(self.spec)
+        for key in ("pre_read", "survey", "follow_up_email"):
+            del core_spec[key]
+        findings = check_pack.check(core_spec, self.smap, str(pack), None)
+        self.assertFalse(any(r["level"] == "FAIL" for r in findings))
+        notes_only = self.root / "notes-only"
+        notes_only.mkdir()
+        (notes_only / "notes.txt").write_text("Notes", encoding="utf-8")
+        findings = check_pack.check(core_spec, self.smap, str(notes_only), str(deck))
+        self.assertEqual(sum(r["check"] == "pack" and r["level"] == "FAIL" for r in findings), 5)
+        self.assertTrue(any(r["level"] == "FAIL" for r in
+                            check_pack.check(core_spec, self.smap, None, None, require_html=True)))
+
+    def test_workbook_cites_source_units_on_each_exercise_sheet(self):
+        exercises = [a for m in self.spec["modules"] for a in m.get("activities", [])
+                     if a["kind"] == "exercise"]
+        exercises[0]["sources"] = ["S2.sec1"]
+        self.smap["sources"].append({
+            "id": "S2", "title": "Second source",
+            "units": [{"ref": "S2.sec1", "heading": "Mapping practice"}]})
+        cite = build_docs.Cite(self.spec, self.smap)
+        path = build_docs.build_workbook(self.spec, cite, None, str(self.root))[0]
+        text = "\n".join(check_pack.docx_text(path))
+        sheets = re.split(r"(?m)^Exercise sheet \d+:", text)
+        self.assertIn("Grounded in: (S2: Mapping practice)", sheets[1])
+        self.assertNotIn("S1: Pilot results", sheets[1])
+        self.assertIn("Grounded in: (S1: Finding pain points; S1: Moments that matter; S1: Pilot results)",
+                      sheets[2])
 
     def test_html_font_names_cannot_escape_style_or_css_strings(self):
         payload = 'A";}body{background:url(https://example.invalid)}/*\n</style><script>alert(1)</script><style>\\'
