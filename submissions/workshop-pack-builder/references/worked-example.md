@@ -44,10 +44,16 @@ Result: 10, 15, 30, 5, 20, 10. Total 90.
 
 ## 5. Exercises
 
-- Map the online returns journey (pattern: worked example, then your turn; 20 minutes in a 30-minute
+- Map the online returns journey (guided mapping; 20 minutes in a 30-minute
   module).
-- Circle the pain points (pattern: hunt; 15 minutes in a 20-minute module), with sample evidence cards.
-- Three discussions: chat waterfall, poll and explain, commitment round.
+- Circle the pain points (pattern: hunt; 15 minutes in a 20-minute module), using the cited illustrative
+  pilot finding about entering an order number twice. Other unsupported steps stay open questions.
+- Three discussions: chat waterfall, compare two illustrative snippets shown on the discussion slide,
+  commitment round in chat. The facilitator guide repeats the snippets if screen sharing fails.
+
+The workbook supplies exercise sheets 1 and 2 with a "Your work" area. The first map can be recorded
+there if the whiteboard fails. The closing commitment uses chat and the annotated map, not a third
+exercise sheet. No separate evidence cards, example map or meeting poll is needed.
 
 Each has an objective, timebox, steps, materials, expected output, debrief questions, fallback and
 sources.
@@ -55,7 +61,7 @@ sources.
 ## 6. Gaps recorded
 
 - The guide does not say how long a session should take; the length comes from the intake.
-- The guide gives no evidence-card template; the sample cards need material from the team.
+- The guide supplies no detailed evidence for every journey step; unsupported steps remain open questions.
 
 ## 7. Build and check
 
@@ -69,4 +75,5 @@ python scripts/check_pack.py assets/example/workshop.example.json --source-map w
 python scripts/deck_preview.py working/pack/deck.pptx --out-dir working/preview
 ```
 
-Result: 22 slides, 8 documents, quality gate passed, contact sheets reviewed slide by slide.
+Expected output: 22 slides and 8 supporting files. Run the quality gate, then review the contact sheets
+slide by slide before calling the pack ready.

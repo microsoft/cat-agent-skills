@@ -117,7 +117,7 @@ def read_pdf(path):
             print(f"note: pdfplumber fallback failed for {path}: {e}", file=sys.stderr)
     for i, t in enumerate(pages, 1):
         units.append({"ref_suffix": f"page{i}", "label": f"Page {i}", "heading": "", "text": _clean(t)})
-    if units and not any(u["text"] for u in units):
+    if not units or not any(u["text"] for u in units):
         raise ValueError("no extractable text (scanned PDF?): run OCR first or ask for a text version")
     return units, title
 

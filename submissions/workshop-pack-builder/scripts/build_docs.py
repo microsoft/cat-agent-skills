@@ -29,6 +29,7 @@ import argparse
 import html
 import json
 import os
+import re
 import sys
 from datetime import datetime, timedelta
 
@@ -327,10 +328,19 @@ def build_email(spec, out_dir):
     return [path]
 
 
+def _css_string(value):
+    # HTML parses style end tags before CSS, so escape markup as well as CSS syntax.
+    return '"' + re.sub(r"[^a-zA-Z0-9 _-]", lambda m: f"\\{ord(m[0]):x} ", value) + '"'
+
+
 def build_html(spec, cite, brand, out_dir):
     b = brand or NEUTRAL
     c = {**NEUTRAL["colors"], **b.get("colors", {})}
     f = {**NEUTRAL["fonts"], **b.get("fonts", {})}
+    for name, value in c.items():
+        if not re.fullmatch(r"#[0-9a-fA-F]{6}", value):
+            raise ValueError(f"invalid HTML brand color {name}: expected #RRGGBB")
+    f = {name: _css_string(value) for name, value in f.items()}
     e = html.escape
     rows = "".join(f"<tr><td>{e(t)}</td><td>{e(m['title'])}</td><td>{m['minutes']} min</td></tr>"
                    for t, m in clock_rows(spec))
@@ -348,8 +358,8 @@ def build_html(spec, cite, brand, out_dir):
     page = f"""<!doctype html><html lang="en-US"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{e(spec['title'])}</title>
 <style>
-body{{font-family:"{f['minor']}",system-ui,sans-serif;color:{c['dk1']};margin:0;line-height:1.5}}
-header{{background:{c['dk2']};color:#fff;padding:48px 8vw}} header h1{{margin:0 0 8px;font-family:"{f['major']}",system-ui,sans-serif}}
+body{{font-family:{f['minor']},system-ui,sans-serif;color:{c['dk1']};margin:0;line-height:1.5}}
+header{{background:{c['dk2']};color:#fff;padding:48px 8vw}} header h1{{margin:0 0 8px;font-family:{f['major']},system-ui,sans-serif}}
 main{{padding:24px 8vw;max-width:960px}} h2{{color:{c['dk2']};border-bottom:3px solid {c['accent1']};padding-bottom:4px}}
 table{{border-collapse:collapse;width:100%}} td,th{{border-bottom:1px solid #d5dbe3;padding:8px;text-align:left}}
 .chip{{background:{c['accent1']};color:#fff;border-radius:12px;padding:2px 10px;font-size:.8em}}

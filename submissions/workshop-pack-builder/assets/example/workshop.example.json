@@ -73,9 +73,9 @@
         {"text": "Contoso maps journeys in five stages: Discover, Decide, Buy, Use and Get help.", "sources": ["S1.sec3"]},
         {"text": "For each step, capture what the customer does, thinks and feels, and the channel.", "sources": ["S1.sec4"]}
       ],
-      "talk_track": "Show the difference between a process diagram and a journey map with the online tent return example. Walk through the five stages. Stress one persona and one goal per map.",
-      "setup": "Slides 4 to 7. Example map on the whiteboard template.",
-      "fallback": "If the whiteboard does not load, show the example map on the slide instead.",
+      "talk_track": "Compare the two illustrative snippets on the discussion slide. A shows company actions; B shows the customer's experience. Walk through the five stages. Stress one persona and one goal per map.",
+      "setup": "Show this module's key points and discussion slide. No separate example map or poll is needed.",
+      "fallback": "If screen sharing fails, read the two snippets from the discussion instructions in the facilitator guide.",
       "activities": [
         {
           "id": "A2",
@@ -83,11 +83,16 @@
           "title": "Journey map or process diagram?",
           "objective": "Check that everyone can tell the two apart.",
           "timebox": 5,
-          "instructions": ["Look at the two examples on the slide.", "Vote in the poll: which one is the journey map?", "Explain your vote in one sentence in chat."],
-          "materials": ["Poll in the meeting", "Slide with two examples"],
-          "expected_output": "Poll result and short explanations.",
+          "instructions": [
+            "Compare these illustrative snippets for returning a tent bought online.",
+            "A: The returns team checks the order, approves the return and issues a label.",
+            "B: I find my order on the website, feel unsure about eligibility and ask for help in chat.",
+            "Post A or B in chat for the customer's journey, and explain your choice."
+          ],
+          "materials": ["Meeting chat", "Discussion slide with snippets A and B"],
+          "expected_output": "Chat votes and short explanations.",
           "debrief": ["What gave it away?", "Where do teams usually slip back into process thinking?"],
-          "fallback": "If polls fail, ask for a show of hands with reactions.",
+          "fallback": "If chat fails, read the snippets aloud and ask for verbal votes.",
           "sources": ["S1.sec2", "S1.sec8"]
         }
       ]
@@ -121,7 +126,7 @@
           "materials": ["Whiteboard with five stage columns", "Exercise sheet 1 in the participant workbook"],
           "expected_output": "One map with at least eight steps, each with an emotion marker.",
           "debrief": ["Which step was hardest to describe from the customer's view?", "Where did you disagree, and what evidence would settle it?"],
-          "fallback": "If the whiteboard fails, fill the table on exercise sheet 1 in a shared document.",
+          "fallback": "If the whiteboard fails, use the Your work area on exercise sheet 1, labeling each entry with its stage, does, thinks, feels and channel.",
           "sources": ["S1.sec3", "S1.sec4"]
         }
       ]
@@ -148,11 +153,11 @@
         {"text": "A pain point is a step where the customer is confused, waits, repeats information or gives up.", "sources": ["S1.sec5"]},
         {"text": "Use evidence such as support tickets, chat transcripts, store notes and survey comments. Mark steps without evidence as open questions.", "sources": ["S1.sec5"]},
         {"text": "A moment that matters changes how the customer feels about Contoso, or what they do next.", "sources": ["S1.sec6"]},
-        {"text": "In the 2025 pilot, three teams found 11 pain points in the online returns journey (illustrative).", "sources": ["S1.sec7"]}
+        {"text": "In the 2025 pilot, the most common pain point was entering an order number twice (illustrative).", "sources": ["S1.sec7"]}
       ],
       "talk_track": "Share the pilot story briefly. Define pain points and moments that matter. Send groups back to their maps.",
-      "setup": "Same breakout rooms and whiteboards. Sample evidence cards on slide 12.",
-      "fallback": "If groups have no evidence, they use the sample evidence cards on slide 12 and mark the rest as open questions.",
+      "setup": "Same breakout rooms and whiteboards. Keep the module's cited key points visible during the briefing.",
+      "fallback": "Use the cited pilot finding about entering an order number twice as illustrative evidence for that step only. Mark all other unsupported steps as open questions.",
       "activities": [
         {
           "id": "A4",
@@ -162,14 +167,14 @@
           "timebox": 15,
           "instructions": [
             "Circle every negative step on your map.",
-            "For each circled step, write the evidence you have, or mark it as an open question.",
-            "Ask the two moment-that-matters questions and star one step."
+            "Use the cited pilot finding about entering an order number twice as illustrative evidence for that step only; mark other circled steps as open questions.",
+            "Ask: Does this step change how the customer feels about Contoso? Would fixing it change what the customer does next? Star one step."
           ],
-          "materials": ["Your map from exercise 1", "Sample evidence cards (slide 12)", "Exercise sheet 2"],
+          "materials": ["Your map from exercise 1", "Module key points with the illustrative pilot finding", "Exercise sheet 2"],
           "expected_output": "Circled pain points with evidence or open questions, and one starred moment that matters.",
           "debrief": ["Which pain point had the strongest evidence?", "Which open question would you check first?"],
           "fallback": "If time runs short, each group names one pain point and one moment that matters in chat.",
-          "sources": ["S1.sec5", "S1.sec6"]
+          "sources": ["S1.sec5", "S1.sec6", "S1.sec7"]
         }
       ]
     },
@@ -194,7 +199,7 @@
           "objective": "Leave with an owned next step.",
           "timebox": 5,
           "instructions": ["Each group posts one improvement, one owner and one check date in chat."],
-          "materials": ["Exercise sheet 3"],
+          "materials": ["Meeting chat", "Your annotated map from exercise 2"],
           "expected_output": "One commitment per group.",
           "debrief": ["What will you check on the date you picked?"],
           "fallback": "If chat is busy, the facilitator reads each group's commitment aloud and records it.",
@@ -205,7 +210,7 @@
   ],
   "gaps": [
     "The guide does not say how long a journey mapping session should take; the 90-minute length comes from the user's intake.",
-    "The guide gives no template for the evidence cards; the sample cards on slide 12 need source material from the team."
+    "The guide supplies only an illustrative pilot finding, not detailed evidence for every journey step; unsupported steps remain open questions."
   ],
   "pre_read": {
     "minutes": 10,

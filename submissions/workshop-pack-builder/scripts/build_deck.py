@@ -439,6 +439,7 @@ class Deck:
                 self.activity(m, a)
         self.closing()
         self.sources()
+        os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
         self.prs.save(out)
         return self.n
 

@@ -127,10 +127,11 @@ def check(spec, smap, pack_dir, deck):
         if re.search(r"\b(understand|know|learn about|be aware)\b", o.get("text", ""), flags=re.I):
             res.append(R("WARN", o.get("id"), "objective_verb", "use an observable verb (explain, map, build, decide), not understand/know"))
     # activity + exercise fields + citations
-    known_refs, known_sources = set(), {s.get("id") for s in spec.get("sources", [])}
-    if smap:
+    known_refs = set()
+    source_list = smap.get("sources", []) if smap is not None else spec.get("sources", [])
+    known_sources = {s["id"] for s in source_list}
+    if smap is not None:
         for s in smap.get("sources", []):
-            known_sources.add(s["id"])
             for u in s.get("units", []):
                 known_refs.add(u["ref"])
 
@@ -142,7 +143,7 @@ def check(spec, smap, pack_dir, deck):
             sid = ref.split(".")[0]
             if sid not in known_sources:
                 res.append(R("FAIL", where, "citations", f"cites unknown source {sid}"))
-            elif smap and "." in ref and ref not in known_refs:
+            elif smap is not None and "." in ref and ref not in known_refs:
                 res.append(R("FAIL", where, "citations", f"cites {ref}, which is not in the source map"))
 
     for m in spec.get("modules", []):

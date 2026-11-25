@@ -69,11 +69,13 @@ def render(path, out_dir, dpi):
     if not soffice or not pdftoppm:
         return None, "soffice or pdftoppm not found: open the deck and check each slide by eye"
     os.makedirs(out_dir, exist_ok=True)
+    pdf = os.path.join(out_dir, os.path.splitext(os.path.basename(path))[0] + ".pdf")
+    if os.path.exists(pdf):
+        os.remove(pdf)
     argv = [soffice, "--headless", "--convert-to", "pdf", "--outdir", out_dir, path]
     r = subprocess.run(argv, capture_output=True, text=True, timeout=240)  # nosec B603 - fixed argv, no shell
-    pdf = os.path.join(out_dir, os.path.splitext(os.path.basename(path))[0] + ".pdf")
-    if not os.path.exists(pdf):
-        return None, f"PDF conversion failed: {r.stderr.strip()[:300]}"
+    if r.returncode != 0 or not os.path.exists(pdf):
+        return None, f"PDF conversion failed (exit {r.returncode}): {(r.stderr or r.stdout).strip()[:300]}"
     for old in glob.glob(os.path.join(out_dir, "slide-*.png")):
         os.remove(old)
     argv = [pdftoppm, "-png", "-r", str(dpi), pdf, os.path.join(out_dir, "slide")]
