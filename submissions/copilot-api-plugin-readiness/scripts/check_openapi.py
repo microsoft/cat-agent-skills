@@ -263,17 +263,46 @@ def long_strings(node, path=""):
             yield from long_strings(value, f"{path}[{index}]")
 
 
-def runtime_functions(runtime, names):
-    """Function names a runtime serves; run_for_functions entries may be wildcard patterns."""
+def runtime_functions(runtime, names, described=None):
+    """Function names a runtime serves, or None when that cannot be known.
+
+    run_for_functions entries may be wildcard patterns. When the property is
+    omitted, the runtime serves the functions its own description declares, so
+    the answer is only known for the runtime whose description was supplied.
+    """
     listed = runtime.get("run_for_functions")
     if not listed:
-        return set(names)
+        return None if described is None else {n for n in names if n in described}
     return {n for n in names if any(fnmatch.fnmatchcase(n, pattern) for pattern in listed)}
 
 
-def spec_name(runtime):
+def spec_path(runtime):
     spec = runtime.get("spec") or {}
-    return os.path.basename(str(spec.get("url") or "").split("?")[0]).lower()
+    return str(spec.get("url") or "").split("?")[0].replace("\\", "/").lower()
+
+
+def spec_name(runtime):
+    return os.path.basename(spec_path(runtime))
+
+
+def match_runtimes(openapi_runtimes, openapi_path):
+    """Runtimes whose spec is the supplied file: by basename, then by the longest shared path suffix."""
+    if len(openapi_runtimes) == 1:
+        return openapi_runtimes
+    supplied = os.path.abspath(openapi_path).replace("\\", "/").lower().split("/")
+    candidates = [r for r in openapi_runtimes if spec_name(r) == supplied[-1]]
+    if len(candidates) < 2:
+        return candidates
+
+    def shared(runtime):
+        parts = [p for p in spec_path(runtime).split("/") if p]
+        count = 0
+        while count < min(len(parts), len(supplied)) and parts[-1 - count] == supplied[-1 - count]:
+            count += 1
+        return count
+
+    best = max(shared(r) for r in candidates)
+    return [r for r in candidates if shared(r) == best]
 
 
 def check_manifest(manifest, operations, openapi_path):
@@ -288,29 +317,40 @@ def check_manifest(manifest, operations, openapi_path):
             add("FIX", "Auth config reference", f"runtime {runtime.get('type')}", f"{auth_type} with no reference_id", SRC_MANIFEST)
 
     openapi_runtimes = [r for r in runtimes if r.get("type") == "OpenApi"]
-    supplied = os.path.basename(openapi_path).lower()
-    if len(openapi_runtimes) == 1:
-        matching = openapi_runtimes
-    else:
-        matching = [r for r in openapi_runtimes if spec_name(r) == supplied]
-    bound_here, bound_elsewhere = set(), {}
+    matching = match_runtimes(openapi_runtimes, openapi_path)
+    ambiguous = len(matching) > 1
+    if ambiguous:
+        add("UNKNOWN", "Function binding", "runtimes", f"{len(matching)} OpenApi runtimes reference a spec named {spec_name(matching[0])}; binding not checked", SRC_MANIFEST)
+    bound_here, bound_elsewhere, open_elsewhere = set(), {}, []
     for runtime in openapi_runtimes:
-        served = runtime_functions(runtime, names)
-        if runtime in matching:
+        here = runtime in matching and not ambiguous
+        served = runtime_functions(runtime, names, operations if here else None)
+        if served is None:
+            open_elsewhere.append(spec_path(runtime) or "an unnamed spec")
+        elif here:
             bound_here |= served
         else:
             for name in served:
-                bound_elsewhere.setdefault(name, spec_name(runtime) or "an unnamed spec")
+                bound_elsewhere.setdefault(name, spec_path(runtime) or "an unnamed spec")
+    # A function no runtime serves can only be called through a runtime of another type.
+    openapi_only = bool(openapi_runtimes) and len(openapi_runtimes) == len(runtimes)
 
     for function in functions:
         name = function.get("name", "")
         where = f"function {name}"
         if not NAME_RE.match(name):
             add("BLOCKER", "Function name", where, "does not match ^[A-Za-z0-9_]+$", SRC_MANIFEST)
-        if name in bound_here and name not in operations:
-            add("BLOCKER", "Function binding", where, "no operationId with this name in the OpenAPI description", SRC_MANIFEST)
-        elif name in bound_elsewhere and name not in bound_here:
-            add("UNKNOWN", "Function binding", where, f"bound to {bound_elsewhere[name]}, which was not supplied; run the checker on that file too", SRC_MANIFEST)
+        if not ambiguous:
+            if name in bound_here:
+                if name not in operations:
+                    add("BLOCKER", "Function binding", where, "no operationId with this name in the OpenAPI description", SRC_MANIFEST)
+            elif name in bound_elsewhere:
+                add("UNKNOWN", "Function binding", where, f"bound to {bound_elsewhere[name]}, which was not supplied; run the checker on that file too", SRC_MANIFEST)
+            elif open_elsewhere:
+                add("UNKNOWN", "Function binding", where, f"not in the supplied description; may be described by {', '.join(sorted(set(open_elsewhere)))}, which was not supplied", SRC_MANIFEST)
+            elif openapi_only:
+                reason = "run_for_functions excludes it" if name in operations else "no operationId with this name in the OpenAPI description"
+                add("BLOCKER", "Function binding", where, f"no runtime serves it: {reason}", SRC_MANIFEST)
         capabilities = function.get("capabilities") or {}
         confirmation = capabilities.get("confirmation") or {}
         if confirmation.get("isNonConsequential") and operations.get(name, "").split(" ")[0] not in ("GET", ""):

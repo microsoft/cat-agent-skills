@@ -101,6 +101,11 @@ first. It is the only question worth blocking on.
   a dot or a space can never be matched: BLOCKER. Fix: rename it, for example
   `get-items` to `getItems`.
 - Every function in the manifest must name an `operationId` that exists.
+- A runtime serves the functions its `run_for_functions` matches (wildcards
+  allowed) or, when that is omitted, the functions its own description
+  declares. In a manifest with only OpenAPI runtimes, a function no runtime
+  serves: BLOCKER. With several descriptions, check each one; a function owned
+  by a description you were not given is UNKNOWN, not a BLOCKER.
 - `operationId` values must be unique in OpenAPI. A duplicate makes the
   function binding ambiguous: BLOCKER.
 
