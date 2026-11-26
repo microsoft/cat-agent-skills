@@ -49,10 +49,19 @@ warning = (
     'reports may appear as zero or empty, including AI spend and forecasts. '
     'Verify source availability and values before relying on this snapshot.</div>'
 )
+incomplete_flows = sum(1 for env in pp["envDetail"].values()
+                       if isinstance(env, dict) and isinstance(env.get("flows"), dict)
+                       and env["flows"].get("__incomplete"))
+if incomplete_flows:
+    warning += (
+        f'<div role="note" style="padding:12px;background:#fff3cd;color:#3d3000;'
+        f'font:14px sans-serif">Cloud-flow inventory is incomplete in {incomplete_flows} '
+        f'environment(s): additional pages were not captured. Do not treat flow counts as complete.</div>'
+    )
 if html.count("<body>") != 1:
     raise ValueError("Console template must contain exactly one <body> tag")
 html = html.replace("<body>", "<body>" + warning, 1)
 os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
 open(a.out, "w", encoding="utf-8").write(html)
 errs = sum(1 for v in admin.values() if isinstance(v, dict) and "__error" in v)
-print(json.dumps({"out": a.out, "bytes": len(html.encode()), "admin_reads": len(admin), "admin_errors": errs, "viva_ranges": list(viva), "pp_envs": len(pp["envDetail"])}))
+print(json.dumps({"out": a.out, "bytes": len(html.encode()), "admin_reads": len(admin), "admin_errors": errs, "viva_ranges": list(viva), "pp_envs": len(pp["envDetail"]), "incomplete_flow_inventories": incomplete_flows}))

@@ -47,6 +47,8 @@ licenses. With your approval it may create a Power Platform connection. The HTML
 contains tenant data, including names and costs; store and share it only with
 authorized people. **Unavailable or failed reports can appear as zero or empty
 values**, including AI spend and forecasts. Verify source availability and
-values before relying on the console. Credits and USD are different measures and must not be added
+values before relying on the console. Cloud-flow inventory can be incomplete
+when the connector returns additional pages; the report warns when it detects this.
+Credits and USD are different measures and must not be added
 together; Admin Center and Viva Insights credits also have different definitions.
 Some reports may not be available in every tenant.

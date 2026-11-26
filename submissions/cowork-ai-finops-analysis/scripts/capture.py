@@ -282,7 +282,10 @@ def slim_apps(d):
     return d
 def slim_flows(d):
     if isinstance(d, dict) and "value" in d:
-        return {"value": [{k: f.get(k) for k in ["displayName","name","stateCode","state","statecode","createdOn","modifiedOn","ownerId","createdBy"]} for f in d["value"][:500]]}
+        out = {"value": [{k: f.get(k) for k in ["displayName","name","stateCode","state","statecode","createdOn","modifiedOn","ownerId","createdBy"]} for f in d["value"]]}
+        if d.get("nextLink") or d.get("@odata.nextLink"):
+            out["__incomplete"] = "Additional flow pages were not captured."
+        return out
     return d
 
 def pp_base():
@@ -329,8 +332,9 @@ def pp_envs():
         out.update(dict(ex.map(detail, batch)))
     save("pp_envs.json", out)
     bad = sum(1 for d in out.values() for v in d.values() if isinstance(v, dict) and "__error" in v)
+    incomplete = sum(1 for d in out.values() if isinstance(d.get("flows"), dict) and d["flows"].get("__incomplete"))
     nxt = off + limit if off + limit < len(envs) else None
-    return {"environments_total": len(envs), "captured": len(out), "failed_reads": bad, "next_env_offset": nxt}
+    return {"environments_total": len(envs), "captured": len(out), "failed_reads": bad, "incomplete_flow_inventories": incomplete, "next_env_offset": nxt}
 
 def retry():
     fixed = left = attempted = 0

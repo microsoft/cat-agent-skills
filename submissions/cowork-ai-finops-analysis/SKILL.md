@@ -78,6 +78,8 @@ Microsoft doesn't provide those reports for every tenant yet.
 The retry limit is shared across both sources; each attempted read is checkpointed. Retry stops starting new
 reads after four minutes, but an individual connector call can still take longer. Report remaining or failed
 reads and any `catalog_error` from `viva_fixed` as unavailable data.
+If `pp_envs` or the builder reports `incomplete_flow_inventories`, tell the user that additional cloud-flow
+pages were not captured and affected counts are incomplete. Check the builder result even after retries.
 
 ### 4. Build, check, publish
 
