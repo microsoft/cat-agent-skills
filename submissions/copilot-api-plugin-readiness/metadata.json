@@ -1,0 +1,13 @@
+{
+  "category": "agent-development",
+  "name": "Copilot API Plugin Readiness",
+  "description": "Check an OpenAPI description and API plugin manifest against the constraints Microsoft documents for Microsoft 365 Copilot declarative agent actions: operation IDs that can never bind, unsupported schema shapes, supported authentication, confirmations and card actions. Ships a Python checker and returns a per-check verdict with the fix.",
+  "platforms": ["Cowork"],
+  "tags": ["api-plugin", "openapi", "declarative-agent", "microsoft-365-copilot", "actions", "authentication", "schema"],
+  "author": "Elliot Margot",
+  "authorUrl": "https://e-margot.ch",
+  "authorGithub": "OwnOptic",
+  "version": "1.0.0",
+  "createdAt": "2026-11-25",
+  "updatedAt": "2026-11-25"
+}
