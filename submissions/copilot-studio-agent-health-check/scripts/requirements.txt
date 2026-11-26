@@ -1,0 +1,3 @@
+# Optional: improves parse reliability of agent YAML exports.
+# The scripts fall back to regex parsing if PyYAML is unavailable.
+PyYAML>=6.0
