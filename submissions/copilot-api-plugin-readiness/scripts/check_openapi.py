@@ -14,6 +14,7 @@ import argparse
 import fnmatch
 import json
 import os
+import posixpath
 import re
 import sys
 
@@ -318,7 +319,8 @@ def check_manifest(manifest, operations, openapi_path):
 
     openapi_runtimes = [r for r in runtimes if r.get("type") == "OpenApi"]
     matching = match_runtimes(openapi_runtimes, openapi_path)
-    ambiguous = len(matching) > 1
+    # Runtimes may share one document, for example to split anonymous and authenticated functions.
+    ambiguous = len({posixpath.normpath(spec_path(r)) for r in matching}) > 1
     if ambiguous:
         add("UNKNOWN", "Function binding", "runtimes", f"{len(matching)} OpenApi runtimes reference a spec named {spec_name(matching[0])}; binding not checked", SRC_MANIFEST)
     bound_here, bound_elsewhere, open_elsewhere = set(), {}, []
