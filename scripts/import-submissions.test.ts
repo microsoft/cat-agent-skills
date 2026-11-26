@@ -5,17 +5,50 @@
  * that undocumented catalog keys are dropped — the bug class that a per-field
  * spot fix would leave open.
  */
-import { test } from "node:test";
+import { test, type TestContext } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
   buildMeta,
   CATALOG_PASSTHROUGH,
+  detectLicenseFiles,
+  loadSubmission,
   targetsCopilotStudio,
   writeCopilotStudioSkill,
 } from "./import-submissions.ts";
+import { validatePluginFiles } from "./validate-plugin.ts";
+import { skillSchema } from "../src/lib/skill-schema.ts";
+
+test("gallery classification preserves existing defaults without changing plugin platforms or type", () => {
+  const required = { name: "Example", description: "Example submission", tags: ["example"], author: "Example" };
+  const existing = skillSchema.parse(buildMeta({ ...required, platforms: ["Scout"] }, {}));
+  assert.equal(existing.category, "productivity");
+  assert.equal(existing.builtByMicrosoft, false);
+  assert.equal(existing.type, "skill");
+
+  const plugin = skillSchema.parse(buildMeta(
+    { ...required, type: "plugin", platforms: ["Cowork"], bundle: "bundles/example.zip" },
+    { category: "manufacturing", builtByMicrosoft: true, type: "skill", platforms: ["Scout"] },
+  ));
+  assert.equal(plugin.category, "manufacturing");
+  assert.equal(plugin.builtByMicrosoft, true);
+  assert.equal(plugin.type, "plugin");
+  assert.deepEqual(plugin.platforms, ["Cowork"]);
+  assert.equal(plugin.bundle, "bundles/example.zip");
+  const financialServices = skillSchema.parse(buildMeta(
+    { ...required, type: "plugin", platforms: ["Cowork"], bundle: "bundles/fsi.zip" },
+    { category: "financial-services", builtByMicrosoft: true },
+  ));
+  assert.equal(financialServices.category, "financial-services");
+  assert.equal(financialServices.builtByMicrosoft, true);
+  assert.equal(financialServices.type, "plugin");
+  assert.deepEqual(financialServices.platforms, ["Cowork"]);
+  for (const invalid of [{ category: "unknown" }, { builtByMicrosoft: "true" }]) {
+    assert.equal(skillSchema.safeParse({ ...plugin, ...invalid }).success, false);
+  }
+});
 
 test("derived fields always win over same-named catalog keys", () => {
   const meta = buildMeta(
@@ -65,6 +98,8 @@ test("only allowlisted catalog fields pass through; everything else is dropped",
     type: "automation",
     // allowlisted, human-authored:
     platforms: ["Cowork"],
+    category: "manufacturing",
+    builtByMicrosoft: true,
     tags: ["a", "b"],
     author: "Ada",
     authorUrl: "https://github.com/ada",
@@ -170,4 +205,250 @@ test("Copilot Studio export rejects resource path traversal", () => {
   } finally {
     rmSync(output, { recursive: true, force: true });
   }
+});
+
+function submissionFixture(t: TestContext, files: Record<string, string | Buffer>): string {
+  const dir = mkdtempSync(join(tmpdir(), "submission-routing-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  for (const [path, contents] of Object.entries(files)) {
+    const full = join(dir, path);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, contents);
+  }
+  return dir;
+}
+
+function pngHeader(width: number, height: number): Buffer {
+  const data = Buffer.alloc(24);
+  Buffer.from("89504e470d0a1a0a0000000d49484452", "hex").copy(data);
+  data.writeUInt32BE(width, 16);
+  data.writeUInt32BE(height, 20);
+  return data;
+}
+
+const pluginManifest = {
+  manifestVersion: "devPreview",
+  id: "4e34d725-5a50-5fff-a8b1-ac68968bbabd",
+  name: { short: "Test Plugin" },
+  description: { short: "A plugin for importer tests." },
+  icons: { color: "color.png", outline: "outline.png" },
+  agentSkills: [{ folder: "./skills/sample-skill" }],
+};
+const pluginFixture = {
+  "manifest.json": JSON.stringify(pluginManifest),
+  "color.png": pngHeader(192, 192),
+  "outline.png": pngHeader(32, 32),
+  "metadata.json": JSON.stringify({
+    name: "Test Plugin",
+    description: "Catalog description",
+    platforms: ["Cowork"],
+    tags: ["testing"],
+    author: "Test Author",
+  }),
+  "README.md": "# Human overview\n",
+  "skills/sample-skill/SKILL.md":
+    "---\nname: sample-skill\ndescription: Use for importer tests.\n---\nRun the task.\n",
+};
+
+test("unpacked plugins route to plugin validation and exclude only root sidecars", (t) => {
+  const files: Record<string, string | Buffer> = {
+    ...pluginFixture,
+    "metadata.yaml": "name: Alternative metadata\n",
+    "metadata.yml": "name: Alternative metadata\n",
+    "skills/sample-skill/README.md": "# Runtime reference\n",
+    "skills/sample-skill/assets/metadata.json": '{"runtime":true}',
+    "shared/config.json": '{"policy":"test"}',
+    ".claude-plugin/plugin.json": '{"name":"sample-plugin"}',
+  };
+  const sub = loadSubmission(submissionFixture(t, files));
+  assert.equal(sub.kind, "plugin");
+  assert.equal(sub.loadProblems, undefined);
+  assert.equal(sub.skillMd, undefined);
+  assert.equal(sub.automationJson, undefined);
+  assert.equal(sub.metaText, pluginFixture["metadata.json"]);
+  assert.equal(sub.readmeMd, pluginFixture["README.md"]);
+  assert.ok(sub.pluginFiles);
+  const expectedPaths = Object.keys(files).filter(
+    (path) => !["metadata.json", "metadata.yaml", "metadata.yml", "README.md"].includes(path),
+  );
+  assert.deepEqual(sub.pluginFiles.map((file) => file.path).sort(), expectedPaths.sort());
+  for (const file of sub.pluginFiles) {
+    const expected = files[file.path];
+    assert.deepEqual(file.data, typeof expected === "string" ? Buffer.from(expected) : expected);
+  }
+  const validation = validatePluginFiles(sub.pluginFiles, sub.label);
+  assert.equal(validation.ok, true, validation.problems.join("\n"));
+  assert.deepEqual(validation.skills.map((skill) => skill.name), ["sample-skill"]);
+});
+
+test("plugin detection and root sidecar removal are case-insensitive", (t) => {
+  const { "manifest.json": manifest, "metadata.json": metadata, "README.md": readme, ...rest } =
+    pluginFixture;
+  const sub = loadSubmission(submissionFixture(t, {
+    ...rest,
+    "MANIFEST.JSON": manifest,
+    "METADATA.JSON": metadata,
+    "readme.md": readme,
+  }));
+  assert.equal(sub.kind, "plugin");
+  assert.equal(sub.metaText, metadata);
+  assert.equal(sub.readmeMd, readme);
+  assert.ok(sub.pluginFiles);
+  assert.ok(sub.pluginFiles.some((file) => file.path === "MANIFEST.JSON"));
+  assert.ok(!sub.pluginFiles.some((file) => /^(metadata\.json|readme\.md)$/i.test(file.path)));
+  const validation = validatePluginFiles(sub.pluginFiles, sub.label);
+  assert.equal(validation.ok, true, validation.problems.join("\n"));
+});
+
+test("connector-only plugins need neither a root skill nor a README", (t) => {
+  const { agentSkills, ...manifest } = pluginManifest;
+  const sub = loadSubmission(submissionFixture(t, {
+    "manifest.json": JSON.stringify({
+      ...manifest,
+      agentConnectors: [{ id: "sample-connector", displayName: "Sample connector" }],
+    }),
+    "metadata.json": pluginFixture["metadata.json"],
+    "color.png": pluginFixture["color.png"],
+    "outline.png": pluginFixture["outline.png"],
+  }));
+  assert.equal(sub.kind, "plugin");
+  assert.equal(sub.readmeMd, undefined);
+  assert.ok(sub.pluginFiles);
+  const validation = validatePluginFiles(sub.pluginFiles, sub.label);
+  assert.equal(validation.ok, true, validation.problems.join("\n"));
+  assert.equal(validation.skills.length, 0);
+  assert.equal(validation.connectors[0]?.id, "sample-connector");
+});
+
+test("invalid unpacked plugins report plugin errors, not automation errors", (t) => {
+  const sub = loadSubmission(submissionFixture(t, {
+    ...pluginFixture,
+    "manifest.json": "{invalid json",
+  }));
+  assert.equal(sub.kind, "plugin");
+  assert.ok(sub.pluginFiles);
+  const validation = validatePluginFiles(sub.pluginFiles, sub.label);
+  assert.equal(validation.ok, false);
+  assert.match(validation.problems.join("\n"), /manifest.json is not valid JSON/);
+});
+
+test("ordinary skills keep root SKILL.md precedence over JSON resources", (t) => {
+  const sub = loadSubmission(submissionFixture(t, {
+    "SKILL.md": pluginFixture["skills/sample-skill/SKILL.md"],
+    "manifest.json": '{"resource":true}',
+    "metadata.json": pluginFixture["metadata.json"],
+  }));
+  assert.equal(sub.kind, "skill");
+  assert.equal(sub.skillMd, pluginFixture["skills/sample-skill/SKILL.md"]);
+  assert.deepEqual(sub.bundleFiles.map((file) => file.path), ["manifest.json"]);
+  assert.equal(sub.pluginFiles, undefined);
+});
+
+test("Scout JSON and nested manifest resources keep automation routing", (t) => {
+  const automation = '{"name":"Example","steps":[],"schedule":{"type":"single"}}';
+  const sub = loadSubmission(submissionFixture(t, {
+    "example.json": automation,
+    "metadata.json": pluginFixture["metadata.json"],
+    "assets/manifest.json": JSON.stringify(pluginManifest),
+  }));
+  assert.equal(sub.kind, "automation");
+  assert.equal(sub.automationJson, automation);
+  assert.equal(sub.loadProblems, undefined);
+});
+
+test("unpacked plugin support does not bypass the new ZIP payload ban", (t) => {
+  const sub = loadSubmission(submissionFixture(t, {
+    ...pluginFixture,
+    "plugin.zip": Buffer.from("not opened: new ZIPs are rejected"),
+  }));
+  assert.match(sub.loadProblems?.join("\n") ?? "", /zip.*payloads are no longer accepted/);
+  assert.equal(sub.pluginFiles, undefined);
+});
+
+const repoLicense = readFileSync(new URL("../LICENSE", import.meta.url));
+const skillMetadata = JSON.stringify({
+  name: "Example",
+  description: "Catalog description",
+  platforms: ["Cowork"],
+  tags: ["testing"],
+  author: "Test Author",
+});
+
+test("submissions without LICENSE or NOTICE get no license keys", (t) => {
+  const sub = loadSubmission(submissionFixture(t, {
+    "SKILL.md": pluginFixture["skills/sample-skill/SKILL.md"],
+    "metadata.json": skillMetadata,
+    "references/guide.md": "# Guide\n",
+  }));
+  assert.deepEqual(sub.license, {});
+  assert.deepEqual(sub.bundleFiles.map((file) => file.path), ["references/guide.md"]);
+  const meta = buildMeta({ name: "N", description: "D", ...sub.license }, {});
+  for (const key of ["licenseName", "licenseFile", "noticeFile"]) {
+    assert.ok(!(key in meta), `expected no "${key}"`);
+  }
+});
+
+test("Microsoft MIT LICENSE is detected and still bundled", (t) => {
+  const crlf = Buffer.from(repoLicense.toString("utf8").replace(/\r?\n/g, "\r\n"));
+  const sub = loadSubmission(submissionFixture(t, {
+    "SKILL.md": pluginFixture["skills/sample-skill/SKILL.md"],
+    "metadata.json": skillMetadata,
+    LICENSE: crlf,
+    "NOTICE.md": "# Notices\n",
+  }));
+  assert.deepEqual(sub.license, { licenseFile: "LICENSE", licenseName: "MIT", noticeFile: "NOTICE.md" });
+  assert.deepEqual(sub.bundleFiles.map((file) => file.path).sort(), ["LICENSE", "NOTICE.md"]);
+});
+
+test("unrecognized or empty LICENSE text links the file without naming a license", () => {
+  for (const text of ["Apache License 2.0 ...", ""]) {
+    assert.deepEqual(detectLicenseFiles([{ path: "LICENSE", data: Buffer.from(text) }]), {
+      licenseFile: "LICENSE",
+    });
+  }
+  const edited = repoLicense.toString("utf8").replace("Microsoft Corporation", "Contoso");
+  assert.deepEqual(detectLicenseFiles([{ path: "LICENSE.txt", data: Buffer.from(edited) }]), {
+    licenseFile: "LICENSE.txt",
+  });
+});
+
+test("only root LICENSE / NOTICE files count", () => {
+  assert.deepEqual(
+    detectLicenseFiles([
+      { path: "skills/a/LICENSE", data: repoLicense },
+      { path: "references/NOTICE.md", data: Buffer.from("x") },
+    ]),
+    {},
+  );
+});
+
+test("unpacked plugins detect a root LICENSE without changing the package files", (t) => {
+  const files = { ...pluginFixture, LICENSE: repoLicense, "skills/sample-skill/LICENSE": repoLicense };
+  const sub = loadSubmission(submissionFixture(t, files));
+  assert.equal(sub.kind, "plugin");
+  assert.deepEqual(sub.license, { licenseFile: "LICENSE", licenseName: "MIT" });
+  assert.ok(sub.pluginFiles?.some((file) => file.path === "LICENSE"));
+  assert.ok(sub.pluginFiles?.some((file) => file.path === "skills/sample-skill/LICENSE"));
+});
+
+test("Scout automations are not scanned for license files", (t) => {
+  const sub = loadSubmission(submissionFixture(t, {
+    "example.json": '{"name":"Example","steps":[],"schedule":{"type":"single"}}',
+    "metadata.json": skillMetadata,
+    LICENSE: repoLicense,
+  }));
+  assert.equal(sub.kind, "automation");
+  assert.equal(sub.license, undefined);
+});
+
+test("license fields are optional in the skill schema", () => {
+  const base = { name: "N", description: "D", platforms: ["Cowork"], tags: ["t"], author: "A" };
+  const plain = skillSchema.parse(base);
+  assert.equal(plain.licenseName, undefined);
+  assert.equal(plain.licenseFile, undefined);
+  assert.equal(plain.noticeFile, undefined);
+  const licensed = skillSchema.parse({ ...base, licenseName: "MIT", licenseFile: "LICENSE", noticeFile: "NOTICE.md" });
+  assert.equal(licensed.licenseName, "MIT");
+  assert.equal(licensed.licenseFile, "LICENSE");
+  assert.equal(licensed.noticeFile, "NOTICE.md");
 });

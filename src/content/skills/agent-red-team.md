@@ -3,6 +3,7 @@ name: Agent Red Team
 description: "Adversarial assurance review for agents you own: prompt injection, oversharing, leakage and tool misuse, mapped to fixes."
 agentDescription: "Run an adversarial assurance review of a Microsoft Copilot Studio agent you own — generate and execute test cases for indirect prompt injection, oversharing and authorization bypass, data leakage, scope escape and tool misuse — then score the findings and map each one to a concrete Copilot Studio control. Use when someone asks to red team, pen test, adversarially test, jailbreak-test or security-review an agent, wants a prompt injection or data leakage assessment before go-live, or needs security sign-off and a risk report for an agent handling sensitive data."
 platforms: [Copilot Studio, Cowork]
+category: agent-development
 tags: [copilot-studio, security, prompt-injection, governance, responsible-ai, testing, risk, assessment]
 author: Marco Zama
 version: 1.0.0

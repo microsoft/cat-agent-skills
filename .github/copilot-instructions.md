@@ -176,7 +176,10 @@ needed by the agent, so it stays in `SKILL.md`.
   `CHANGELOG`, stray notes) belong in the submission folder — everything except
   the `metadata.*` and `README.md` sidecars is packaged into the agent bundle
   and wastes context. Ad-hoc contributor notes still belong in the PR
-  description.
+  description. Exception: a root `LICENSE` / `NOTICE` (optionally `.md` /
+  `.txt`), and a plugin's per-skill `LICENSE` copies, are legal terms that
+  must travel with the download — do not flag them as stray docs or context
+  noise.
 - `SKILL.md` is agent-only: no "Human setup instructions" / Overview / Quick
   start / setup-prep prose (see **Human-facing vs. agent-facing content**
   above). Open straight into the agent instructions.
@@ -188,7 +191,7 @@ needed by the agent, so it stays in `SKILL.md`.
 - `metadata.json` should carry the documented fields only
   (`name`, `description`, `platforms`, `tags`, `author`, and the optional
   `authorUrl`, `authorGithub`, `version`, `createdAt`, `updatedAt`, `coverColor`,
-  `featured`). Unknown keys are silently stripped by the schema — flag them as noise.
+  `featured`, `category`, `builtByMicrosoft`). Unknown keys are silently stripped by the schema — flag them as noise.
 - `authorGithub` is normally derived from a `github.com/<login>` `authorUrl`; set
   it explicitly only to attribute an author whose link isn't a GitHub profile
   (e.g. LinkedIn), or leave it unset. It is never the PR/merger login. Never set

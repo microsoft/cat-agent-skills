@@ -1,0 +1,45 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.0.29",
+  "id": "3266e3c0-c878-4d4b-8f2c-42608eefc669",
+  "developer": {
+    "name": "Microsoft Corporation",
+    "websiteUrl": "https://www.microsoft.com/en-us/copilot/features/cowork",
+    "privacyUrl": "https://www.microsoft.com/en-us/privacy/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  },
+  "name": {
+    "short": "FSI Risk and Compliance",
+    "full": "FSI Risk and Compliance for Cowork"
+  },
+  "description": {
+    "short": "Financial services compliance: triage rule changes, map policy gaps, track exams",
+    "full": "FSI Risk and Compliance drafts cited working papers for compliance, risk and audit teams: regulatory change triage, policy-to-rule gap tables, exam request trackers, enforcement read-across, vendor SOC 2 reviews and KYC research records. It never concludes compliance, rates risk, approves a vendor or screens sanctions. Nothing is sent or filed.\n\nSign up: https://www.microsoft.com/en-us/copilot/pricing/enterprise\nGet started: https://support.microsoft.com/en-us/microsoft-365-copilot/get-started-with-cowork\nHelp: https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/use-cowork\nContact us: https://support.microsoft.com/home/contact"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#7A2E2E",
+  "agentSkills": [
+    {
+      "folder": "reg-change-triage"
+    },
+    {
+      "folder": "policy-gap-analysis"
+    },
+    {
+      "folder": "exam-request-response"
+    },
+    {
+      "folder": "enforcement-action-review"
+    },
+    {
+      "folder": "vendor-risk-review"
+    },
+    {
+      "folder": "kyc-research-pack"
+    }
+  ]
+}

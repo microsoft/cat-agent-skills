@@ -1,0 +1,11 @@
+{
+  "name": "Study Flashcards",
+  "description": "Turn your notes, slides, PDFs, or pasted text into source-grounded flashcards and a practice quiz — delivered as a self-contained interactive HTML study app with spaced repetition.",
+  "platforms": ["Cowork", "Copilot Studio", "Scout"],
+  "tags": ["learning", "productivity", "documents", "html"],
+  "author": "Bobby Chang",
+  "authorUrl": "https://github.com/bobbyschang",
+  "version": "1.0.0",
+  "createdAt": "2026-09-29",
+  "updatedAt": "2026-09-29"
+}

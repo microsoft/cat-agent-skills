@@ -1,0 +1,5 @@
+{
+  "_comment": "Customer-editable. Read by base/scripts/consistency_check.py (submission-rules.md #2).",
+  "population_terms_must_match_sap": true,
+  "numeric_format": "no rounding beyond source precision"
+}

@@ -1,0 +1,40 @@
+{
+  "decisions": [
+    { "candidate_id": "f:word/document.xml#p1#13-26", "decision": "field", "field": "client_name" },
+    { "candidate_id": "f:word/document.xml#p1#30-43", "decision": "field", "field": "issue_date" },
+    { "candidate_id": "i:word/document.xml#p2#0-48", "decision": "remove_paragraph", "reason": "drafting guidance, not content" },
+    { "candidate_id": "f:word/document.xml#p10#18-38", "decision": "field", "field": "contact" },
+    { "candidate_id": "f:word/document.xml#p11#7-25", "decision": "field", "field": "total_amount" },
+    { "candidate_id": "f:word/document.xml#p14#0-11", "decision": "field", "field": "item_name" },
+    { "candidate_id": "b:word/document.xml#p15#0-0", "decision": "field", "field": "quantity" },
+    { "candidate_id": "c:word/document.xml#p16#11-36", "decision": "field", "field": "signatory" },
+    { "candidate_id": "i:word/document.xml#p17#0-34", "decision": "remove_paragraph", "reason": "hidden internal note" },
+    { "candidate_id": "f:word/document.xml#p18#9-22", "decision": "field", "field": "remarks" },
+    { "candidate_id": "f:word/header1.xml#p0#15-28", "decision": "field", "field": "client_name" },
+    { "candidate_id": "f:word/footnotes.xml#p2#4-15", "decision": "field", "field": "reference" }
+  ],
+  "fields": [
+    { "name": "client_name", "type": "string", "source": "client.name" },
+    { "name": "issue_date", "type": "date", "source": "issued", "format": { "pattern": "D MMMM YYYY" } },
+    { "name": "contact", "type": "string", "source": "client.contact", "absence_policy": "sentinel", "absence_text": "To be confirmed" },
+    { "name": "total_amount", "type": "decimal", "source": "total", "format": { "precision": 2, "thousands_separator": "," } },
+    { "name": "signatory", "type": "string", "literal": "Ada Lovelace, Director",
+      "notes": "derived: the input names Ada Lovelace as the approving director; no signatory field is supplied" },
+    { "name": "remarks", "type": "string", "source": "summary[0]" },
+    { "name": "remarks_rest", "type": "string", "source": "summary_rest" },
+    { "name": "reference", "type": "string", "source": "reference" },
+    { "name": "item_name", "type": "string", "source": "name", "repeat": "items" },
+    { "name": "quantity", "type": "integer", "source": "qty", "repeat": "items" }
+  ],
+  "operations": [
+    { "op": "delete_range", "from_paragraph": "word/document.xml#p3", "to_paragraph": "word/document.xml#p9",
+      "reason": "optional services are not included for this client" },
+    { "op": "repeat_row", "id": "items", "paragraph": "word/document.xml#p14", "source": "items" },
+    { "op": "insert_paragraph_after", "paragraph": "word/document.xml#p18", "field": "remarks_rest" }
+  ],
+  "instructions_used": [
+    "p2 '[Guidance: delete this paragraph before sending]' -> removed",
+    "p3 'include only if applicable' -> data has no optional services, so p3-p9 deleted"
+  ],
+  "notes": "Example plan for assets/fixtures/mixed-conventions.docx. A real plan starts from plan.draft.json, which also carries template_sha256 and manifest_sha256."
+}

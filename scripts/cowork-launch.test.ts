@@ -1,0 +1,88 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { authorKey, computeStats, directoryAuthors, resolveBadges, type BadgeSkill } from "../src/lib/badges";
+import { contributorAvatar } from "../src/lib/contributor-avatar";
+import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICON_PATHS, CATEGORY_LABELS } from "../src/lib/categories";
+import { skillSchema } from "../src/lib/skill-schema";
+import { loadSubmission } from "./import-submissions";
+import { validatePluginFiles } from "./validate-plugin";
+
+const team = "Microsoft";
+const plugins = [
+  ["education-for-cowork", "education", 10],
+  ["legal-for-cowork", "legal", 20],
+  ["finance-for-cowork", "finance", 13],
+  ["capital-markets-for-cowork", "financial-services", 10],
+  ["accounting-for-cowork", "accounting", 7],
+  ["sales-for-cowork", "sales", 19],
+  ["service-for-cowork", "service", 5],
+] as const;
+
+test("every category has a label, color, icon, and schema support", () => {
+  assert.equal(new Set(CATEGORIES).size, 13);
+  for (const category of CATEGORIES) {
+    assert.ok(CATEGORY_LABELS[category]);
+    assert.match(CATEGORY_COLORS[category], /^#[0-9a-f]{6}$/i);
+    assert.ok(CATEGORY_ICON_PATHS[category]);
+    assert.equal(skillSchema.parse({
+      name: "Example", description: "Example", platforms: ["Cowork"],
+      category, tags: ["example"], author: team,
+    }).category, category);
+  }
+});
+
+test("launch submissions are seven complete Cowork plugins", () => {
+  const entries = plugins.map(([slug, category]) => ({ slug, category, kind: "plugin" }));
+  assert.equal(entries.length, 7);
+  for (const { slug, category, kind } of entries) {
+    const path = `submissions/${slug}`;
+    const sub = loadSubmission(path);
+    assert.ok(sub);
+    assert.equal(sub.kind, kind, slug);
+    assert.equal(sub.loadProblems?.length ?? 0, 0, slug);
+    assert.ok(sub.readmeMd?.trim(), `${slug} needs a human-facing README`);
+    assert.equal([...(sub.pluginFiles ?? []), ...sub.bundleFiles]
+      .some((file) => file.path.toLowerCase() === "readme.md"), false, slug);
+    const meta = skillSchema.parse(JSON.parse(readFileSync(`${path}/metadata.json`, "utf8")));
+    assert.equal(meta.category, category);
+    assert.equal(meta.builtByMicrosoft, true);
+    assert.equal(meta.author, team);
+    assert.equal(meta.authorUrl, "https://github.com/microsoft");
+    assert.deepEqual(meta.platforms, ["Cowork"]);
+    assert.equal(meta.authorGithub, undefined);
+    assert.equal(authorKey(meta.authorGithub, meta.author), "microsoft");
+    if (kind === "plugin") {
+      const validated = validatePluginFiles(sub.pluginFiles ?? [], slug);
+      assert.deepEqual(validated.problems, []);
+      assert.equal(validated.skills.length, plugins.find(([name]) => name === slug)?.[2]);
+    }
+  }
+});
+
+test("team directory entry aggregates all nineteen submissions without fabricating a login or badge", () => {
+  const skills: BadgeSkill[] = Array.from({ length: 19 }, (_, index) => ({
+    slug: `team-${index}`, name: `Team ${index}`, author: team,
+    authorGithub: null, featured: false, createdAt: "2026-10-31",
+  }));
+  skills.push({ slug: "ada", name: "Ada's skill", author: "Ada", authorGithub: "ADA" });
+  const authors = directoryAuthors(skills);
+  assert.equal(authors.length, 2);
+  assert.equal(authors[0].key, "microsoft");
+  assert.equal(authors[0].login, "");
+  assert.equal(authors[0].displayName, team);
+  assert.equal(authors[0].skillCount, 19);
+  assert.equal(authors[0].skills.length, 19);
+  assert.equal(authors[1].key, "ada");
+  assert.equal(computeStats("ada", skills).skillCount, 1);
+  assert.equal(computeStats("microsoft", skills).skillCount, 0);
+  assert.deepEqual(resolveBadges("microsoft", skills), []);
+});
+
+test("avatars come from GitHub logins and otherwise fall back to initials", () => {
+  assert.equal(contributorAvatar(null, team), null);
+  assert.equal(contributorAvatar("microsoft", team), "/microsoft.svg");
+  assert.equal(contributorAvatar("@Microsoft", team), "/microsoft.svg");
+  assert.equal(contributorAvatar("@Ada", "Ada"), "https://github.com/ada.png?size=96");
+  assert.equal(contributorAvatar(undefined, "Another team"), null);
+});

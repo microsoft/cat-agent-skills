@@ -1,0 +1,67 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Confirm that the request details are correct, or go back to make changes.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Confirm request",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Title",
+          "value": "Replace a damaged item"
+        },
+        {
+          "title": "Category",
+          "value": "Equipment"
+        },
+        {
+          "title": "Requested date",
+          "value": "18 September 2026"
+        }
+      ]
+    },
+    {
+      "type": "Input.Toggle",
+      "id": "confirmDetails",
+      "label": "Confirmation",
+      "title": "I confirm that these details are correct.",
+      "isRequired": true,
+      "errorMessage": "Confirm the details before continuing.",
+      "valueOn": "true",
+      "valueOff": "false"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Confirm request",
+      "data": {
+        "cardId": "request_confirmation_v1",
+        "actionId": "confirm",
+        "actionSubmitId": "request_confirmation_v1_confirm",
+        "intent": "request.confirm",
+        "riskLevel": "consequential"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Change details",
+      "associatedInputs": "none",
+      "data": {
+        "cardId": "request_confirmation_v1",
+        "actionId": "change_details",
+        "actionSubmitId": "request_confirmation_v1_change_details",
+        "intent": "request.change_details",
+        "riskLevel": "none",
+        "isEscapeAction": true
+      }
+    }
+  ]
+}

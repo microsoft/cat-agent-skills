@@ -1,0 +1,54 @@
+{
+  "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "fallbackText": "Welcome. You can ask to check a request, create a request, or get help.",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "How can I help?",
+      "style": "heading",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Choose a starting point.",
+      "wrap": true
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Check a request",
+      "data": {
+        "cardId": "welcome_starters_v1",
+        "actionId": "check_request",
+        "actionSubmitId": "welcome_starters_v1_check_request",
+        "intent": "request.check",
+        "riskLevel": "none"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Create a request",
+      "data": {
+        "cardId": "welcome_starters_v1",
+        "actionId": "create_request",
+        "actionSubmitId": "welcome_starters_v1_create_request",
+        "intent": "request.create",
+        "riskLevel": "none"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Get help",
+      "data": {
+        "cardId": "welcome_starters_v1",
+        "actionId": "get_help",
+        "actionSubmitId": "welcome_starters_v1_get_help",
+        "intent": "help.start",
+        "riskLevel": "none"
+      }
+    }
+  ]
+}

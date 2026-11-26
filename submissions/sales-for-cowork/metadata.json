@@ -1,0 +1,13 @@
+{
+  "name": "Sales",
+  "description": "Delegate sales work and turn customer context into action with Copilot Cowork.",
+  "platforms": ["Cowork"],
+  "category": "sales",
+  "builtByMicrosoft": true,
+  "tags": ["sales", "pipeline", "customer-engagement", "presentations"],
+  "author": "Microsoft",
+  "authorUrl": "https://github.com/microsoft",
+  "version": "1.0.3",
+  "createdAt": "2026-10-31",
+  "updatedAt": "2026-11-24"
+}

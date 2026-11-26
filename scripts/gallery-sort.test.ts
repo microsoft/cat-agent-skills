@@ -1,0 +1,113 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { compareCategoryThenName, compareNewest, compareRecentlyUpdated, defaultGallerySort } from "../src/lib/gallery-sort";
+
+test("Microsoft collections default to category sorting without changing community defaults", () => {
+  assert.equal(defaultGallerySort("microsoft"), "category");
+  assert.equal(defaultGallerySort("all"), "featured");
+  assert.equal(defaultGallerySort(undefined), "featured");
+});
+
+test("Microsoft category sorting groups launch categories and orders names within each group", () => {
+  const submissions = [
+    { category: "sales", name: "Alpha sales" },
+    { category: "service", name: "Alpha service" },
+    { category: "finance", name: "Zulu finance" },
+    { category: "sales", name: "Zulu sales" },
+    { category: "finance", name: "Alpha finance" },
+  ] as const;
+  assert.deepEqual(submissions.toSorted(compareCategoryThenName).map(({ name }) => name), [
+    "Alpha finance", "Zulu finance", "Alpha sales", "Zulu sales", "Alpha service",
+  ]);
+});
+
+const item = (
+  name: string,
+  created: string | undefined,
+  updated?: string,
+  sample = "0",
+) => ({
+  dataset: { name, created, updated, sample },
+});
+
+test("Microsoft previews sort by category label and then title, regardless of featured status", () => {
+  const submissions = [
+    { category: "retail-cpg", name: "Zulu retail", featured: true },
+    { category: "manufacturing", name: "Zulu manufacturing", featured: true },
+    { category: "manufacturing", name: "Beta manufacturing", featured: false },
+    { category: "retail-cpg", name: "Alpha retail", featured: false },
+    { category: "productivity", name: "Zulu productivity", featured: false },
+    { category: "agent-development", name: "Zulu agents", featured: false },
+    { category: "financial-services", name: "Asset management", featured: false },
+    { category: "healthcare", name: "Alpha healthcare", featured: false },
+  ] as const;
+
+  assert.deepEqual(submissions.toSorted(compareCategoryThenName).map(({ name }) => name), [
+    "Zulu agents",
+    "Asset management",
+    "Alpha healthcare",
+    "Beta manufacturing",
+    "Zulu manufacturing",
+    "Zulu productivity",
+    "Alpha retail",
+    "Zulu retail",
+  ]);
+});
+
+test("newest orders skills by creation date rather than update date", () => {
+  const older = item("older", "100", "900");
+  const newest = item("newest", "300", "300");
+  const middle = item("middle", "200", "200");
+
+  assert.deepEqual([older, newest, middle].sort(compareNewest), [
+    newest,
+    middle,
+    older,
+  ]);
+});
+
+test("newest keeps missing dates last and breaks ties by name", () => {
+  const undated = item("undated", undefined);
+  const beforeEpoch = item("before-epoch", "-100");
+  const beta = item("beta", "100");
+  const alpha = item("alpha", "100");
+
+  assert.deepEqual([undated, beforeEpoch, beta, alpha].sort(compareNewest), [
+    alpha,
+    beta,
+    beforeEpoch,
+    undated,
+  ]);
+});
+
+test("recently updated prefers update dates and falls back to creation dates", () => {
+  const updatedOlder = item("updated-older", "100", "900");
+  const newlyCreated = item("newly-created", "500");
+  const unchanged = item("unchanged", "300", "300");
+  const updateOnly = item("update-only", undefined, "700");
+
+  assert.deepEqual(
+    [unchanged, newlyCreated, updatedOlder, updateOnly].sort(compareRecentlyUpdated),
+    [updatedOlder, updateOnly, newlyCreated, unchanged],
+  );
+});
+
+test("recently updated keeps missing dates last and breaks ties by name", () => {
+  const undatedBeta = item("undated-beta", undefined);
+  const undatedAlpha = item("undated-alpha", undefined);
+  const beforeEpoch = item("before-epoch", undefined, "-100");
+  const beta = item("beta", "100");
+  const alpha = item("alpha", "50", "100");
+
+  assert.deepEqual(
+    [undatedBeta, beta, beforeEpoch, undatedAlpha, alpha].sort(compareRecentlyUpdated),
+    [alpha, beta, beforeEpoch, undatedAlpha, undatedBeta],
+  );
+});
+
+test("recently updated preserves a zero update timestamp", () => {
+  const epoch = item("epoch", "900", "0");
+  const afterEpoch = item("after-epoch", "100");
+
+  assert.deepEqual([epoch, afterEpoch].sort(compareRecentlyUpdated), [afterEpoch, epoch]);
+});
