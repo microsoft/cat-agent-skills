@@ -1,0 +1,11 @@
+{
+  "name": "AI FinOps Admin Console",
+  "description": "Build an offline AI FinOps console combining tenant spend, credits, Copilot, agents, and Power Platform data.",
+  "platforms": ["Cowork"],
+  "tags": ["finops", "cowork", "copilot", "ai", "consumption", "dashboard", "power-platform"],
+  "author": "Bojan Buhac",
+  "authorUrl": "https://github.com/bojanbuhac",
+  "version": "1.0.0",
+  "createdAt": "2026-11-26",
+  "coverColor": "#0f6cbd"
+}
