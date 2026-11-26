@@ -491,6 +491,8 @@ def analyze(data, args, as_of):
                      "projection covers the current billing month only. Re-run with --period ytd if the export was "
                      "taken with a year-to-date filter.")
     # ---- users -------------------------------------------------------------
+    for u in users:
+        u["share"] = pct(u["used"], user_total)
     users_sorted = sorted(users, key=lambda u: -u["used"])
     consuming = [u for u in users if u["used"] > 0]
     n_users = len(users)
@@ -931,7 +933,7 @@ def render_html(res, anonymize=False):
         concentration_html = f"""<p>Top 10 users account for <b>{fmt(U['top10Share'],0)}%</b> of user credits; the top 20% of users ({U['top20pctCount']}) account for <b>{fmt(U['top20pctShare'],0)}%</b>.</p>{bar_rows(U['top10'], 'used', 'displayName', total=U['total'] or None, color=lambda u: 'bad' if (u.get('pctUsed') or 0) >= 100 else ('warn' if (u.get('pctUsed') or 0) >= near_pct else ''))}"""
         grp_html = f"""<div class="grid2"><div class="card"><h4>Credits by group</h4>{bar_rows(G['rows'][:10], 'used', 'name', valfmt=lambda g: f"{fmt(g['used'])} <span class='muted'>{g['membersUsed']} consumers</span>")}</div>
         <div class="card"><h4>Concentration</h4>{concentration_html}</div></div>
-        <div class="tw" style="margin-top:12px"><table><thead><tr><th onclick="sortTable(this)">Group</th><th class="num" onclick="sortTable(this)">Total users</th><th class="num" onclick="sortTable(this)">Credits</th><th class="num" onclick="sortTable(this)">Members that used credits</th><th class="num" onclick="sortTable(this)">Avg / user / day</th><th class="num" onclick="sortTable(this)">Sessions</th><th onclick="sortTable(this)">Last activity</th></tr></thead><tbody>{grow}</tbody></table></div>
+        <div class="tw" style="margin-top:12px"><table><thead><tr><th onclick="sortTable(this)">Group</th><th class="num" onclick="sortTable(this)">Total users</th><th class="num" onclick="sortTable(this)">Members that used credits</th><th class="num" onclick="sortTable(this)">Activation rate</th><th class="num" onclick="sortTable(this)">Credits</th><th class="num" onclick="sortTable(this)">Avg / user / day</th><th class="num" onclick="sortTable(this)">Sessions</th><th onclick="sortTable(this)">Last activity</th></tr></thead><tbody>{grow}</tbody></table></div>
         <p class="muted">Groups overlap - a user in several groups is counted in each. Never add group rows together.</p>"""
     else:
         grp_html = "<p class='note'>Groups export not provided.</p>"
@@ -958,7 +960,7 @@ def render_html(res, anonymize=False):
         return " ".join(flags)
     urows = "".join(
         f"<tr><td>{html.escape(name(u))}</td><td>{html.escape(u.get('department') or '-')}</td><td>{html.escape(u.get('manager') or '-')}</td><td class='num' data-v='{u['used']}'>{fmt(u['used'])}</td><td class='num' data-v='{u['limit'] or 0}'>{fmt(u['limit'])}</td>"
-        f"<td class='num' data-v='{u['pctUsed'] or 0}'>{'-' if u['pctUsed'] is None else fmt(u['pctUsed'],1)+'%'}</td><td class='num' data-v='{u.get('share') or 0}'>{fmt(u.get('share'),1)}%</td><td class='num' data-v='{u.get('tasks') or 0}'>{fmt(u.get('tasks'))}</td>"
+        f"<td class='num' data-v='{u['pctUsed'] or 0}'>{'-' if u['pctUsed'] is None else fmt(u['pctUsed'],1)+'%'}</td><td class='num' data-v='{u['share'] or 0}'>{'-' if u['share'] is None else fmt(u['share'],1)+'%'}</td><td class='num' data-v='{u.get('tasks') or 0}'>{fmt(u.get('tasks'))}</td>"
         f"<td class='num' data-v='{u.get('creditsPerTask') or 0}'>{fmt(u.get('creditsPerTask'))}</td><td class='num' data-v='{u['sessions']}'>{fmt(u['sessions'])}</td><td>{u['lastActivity'] or '-'}</td><td>{user_flags(u)}</td></tr>" for u in U["all"])
     users_html = f"""<div class="grid4"><div class="card"><h4>Over 100% of limit ({len(U['overLimit'])})</h4><p>{names_for(U['overLimit'])}</p></div>
     <div class="card"><h4>Near limit &ge; {near_pct}% ({len(U['nearLimit'])})</h4><p>{names_for(U['nearLimit'])}</p></div>

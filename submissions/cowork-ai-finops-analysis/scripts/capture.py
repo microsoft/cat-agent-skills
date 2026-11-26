@@ -340,7 +340,7 @@ def retry():
     if (OUT / "pp_envs.json").exists():
         data = load("pp_envs.json")
         ops = {"apps": ("Get-AdminApps", {"api-version": V, "$top": 250}), "flows": ("ListCloudFlows", {"api-version": V}), "billing": ("GetEnvironmentBillingPolicy", {"api-version": V}), "backups": ("GetEnvironmentBackups", {"api-version": V})}
-        jobs = [(e, p) for e, d in data.items() for p, v in d.items() if isinstance(v, dict) and "__error" in v and "status 4" not in v["__error"]][: int(A.get("limit", 80))]
+        jobs = [(e, p) for e, d in data.items() for p, v in d.items() if isinstance(v, dict) and "__error" in v and ("status 4" not in v["__error"] or v["__error"] == "status 429")][: int(A.get("limit", 80))]
         def go2(j):
             e, p = j; o, prm = ops[p]
             r = pp_op(o, dict(prm, environmentId=e), 3)
