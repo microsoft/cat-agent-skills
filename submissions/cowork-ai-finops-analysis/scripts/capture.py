@@ -232,8 +232,18 @@ def viva_fixed():
     res = {}
     with ThreadPoolExecutor(3) as ex:
         for (n, a, b), r in zip(jobs, ex.map(lambda j: run_viva(*j), jobs)): res.setdefault(f"{a}|{b}", {})[n] = r
-    ds = payload_of(tools.call("vivainsightsmcp", "list_datasets", {"actAs": ACT}))
-    ds = json.loads(ds[ds.index("["):]) if isinstance(ds, str) else ds
+    save("viva_fixed.json", res)
+    fixed = {k: {n: (len(v) if isinstance(v, list) else "ERR") for n, v in d.items()} for k, d in res.items()}
+    try:
+        response = tools.call("vivainsightsmcp", "list_datasets", {"actAs": ACT})
+        if getattr(response, "is_error", False):
+            raise RuntimeError(str(payload_of(response)))
+        ds = payload_of(response)
+        ds = json.loads(ds[ds.index("["):]) if isinstance(ds, str) else ds
+        if not isinstance(ds, list) or not all(isinstance(d, dict) and isinstance(d.get("DatasetName"), str) for d in ds):
+            raise ValueError("Invalid dataset catalog response")
+    except Exception as e:
+        return {"catalog_error": str(e)[:200], "fixed": fixed}
     def attrs(d):
         try:
             a = payload_of(tools.call("vivainsightsmcp", "list_attributes", {"datasetName": d["DatasetName"], "actAs": ACT}))
@@ -244,7 +254,7 @@ def viva_fixed():
         at = dict(ex.map(attrs, ds))
     res["__datasets"] = ds; res["__attrs"] = at
     save("viva_fixed.json", res)
-    return {"datasets": len(ds), "fixed": {k: {n: (len(v) if isinstance(v, list) else "ERR") for n, v in d.items()} for k, d in res.items() if not k.startswith("__")}}
+    return {"datasets": len(ds), "fixed": fixed}
 
 # ---------------- Power Platform admin ----------------
 def pp_op(o, params, retries=1):
@@ -323,35 +333,49 @@ def pp_envs():
     return {"environments_total": len(envs), "captured": len(out), "failed_reads": bad, "next_env_offset": nxt}
 
 def retry():
-    fixed = left = 0
+    fixed = left = attempted = 0
+    limit = max(0, int(A.get("limit", 80)))
+    deadline = time.monotonic() + 240
+    admin_jobs = []
+    admin_data = {}
     for fname in ["admin_base.json", "admin_periods.json", "admin_trends.json"]:
         if not (OUT / fname).exists(): continue
         data = load(fname)
+        admin_data[fname] = data
         bad = [k for k, v in data.items() if isinstance(v, dict) and "__error" in v and not re.search(r"404|NotFound|403|Forbidden", v["__error"])]
-        def go(k):
-            t, a = k.split("|", 1)
-            return k, admin_call(t, json.loads(a), 3)
-        with ThreadPoolExecutor(2) as ex:
-            for k, r in ex.map(go, bad):
-                data[k] = r
-                if isinstance(r, dict) and "__error" in r: left += 1
-                else: fixed += 1
-        save(fname, data)
+        admin_jobs.extend((fname, k) for k in bad)
+    pp_jobs = []
+    pp_data = None
+    ops = {"apps": ("Get-AdminApps", {"api-version": V, "$top": 250}), "flows": ("ListCloudFlows", {"api-version": V}), "billing": ("GetEnvironmentBillingPolicy", {"api-version": V}), "backups": ("GetEnvironmentBackups", {"api-version": V})}
     if (OUT / "pp_envs.json").exists():
-        data = load("pp_envs.json")
-        ops = {"apps": ("Get-AdminApps", {"api-version": V, "$top": 250}), "flows": ("ListCloudFlows", {"api-version": V}), "billing": ("GetEnvironmentBillingPolicy", {"api-version": V}), "backups": ("GetEnvironmentBackups", {"api-version": V})}
-        jobs = [(e, p) for e, d in data.items() for p, v in d.items() if isinstance(v, dict) and "__error" in v and ("status 4" not in v["__error"] or v["__error"] == "status 429")][: int(A.get("limit", 80))]
-        def go2(j):
-            e, p = j; o, prm = ops[p]
-            r = pp_op(o, dict(prm, environmentId=e), 3)
-            return j, slim_apps(r) if p == "apps" else slim_flows(r) if p == "flows" else r
-        with ThreadPoolExecutor(3) as ex:
-            for (e, p), r in ex.map(go2, jobs):
-                data[e][p] = r
-                if isinstance(r, dict) and "__error" in r: left += 1
-                else: fixed += 1
-        save("pp_envs.json", data)
-    return {"fixed": fixed, "still_failing": left}
+        pp_data = load("pp_envs.json")
+        pp_jobs = [(e, p) for e, d in pp_data.items() for p, v in d.items() if isinstance(v, dict) and "__error" in v and ("status 4" not in v["__error"] or v["__error"] == "status 429")]
+    jobs = []
+    for i in range(max(len(admin_jobs), len(pp_jobs))):
+        if i < len(admin_jobs): jobs.append(("admin", admin_jobs[i]))
+        if i < len(pp_jobs): jobs.append(("pp", pp_jobs[i]))
+    for source, job in jobs:
+        if attempted >= limit or time.monotonic() >= deadline: break
+        attempted += 1
+        if source == "admin":
+            fname, k = job
+            t, a = k.split("|", 1)
+            r = admin_call(t, json.loads(a))
+            admin_data[fname][k] = r
+            data = admin_data[fname]
+        else:
+            e, p = job
+            o, prm = ops[p]
+            r = pp_op(o, dict(prm, environmentId=e))
+            r = slim_apps(r) if p == "apps" else slim_flows(r) if p == "flows" else r
+            pp_data[e][p] = r
+            fname, data = "pp_envs.json", pp_data
+        tmp = OUT / (fname + ".tmp")
+        tmp.write_text(json.dumps(data, ensure_ascii=False, default=str))
+        tmp.replace(OUT / fname)
+        if isinstance(r, dict) and "__error" in r: left += 1
+        else: fixed += 1
+    return {"attempted": attempted, "fixed": fixed, "still_failing": left, "remaining": len(jobs) - attempted}
 
 DISPATCH = {"admin_base": admin_base, "admin_periods": admin_periods, "admin_trends": admin_trends,
             "viva_7": lambda: viva_period("7"), "viva_30": lambda: viva_period("30"), "viva_qtd": lambda: viva_period("qtd"), "viva_90": lambda: viva_period("90"),

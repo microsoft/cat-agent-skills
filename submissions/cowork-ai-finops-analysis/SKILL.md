@@ -75,6 +75,9 @@ Skip `admin_*` parts when `admin_server` is `"none"`, `viva_*` when Viva is unav
 Power Platform connection. Report per-part errors only as a summary; 404s on some Copilot Credits reports
 (PAYG overview, policy health, model/environment/policy/resource consumption, service trends) are normal —
 Microsoft doesn't provide those reports for every tenant yet.
+The retry limit is shared across both sources; each attempted read is checkpointed. Retry stops starting new
+reads after four minutes, but an individual connector call can still take longer. Report remaining or failed
+reads and any `catalog_error` from `viva_fixed` as unavailable data.
 
 ### 4. Build, check, publish
 
