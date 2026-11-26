@@ -332,12 +332,16 @@ def rollup(users, key_fn, label_unknown, near_pct=80):
         if a["topUser"] is None or u["used"] > a["topUser"]["used"]:
             a["topUser"] = u
         a["members"].append(u["upn"])
+    matched_credits = defaultdict(int)
+    for u in users:
+        if (u.get("tasks") or 0) > 0:
+            matched_credits[key_fn(u) or label_unknown] += u["used"]
     total = sum(a["used"] for a in agg.values()) or 1
     rows = []
     for a in agg.values():
         rows.append({**a, "share": round(a["used"] / total * 100, 1),
                      "avgPerUser": round(a["used"] / a["users"]) if a["users"] else 0,
-                     "creditsPerTask": round(a["used"] / a["tasks"]) if a["tasks"] else None,
+                     "creditsPerTask": round(matched_credits[a["name"]] / a["tasks"]) if a["tasks"] else None,
                      "topUser": a["topUser"]["displayName"] if a["topUser"] else "", "members": len(a["members"])})
     rows.sort(key=lambda r: -r["used"])
     return rows
