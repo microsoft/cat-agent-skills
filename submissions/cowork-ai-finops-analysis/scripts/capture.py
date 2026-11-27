@@ -7,7 +7,7 @@ import json, re, time
 from pathlib import Path
 from datetime import date, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from urllib.parse import unquote
+from urllib.parse import parse_qs, unquote, urlparse
 from aether_tools import args, set_result, tools
 
 A = args() or {}
@@ -263,7 +263,13 @@ def pp_op(o, params, retries=1):
         try:
             r = payload_of(tools.call("powerplatform", "InvokeConnectorOperation", dict(PPC, operation_id=o, params=params)))
             if isinstance(r, str): r = json.loads(r)
-            if r.get("status", 200) >= 400: return {"__error": f"status {r.get('status')}"}
+            status = r.get("status", 200)
+            if status >= 400:
+                err = f"status {status}"
+                if status not in (408, 425, 429, 500, 502, 503, 504) or attempt + 1 >= retries:
+                    return {"__error": err}
+                time.sleep(min(2, 0.5 * (2 ** attempt)))
+                continue
             body = r.get("response")
             if r.get("truncated"):
                 m = re.search(r"(grounding/responses/[^\s\"']+)", json.dumps(r))
@@ -276,15 +282,46 @@ def pp_op(o, params, retries=1):
             if attempt + 1 < retries: time.sleep(4 + attempt * 5)
     return {"__error": err}
 
+def pp_collection(o, params, retries=3, max_pages=100):
+    rows = []
+    current = dict(params)
+    seen = set()
+    for _ in range(max_pages):
+        response = pp_op(o, current, retries)
+        if isinstance(response, dict) and "__error" in response:
+            return {"value": rows, "__error": response["__error"],
+                    "__incomplete": "A page failed before the inventory was complete."}
+        if not isinstance(response, dict) or not isinstance(response.get("value"), list):
+            return {"value": rows, "__error": "Invalid collection response",
+                    "__incomplete": "A page returned an invalid collection response."}
+        rows.extend(response["value"])
+        next_link = response.get("nextLink") or response.get("@odata.nextLink")
+        if not next_link:
+            return {"value": rows}
+        query = parse_qs(urlparse(next_link).query)
+        token_key = next((key for key in ("$skipToken", "$skiptoken", "skipToken", "skiptoken", "$skip")
+                          if key in query and query[key]), None)
+        if token_key:
+            token = unquote(query[token_key][0])
+        else:
+            token = response.get("continuationToken") or response.get("nextPageToken")
+            token_key = "$skipToken" if token else None
+        if not token or token in seen:
+            return {"value": rows, "__incomplete": "Pagination returned an unusable or repeated continuation token."}
+        seen.add(token)
+        current[token_key] = token
+    return {"value": rows, "__incomplete": f"Inventory exceeded the {max_pages}-page capture limit."}
+
 def slim_apps(d):
     if isinstance(d, dict) and "value" in d:
-        return {"value": [{"name": a.get("name"), "type": a.get("type"), "properties": {k: (a.get("properties") or {}).get(k) for k in ["displayName","owner","appType","createdTime","lastModifiedTime","sharedUsersCount","sharedGroupsCount"]}} for a in d["value"]]}
+        out = {"value": [{"name": a.get("name"), "type": a.get("type"), "properties": {k: (a.get("properties") or {}).get(k) for k in ["displayName","owner","appType","createdTime","lastModifiedTime","sharedUsersCount","sharedGroupsCount"]}} for a in d["value"]]}
+        out.update({k: d[k] for k in ("__error", "__incomplete") if k in d})
+        return out
     return d
 def slim_flows(d):
     if isinstance(d, dict) and "value" in d:
         out = {"value": [{k: f.get(k) for k in ["displayName","name","stateCode","state","statecode","createdOn","modifiedOn","ownerId","createdBy"]} for f in d["value"]]}
-        if d.get("nextLink") or d.get("@odata.nextLink"):
-            out["__incomplete"] = "Additional flow pages were not captured."
+        out.update({k: d[k] for k in ("__error", "__incomplete") if k in d})
         return out
     return d
 
@@ -322,8 +359,8 @@ def pp_envs():
     envs = [e["id"] for e in (load("pp_base.json").get("envs") or {}).get("value", [])]
     off = int(A.get("env_offset", 0)); limit = int(A.get("env_limit", 50))
     def detail(eid):
-        return eid, {"apps": slim_apps(pp_op("Get-AdminApps", {"environmentId": eid, "api-version": V, "$top": 250}, 2)),
-                     "flows": slim_flows(pp_op("ListCloudFlows", {"environmentId": eid, "api-version": V}, 2)),
+        return eid, {"apps": slim_apps(pp_collection("Get-AdminApps", {"environmentId": eid, "api-version": V, "$top": 250})),
+                     "flows": slim_flows(pp_collection("ListCloudFlows", {"environmentId": eid, "api-version": V})),
                      "billing": pp_op("GetEnvironmentBillingPolicy", {"environmentId": eid, "api-version": V}, 2),
                      "backups": pp_op("GetEnvironmentBackups", {"environmentId": eid, "api-version": V}, 2)}
     batch = envs[off:off + limit]
@@ -332,9 +369,12 @@ def pp_envs():
         out.update(dict(ex.map(detail, batch)))
     save("pp_envs.json", out)
     bad = sum(1 for d in out.values() for v in d.values() if isinstance(v, dict) and "__error" in v)
-    incomplete = sum(1 for d in out.values() if isinstance(d.get("flows"), dict) and d["flows"].get("__incomplete"))
+    incomplete_apps = sum(1 for d in out.values() if isinstance(d.get("apps"), dict) and d["apps"].get("__incomplete"))
+    incomplete_flows = sum(1 for d in out.values() if isinstance(d.get("flows"), dict) and d["flows"].get("__incomplete"))
     nxt = off + limit if off + limit < len(envs) else None
-    return {"environments_total": len(envs), "captured": len(out), "failed_reads": bad, "incomplete_flow_inventories": incomplete, "next_env_offset": nxt}
+    return {"environments_total": len(envs), "captured": len(out), "failed_reads": bad,
+            "incomplete_app_inventories": incomplete_apps, "incomplete_flow_inventories": incomplete_flows,
+            "incomplete_inventories": incomplete_apps + incomplete_flows, "next_env_offset": nxt}
 
 def retry():
     fixed = left = attempted = 0
@@ -370,7 +410,7 @@ def retry():
         else:
             e, p = job
             o, prm = ops[p]
-            r = pp_op(o, dict(prm, environmentId=e))
+            r = pp_collection(o, dict(prm, environmentId=e)) if p in ("apps", "flows") else pp_op(o, dict(prm, environmentId=e), 3)
             r = slim_apps(r) if p == "apps" else slim_flows(r) if p == "flows" else r
             pp_data[e][p] = r
             fname, data = "pp_envs.json", pp_data

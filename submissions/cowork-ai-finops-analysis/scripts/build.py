@@ -49,14 +49,21 @@ warning = (
     'reports may appear as zero or empty, including AI spend and forecasts. '
     'Verify source availability and values before relying on this snapshot.</div>'
 )
+incomplete_apps = sum(1 for env in pp["envDetail"].values()
+                      if isinstance(env, dict) and isinstance(env.get("apps"), dict)
+                      and env["apps"].get("__incomplete"))
 incomplete_flows = sum(1 for env in pp["envDetail"].values()
                        if isinstance(env, dict) and isinstance(env.get("flows"), dict)
                        and env["flows"].get("__incomplete"))
-if incomplete_flows:
+if incomplete_apps or incomplete_flows:
+    inventory_summary = ", ".join(
+        f"{count} {name} environment(s)" for name, count in
+        (("app", incomplete_apps), ("cloud-flow", incomplete_flows)) if count
+    )
     warning += (
         f'<div role="note" style="padding:12px;background:#fff3cd;color:#3d3000;'
-        f'font:14px sans-serif">Cloud-flow inventory is incomplete in {incomplete_flows} '
-        f'environment(s): additional pages were not captured. Do not treat flow counts as complete.</div>'
+        f'font:14px sans-serif">Power Platform inventory is incomplete in {inventory_summary}. '
+        f'Additional pages or reads were not captured; do not treat these inventory counts as complete.</div>'
     )
 if html.count("<body>") != 1:
     raise ValueError("Console template must contain exactly one <body> tag")
@@ -64,4 +71,4 @@ html = html.replace("<body>", "<body>" + warning, 1)
 os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
 open(a.out, "w", encoding="utf-8").write(html)
 errs = sum(1 for v in admin.values() if isinstance(v, dict) and "__error" in v)
-print(json.dumps({"out": a.out, "bytes": len(html.encode()), "admin_reads": len(admin), "admin_errors": errs, "viva_ranges": list(viva), "pp_envs": len(pp["envDetail"]), "incomplete_flow_inventories": incomplete_flows}))
+print(json.dumps({"out": a.out, "bytes": len(html.encode()), "admin_reads": len(admin), "admin_errors": errs, "viva_ranges": list(viva), "pp_envs": len(pp["envDetail"]), "incomplete_app_inventories": incomplete_apps, "incomplete_flow_inventories": incomplete_flows}))
