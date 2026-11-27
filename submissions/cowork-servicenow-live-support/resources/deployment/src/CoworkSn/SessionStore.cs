@@ -158,7 +158,15 @@ public sealed class SessionStore
     {
         using var db = Open();
         using var command = db.CreateCommand();
-        command.CommandText = "DELETE FROM sessions WHERE terminal_at IS NOT NULL AND terminal_at<$cutoff";
+        command.CommandText = """
+            DELETE FROM sessions
+            WHERE terminal_at IS NOT NULL AND terminal_at<$cutoff
+              AND NOT EXISTS (
+                  SELECT 1 FROM operations
+                  WHERE operations.session_id=sessions.id
+                    AND operations.key LIKE 'client:%'
+                    AND operations.state IN ('pending','ambiguous'))
+            """;
         command.Parameters.AddWithValue("$cutoff", cutoff.ToString("O"));
         command.ExecuteNonQuery();
     }
