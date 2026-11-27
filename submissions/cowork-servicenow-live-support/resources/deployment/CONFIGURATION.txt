@@ -1,0 +1,178 @@
+CONFIGURATION, LOCAL BUILD AND OWNER-RUN DEPLOYMENT
+=================================================
+Start with README.md for the architecture and complete ServiceNow setup sequence.
+All commands below run from this package root in Windows PowerShell 7.
+No cloud mutation or plugin upload is part of Build.ps1 or Test-Package.ps1.
+
+PREREQUISITES AND OFFLINE VALIDATION
+- Windows is required by the package icon generator (System.Drawing).
+- Node.js with npm and type stripping support (source CI uses Node 22; review
+  used Node 26.13.0/npm 11.20.0). Use a current patch satisfying locked Vite engines.
+- .NET SDK supporting net9.0 and .NET/ASP.NET Core 9 runtime for native execution.
+  The review machine had SDK 10.0.404 and runtime 10.0.15, not runtime 9.
+  Baseline native net9 tests therefore aborted; explicit process-only major
+  roll-forward allowed the existing suite to run without changing the target.
+- Network access to ordinary npm/NuGet registries is needed for initial restore;
+  tests use mocks/in-memory hosts and do not contact ServiceNow, Entra or Translator.
+
+Source build pattern (net9.0 is retained for prototype reproduction, not a
+production-support commitment; review supported-runtime migration):
+  npm --prefix widget ci --no-audit --no-fund
+  .\scripts\Build.ps1 -Test
+
+Exact runtime compatibility mode used during this review (not a production fix):
+  $previous = $env:DOTNET_ROLL_FORWARD
+  try {
+    $env:DOTNET_ROLL_FORWARD = 'Major'
+    .\scripts\Build.ps1 -Test
+  } finally { $env:DOTNET_ROLL_FORWARD = $previous }
+
+The build creates widget\dist\index.html, regenerates both ServiceNow artifacts,
+builds the Release host, typechecks/tests the widget, runs .NET and Node tests,
+and checks a synthetic plugin's ZIP, manifest, OAuth requirement, icons and URLs.
+Test plugin output is created under artifacts and removed after the test.
+The baseline had a stale install.js; Build.ps1 now regenerates it before tests.
+Do not add generated bin/obj/node_modules/dist/data/logs or artifacts to a release.
+servicenow\artifacts contains deliberately regenerated, sanitized review templates.
+
+Optional owner-run browser-only synthetic demo:
+  .\scripts\Start-Demo.ps1
+Then open http://localhost:5078/?demo=1. Stop the foreground process when finished.
+It binds only loopback, requires Development and uses no external integration.
+Do not tunnel, reverse-proxy or publicly expose Demo mode.
+This packaging review did not start a persistent demo server.
+
+HOST AND WIDGET
+  .\scripts\Build.ps1
+  dotnet publish .\src\CoworkSn\CoworkSn.csproj -c Release -o .\artifacts\host
+Widget HTML is copied into the publish output. WidgetPath can override its path.
+Run exactly one host against persistent local SQLite storage, with appropriate
+file ACLs, encryption, backups and retention. Never use SMB/NFS or shared replicas.
+Deploy the publish output using your approved service manager and TLS setup.
+Do not run from this archive expecting an already configured tenant.
+
+appsettings.json is a safe configuration template, not a working registration.
+Supply settings through environment variables (colon becomes double underscore)
+or an approved deployment secret store. For example arrays use numeric indices:
+Auth__AllowedEmailDomains__0 and Auth__AllowedWebhookCallers__0.
+Use dotnet user-secrets only for Development; it is not a production secret vault.
+Do not place secrets in manifests, appsettings files, scripts, transcripts or Git.
+
+Required even when authenticated ServiceNow integration remains disconnected:
+  PublicBaseUrl                   external HTTPS origin, no path/query/fragment
+  Auth__TenantId                  owner-selected Entra tenant GUID
+  Auth__UserAudience              exact aud of delegated user API access token
+  Auth__WebhookAudience           DISTINCT callback API token audience
+  Auth__DelegatedScope            full API scope ending /LiveChat.Access
+  Auth__EmailClaim                preferred_username OR email, explicitly chosen
+  Auth__AllowedEmailDomains__0    approved requester mapping domain
+  Auth__AllowedWebhookCallers__0  approved outbound callback application's client ID
+  Demo__Enabled                  false
+  ServiceNow__Enabled             false until separate activation approval
+  Translator__Enabled             false unless separate processor approved
+
+OAuth registration is manual owner work; tenant-specific provisioning/start
+scripts were excluded rather than repackaged with a remembered identity.
+1. Register separate Entra user API and callback API identities with v2 tokens.
+   Expose delegated LiveChat.Access on the user API and application role
+   LiveChat.Webhook on the distinct callback API.
+2. Register the host OAuth client using the CURRENT host-approved redirect URI,
+   authorization-code/PKCE settings, approved consent and offline_access for
+   refresh. Entra is not generic dynamic client registration; verify host support.
+3. Configure OAuth in the Microsoft Enterprise token store using that registration.
+   Record its OAuth reference ID. It is NOT a secret, app ID or tenant ID.
+4. Register a dedicated ServiceNow outbound callback client, assign/admin-consent
+   only the required callback application role, and configure its credential in
+   ServiceNow's approved credential store. Allowlist its exact client ID above.
+5. Restrict user assignment/consent to approved users. Verify signed tid, oid and
+   chosen email mapping; each requester must match exactly one active SN user.
+
+The bridge validates issuer, audience, signature, expiry and delegated scope.
+Callbacks require the separate audience, app caller allowlist and
+LiveChat.Webhook role, with no delegated scp. No authentication bypass is provided.
+Discovery: /.well-known/oauth-protected-resource; MCP endpoint: /mcp;
+callback: /api/livechat/sn. The iframe receives no bearer tokens or SN credentials.
+
+With a reverse proxy: preserve the public Host and set X-Forwarded-Proto=https.
+Configure TrustedProxyIps__0 (and further indices) for explicit trusted proxy IPs,
+and an appropriately private ASPNETCORE_URLS listener. Restrict direct access.
+Otherwise terminate TLS in Kestrel. Forwarded Host is not trusted.
+The built-in /privacy and /terms text is sample prose, not owner-approved legal
+terms; supply reviewed legal URLs to the package generator.
+
+SERVICENOW TARGET ADAPTATION — REQUIRED BEFORE LIVE USE
+The distribution deliberately uses example.invalid and namespace cowork_review.
+These are template coordinates, NOT an installed namespace or real service.
+The original installer was strict and target-bound; its guards remain strict,
+not broadened to permit arbitrary production instances.
+
+An authorized owner must independently review and adapt these coupled locations:
+  servicenow\install-definition.json: target and rest_definition namespace
+  servicenow\tools\generate-install.cjs: exact instance/namespace/base-path guards,
+    manifest target and runtime API/identity guards
+  src\CoworkSn\ServiceNowClient.cs: matching isolated REST base path
+  associated tests and deployment documentation: aligned target contract
+Retain exact target guards; do not disable collision, ACL, schema or role checks.
+Rebuild and test after adaptation. Changing these values is not proof of platform
+support or permission to write metadata.
+
+Generate review artifacts locally:
+  node .\servicenow\tools\build-artifacts.cjs
+  node .\servicenow\tools\generate-install.cjs
+  node --test .\servicenow\tests\*.test.cjs
+install-bundle.json is review data; install.js is a Global Background Script.
+The shipped install.js is labeled NONDEPLOYABLE TEMPLATE and defaults dry-run.
+Do not execute even dry-run on a live instance without separate owner approval.
+Apply requires both the deliberate dry-run change and exact reviewed-definition
+hash. It is create-only, not transactional across platform DDL, not an upgrader.
+
+Validate plugins/licenses, internal sn_cs APIs and AWA schema on an isolated queue.
+Provision independent inbound SN OAuth app/runtime user, outbound callback OAuth,
+queue/channel/vendor/VA references, restrictive ACLs, real unique indexes and
+outbox retry schedule/monitoring. Never reuse unrelated harness credentials.
+The installer does not create these runtime identities or routing resources.
+Runtime identity must not have admin/security_admin/impersonator shortcuts.
+See servicenow\DEPLOYMENT.txt for exact properties, ordering and rollback.
+The zero legacy rule/hash pins are sentinels; no historical rule is authorized.
+The legacy helper CLI is blocked until a specific target rule is independently
+reviewed/pinned. Its apply/rollback commands produce proposals, not remote writes.
+
+Only after that independent review configure:
+  ServiceNow__BaseUrl                  actual HTTPS instance origin, no API path
+  ServiceNow__OAuth__TokenUrl           dedicated OAuth token endpoint
+  ServiceNow__OAuth__ClientId           dedicated inbound OAuth client ID
+  ServiceNow__OAuth__ClientSecret       approved secret-store injection
+  ServiceNow__Enabled                  true only after activation approval
+Keep SN cowork_bridge.enabled and cowork_bridge.outbox_delivery_enabled false
+through staging. Enable delivery only after authentication/retry/dead-letter
+checks; enable new handovers LAST. Confirmation inside the widget remains required.
+
+TARGET-BUILT COWORK UPLOAD ZIP (NOT THE SOURCE REVIEW ZIP)
+No example upload ZIP is distributed. templates\manifest.template.json is
+nondeployable documentation; do not upload it.
+The following command shape is reproducible after owner variables are populated
+from reviewed configuration; no values or registrations are supplied here:
+  $appId = [guid]::NewGuid() # record once; reuse this ID for later upgrades
+  .\scripts\New-CoworkPackage.ps1 `
+    -AppId $appId `
+    -Version $approvedVersion `
+    -ServerUrl $approvedMcpUrl `
+    -OAuthReferenceId $approvedTokenStoreReferenceId `
+    -WebsiteUrl $approvedWebsiteUrl `
+    -PrivacyUrl $approvedPrivacyUrl `
+    -TermsUrl $approvedTermsUrl `
+    -OutputDirectory .\artifacts\package
+
+ServerUrl must be an authenticated HTTPS endpoint ending /mcp. URLs reject
+credentials, localhost, query strings and fragments. OAuthPluginVault is mandatory.
+AppId is now mandatory to prevent silently reusing the original demo app identity.
+Output: manifest.json, color.png (192 square), outline.png (32 square) and
+cowork-sn.zip with exactly those three files at the archive root.
+Use -Force only for the dedicated output directory; unrelated files block it.
+An unchanged app ID, version, URLs, reference and inputs yield the same manifest;
+ZIP container timestamps are not promised to be bit-for-bit reproducible.
+
+Validate manifest 1.29/agentConnectors and OAuthPluginVault against current host
+tooling and tenant policy. Only then may the owner manually upload a personal
+test package and run approved synthetic end-to-end acceptance tests.
+No tenant-wide publishing, account switching or automatic installation is included.

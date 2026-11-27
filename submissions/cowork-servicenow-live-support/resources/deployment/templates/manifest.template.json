@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.29/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.29",
+  "version": "0.1.1",
+  "id": "<OWNER-APP-GUID>",
+  "developer": {
+    "name": "<OWNER>",
+    "websiteUrl": "https://example.invalid/",
+    "privacyUrl": "https://example.invalid/privacy",
+    "termsOfUseUrl": "https://example.invalid/terms"
+  },
+  "name": { "short": "ServiceNow Live Support", "full": "ServiceNow Live Support for Copilot Cowork" },
+  "description": {
+    "short": "NONDEPLOYABLE TEMPLATE - generate a reviewed target package.",
+    "full": "Documentation only. Use scripts\\New-CoworkPackage.ps1 with owner-approved configuration and generated icons. Review and explicitly confirm the request in the embedded panel before ServiceNow receives it."
+  },
+  "icons": { "color": "color.png", "outline": "outline.png" },
+  "accentColor": "#B11F4B",
+  "validDomains": [ "example.invalid" ],
+  "agentConnectors": [{
+    "id": "cowork-sn",
+    "displayName": "ServiceNow Live Support",
+    "description": "start_live_chat prepares a draft only; explicit employee approval in the panel is required.",
+    "toolSource": {
+      "remoteMcpServer": {
+        "mcpServerUrl": "https://example.invalid/mcp",
+        "authorization": { "type": "OAuthPluginVault", "referenceId": "<OWNER-TOKEN-STORE-REFERENCE>" }
+      }
+    }
+  }]
+}

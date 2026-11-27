@@ -1,0 +1,439 @@
+COPILOT COWORK / SERVICENOW ISOLATED PROTOTYPE
+
+Status and support boundary
+---------------------------
+This folder contains an offline definition and a create-only, disabled installer
+template. Neither is an end-to-end provisioning or production installer.
+No browser, live API, background script, standard harness, existing OAuth helper,
+existing account, or existing property is changed by its build/test commands.
+
+NONDEPLOYABLE REVIEW TEMPLATE: example.invalid, namespace cowork_review.
+Template API: /api/cowork_review/cowork_bridge
+Independently adapt and review instance, namespace and corresponding strict
+generator/client guards before use. No previous tenant registration is included.
+New Script Includes: CoworkBridge, CoworkBridgeWebhook, CoworkBridgeOutbox
+(server-only).
+New rules: Cowork interaction accepted or closed; Cowork agent message callback.
+New tables: u_cowork_command, u_cowork_outbox.
+New scheduled job: Cowork outbox retry (inactive until reviewed).
+New interaction fields: u_cowork_session_id and u_cowork_upn.
+
+The chat plumbing deliberately reproduces an observed instance prototype using
+sn_cs.VASystemObject.createConversation, sn_cs.AgentChatScriptObject.send,
+sys_cs_session QnA, sys_cs_session_binding AMB, and direct AWA work-item writes.
+These are undocumented/internal, release-sensitive APIs and schemas. This is NOT
+a supported standard ServiceNow connector. Node mocks validate our logic, not
+ServiceNow platform behavior, ACLs, licensing, transaction commits, or upgrades.
+An authorized operator must validate the target release in an isolated queue.
+Do not claim production readiness or enable before those checks.
+
+Offline generation and tests (from the repository root)
+-------------------------------------------------------
+  node --test .\servicenow\tests\*.test.cjs
+  node .\servicenow\tools\build-artifacts.cjs
+
+The generated servicenow\artifacts\install-bundle.json includes source text,
+SHA-256 hashes, stable proposed record IDs, the definition, and blocking review
+requirements. Identical inputs produce identical bytes. It contains no credential.
+It is not an executable background script and does not call ServiceNow.
+
+All manual edits and generated files for this component stay in servicenow.
+Only this folder belongs to this component; backend and widget are separate.
+
+Configuration: all names are owned by Cowork
+------------------------------------------
+cowork_bridge.enabled                  new handovers only; false by default; enable LAST
+cowork_bridge.outbox_delivery_enabled   false by default; gates HTTP and retries,
+                                       not capture of existing Cowork events
+cowork_bridge.integration_user_sys_id   exact new OAuth integration user sys_id
+cowork_bridge.queue_sys_id              new/dedicated reviewed active AWA queue
+cowork_bridge.service_channel_sys_id    active queue service channel
+cowork_bridge.vendor_sys_id             verified sys_cs_vendor reference
+cowork_bridge.virtual_agent_user_sys_id verified active Virtual Agent sys_user
+cowork_bridge.webhook_url               https://BACKEND-HOST/api/livechat/sn
+cowork_bridge.webhook_oauth_entity      new outbound OAuth provider NAME
+cowork_bridge.webhook_oauth_scope       backend app URI followed by /.default
+cowork_bridge.unavailable_message       end-user-safe message, at most 1000 chars
+
+Properties contain configuration references/names only, never client secrets,
+passwords or bearer tokens. Configure the dedicated outbound OAuth provider's
+credentials in ServiceNow's credential store through an approved admin workflow.
+The existing CopilotBridgeAuth is neither invoked nor modified. No Copilot or
+Intranet property, webhook URL, shared secret or integration account is reused.
+Only HTTPS with a hostname, optional port 443 and the exact callback path is
+accepted; credentials, query strings and fragments in the URL are rejected.
+There is no alternate URL or authentication fallback.
+
+OAuth and least privilege
+-------------------------
+Provision a NEW dedicated integration account and inbound OAuth application.
+Map the inbound app's application user to that account. Grant the new
+cowork_bridge.integration role and only the chat, interaction and AWA roles
+actually required by the installed plugins and these operations. Role names and
+effective inherited permissions vary by release: prove the minimum with ACL
+debugging in the test queue. Do NOT grant admin, security_admin, impersonator,
+or broad web-service/table-write access as a shortcut. Exact role assignment is
+an operator validation blocker, not something this repository guesses.
+
+Every REST resource requires authentication and a REST execute ACL; additionally
+the script compares gs.getUserID() to the configured exact principal. A valid
+end-user token, unrelated administrator token, or another bridge account fails
+the script check. The backend must verify the Microsoft caller and bind each
+client_session_id/conversation to that user. The integration API trusts only
+that backend; do not expose its credentials or route arbitrary widget requests
+directly to ServiceNow.
+
+Configure a separate outbound client-credentials provider with backend audience
+and APPLICATION app role LiveChat.Webhook. Assign/admin-consent that role to the
+outbound app. The backend MUST verify token issuer, audience, signature, expiry
+and roles; an HTTP header is not evidence of an app role. Authorization: Bearer
+contains only the acquired OAuth token. X-Cowork-Event-Id and X-Cowork-Bot are
+correlation headers, not authentication. Verify the platform token response
+methods and expiry semantics for this release. Any token error/empty token fails
+closed. Token errors and HTTP response bodies are never copied into logs.
+
+Restrict command/outbox-table read/create/update/delete ACLs to authorized reconciliation
+administrators, not agent/end-user/Table API callers. The server-only Script
+Includes use GlideRecord after explicit REST identity checks; validate their
+runtime/table access in the target scope. Protect the two interaction metadata
+fields from changes by agents/end users, so they cannot tag foreign sessions.
+Do not alter unrelated standard ACLs or grant new roles to existing accounts.
+
+Reviewed installation ordering
+------------------------------
+1. Read-only preflight: export collision candidates and, only if relevant, the precise legacy rule;
+   verify plugin/license/API availability and original schema types/choices.
+   Confirm the namespace belongs to the intended API registration; do not change
+   an existing application scope. Global includes are proposed because the
+   underlying internal APIs are global. Review any required cross-scope access.
+2. Review install-definition.json and generated install-bundle.json. Create only
+   new records. Stop on name or proposed-ID collisions rather than overwriting.
+   Keep cowork_bridge.enabled=false throughout installation.
+3. Provision new role/account and OAuth applications; configure the backend app
+   role, certificate/secret in approved stores, and the dedicated queue.
+4. Create u_cowork_command and columns, status choices, then enforce a REAL UNIQUE
+   DATABASE INDEX on u_key. Test concurrent equal-key inserts: exactly one must
+   succeed. This is mandatory; a scripted "check then insert" is not sufficient.
+   u_result max 8000, u_error max 1000. Add restrictive ACLs before exposure.
+   Add interaction.u_cowork_session_id string80 (nonunique index) and
+   u_cowork_upn string254. A global unique session index is intentionally avoided:
+   unrelated interactions contain blanks and blank uniqueness is release-sensitive.
+   The unique open:<session> ledger key supplies the atomic reservation. Retain
+   that ledger for at least the entire session/retry/recovery retention period.
+   Create u_cowork_outbox and its columns, status choices, UNIQUE u_event_id index,
+   due/recovery/attention indexes and administrative ACLs. u_payload must support
+   65535 characters so JSON escaping an approved 8000-character message cannot
+   truncate it. No public/agent/integration-account Table API access to snapshots.
+   Verify the conditional lease update against competing workers on this release;
+   it depends on atomic query-constrained updateMultiple and automatic sys_mod_count.
+5. Create disabled/default properties, then CoworkBridgeWebhook and CoworkBridge,
+   plus CoworkBridgeOutbox, then authenticated REST API/resources/execute ACL and
+   INACTIVE callback rules. Register cowork_bridge.outbox.dead_letter. Install
+   INACTIVE periodic sysauto_script "Cowork outbox retry" from outbox_retry.js.
+   Configure an approved operations recipient/monitor; do not send payloads in alerts.
+6. If a relevant legacy fanout rule exists, independently review the single narrow
+   amendment below. Verify active/timing/filter and all other fields stay unchanged.
+   If absent, skip this step; never create a legacy rule or the unrelated legacy
+   interaction fields. Runtime guards tolerate absent fields, reject either
+   populated legacy field independently, and retain all Cowork ownership checks.
+   The installer checks schema presence without reading legacy data and stops on
+   presence drift before/between writes and at completion.
+7. Fill ALL routing/callback properties. Check active queue, service channel,
+   vendor, Virtual Agent and integration user, actual role permissions, token
+   audience/role and backend reachability. New sessions are not created unless
+   all required properties/referenced routing records pass validation.
+8. Enable the TWO NEW callback rules and the reviewed retry job while both enabled
+   properties stay false. Probe disabled open, owned-session draining and wrong-principal calls.
+   Verify the one-minute schedule's run-as user and workers/leases with synthetic
+   approved callback data, then set outbox_delivery_enabled=true. Test transient
+   HTTP/OAuth failure, recovery, duplicate IDs and dead-letter alert delivery.
+9. After operator approval, enable cowork_bridge.enabled last. Test open, accept,
+   agent reply, requester send, duplicate commands, and both agent/client closes
+   on the isolated queue. Inspect both other harnesses for zero Cowork callbacks.
+10. Record installed IDs, resulting script hashes, original legacy snapshot,
+    review decisions and validated role list in restricted deployment records.
+
+Single exact legacy fanout amendment and rollback artifact
+---------------------------------------------------------
+Target-specific review is required; no existing record is authorized here:
+  sys_script.sys_id = 00000000000000000000000000000000 (template sentinel)
+  collection = sys_cs_message, when = async, active = true, filter_condition = ""
+Only allowed changed field: script
+After the ONE literal occurrence:
+  if (!ix.next()) return;
+insert:
+  if (ix.getValue('u_cowork_session_id')) return; // Cowork sessions use their isolated callback only.
+
+No historical snapshot, target record ID or reviewed source hash is included.
+The all-zero ID and hash in the definition are NONDEPLOYABLE sentinels. The
+legacy-fanout-patch CLI refuses its sentinel target. An authorized owner must
+independently identify a relevant target rule, review its source and approve a
+new exact ID/hash pin before adapting the helper and definition. If there is no
+such fanout rule, document why this optional adaptation does not apply.
+Never generalize the helper into a broad rule search/update. No live amendment
+was applied while preparing this package.
+
+Export one sys_script JSON record (raw, {"result":[record]}, or
+{"status":200,"data":{"result":[record]}}) including sys_id,
+script, name, collection, when, active, filter_condition, sys_mod_count and audit
+fields; keep it at servicenow\review\fanout-original.json. Review its actual script
+and independently obtain SHA-256 of the exact UTF-8 script STRING (not the JSON
+file, no newline/encoding normalization). Treat snapshots as restricted artifacts:
+legacy scripts may contain sensitive configuration; NEVER stage/commit them.
+servicenow\.gitignore excludes the entire review directory, and the CLI refuses
+to write private artifacts anywhere else. Verify exclusions with git check-ignore.
+Do not use git add -f, embed original source in the public install bundle, or copy
+any existing webhook URL/client configuration into new scripts.
+
+  node .\servicenow\tools\legacy-fanout-patch.cjs prepare .\servicenow\review\fanout-original.json REVIEWED_SHA256 .\servicenow\review\fanout-patch.json
+
+Preparation fails unless identity, revision, active/filter/timing, reviewed hash,
+exactly one anchor and absence of an existing Cowork marker match. The artifact
+contains the original full record, original script hash, original record hash,
+patched script hash and exact patched script. It is sufficient for rollback.
+Outputs use exclusive-create to avoid overwriting earlier review evidence.
+
+After obtaining a fresh read of the live record as fanout-current.json:
+  node .\servicenow\tools\legacy-fanout-patch.cjs apply .\servicenow\review\fanout-current.json .\servicenow\review\fanout-patch.json .\servicenow\review\fanout-apply.json
+
+The result is a REVIEW PROPOSAL, not a write. The owner's reviewed metadata
+installer must honor BOTH its source-script hash and sys_mod_count preconditions
+at the actual write, then write only fields.script. A stale read followed by an
+unconditional Table API PATCH is not safe. Use an available verified conditional
+update mechanism or an approved maintenance window with a final compare/read;
+if atomic conditional writes cannot be assured, stop and obtain admin review.
+Never install an auto-running background script or disable the original rule.
+
+After patching, fresh-read and verify exact patched hash plus unchanged non-script
+fields. Re-proposing an already patched record returns changed:false. A different
+script, timing, active flag, filter or non-audit metadata refuses patch/rollback.
+
+Rollback proposal against another fresh live export:
+  node .\servicenow\tools\legacy-fanout-patch.cjs rollback .\servicenow\review\fanout-current-after-patch.json .\servicenow\review\fanout-patch.json .\servicenow\review\fanout-rollback.json
+
+Rollback restores ONLY the exact original script and only if current hash is the
+expected patched hash. An already original script is an idempotent no-op. Never
+overwrite a concurrently changed script with the snapshot; review manually.
+
+HTTP contract and recovery
+--------------------------
+All resources are POST JSON. ServiceNow's normal Scripted REST serialization
+wraps successful response bodies in "result"; verify that envelope on the target.
+
+open_chat request:
+  {"email":"person@example.test","summary":"Need help","lang":"en","client_session_id":"cowork-session-000001","bot":"cowork_mcp"}
+Result:
+  {"conversation_sys_id":"32-lowercase-hex","interaction_number":"...","unavailable":false}
+Disabled result (HTTP200):
+  {"conversation_sys_id":"","interaction_number":"","unavailable":true,"message":"..."}
+Email: 3..254 chars, normalized lowercase; exactly one active sys_user must match.
+Summary: 1..4000 nonblank chars. Lang optional/empty or 2..8 letters followed
+by up to three 1..8 alphanumeric subtags, max32 (including es-419 and zh-Hant-TW).
+Bot must be exactly cowork_mcp.
+Client session/message IDs: only ASCII letters/digits/hyphen, length16..80.
+The backend should use one UUID for each new logical command; a full UUID fits.
+
+send_message request:
+  {"conversation_sys_id":"32-lowercase-hex","text":"Hello","email":"person@example.test","client_message_id":"cowork-message-000001"}
+Result: {"sent":true,"closed":false}, or {"sent":false,"closed":true}.
+Text: 1..8000 nonblank chars. Email is format-validated but NEVER used to choose
+the display name or mutate the requester. Display comes from interaction.opened_for
+and is labeled "(via Copilot Cowork)". Execution remains the dedicated service
+account, without impersonation. A send API exception or explicit false is a
+failure; internal API return shapes remain release-sensitive and need validation.
+
+close_chat request:
+  {"conversation_sys_id":"32-lowercase-hex","client_message_id":"optional-valid-command-id"}
+Result: {"closed":true}. Omitting the ID uses a stable close:<conversation> key.
+An already closed known Cowork session is idempotent. Closing preserves metadata
+and normal business rules, including our own terminal closed callback.
+
+Foreign/mixed-harness interactions return403; malformed input400; missing records
+404 before reservation. Disabled entry prevents new opens but lets existing owned
+sessions send/close. New opens require complete routing/callback configuration.
+Authenticated callers must match the configured
+principal on every operation, including when disabled.
+
+Ledger keys: open:<client_session_id>, send:<conversation>:<client_message_id>,
+close:<conversation>[:<client_message_id>]. Reserve before mutation. Store only a
+SHA-256 of normalized request JSON (no transcript), result, error code and optional
+conversation reference. A completed exact duplicate replays its original result.
+Reusing a key with different input returns409 idempotency_key_reused.
+The ledger does not serialize distinct command IDs; the backend must order sends
+and close for each session and retain the SAME ID/body across uncertain retries.
+
+Pending/failed rows, partial creation, uncertain send, or failed result persistence
+return409 command_ambiguous. A failed unique reservation without a visible winner
+returns409 command_reservation_unconfirmed. These are NOT success-shaped fallbacks.
+Do not auto-retry with a new key, delete the row, or set it back to pending.
+
+Operator recovery:
+1. Stop/reconcile the affected backend session; capture command key/hash/status,
+   u_conversation and time. Do not log or export entire transcripts unnecessarily.
+2. Inspect related interaction/conversation, sessions/bindings, messages and AWA
+   work item with appropriate admin access. Determine whether the external send
+   happened or the open routed; never infer "not sent" just from a client timeout.
+3. If completion is proven, an authorized reviewer may set the exact original
+   operation result and completed status, retaining key/hash for subsequent replay.
+4. If failure is proven before ANY side effect, approve a new logical command ID
+   only after safely reconciling/closing orphan resources. If delivery cannot be
+   proven, leave ambiguous and seek human recovery; do not blindly resend.
+5. For partial opens, retain the failed ledger and any conversation reference.
+   There may be an internal conversation even if the API threw before returning
+   its ID. Locate it by requester/time; do not create a second chat automatically.
+Ledger persistence and unique-conflict behavior must be verified against the
+platform transaction model; process death/rollback semantics are not proven by VM.
+
+Callbacks, timing and operational limits
+----------------------------------------
+Both new rules are synchronous AFTER rules, not async: previous and the exact
+transition snapshot are needed. They enqueue a durable Cowork-only callback
+snapshot BEFORE any OAuth/HTTP call, then make one immediate best-effort attempt.
+The source callback returns after durable enqueue even if that attempt fails.
+HTTP delivery has a 10-second request timeout; OAuth acquisition can add latency.
+An unpersisted event is NEVER sent. An enqueue error is raised and logged without
+transcript; treat it as an operational incident and reconcile the source record.
+Validate source-event/outbox transaction commit behavior on the actual release.
+
+Body:
+  {"event":"accepted|message|closed","bot":"cowork_mcp","client_session_id":"...","interaction_number":"...","text":"...","agent_name":"...","message_sys_id":"optional","event_id":"..."}
+Message event_id is exactly sys_cs_message.sys_id. Acceptance/close event_id is
+interaction.sys_id + ":" + event + ":" + sys_mod_count (sys_updated_on fallback).
+This is stable for a given rule execution, not recomputed using the current clock.
+Backend dedup must retain terminal events and tolerate callbacks before open's
+response, duplicates, and out-of-order delivery.
+
+Acceptance requires work_in_progress plus a new assignment/state transition.
+Close requires first transition into a state whose value begins "closed".
+The reviewed original rule accepts q_data_message_type systemTextMessage and
+consumerTextMessage. Our helper uses those same types AND requires text, a
+Cowork-only interaction, sender matching its
+currently assigned active agent, and sender unequal to opened_for and our
+integration account. No attachments, typing events, consumer/system messages,
+unassigned collaborators, oversized payloads (>8000), or transcript harvesting.
+A "consumerTextMessage" type alone does not identify the requester: sender/owner
+checks are mandatory. Verify one actual assigned-agent message in the isolated
+queue before enabling; do not broaden to all message types.
+
+Durable outbox and retry schedule
+--------------------------------
+u_cowork_outbox stores only the approved event contract, its SHA-256, source
+references, correlation IDs, attempt/status/timing metadata and sanitized errors.
+It stores NO OAuth token, client secret, URL, HTTP headers or raw exception.
+Extra fields are discarded before persistence. UNIQUE u_event_id prevents
+duplicates; a duplicate with the same snapshot is a no-op even while backoff is
+pending. A conflicting duplicate retains the original snapshot, flags operator
+attention and never overwrites the previously approved conversation data.
+
+Status lifecycle:
+  pending -> sending -> delivered
+                     -> retry -> sending ...
+                     -> dead_letter (after 8 failed/abandoned claims)
+Callbacks continue CAPTURING for owned Cowork interactions when new opens are disabled,
+so closing an existing session never loses its terminal event just because new
+opens were paused. outbox_delivery_enabled=false pauses immediate/retry HTTP
+without deleting rows or suppressing capture. Leave new callback rules active
+while existing chats or source messages can still emit events.
+
+The scheduled script calls new CoworkBridgeOutbox().retry() every 60 seconds.
+Each run examines up to 20 due pending/retry rows and 20 expired sending leases.
+Backoff is 30 * 2^(attempt-1) seconds, capped at 3600 seconds; actual delivery
+rounds up to the next schedule tick. Eight failed/abandoned claims exhaust the
+automatic budget. Success requires HTTP2xx with no platform response error.
+OAuth/configuration errors remain retryable, never use a secret/legacy fallback,
+and eventually become visible dead letters rather than fabricated success.
+
+Concurrency and crashes:
+Each attempt atomically conditionally updates the observed row's sys_mod_count,
+status and due time, writes a fresh GUID lease token and a 600-second lease, then
+fresh-reads the winning token. Competing workers cannot both win the same revision.
+Completion updates require the same token and sending state, so an old worker
+cannot overwrite a successor. A worker crash leaves a sending row that the
+schedule reclaims after lease expiry. If HTTP succeeded but acknowledgment/state
+persistence failed, redelivery uses the EXACT original event_id. This is at-least-
+once delivery, not exactly-once; backend idempotency and durable terminal-event
+handling remain mandatory. A token/HTTP call outliving the lease may overlap a
+successor; backend dedup is still authoritative.
+
+Platform schedule installation prerequisites:
+- Install/review exactly ONE sysauto_script definition, active=false initially,
+  run_type=periodically, interval=60 seconds. Map that interval to this release's
+  duration field representation rather than guessing raw sys_trigger values.
+- Resolve run_as to the dedicated integration user; do not grant that user admin
+  to make scheduled execution work. Verify server Script Include/table access
+  and the scheduler's approved execution permissions in the target scope.
+- Verify gs.generateGUID (32 lowercase hex), GlideDateTime, updateMultiple with
+  query predicates, automatic sys_mod_count and multi-node conditional updates.
+  The VM tests emulate these, not the platform database. If atomic conditional
+  updates cannot be proven, DO NOT activate retries or claim multi-worker safety.
+- Confirm scheduler execution is enabled on the instance, the job is actually
+  triggered every minute, and backlog age is monitored. Avoid duplicated jobs or
+  overlapping manual "Execute now" runs despite the per-row safety lease.
+- Register the metadata-only dead-letter event and install an approved ops
+  notification/monitor. No recipients or live notification writes are in this repo.
+
+Dead letters and operations:
+Exhausted rows retain the original payload and event ID with
+u_status=dead_letter, u_requires_attention=true. The worker writes an error with
+only event_id and queues cowork_bridge.outbox.dead_letter with only event_id/error
+code. Every retry run also warns if any attention row remains. Monitor
+u_requires_attention=true and aged u_statusINpending,retry,sending. Terminal
+events are NEVER silently discarded after the retry budget. Configure an alert
+recipient before enabling the bridge; the event registration alone sends no mail.
+
+Authorized recovery:
+1. Resolve provider/backend outage, owner/payload conflict or database issue.
+2. Inspect the retained event metadata and delivery evidence; avoid exporting
+   the transcript. Do not mint a new event ID or recompute a closed transition.
+3. If delivery is not proven, an authorized administrator may requeue the SAME
+   retained row after approval: u_status=retry, u_attempts=0, u_next_attempt_at=now,
+   empty lease token/expiry, and clear attention/error only after reconciliation.
+   Keep event_id, payload, payload hash and owner references unchanged. The backend
+   must dedup any uncertain previous success. Do not edit a currently live lease.
+4. If delivery is proven, record that evidence and mark delivered through the
+   reviewed ops procedure. Do not replay a terminal event with a new ID.
+5. If enqueue itself failed (no outbox row), reconstruct the original event from
+   trusted source/audit evidence; acceptance/closed must use the ORIGINAL version,
+   not today's sys_mod_count. If unavailable, reconcile the session manually.
+6. Retain pending/retry/sending/dead_letter rows until explicit resolution. Retain
+   delivered event IDs/payloads through the approved retry, dedup and privacy
+   retention windows. No automatic purge job is installed.
+
+Application scripts do not log transcript/request text, raw exceptions, tokens,
+or response bodies. RESTMessageV2 logging is explicitly "basic". Verify instance
+outbound-HTTP logging overrides, proxy logs and platform OAuth diagnostics do not
+capture headers/bodies; never enable full logging with real conversations.
+
+Rollback sequencing
+-------------------
+1. Stop new opens at the backend first. Drain existing Cowork sessions while
+   callbacks/guard still operate, or obtain approval to reconcile them manually.
+2. Set cowork_bridge.enabled=false. This stops new handovers; existing owned
+   sessions can still send/close and drain. Own source callbacks still enqueue.
+   Keep outbox_delivery_enabled and its job running until backlog is delivered or
+   explicitly reconciled. Then set outbox_delivery_enabled=false and disable ONLY
+   the new retry job. Retain unresolved/dead-letter rows and operational evidence.
+3. Deactivate ONLY the two new callback rules once no more owned source events
+   can occur; disable new REST access/OAuth apps after outbox delivery is complete.
+   Leave old Copilot/Intranet APIs/rules/accounts/properties untouched.
+4. KEEP the narrow legacy guard while Cowork conversations or retained Cowork
+   message records can still fire the active old async message rule. Removing
+   the guard prematurely can leak late Cowork messages into the legacy webhook.
+   Drain/reconcile pending async jobs and all Cowork sessions first.
+5. When safe and reviewed, use the exact hash-checked rollback proposal above to
+   restore only the original legacy script. Never toggle its active flag.
+6. Preserve command ledger, outbox (especially terminal/dead-letter events), source
+   records, and restricted original/patch hashes
+   until all retry/recovery/retention obligations expire. Do not clear ownership
+   metadata just to make a deletion easy. Remove only recorded new installation
+   objects in dependency order; do not delete shared platform chat data.
+
+Remaining deployment blockers
+-----------------------------
+Fresh legacy filter_condition/script/revision verification; actual agent-message
+smoke test; reviewed atomic
+metadata write mechanism and lease update semantics; retry schedule and ops alert
+installation; real namespace/scope/API compatibility; exact minimal
+role and field/table ACL policy; plugin/license availability; new identity/OAuth
+provisioning; configured queue/channel/vendor/VA references; backend app-role
+validation and live isolated smoke tests. None of those were claimed as installed.

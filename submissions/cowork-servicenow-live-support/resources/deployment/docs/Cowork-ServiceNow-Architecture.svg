@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1160" viewBox="0 0 1920 1160">
+<title>Cowork ServiceNow Live Support architecture</title>
+<desc>User-approved handover through delegated OAuth and an independent ServiceNow service identity; app-only callbacks persist to SQLite and the widget polls through Cowork.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke"/></marker></defs>
+<rect width="1920" height="1160" fill="white"/>
+<text x="60" y="68.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="38" font-weight="bold">Cowork ServiceNow Live Support</text>
+<text x="60" y="114.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="normal">User-approved handover · Human conversation in the MCP App panel · Separate user and service identities</text>
+<rect x="60" y="160" width="450" height="570" rx="16" fill="none" stroke="#0078D4" stroke-width="2"/>
+<rect x="630" y="160" width="570" height="570" rx="16" fill="none" stroke="#5C2D91" stroke-width="2"/>
+<rect x="1320" y="160" width="540" height="570" rx="16" fill="none" stroke="#107C10" stroke-width="2"/>
+<text x="85" y="209.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="bold">1  COWORK + EMPLOYEE</text>
+<text x="655" y="209.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="bold">2  .NET MCP BRIDGE</text>
+<text x="1345" y="209.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="bold">3  SERVICENOW</text>
+<rect x="85" y="247" width="400" height="140" rx="16" fill="none" stroke="#0078D4" stroke-width="2"/>
+<text x="105" y="288.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="bold">Main Cowork composer</text>
+<text x="105" y="327.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">AI prepares a support draft.</text>
+<text x="105" y="357.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">No autonomous VPN repair.</text>
+<polyline points="285,395 285,433" fill="none" stroke="#0078D4" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="85" y="445" width="400" height="250" rx="16" fill="none" stroke="#0078D4" stroke-width="2"/>
+<text x="105" y="485.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="bold">Embedded MCP App widget</text>
+<text x="105" y="524.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Review / edit → Request support</text>
+<text x="105" y="554.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Human chat uses the panel input.</text>
+<text x="105" y="584.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">App-only send / poll / end tools.</text>
+<text x="105" y="614.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">No bearer token in the iframe.</text>
+<text x="105" y="665.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="18" font-weight="normal">No proactive main-composer push.</text>
+<rect x="655" y="247" width="520" height="195" rx="16" fill="none" stroke="#5C2D91" stroke-width="2"/>
+<text x="675" y="287.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="bold">Authenticated /mcp endpoint</text>
+<text x="675" y="329.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Delegated Entra user token</text>
+<text x="675" y="359.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">LiveChat.Access + user audience</text>
+<text x="675" y="389.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Validate tid / oid / signed email</text>
+<text x="675" y="419.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Owner checks + explicit approval flow</text>
+<rect x="655" y="485" width="520" height="210" rx="16" fill="none" stroke="#5C2D91" stroke-width="2"/>
+<text x="675" y="525.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="bold">Durable local SQLite</text>
+<text x="675" y="567.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Sessions, ordered events, cursors</text>
+<text x="675" y="597.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Callback: /api/livechat/sn</text>
+<text x="675" y="627.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Distinct webhook audience</text>
+<text x="675" y="657.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">LiveChat.Webhook + app caller allowlist</text>
+<polyline points="920,477 920,450" fill="none" stroke="#5C2D91" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1345" y="247" width="490" height="190" rx="16" fill="none" stroke="#107C10" stroke-width="2"/>
+<text x="1365" y="287.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="bold">Restricted Scripted REST API</text>
+<text x="1365" y="329.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">open_chat / send_message / close_chat</text>
+<text x="1365" y="359.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Exact integration principal + role</text>
+<text x="1365" y="389.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Cowork ownership + command ledger</text>
+<text x="1365" y="419.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Dedicated inbound client credentials</text>
+<polyline points="1590,445 1590,475" fill="none" stroke="#107C10" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="1345" y="485" width="490" height="210" rx="16" fill="none" stroke="#107C10" stroke-width="2"/>
+<text x="1365" y="525.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="bold">AWA + normal operator workspace</text>
+<text x="1365" y="567.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Isolated queue / group / eligibility</text>
+<text x="1365" y="597.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Human accepts, replies and closes.</text>
+<text x="1365" y="627.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Callback rules → durable outbox</text>
+<text x="1365" y="657.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Retry leases / dedup / dead letters</text>
+<polyline points="515,535 560,535 560,344 645,344" fill="none" stroke="#0078D4" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="522" y="251.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="normal">Host</text>
+<text x="522" y="275.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="normal">proxies</text>
+<text x="522" y="299.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="normal">calls</text>
+<polyline points="1180,344 1335,344" fill="none" stroke="#0078D4" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="1205" y="252.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="normal">Independent</text>
+<text x="1205" y="276.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="normal">ServiceNow</text>
+<text x="1205" y="300.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="normal">OAuth</text>
+<polyline points="1460,738 1460,820 1030,820 1030,739" fill="none" stroke="#107C10" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="1045" y="866.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">ServiceNow outbound OAuth → app-only Entra JWT</text>
+<text x="1045" y="904.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">accepted / message / closed → durable bridge events</text>
+<polyline points="655,615 555,615 555,800 285,800 285,739" fill="none" stroke="#5C2D91" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="80" y="866.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">Widget polls through Cowork → ordered events</text>
+<text x="80" y="904.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="normal">No direct widget → ServiceNow connection; no LLM message relay</text>
+<rect x="60" y="963" width="1800" height="148" rx="16" fill="none" stroke="#495057" stroke-width="2"/>
+<text x="85" y="1003.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="bold">Boundaries and deployment prerequisites</text>
+<text x="85" y="1042.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="normal">Distinct token audiences · Restricted OAuth/API scopes · Explicit user consent · Safe defaults disabled</text>
+<text x="85" y="1077.0" fill="#000000" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="normal">Single-host SQLite prototype · Physical ServiceNow indexes required · Internal chat/AWA APIs are release-sensitive</text>
+</svg>

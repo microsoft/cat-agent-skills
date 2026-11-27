@@ -1,0 +1,233 @@
+REVIEWABLE, CREATE-ONLY COWORK INSTALLER (SUPPLEMENT TO DEPLOYMENT.txt)
+===================================================================
+Nothing in the generation or tests contacts ServiceNow. No live installation has
+been performed by the generator itself. The original definition/bundle remain review metadata; the new
+artifacts\install.js is a separate executable GLOBAL Background Script.
+
+TARGET-RELEASE VALIDATION CHECKLIST
+-----------------------------------
+This sanitized distribution is an unconfigured, NONDEPLOYABLE template.
+Historical tenant installation records and private test evidence are excluded.
+README.md at the project root gives the complete prerequisite and OAuth setup order.
+The current template plans 83 records, including two platform-created collections.
+Legacy interaction fields u_copilot_upn/u_bridge_session_id are OPTIONAL; do not
+create them. The installer checks only their presence and rechecks for drift
+before/between inserts and at completion. Runtime reads use isValidField and
+reject either populated legacy field even when only one field exists.
+The following release-sensitive assumptions require independent verification:
+- Global execution returns scope name rhino.global; the application ID is global.
+- Elevation is checked by exact security_admin in the active-session CSV roles.
+- Reference metadata is available through getED().getReference(), including lists.
+- The table platform title-cases labels and generates collection dictionaries.
+- Inactive calculation templates and unversioned default_version are platform-owned.
+- An inactive scheduled job defaults run_as to the installing user. Activation MUST
+  explicitly set and verify the dedicated runtime account before setting active=true.
+- Event descriptions are limited to 100 characters.
+- Dictionary unique=true did NOT create the actual unique indexes. Use Database
+  Indexes > New, then verify real duplicate rejection before activation. The
+  supported UI uses IndexCreatorErrorChecker and ScheduleCreator; do not substitute
+  raw sys_index inserts for physical DDL.
+
+Generate and test locally from repository root:
+  node .\servicenow\tools\generate-install.cjs
+  node --test .\servicenow\tests\installer.test.cjs
+
+DEFAULT: COWORK_INSTALL_DRY_RUN = true. This performs metadata-only reads, schema
+checks, collision checks and baseline comparisons, then prints proposed record IDs.
+Do not execute even dry-run live without approval. No transcript, credentials or
+property values are printed. Platform errors are sanitized. Apply requires BOTH:
+  COWORK_INSTALL_DRY_RUN = false
+  COWORK_INSTALL_REVIEWED_DEFINITION = '<exact definition_sha256 in the manifest>'
+The second value is an operator attestation that the prerequisites below were
+reviewed; a hash is not proof that the target platform supports the metadata.
+Alternatively invoke CoworkInstall(manifest, manifestHash,
+  {dryRun: false, reviewedDefinition: manifest.definition_sha256}) once, instead
+of the generated final invocation, after the same review. No alternate instance
+or scope is supported.
+
+Boundary and execution order
+----------------------------
+Use an authorized admin with security_admin explicitly elevated ONLY for install.
+The script requires the EXACT security_admin token in gs.getSession().getRoles(),
+not gs.hasRole() or an administrator shortcut. Supported representations are a
+Java/JavaScript list, comma-separated names, a bracketed list, or a JSON string
+array; unrecognized representations fail closed. Verify the actual session API
+and its representation in the parent's read-only inspection before apply.
+The observed string is comma-delimited with an empty leading token. Empty CSV
+tokens are ignored; role names are compared exactly. agent_security_admin is NOT
+security_admin, and neither admin nor a substring match proves elevation. Use
+the supported UI elevation workflow before apply; the installer never elevates.
+gs.requireSecurityAdmin() is additionally called only if it exists; its absence
+does NOT bypass the mandatory session-role check. Elevation is checked again
+before every insert. No session roles are printed.
+Template checks: instance_name=example, getCurrentApplicationId()=global, scope name
+exactly global OR the observed rhino.global, and sys_scope record
+sys_id=global/scope=global. It never changes sys_scope or creates an app.
+Use one installer session and no concurrent metadata edits. Capture a reviewed
+update set/export first. The script does NOT claim a multi-record transaction:
+DDL/platform business rules can commit partially. On any error it stops, reports
+created IDs/counts, and never attempts deletion, rollback or corrective updates.
+
+It preflights ALL planned records before writing, then checks again before each
+insert and reads it back. Existing records must have their exact deterministic
+ID, natural identity, managed-field baseline SHA-256 and expected global scope
+(the strictly table-bound platform collection exception is described below).
+Identical reruns are no-ops. Drift, unrelated IDs/names, unowned backing fields,
+extra ACL-role links, or partial schema fail closed. No adoption/overwrite is
+attempted. Deliberately configured or activated installations will FAIL baseline
+checks; this is an installer, not an upgrader or configuration reset tool.
+Unexpected inherited integration roles or additional resources on the new API also
+block installation. Existing unrelated role assignments are never enumerated.
+
+ACLs and their role links are created before schema. Tables have ws_access=false
+(Table API disabled entirely, including for admin) and cross-scope data access
+flags false. Admin-only create/read/write/delete ACLs are additional protection.
+Two interaction fields receive create/write ACLs requiring admin OR the exact
+configured Cowork principal WITH its integration role. No existing ACL changes.
+Script Includes are server-only. Both REST definition AND all three operations
+are INACTIVE as an extra safety gate; both have enforce_acl containing ONLY the
+new REST_Endpoint execute ACL. It has admin_overrides=false, the integration
+role link, and the exact-principal script. Resources require authentication and
+ACL authorization. Template service_id=cowork_bridge, namespace=cowork_review,
+base_uri=/api/cowork_review/cowork_bridge. No alternate field-name fallbacks are used.
+
+Schema and indexes: explicit support boundary
+--------------------------------------------
+sys_db_object insert may invoke the observed after-insert SNC.TableEditor.tableCreate
+business rule, creating the physical table and its collection dictionary. The
+installer does NOT invoke this internal API itself or disable its business rule.
+It accepts exactly one platform-generated collection for that table only when:
+the parent sys_db_object has its exact deterministic ID AND baseline; the parent
+was verified in initial preflight or inserted/readback-verified in this run;
+the collection has exact name=<owned table>, empty element, type=collection and
+sys_scope=global; and the actual table plus required system fields are valid.
+An orphan collection, foreign parent, duplicate, scope/type mismatch, reserved-ID
+collision or collection-ID change during this run stops installation.
+Actual generated IDs are captured and printed as PLATFORM_CREATED on first apply
+and UNCHANGED on rerun, never overwritten. Created counts include these two
+platform-created collection rows. Collection identity/scope/type invariants are
+hashed; other platform-managed collection defaults are not rewritten or claimed
+to match a manually inserted collection's full baseline. Reruns require the same
+owned-parent baseline before accepting its collection.
+If no platform collection exists, the explicit deterministic collection insertion
+path remains available. All columns, choices and ACL-role links retain deterministic
+IDs and full baseline checks. sys_scope is set only on metadata tables with that supported
+reference. Dictionary internal_type and reference use platform NAME keys, not
+invented sys_ids. Table/dictionary business rules remain on; disabling workflow
+would risk metadata without a physical table. isValid(), required system fields,
+isValidField(), actual field type/reference/length are checked after creation.
+sys_choice rows and sys_security_acl_role links do NOT receive a guessed sys_scope
+field; choice update-set ownership is managed by the platform's sys_choice_set.
+
+IMPORTANT: only the collection exception above is allowed. No auto-created ACL
+is adopted; create_access_controls=false skips the observed automatic-ACL rule.
+Never suppress schema business rules or proceed past a missing physical table/
+field. A sys_db_object row alone is NOT a successfully created backing table.
+Postconditions are runtime schema checks, not proof of DDL completion on all nodes.
+
+Unique indexes are REQUESTED by supported sys_dictionary.unique=true for:
+  u_cowork_command(u_key)
+  u_cowork_outbox(u_event_id)
+Dictionary readback is NOT proof of a physical unique database index. An operator
+must inspect the table's Database Indexes and prove that concurrent equal-key
+inserts allow exactly one success in isolated, approved tests before activation.
+No sys_index/sys_db_index metadata or undocumented index API is guessed here.
+Use the supported Tables > Database Indexes workflow for these nonunique indexes:
+  u_cowork_outbox(u_status,u_next_attempt_at)
+  u_cowork_outbox(u_status,u_lease_until)
+  u_cowork_outbox(u_requires_attention)
+  interaction(u_cowork_session_id)
+Index metadata identities are platform-managed, not claimed as installer-owned
+deterministic IDs. The script always reports STAGED_DISABLED_NOT_ACTIVATION_READY,
+not a deployment/physical-index success claim.
+
+Exact read-only schema queries needed before approval
+----------------------------------------------------
+Run these in the parent's approved read-only inspection workflow, not via this
+offline generator. Return name,element,internal_type,reference,reference_key,
+mandatory,read_only,default_value,attributes,choice,sys_scope from sys_dictionary.
+Include inherited definitions from sys_metadata and sysauto:
+  nameINsys_ws_definition,sys_ws_operation,sys_security_acl,sys_security_acl_role,
+    sys_db_object,sys_dictionary,sys_choice,sys_properties,sys_user_role,
+    sys_user_role_contains,sys_script_include,sys_script,sysauto,sysauto_script,
+    sysevent_register,sys_metadata
+  ^elementISNOTEMPTY
+Particularly verify:
+  sys_ws_definition: name,service_id,namespace,base_uri,enforce_acl,active,
+    is_versioned,default_version,consumes,produces,consumes_customized,produces_customized
+  sys_ws_operation: web_service_definition,web_service_version,relative_path,
+    http_method,operation_script,requires_authentication,
+    requires_acl_authorization,enforce_acl,active
+  enforce_acl MUST be glide_list -> sys_security_acl on BOTH REST tables.
+  web_service_definition MUST be reference -> sys_ws_definition, NOT a made-up
+    ACL-to-REST M2M table. REST definition itself has no assumed requires_* flags.
+  sys_security_acl: type (REST_Endpoint versus review metadata rest_endpoint),
+    operation (name-key reference), advanced,admin_overrides,condition,script
+  sys_security_acl_role: sys_security_acl and sys_user_role references
+  sys_user_role_contains: role,contains (read-only privilege-drift check)
+  sys_choice: sys_domain=global, no sys_scope column assumption
+  sys_db_object: create_access_controls,ws_access,create/read/update/delete_access
+  sys_dictionary: collection support,unique boolean,reference name-key semantics
+  sysauto.run_period: glide_duration; raw value for 60 seconds must round-trip
+    as 1970-01-01 00:01:00; run_type periodically; run_as may be empty while inactive
+  sysevent_register: event_name (NOT name),table,description,queue
+sys_scope: sys_id=global; fields sys_id,scope,name (must remain untouched).
+sys_choice: nameINsys_security_acl,sysauto,sys_script_include,sys_db_object,
+  sys_dictionary,sys_properties^elementINtype,operation,run_type,access,choice
+  fields name,element,value,label,inactive,dependent_value (include inherited choices).
+sys_ws_definition: namespace=<OWNER_REVIEWED_NAMESPACE>; inspect ONLY
+  sys_id,name,namespace,service_id,base_uri,sys_scope,enforce_acl.
+This checks the registered namespace pattern without changing any old API.
+To discover the release's index metadata without guessing fields:
+  sys_db_object: nameSTARTSWITHsys^labelLIKEindex; fields sys_id,name,label
+Then inspect that returned table's dictionary and supported Database Indexes UI;
+do not infer actual uniqueness just from index metadata or a dictionary flag.
+Also inspect applicable table-creation business rules/read-only platform docs:
+  sys_script: collectionINsys_db_object,sys_dictionary^active=true
+  fields sys_id,name,collection,when,order,action_insert,condition,filter_condition
+Only inspect their source separately if approved; this installer never edits them.
+Confirm the observed tableCreate collection generation and session getRoles()
+representation; do not assume native requireSecurityAdmin exists. Exact
+unknowns are target release schema/DDL behavior, index enforcement, custom namespace
+generation, elevated API availability, ACL effectiveness, run-as/lease behavior,
+plugin/license/internal chat APIs and minimum runtime roles. Offline mocks do not
+answer these.
+
+Cautious deployment sequence after owner review
+------------------------------------------------
+1. Resolve schema/DDL/namespace/plugin/license prerequisites. Independently inspect
+   all IDs/scripts/ACLs and the complete dry-run result. Install only after explicit
+   approval; never force through a failed preflight or change baseline hashes to
+   make an unrelated collision pass.
+2. Stage the new metadata. Verify real schema/indexes and ACLs, no extra permissive
+   ACLs, exactly one inactive retry job, API base paths and every execute ACL binding.
+   Add the manual nonunique indexes and an operator-owned dead-letter monitor.
+3. Separately inspect the private hash/revision-qualified fanout amendment artifact
+   immediately before its separate apply step. The original script hash is recorded
+   in a target-reviewed manifest; this template has only an all-zero sentinel.
+   No original source/script update is embedded.
+   Preserve original rule active/timing/filter and all other original records.
+4. Separately provision NEW OAuth applications, approved credential-store entries,
+   dedicated principal, queue/channel and backend LiveChat.Webhook application role.
+   Grant cowork_bridge.integration plus ONLY proven chat/AWA roles to that principal.
+   Never grant admin, security_admin, impersonator or broad Table API privileges.
+   The installer creates none of those users, credentials, memberships or queues.
+5. Configure routing/principal/OAuth-name properties and retry run_as. Verify tests
+   for wrong-principal REST denial, agent/end-user tagging denial, Table API denial,
+   callback token audience/role, leases/retries/dead letters and backend dedup.
+6. With BOTH cowork_bridge enabled flags false, explicitly activate the NEW API,
+   its THREE operations, TWO callback rules and ONE configured retry job. Test
+   denied/disabled operations. Enable delivery only after operational tests, then
+   cowork_bridge.enabled LAST. Follow DEPLOYMENT.txt for isolation and rollback.
+
+Public metadata references used (not proof of target-release support)
+-------------------------------------------------------------------
+https://github.com/ServiceNow/devtraining-needit-utah/tree/master/update
+  Platform-generated sys_db_object, collection/column sys_dictionary,
+  sys_security_acl, sysauto_script and sysevent_register XML exports.
+https://github.com/microsoft/copilot-servicenow-connector-setup-scripts/blob/main/scripted_rest_api_setup.js
+  REST_Endpoint spelling, enforce_acl glide_list, ACL-role M2M and operation parent.
+  Its reuse/update/fallback policy is NOT copied; this installer is create-only.
+https://github.com/jnichols-servicenow/SN2026-Vehicles-API/tree/main
+  sys_ws_definition/sys_ws_operation exports: namespace, base_uri, service_id,
+  enforce_acl and operation authorization/parent/version fields.

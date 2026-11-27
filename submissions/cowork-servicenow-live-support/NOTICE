@@ -1,0 +1,14 @@
+Cowork ServiceNow Live Support
+Author: Julie Chudakova (youlkax)
+
+This contribution adopts the CAT Agent Skills repository's MIT LICENSE.
+The root LICENSE is copied verbatim, including its existing copyright notice.
+That notice does not assert that this is a verified Microsoft-built product.
+Source lineage and retained adaptation attribution are in
+resources/deployment/PROVENANCE.txt; private repositories are provenance only.
+
+Third-party npm/NuGet dependencies remain governed by their respective licenses.
+Their packages and binaries are not redistributed in this source-only kit.
+Preserve required upstream notices when restoring/building/distributing them.
+Microsoft 365, Entra and ServiceNow platform/plugin licensing is not included.
+No vendor support, SLA, legal certification or production readiness is asserted.

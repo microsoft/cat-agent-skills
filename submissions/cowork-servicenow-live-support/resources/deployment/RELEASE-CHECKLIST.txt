@@ -1,0 +1,32 @@
+OWNER RELEASE / LICENSE CHECKLIST — NOT A CERTIFICATION
+=====================================================
+[x] Adopt gallery-root MIT for this new contribution; retain source attribution.
+[ ] Obtain separate approval before publishing/pushing or opening a public PR.
+[ ] Review all direct/transitive npm and NuGet licenses and required notices.
+    The original package-lock.json pins npm resolution; NuGet project references
+    pin direct package versions but the source supplies no NuGet lockfiles.
+    Do not treat this as a complete SBOM or a blanket license for dependencies.
+[ ] Recheck current SDK/runtime support and migrate net9.0 to supported LTS with
+    testing before a production commitment. Review runtime roll-forward explicitly.
+[ ] Confirm supported Cowork MCP Apps, manifest schema, OAuth flow, quota, tenant
+    policy and iframe semantics. Local tests are not platform certification.
+[ ] Independently adapt/review target SN namespace and strict installer/client
+    guards, plugins, license entitlements, internal APIs and real database indexes.
+[ ] Review identity assignment, consent, least privilege, app/callback audiences,
+    roles/caller allowlists, secret storage/rotation and requester identity mapping.
+[ ] Use separate runtime account, OAuth apps, routing, properties and callbacks.
+    Preserve other harnesses; no broad fanout rule changes or credential reuse.
+[ ] Exercise idempotency, leases, callback retries, dead letters, timeouts, ambiguous
+    delivery/reconciliation, rollback, restart and wrong-owner/token tests live
+    only with approval and synthetic data.
+[ ] Approve privacy/terms, transcript retention, regional processing, translation
+    opt-in, data access/deletion, accessibility and operational incident ownership.
+[ ] Validate single-instance durable storage, encryption, backup restore and TLS.
+[ ] Confirm generator outputs have target-owned app ID, endpoints, legal URLs and
+    token-store reference, without secrets or invented tenant registrations.
+[ ] Run build/tests, regenerate artifacts, repeat hygiene and inventory/hash checks.
+[ ] Manually validate personal upload and agent-console round trip before wider
+    deployment. Publication, upload and activation require separate approval.
+
+No vendor support, SLA, security certification, public API guarantee or production
+readiness is implied by this package. No live tenant acceptance was run here.

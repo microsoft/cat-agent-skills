@@ -1,0 +1,86 @@
+PROVENANCE AND PACKAGING CHANGES
+===============================
+Source: https://github.com/youlkax/cowork-sn
+Pinned commit: 8221f0d169ed71bcd8e0c10dbc1f6fdf252adce5
+Source commit date supplied with review request: 2026-10-16.
+Source revision: request-first widget and split-screen demonstration revision.
+Package prepared: 2026-11-27; locally adapted for the CAT Agent Skills gallery.
+The original repository remains private. Its link records provenance, not a
+build/download dependency. No public repository transfer or publication occurred.
+
+The pinned source documentation identifies adaptation from:
+https://github.com/youlkax/skill-sn/tree/4bf15629a85c8e3f6350b3c4a33e53915e194943
+That provenance is not a runtime dependency; retained attribution is preserved.
+This package is not the imported Microsoft LOB ITSM sample or GHCP FrontBridge/CEA.
+
+Included: .NET MCP host and tests, TypeScript widget/tests and original npm lock,
+solution/project files, generic build/demo/package scripts, safe appsettings,
+ServiceNow bridge scripts, offline tests, installer declarations/generators,
+sanitized regenerated installer artifacts, read-only-permission build CI,
+sanitized architecture/operations and owner-run configuration guidance.
+
+Excluded: tenant-specific identity provisioning and startup scripts, original
+demo app ID/instance/namespace/legacy rule ID and source hash, original generated
+target installer artifacts (replaced by regenerated templates), raw pilot reports,
+recordings/screenshots, runtime state, actual endpoints/tenant/user IDs/credentials,
+secret caches, local absolute paths, .git, bin/obj, dependencies, logs and data.
+No original source files or unrelated sibling package were changed.
+
+NOVEMBER 27 REFRESH
+Baseline: sanitized November 26 library source, not a whole runtime-repo mirror.
+Compared every baseline source path with the current private November 26 runtime.
+Reviewed source additions; excluded target staging scripts and secure credential
+receiver/loader/startup helpers, credentials, state and live deployment notes.
+No private runtime source or host/tunnel configuration was changed.
+
+Included current reusable fixes:
+- CoworkBridge/CoworkBridgeWebhook guard each optional legacy field read with
+  isValidField; absent and partial schemas work, populated mixed ownership fails.
+- Installer captures/rechecks legacy schema presence without reading legacy data;
+  drift before/between writes and at completion fails closed.
+- Added runtime's standalone/partial-schema, mixed-owner, principal, drift and
+  all-zero legacy-helper sentinel regression tests. Converted its private staged
+  handoff test to test the shipped generic artifact and an in-memory mock apply;
+  no pre-enabled apply script or private metadata handoff is shipped.
+- Kept namespace/instance pins exact but genericized to example.invalid,
+  example and cowork_review. All-zero legacy pins remain blocked.
+- Retained baseline's later demo fixes: sandbox-safe panel controls, request-first
+  presentation, delivery ambiguity/idempotency handling, serialized polling,
+  cursor/remount replay and honest remote closure. Current runtime widget and
+  host implementations were byte-compared; only deployment namespace comments/
+  paths differ in the runtime host, so the already generic host is preserved.
+- Added README.md with business purpose, architecture, complete native ServiceNow
+  setup, credential boundaries, source-versus-upload distinction and safe rollback.
+  Added matching local-generated PNG/SVG and editable Excalidraw diagram.
+- Refreshed deployment/installer guidance, validation and package inventory.
+
+The November 26 finished synthetic 126-second demo is described but not bundled.
+No claim is made that offline package validation repeats that live demonstration.
+
+Packaging-coupled changes:
+- Explicitly disable ServiceNow in both default options and appsettings; add a
+  default-disabled regression assertion. Keep demo/translation disabled.
+- Require caller-supplied plugin AppId; package test supplies a synthetic GUID.
+- Relocate package-test scratch output from OS temp to repository artifacts.
+- Replace target coordinates with example.invalid/cowork_review, align client,
+  definition/generator guards and tests; label generated script a review template.
+- Replace legacy rule/hash pins with zero sentinels; block legacy CLI on sentinel.
+- Remove tenant-specific /about prose and historical/private deployment reports.
+- Regenerate both ServiceNow artifacts in Build.ps1 to prevent the source's stale
+  generated-installer test failure. Do not broaden installer or auth safeguards.
+- Add owner-run setup, licensing, validation and manifest-template documentation.
+
+CAT GALLERY ADAPTATION
+The owner chose MIT for this new contribution. LICENSE is copied verbatim from
+the gallery root into the submission and this deployment source copy; NOTICE
+preserves attribution and dependency boundaries. Earlier source archives remain
+unchanged. This is not legal certification or relicensing of third-party packages.
+Root metadata/README, a new stable sample UUID, explicitly nonfunctional OAuth/
+endpoint placeholders and generic icons describe a deployment-required plugin.
+All deployment source is included under resources/deployment. Original runtime,
+namespace/drift guards, lockfiles and package-generator validation are retained.
+The nested ServiceNow .gitignore explicitly retains the two reviewed installer
+artifacts so the gallery's broad artifacts/ exclusion cannot drop them from a PR.
+The gallery README embeds the supplied SVG with responsive display sizing
+because the importer does not copy plugin resources to public image paths.
+No commit, push, PR, transfer, upload or live deployment is part of this adaptation.
