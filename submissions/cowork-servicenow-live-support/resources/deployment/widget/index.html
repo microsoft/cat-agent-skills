@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT support · Copilot Cowork</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+  </style>
+  <script type="module" src="./src/main.ts"></script>
+</head>
+<body>
+  <main class="support-app" id="support-app" aria-label="IT support">
+    <div id="demo-banner" class="demo-banner" hidden><strong>DEMO</strong> Simulated support · Not a live agent.</div>
+    <header class="app-header">
+      <div class="heading"><h1 id="status-text" tabindex="-1">IT support</h1></div>
+      <button id="end-button" class="text-button" type="button" hidden>End</button>
+      <button id="expand-button" class="icon-button" type="button" aria-label="Expand support to fullscreen" title="Expand support" hidden>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </header>
+    <div id="loading" class="loading-state"><span class="loading-mark" aria-hidden="true"></span><h2>Preparing your request</h2><p>Nothing is shared until you request support.</p></div>
+    <section id="review-panel" class="review-panel" aria-label="Review your request" hidden>
+      <div id="summary-form">
+        <label for="summary-input">Your request</label>
+        <textarea id="summary-input" rows="6" maxlength="4000" aria-describedby="consent-note" placeholder="What do you need help with?"></textarea>
+        <p id="consent-note" class="consent-note">Sends this request to IT support. Leave out passwords and access codes.</p>
+        <button id="confirm-button" type="button" class="primary-button">Request support</button>
+      </div>
+    </section>
+    <section id="chat-panel" class="chat-panel" aria-label="Support conversation" hidden>
+      <section id="shared-summary" class="request-summary" aria-labelledby="request-title"><h2 id="request-title">Your request</h2><p id="shared-summary-text" tabindex="0"></p></section>
+      <p id="connection-detail" class="connection-detail" hidden></p>
+      <div class="transcript-wrap">
+        <ol id="transcript" class="transcript" aria-label="Support messages" tabindex="0"></ol>
+        <div id="empty-transcript" class="empty-transcript"><p>Your conversation will appear here.</p></div>
+        <button id="new-messages" class="new-messages" type="button" hidden>New messages ↓</button>
+      </div>
+      <p id="terminal-note" class="terminal-note" hidden></p>
+      <section id="attention-panel" class="attention-panel" aria-label="Important support updates" tabindex="0" hidden><ol id="attention-events"></ol></section>
+      <details id="session-details" class="session-details">
+        <summary>Details</summary>
+        <div class="details-content">
+          <dl class="session-facts"><div><dt>Reference</dt><dd id="interaction-number"></dd></div><div><dt>Status</dt><dd id="technical-status"></dd></div><div><dt>Request length</dt><dd id="summary-count"></dd></div><div><dt>Message length</dt><dd id="message-count"></dd></div></dl>
+          <p id="sync-status" class="sync-status">Connecting securely through Cowork…</p>
+          <ol id="technical-events" class="technical-events" aria-label="Service history"></ol>
+        </div>
+      </details>
+      <div id="message-form" class="message-form">
+        <label for="message-input" class="sr-only">Message IT support</label>
+        <div class="composer"><textarea id="message-input" rows="2" maxlength="4000" placeholder="Message IT support…" aria-describedby="composer-hint send-error"></textarea><button id="send-button" class="primary-button send-button" type="button">Send</button></div>
+        <p id="composer-hint" class="composer-hint">Enter to send · Shift+Enter for a new line</p>
+        <p id="pending-note" class="pending-note" hidden>Delivery is unconfirmed. Retry the same message safely; its reference is preserved.</p>
+        <p id="send-error" class="error-inline" role="alert" hidden></p>
+      </div>
+    </section>
+    <dialog id="end-confirmation" class="end-confirmation" aria-labelledby="end-confirm-title" aria-describedby="end-confirm-description">
+      <h2 id="end-confirm-title" tabindex="-1">Request the end of this chat?</h2><p id="end-confirm-description"></p>
+      <div class="button-row"><button id="keep-chat-button" class="secondary-button" type="button">Keep chatting</button><button id="confirm-end-button" class="primary-button" type="button">Request end</button></div>
+    </dialog>
+    <section id="error-panel" class="error-panel" role="alert" hidden><p id="error-text"></p><button id="retry-button" class="text-button" type="button">Retry updates</button></section>
+    <footer class="app-footer"><p>This card messages IT support; Cowork’s composer messages Copilot.</p><button id="return-button" class="text-button" type="button" hidden title="Asks Copilot to continue. Does not share this transcript or end this chat.">Return to Cowork</button></footer>
+    <div id="announcements" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    <noscript><p>JavaScript is required for human support. Enable it in your MCP App host.</p></noscript>
+  </main>
+</body>
+</html>

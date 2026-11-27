@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cowork ServiceNow MCP App — architecture and operations</title>
+<style>
+body{font:16px/1.6 "Segoe UI",sans-serif;max-width:1050px;margin:auto;padding:32px;color:#242424;background:#f7f4ef}
+h1,h2{line-height:1.2}h2{border-bottom:1px solid #ccc;padding-bottom:8px;margin-top:32px}
+code,pre{font-family:Consolas,monospace}pre{white-space:pre-wrap;background:white;padding:16px}
+aside{border-left:4px solid #b11f4b;padding:12px 20px;background:white}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:10px;text-align:left}a{color:#0067b8}
+</style>
+</head>
+<body>
+<h1>ServiceNow live support inside Copilot Cowork</h1>
+<aside>Sanitized library-review source package, not an installed or certified service. Historical tenant reports, identities, deployment endpoints and recordings are omitted. Read <a href="../README.md">README.md</a>, <a href="../CONFIGURATION.txt">CONFIGURATION.txt</a> and <a href="../RELEASE-CHECKLIST.txt">RELEASE-CHECKLIST.txt</a> first.</aside>
+<h2>1. Architecture and isolation</h2>
+<p>Cowork calls the .NET MCP bridge using Streamable HTTP at <code>/mcp</code>. The model-visible <code>start_live_chat</code> tool creates only a local, owner-bound draft and renders the MCP App widget. The employee reviews the request in the panel and selects <strong>Request support</strong> before the bridge sends it to ServiceNow.</p>
+<pre>Cowork → MCP App widget → .NET MCP bridge → ServiceNow REST
+ServiceNow callbacks → authenticated .NET endpoint → SQLite events → widget polling</pre>
+<p>The panel owns its own message input and transcript. Human messages are brokered through app-only MCP tools, not sent through the model or the main Cowork composer. The panel cannot intercept, lock or take over the host composer. App-only visibility is enforced by a compatible host, not an independent authorization boundary.</p>
+<p>The request-first layout keeps the approved request visible above employee and representative messages. Details contains reference numbers and service history; errors and uncertain delivery remain visible. Explicit button handlers and Enter-to-send avoid native form submission because the host iframe sandbox may omit <code>allow-forms</code>.</p>
+<p>This is separate from the standard-harness .NET skill: no Agents SDK activities, Copilot Studio skill registration or existing Teams return path is reused. ServiceNow uses its own <code>cowork_bridge</code> API, <code>cowork_bridge.*</code> settings, <code>u_cowork_session_id</code>, <code>u_cowork_upn</code> and <code>cowork_mcp</code> marker.</p>
+<table><tr><th>Tool</th><th>Visibility</th><th>Effect</th></tr>
+<tr><td>start_live_chat</td><td>Model/app</td><td>Create draft; no ServiceNow call.</td></tr>
+<tr><td>confirm_live_chat</td><td>App only</td><td>Send reviewed summary with stable session ID.</td></tr>
+<tr><td>get_live_chat_updates</td><td>App only</td><td>Read owner-authorized ordered deltas.</td></tr>
+<tr><td>send_live_chat_message</td><td>App only</td><td>Send with stable client message ID.</td></tr>
+<tr><td>request_end_live_chat</td><td>App only</td><td>Cancel waiting request or ask connected representative to close.</td></tr></table>
+<p>The resource is <code>ui://cowork-sn/live-chat.html</code> with MIME type <code>text/html;profile=mcp-app</code>. Tool results have structured content and text fallback. The widget refreshes active chats every four seconds and closed remote sessions every fifteen seconds while visible; hidden panels pause. These are polling updates, not server push. Recheck current host quotas before deployment.</p>
+<h2>2. Local development and repository map</h2>
+<p>Use Windows PowerShell 7, Node/npm and a .NET SDK supporting net9.0. See the root configuration guide for precise prerequisites and the runtime used in this review.</p>
+<pre>.\scripts\Build.ps1 -Test
+# Optional owner-run synthetic local browser demo:
+.\scripts\Start-Demo.ps1</pre>
+<p>Demo mode requires explicit enablement, Development and loopback. Never expose it through a tunnel or reverse proxy. It uses synthetic support replies and no ServiceNow or translation calls. Live mode refuses missing OAuth configuration.</p>
+<p><code>src\CoworkSn</code> contains the MCP host, identity checks, session store and outbound clients; <code>widget</code> builds one HTML resource; <code>tests</code> contains offline .NET tests; <code>servicenow</code> contains isolated bridge scripts, installer templates and Node mocks; <code>scripts</code> contains build and plugin packaging commands.</p>
+<h2>3. Identity and data boundaries</h2>
+<p>Cowork uses an independently registered delegated OAuth client and the <code>LiveChat.Access</code> scope. Validate v2 issuer, tenant, audience, signature, expiry, scope and owner identity. Choose a signed email claim and allowed domains that resolve to exactly one active ServiceNow user. The token-store OAuth reference is neither a secret nor the Entra application ID.</p>
+<p>The bridge has independent ServiceNow client credentials. Callback tokens use a distinct audience, a dedicated application caller allowlist and <code>LiveChat.Webhook</code> role; delegated callback tokens are rejected. Callbacks arrive at <code>/api/livechat/sn</code>. The iframe receives no credentials. No Basic or shared-secret authentication fallback is supplied.</p>
+<p>Only the reviewed summary and typed messages should be shared, never the full host conversation, private files or hidden context. Render human text as untrusted data. Optional translation must be explicitly approved, labeled and retain original text; it introduces another processor and is disabled by default.</p>
+<h2>4. ServiceNow installation</h2>
+<p>Read <a href="../servicenow/DEPLOYMENT.txt">ServiceNow deployment</a> and <a href="../servicenow/INSTALLER.txt">installer safeguards</a>. The supplied target <code>example.invalid</code>, namespace <code>cowork_review</code> and zero legacy pins are nondeployable templates. Adapt the client, definition, strict generator guards and associated tests together after independent target review; do not remove guard checks to make an existing installation pass.</p>
+<p>Create separate OAuth applications, runtime account, queue/channel, callback provider, properties, fields, tables, ACLs, idempotency ledger and outbox. Check collisions, plugin/license availability, schema, real unique indexes, lease concurrency and minimum roles before activation. Do not grant admin or security_admin to the runtime identity. The installer is create-only, dry-run by default and not an upgrader.</p>
+<p>Inspect any existing fanout rule separately. Only a specifically reviewed exclusion for Cowork-tagged sessions may be appropriate. Preserve unrelated harnesses, routing and credentials. The offline legacy helper emits review proposals only and is blocked until a target rule is pinned; it never writes to ServiceNow.</p>
+<p>Keep <code>cowork_bridge.enabled</code> and <code>cowork_bridge.outbox_delivery_enabled</code> false during staging. Verify callback authentication, retries, dead-letter monitoring, restrictive ACLs and dedicated schedule run-as before delivery; enable new handovers last. No deployment approval is implied.</p>
+<h2>5. Target-built Cowork package</h2>
+<p>The source archive is not the upload ZIP. Follow CONFIGURATION.txt to generate a fresh target-specific connector-only package with <code>New-CoworkPackage.ps1</code>, supplying your app ID, HTTPS MCP URL, real token-store reference and approved legal URLs. It produces manifest 1.29 and two icons, with OAuthPluginVault required. No plugin ZIP or tenant registration is supplied here.</p>
+<p>Validate against current Microsoft 365 app/host tooling and tenant policy before any personal upload. Reuse the approved app ID for upgrades. Do not publish tenant-wide before acceptance and owner/license approval.</p>
+<h2>6. Operations, recovery and acceptance</h2>
+<p>Use exactly one host process and a persistent local SQLite volume, never shared network storage or horizontally shared replicas. Protect transcripts and backups with OS ACLs, encryption and approved retention. Terminal retention defaults to seven days; active and ambiguous operations remain retained.</p>
+<p>Commit session and operation keys before network I/O; acknowledge callbacks only after commit. Preserve IDs on retry. Ambiguous open/send operations are not blindly replayed; reconcile in ServiceNow. Only eligible close operations retry with a stable key; HTTP 409 pauses uncertain closure. Late replies remain visible without reopening terminal sessions. Closing the panel does not close the support conversation.</p>
+<p>Before real use, independently test consent, wrong-owner/tenant/audience/caller rejection, one interaction per request, two-way agent-console messages, duplicate commands/events, restart, remount, delays, timeouts, closure, dead letters and rollback. Confirm no callbacks reach unrelated harnesses. Local mocks do not prove these platform behaviors.</p>
+<h2>7. Support and licensing limitations</h2>
+<p>The scripts use internal, release-sensitive ServiceNow APIs including <code>sn_cs.VASystemObject.createConversation</code>, <code>sn_cs.AgentChatScriptObject.send</code>, chat session bindings and AWA writes. API exceptions can be ambiguous after persistence; do not blindly repeat sends. Obtain target-release validation or adapt to documented APIs. This sample supplies no vendor support, SLA, certification, internal-API rights or production-readiness claim.</p>
+<p>Scope is text chat, not attachments, voice, typing indicators or automatic host-composer handoff. Host MCP Apps/OAuth availability, iframe policy, current quotas, accessibility and runtime support require review. This new gallery contribution adopts the supplied gallery-root MIT LICENSE. Dependencies retain their own licenses/notices; platform entitlements are not included. Publication and target deployment require separate approval.</p>
+<h2>8. Source references</h2>
+<ul>
+<li><a href="https://github.com/youlkax/cowork-sn/tree/8221f0d169ed71bcd8e0c10dbc1f6fdf252adce5">Pinned private Cowork source (authorized access required)</a></li>
+<li><a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/mcp-apps-support">Microsoft: MCP Apps support in Cowork</a></li>
+<li><a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development">Microsoft: Cowork plugin development</a></li>
+<li><a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/plugin-authentication">Microsoft: plugin OAuth</a></li>
+<li><a href="https://www.servicenow.com/docs/r/zurich/conversational-interfaces/virtual-agent/virtual-agent-api-landing-page.html">ServiceNow: Virtual Agent API alternative</a></li>
+<li><a href="https://github.com/modelcontextprotocol/ext-apps">MCP Apps SDK</a></li>
+</ul>
+<p>Source documentation condensed and sanitized for review. Product references must be rechecked for the target environment.</p>
+</body></html>

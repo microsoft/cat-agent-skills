@@ -1,0 +1,63 @@
+LOCAL VALIDATION — 2026-11-27
+===========================
+Environment: Windows, PowerShell 7, .NET SDK 10.0.404,
+Node.js 26.13.0, npm 11.20.0. net9.0 source target retained.
+DOTNET_ROLL_FORWARD=Major was set only in validation processes because runtime 9
+was absent. Runtime-10 compatibility is not production runtime certification.
+
+BASELINE (November 26 folder left unchanged)
+- Widget tests: 23/23 passed; ServiceNow tests: 65/65 passed.
+- Baseline widget typecheck could not run: existing node_modules lacked the
+  TypeScript executable. Baseline --no-build .NET invocation emitted no test
+  result, so it is NOT counted as a successful .NET baseline run.
+- No baseline dependencies, build outputs, source or artifacts were changed.
+
+STAGED SOURCE
+- Fresh npm ci --no-audit --no-fund: passed.
+- Initial full build: widget build/typecheck and 23 tests passed; .NET Release
+  build passed (zero warnings/errors), 62/62 tests passed.
+- Initial imported ServiceNow suite: 81/83 passed. The two packaging mismatches
+  were a private staged-handoff dependency and a wrong-instance negative fixture
+  colliding with the new generic target name. Both tests were adapted, not skipped:
+  shipped-template equality/in-memory mock apply and distinct invalid-target pins.
+- Final scripts\Build.ps1 -Test: PASSED.
+- Final widget production build, TypeScript typecheck: PASSED.
+- Final widget tests: 23/23; .NET tests: 62/62; ServiceNow tests: 83/83.
+- Final .NET Release build: zero warnings/errors.
+- Existing Test-Package.ps1: passed exact ZIP structure, manifest 1.29,
+  OAuthPluginVault requirement, URLs/domains and 192/32 icon checks.
+- dotnet publish Release: passed; widget\index.html present (269520 bytes).
+- ServiceNow review artifacts regenerated deterministically from staged source.
+- Native runtime-9 execution and live target validation were NOT performed.
+
+VALIDATION BOUNDARY
+Existing mock/in-memory tests only; ordinary npm/NuGet registry restore allowed.
+No live ServiceNow, Entra, Translator, Graph or Cowork call, installation, upload,
+publication, host startup/shutdown or tenant/credential change was performed.
+All disposable test/build/cache outputs are excluded from the delivered folder.
+
+PACKAGE CHECKS
+The preceding results describe the safe November 27 source-package validation.
+Its obsolete inventory/hygiene report are not copied into this adaptation.
+The CAT contribution's transport inventory and handoff record its own final
+checks. The adjacent transport ZIP checksum checks archive integrity only;
+it is not a signed publisher attestation or security review.
+
+LIMITS
+One successful synthetic November 26 demo is described in README.md, not replayed
+here. Target licenses/schema/internal APIs, physical indexes, ACLs, grants,
+consent, recovery, runtime support and operational readiness still need approval
+and verification. This new contribution adopts the gallery-root MIT license;
+third-party licenses/notices and platform entitlements remain separate.
+
+CAT GALLERY ADAPTATION VALIDATION — 2026-11-27
+An isolated copy of this deployment source passed scripts\Build.ps1 -Test:
+widget build/typecheck and 23 tests, .NET Release build and 62 tests, ServiceNow
+83 tests, and the existing synthetic three-file package/icon/OAuth URL checks.
+DOTNET_ROLL_FORWARD=Major was process-only; no live target was contacted.
+Runtime source, lockfile, target/legacy guards and regenerated ServiceNow artifacts
+remain byte-identical to the safe November 27 package. Adaptation changes are
+documentation, license/notice, sample manifest/version and gallery packaging only.
+Gallery npm ci, check/import/build and 155 existing tests passed before and after
+adding the submission. Import classifies it as plugin, Cowork, service, MIT.
+This validator checks connector structure, not operational OAuth or availability.

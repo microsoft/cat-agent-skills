@@ -1,0 +1,904 @@
+{
+  "format": "cowork-review-bundle-v1",
+  "deployable_without_review": false,
+  "definition_sha256": "82d75da13ad93c4a96c85d39f640c17e06be2a95f6904e961d045e59b540431e",
+  "definition": {
+    "format_version": 1,
+    "name": "Copilot Cowork isolated live chat prototype",
+    "target": {
+      "instance": "example.invalid",
+      "namespace": "cowork_review",
+      "api_id": "cowork_bridge",
+      "base_path": "/api/cowork_review/cowork_bridge",
+      "execution_scope": "global",
+      "scope_review_required": "Confirm API namespace registration and cross-scope access to global Script Includes and sn_cs APIs before installation."
+    },
+    "installation_policy": {
+      "execute_automatically": false,
+      "create_only": true,
+      "fail_on_name_collision": true,
+      "preserve_standard_harness": true,
+      "single_legacy_exception": "Template only: owner must identify and hash-pin a target-specific legacy fanout rule, if applicable. If absent, no amendment is needed. All-zero sentinels and helper CLI refusal remain.",
+      "deterministic_id_strategy": "sha256(cowork-sn:v1:<table>:<identity>) first 32 lowercase hexadecimal characters",
+      "review_required": true
+    },
+    "roles": [
+      {
+        "name": "cowork_bridge.integration",
+        "description": "Restricts the new Scripted REST API; only the dedicated integration account receives this role.",
+        "contains_roles": []
+      }
+    ],
+    "tables": [
+      {
+        "name": "u_cowork_command",
+        "label": "Cowork Command",
+        "extends": null,
+        "audited": false,
+        "external_access": false,
+        "access_policy": "No public/Table API/agent access. Admin-controlled reconciliation and server Script Includes only; do not assign admin to integration user.",
+        "columns": [
+          {
+            "name": "u_key",
+            "label": "Command key",
+            "type": "string",
+            "max_length": 240,
+            "mandatory": true,
+            "unique": true
+          },
+          {
+            "name": "u_request_hash",
+            "label": "Request SHA-256",
+            "type": "string",
+            "max_length": 64,
+            "mandatory": true
+          },
+          {
+            "name": "u_status",
+            "label": "Status",
+            "type": "string",
+            "max_length": 20,
+            "mandatory": true,
+            "default": "pending",
+            "choices": [
+              "pending",
+              "completed",
+              "failed"
+            ]
+          },
+          {
+            "name": "u_result",
+            "label": "Result JSON",
+            "type": "string",
+            "max_length": 8000
+          },
+          {
+            "name": "u_error",
+            "label": "Sanitized error code",
+            "type": "string",
+            "max_length": 1000
+          },
+          {
+            "name": "u_conversation",
+            "label": "Conversation",
+            "type": "reference",
+            "reference": "sys_cs_conversation"
+          }
+        ]
+      },
+      {
+        "name": "u_cowork_outbox",
+        "label": "Cowork Callback Outbox",
+        "extends": null,
+        "audited": false,
+        "external_access": false,
+        "access_policy": "Administrative reconciliation and server-only helpers. Contains approved callback conversation data; no tokens, credentials, HTTP headers or routing properties. No public, agent or integration-user Table API access.",
+        "columns": [
+          {
+            "name": "u_event_id",
+            "label": "Stable event ID",
+            "type": "string",
+            "max_length": 160,
+            "mandatory": true,
+            "unique": true
+          },
+          {
+            "name": "u_event",
+            "label": "Event",
+            "type": "string",
+            "max_length": 20,
+            "mandatory": true,
+            "choices": [
+              "accepted",
+              "message",
+              "closed"
+            ]
+          },
+          {
+            "name": "u_client_session_id",
+            "label": "Cowork session ID",
+            "type": "string",
+            "max_length": 80,
+            "mandatory": true
+          },
+          {
+            "name": "u_interaction",
+            "label": "Interaction",
+            "type": "reference",
+            "reference": "interaction",
+            "mandatory": true
+          },
+          {
+            "name": "u_message",
+            "label": "Message",
+            "type": "reference",
+            "reference": "sys_cs_message"
+          },
+          {
+            "name": "u_payload",
+            "label": "Approved callback snapshot JSON",
+            "type": "string",
+            "max_length": 65535,
+            "mandatory": true
+          },
+          {
+            "name": "u_payload_hash",
+            "label": "Snapshot SHA-256",
+            "type": "string",
+            "max_length": 64,
+            "mandatory": true
+          },
+          {
+            "name": "u_status",
+            "label": "Status",
+            "type": "string",
+            "max_length": 20,
+            "mandatory": true,
+            "default": "pending",
+            "choices": [
+              "pending",
+              "sending",
+              "retry",
+              "delivered",
+              "dead_letter"
+            ]
+          },
+          {
+            "name": "u_attempts",
+            "label": "Claim attempts",
+            "type": "integer",
+            "default": "0"
+          },
+          {
+            "name": "u_next_attempt_at",
+            "label": "Next attempt",
+            "type": "glide_date_time"
+          },
+          {
+            "name": "u_lease_token",
+            "label": "Worker lease correlation ID",
+            "type": "string",
+            "max_length": 32
+          },
+          {
+            "name": "u_lease_until",
+            "label": "Worker lease expiry",
+            "type": "glide_date_time"
+          },
+          {
+            "name": "u_delivered_at",
+            "label": "Delivered",
+            "type": "glide_date_time"
+          },
+          {
+            "name": "u_last_error",
+            "label": "Sanitized error code",
+            "type": "string",
+            "max_length": 1000
+          },
+          {
+            "name": "u_requires_attention",
+            "label": "Operator attention required",
+            "type": "boolean",
+            "default": "false"
+          }
+        ],
+        "indexes": [
+          {
+            "columns": [
+              "u_event_id"
+            ],
+            "unique": true
+          },
+          {
+            "columns": [
+              "u_status",
+              "u_next_attempt_at"
+            ],
+            "unique": false
+          },
+          {
+            "columns": [
+              "u_status",
+              "u_lease_until"
+            ],
+            "unique": false
+          },
+          {
+            "columns": [
+              "u_requires_attention"
+            ],
+            "unique": false
+          }
+        ]
+      }
+    ],
+    "extensions": [
+      {
+        "table": "interaction",
+        "columns": [
+          {
+            "name": "u_cowork_session_id",
+            "label": "Cowork session ID",
+            "type": "string",
+            "max_length": 80,
+            "mandatory": false,
+            "unique": false,
+            "indexed": true,
+            "reason": "Many non-Cowork interactions have blank values; avoid a global unique index with release-dependent empty-string semantics. u_cowork_command.u_key supplies the atomic unique reservation."
+          },
+          {
+            "name": "u_cowork_upn",
+            "label": "Cowork requester UPN",
+            "type": "string",
+            "max_length": 254,
+            "mandatory": false
+          }
+        ],
+        "field_write_acl": "Only the dedicated principal or administrators may set Cowork metadata. Existing end-user or agent table ACLs must not allow arbitrary tagging.",
+        "do_not_populate": [
+          "u_copilot_upn",
+          "u_bridge_session_id"
+        ],
+        "legacy_ownership_policy": "These unrelated fields are optional and must not be created. Guard each runtime read with isValidField; reject either present populated field independently, including partial presence. Installer captures and revalidates presence only, never legacy data."
+      }
+    ],
+    "access_controls": [
+      {
+        "identity": "Cowork Bridge REST execute",
+        "type": "rest_endpoint",
+        "operation": "execute",
+        "name": "Cowork Bridge",
+        "active": true,
+        "admin_overrides": false,
+        "required_roles": [
+          "cowork_bridge.integration"
+        ],
+        "script": "answer = String(gs.getUserID()) === String(gs.getProperty('cowork_bridge.integration_user_sys_id', ''));",
+        "attach_to": "rest_definition and all resources"
+      },
+      {
+        "identity": "Cowork command administrative access",
+        "type": "record",
+        "name": "u_cowork_command",
+        "operations": [
+          "create",
+          "read",
+          "write",
+          "delete"
+        ],
+        "active": true,
+        "admin_overrides": true,
+        "required_roles": [
+          "admin"
+        ],
+        "script": "answer = gs.hasRole('admin');"
+      },
+      {
+        "identity": "Cowork ownership metadata write",
+        "type": "record",
+        "names": [
+          "interaction.u_cowork_session_id",
+          "interaction.u_cowork_upn"
+        ],
+        "operations": [
+          "create",
+          "write"
+        ],
+        "active": true,
+        "admin_overrides": true,
+        "required_roles": [],
+        "script": "answer = gs.hasRole('admin') || (gs.hasRole('cowork_bridge.integration') && String(gs.getUserID()) === String(gs.getProperty('cowork_bridge.integration_user_sys_id', '')));"
+      },
+      {
+        "identity": "Cowork outbox administrative access",
+        "type": "record",
+        "name": "u_cowork_outbox",
+        "operations": [
+          "create",
+          "read",
+          "write",
+          "delete"
+        ],
+        "active": true,
+        "admin_overrides": true,
+        "required_roles": [
+          "admin"
+        ],
+        "script": "answer = gs.hasRole('admin');"
+      }
+    ],
+    "script_includes": [
+      {
+        "name": "CoworkBridgeOutbox",
+        "active": true,
+        "client_callable": false,
+        "accessible_from": "all",
+        "script_file": "scripts\\CoworkBridgeOutbox.js"
+      },
+      {
+        "name": "CoworkBridgeWebhook",
+        "active": true,
+        "client_callable": false,
+        "accessible_from": "all",
+        "script_file": "scripts\\CoworkBridgeWebhook.js"
+      },
+      {
+        "name": "CoworkBridge",
+        "active": true,
+        "client_callable": false,
+        "accessible_from": "all",
+        "script_file": "scripts\\CoworkBridge.js"
+      }
+    ],
+    "rest_definition": {
+      "name": "Cowork Bridge",
+      "service_id": "cowork_bridge",
+      "namespace": "cowork_review",
+      "requires_authentication": true,
+      "requires_acl_authorization": true,
+      "execute_role": "cowork_bridge.integration",
+      "resources": [
+        {
+          "name": "open_chat",
+          "relative_path": "/open_chat",
+          "http_method": "POST",
+          "requires_authentication": true,
+          "requires_acl_authorization": true,
+          "script_file": "scripts\\open_chat.js"
+        },
+        {
+          "name": "send_message",
+          "relative_path": "/send_message",
+          "http_method": "POST",
+          "requires_authentication": true,
+          "requires_acl_authorization": true,
+          "script_file": "scripts\\send_message.js"
+        },
+        {
+          "name": "close_chat",
+          "relative_path": "/close_chat",
+          "http_method": "POST",
+          "requires_authentication": true,
+          "requires_acl_authorization": true,
+          "script_file": "scripts\\close_chat.js"
+        }
+      ]
+    },
+    "business_rules": [
+      {
+        "name": "Cowork interaction accepted or closed",
+        "collection": "interaction",
+        "active": false,
+        "advanced": true,
+        "when": "after",
+        "order": 200,
+        "action_insert": false,
+        "action_update": true,
+        "action_delete": false,
+        "action_query": false,
+        "filter_condition": "u_cowork_session_idISNOTEMPTY^u_cowork_upnISNOTEMPTY",
+        "condition": "current.state.changes() || current.assigned_to.changes()",
+        "script_file": "scripts\\interaction_callback.js",
+        "timing_reason": "Synchronous after-update snapshots previous and stable transition versions into the durable outbox before best-effort delivery. Own closed events are captured even when new REST operations are disabled."
+      },
+      {
+        "name": "Cowork agent message callback",
+        "collection": "sys_cs_message",
+        "active": false,
+        "advanced": true,
+        "when": "after",
+        "order": 200,
+        "action_insert": true,
+        "action_update": false,
+        "action_delete": false,
+        "action_query": false,
+        "filter_condition": "message_type=text",
+        "condition": "",
+        "script_file": "scripts\\message_callback.js",
+        "timing_reason": "Synchronous after-insert snapshots the agent assignment and stable message sys_id. Strict helper checks own interaction, sender, and q_data_message_type."
+      }
+    ],
+    "scheduled_jobs": [
+      {
+        "name": "Cowork outbox retry",
+        "table": "sysauto_script",
+        "active": false,
+        "run_type": "periodically",
+        "run_period_seconds": 60,
+        "script_file": "scripts\\outbox_retry.js",
+        "run_as": "Configured dedicated Cowork integration user; operator must resolve its reference before activation.",
+        "concurrency": "Conditional GlideRecord.updateMultiple leases guarded by sys_mod_count, due time and state; fresh-read verifies random lease token. Lease is 600 seconds; finish updates require its token. Backend dedup remains mandatory for lease expiry after an uncertain send.",
+        "prerequisites": "Review and install exactly one periodic job; verify scheduler permission, run-as context, updateMultiple compare-and-swap behavior across workers/nodes, auto sys_mod_count, GlideDateTime and gs.generateGUID support; configure ops alert before enabling delivery."
+      }
+    ],
+    "event_registry": [
+      {
+        "name": "cowork_bridge.outbox.dead_letter",
+        "table": "u_cowork_outbox",
+        "description": "Retained event needs operator recovery. Parm1 is stable event ID; parm2 is sanitized error code; no transcript."
+      }
+    ],
+    "operations": {
+      "dead_letter_filter": "u_requires_attention=true",
+      "backlog_filter": "u_statusINpending,retry,sending",
+      "required_alert": "Configure an operator-owned notification or monitor for cowork_bridge.outbox.dead_letter and the attention/backlog filters; never include u_payload in alerts.",
+      "retention": "Never purge pending/retry/sending/dead_letter automatically. Retain delivered snapshots/event IDs through backend dedup and approved conversation-data retention windows. No purge job is installed.",
+      "retry_policy": "Immediate best effort after enqueue; periodic retry up to 8 claims, exponential 30s base backoff capped at 3600s; expired 600s leases recover crashes. Exhaustion retains payload and marks dead_letter plus attention, error log and metadata-only event."
+    },
+    "properties": [
+      {
+        "name": "cowork_bridge.enabled",
+        "type": "boolean",
+        "value": "false"
+      },
+      {
+        "name": "cowork_bridge.outbox_delivery_enabled",
+        "type": "boolean",
+        "value": "false"
+      },
+      {
+        "name": "cowork_bridge.integration_user_sys_id",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.queue_sys_id",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.service_channel_sys_id",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.vendor_sys_id",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.virtual_agent_user_sys_id",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.webhook_url",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.webhook_oauth_entity",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.webhook_oauth_scope",
+        "type": "string",
+        "value": ""
+      },
+      {
+        "name": "cowork_bridge.unavailable_message",
+        "type": "string",
+        "value": "Live chat is unavailable. Please use your IT support portal."
+      }
+    ],
+    "oauth": {
+      "inbound": "New dedicated OAuth application mapped to new dedicated integration account; no Copilot/Intranet account or credential reuse.",
+      "outbound": "New outbound OAuth provider/profile; client credentials stored only in the platform credential store. webhook_oauth_entity is its provider name, webhook_oauth_scope is the backend application URI plus /.default.",
+      "required_application_role": "LiveChat.Webhook",
+      "webhook_path": "/api/livechat/sn",
+      "secret_fallback": false
+    },
+    "legacy_amendment": {
+      "table": "sys_script",
+      "sys_id": "00000000000000000000000000000000",
+      "fields_allowed": [
+        "script"
+      ],
+      "expected_when": "async",
+      "expected_active": true,
+      "expected_filter_condition": "",
+      "anchor": "if (!ix.next()) return;",
+      "expected_occurrences": 1,
+      "insert_after": "if (ix.getValue('u_cowork_session_id')) return; // Cowork sessions use their isolated callback only.",
+      "generator": "tools\\legacy-fanout-patch.cjs",
+      "original_script_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "original_record": null,
+      "private_review_artifact": "review\\fanout-patch.json",
+      "blocked_until": "NONDEPLOYABLE TEMPLATE. No target rule or original hash is supplied. Obtain independent target-specific approval, snapshot and hash pin; immediately before any write compare every invariant and revision. Keep private records outside this distribution.",
+      "do_not_disable": true
+    },
+    "deployment_order": [
+      "Read-only collision/schema/plugin/license/internal-API checks; export collision candidates. Legacy ownership fields are optional and must not be created. Inspect whether a relevant legacy fanout rule exists.",
+      "Review generated definition; keep enabled=false; provision new role, minimum-role integration user, inbound/outbound OAuth apps, backend LiveChat.Webhook role assignment, own queue and channel.",
+      "Create command and outbox tables, required unique indexes, interaction fields/index and restrictive ACLs. Verify uniqueness and conditional leases with concurrent workers.",
+      "Create disabled/default properties and Script Includes.",
+      "Create authenticated REST definition/resources and execute ACL; create inactive callback rules, inactive retry schedule and dead-letter event registry; configure operator notification/monitor.",
+      "If no legacy fanout rule exists, skip amendment. Otherwise obtain exact source/revision approval before any narrow amendment; retain sentinel refusal until then.",
+      "Configure all Cowork properties; validate outbound token audience/role and backend callback reachability.",
+      "Enable new callback rules and retry schedule while bridge/delivery remain disabled; execute gated and wrong-principal probes.",
+      "Enable outbox_delivery_enabled after retry/failure/ops tests, then cowork_bridge.enabled last; run isolated open/accept/message/close/idempotency tests.",
+      "Rollback order and ambiguous-command recovery are in DEPLOYMENT.txt."
+    ]
+  },
+  "identities": [
+    {
+      "table": "sys_user_role",
+      "identity": "cowork_bridge.integration",
+      "proposed_sys_id": "f8d0a2303bf82309dd0500e06401815d"
+    },
+    {
+      "table": "sys_db_object",
+      "identity": "u_cowork_command",
+      "proposed_sys_id": "01fc81bd555bfa04c7ec5301c1dc79e6"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_command.u_key",
+      "proposed_sys_id": "859e3e5b00df0e09199fb0037adeeed4"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_command.u_request_hash",
+      "proposed_sys_id": "a6789e0e6fc08dce2282a778a9c38e69"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_command.u_status",
+      "proposed_sys_id": "093956a2e19c11132823ee89da1c55a0"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_command.u_result",
+      "proposed_sys_id": "548384400081776862f81e182b896a74"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_command.u_error",
+      "proposed_sys_id": "3f39c77710e3abf56d4527937dd909bc"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_command.u_conversation",
+      "proposed_sys_id": "d4e98ca0811b224fa441c9bd3c578eb5"
+    },
+    {
+      "table": "sys_db_object",
+      "identity": "u_cowork_outbox",
+      "proposed_sys_id": "60079012809484c351a20eddacd313fc"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_event_id",
+      "proposed_sys_id": "86e01d96d8f6d5031e36ad4284e57161"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_event",
+      "proposed_sys_id": "0b492b098151e9d0e17182e76886b6d8"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_client_session_id",
+      "proposed_sys_id": "3316b1cdb15fa3883050c8cd00e270a3"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_interaction",
+      "proposed_sys_id": "ccf5a433a5e035a272e852e949e5138a"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_message",
+      "proposed_sys_id": "1b721abedc1ffa249942404a42484b71"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_payload",
+      "proposed_sys_id": "a468970478ee4a70ccf2fdb944b812b3"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_payload_hash",
+      "proposed_sys_id": "b60944fa27698d7e99257e65071ca126"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_status",
+      "proposed_sys_id": "85a6ef6d6bfaf240c5be0682ac618425"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_attempts",
+      "proposed_sys_id": "6e92e8297ee702253b1b14b3f2ca7830"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_next_attempt_at",
+      "proposed_sys_id": "4f4fe880d3255d6739d63af947165396"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_lease_token",
+      "proposed_sys_id": "bb8a0c018e80cbf217ec13b3a6383ee6"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_lease_until",
+      "proposed_sys_id": "f82bd7a2bd15c565f295fe3f370fc461"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_delivered_at",
+      "proposed_sys_id": "a35267b8974659c85c93d9d6a1f50a41"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_last_error",
+      "proposed_sys_id": "2836ec71761c3986fc35735c1c2bc173"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "u_cowork_outbox.u_requires_attention",
+      "proposed_sys_id": "9d5079eadcc20531710ff5db1c7eea22"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "interaction.u_cowork_session_id",
+      "proposed_sys_id": "8f535f999666b2a581883d2d76c5463e"
+    },
+    {
+      "table": "sys_dictionary",
+      "identity": "interaction.u_cowork_upn",
+      "proposed_sys_id": "45768d134a35208ed83f6901072bcf1b"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.enabled",
+      "proposed_sys_id": "9900be932e7ea43262447743a6a18f9a"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.outbox_delivery_enabled",
+      "proposed_sys_id": "fe7fcd73cc9747549f7df7d7434aeeb3"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.integration_user_sys_id",
+      "proposed_sys_id": "752da148b2af6cd543ed872241b9ff14"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.queue_sys_id",
+      "proposed_sys_id": "aeefae6d0af5d76d2f8af2cafddd6ff9"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.service_channel_sys_id",
+      "proposed_sys_id": "9ffc768df6cbf19621a030366fe32e58"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.vendor_sys_id",
+      "proposed_sys_id": "b9135dc5c590db66121871679a112903"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.virtual_agent_user_sys_id",
+      "proposed_sys_id": "40957d01b8139255b580e5985f9001a0"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.webhook_url",
+      "proposed_sys_id": "c708a1355393ce25bfb25968ae2b4665"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.webhook_oauth_entity",
+      "proposed_sys_id": "fc206eed91666bdd2f6ba0bf1ed85781"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.webhook_oauth_scope",
+      "proposed_sys_id": "b63844782378f91de13964ffddf6c652"
+    },
+    {
+      "table": "sys_properties",
+      "identity": "cowork_bridge.unavailable_message",
+      "proposed_sys_id": "822fcc66c6095d6f7f04d7f6bd42c580"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "rest_endpoint:Cowork Bridge:execute",
+      "proposed_sys_id": "01af399fbf8ceb48a1ba6d603b0f4bdd"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_command:create",
+      "proposed_sys_id": "1894e90665859a4afb2bf2fc3813fa3a"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_command:read",
+      "proposed_sys_id": "90e06bb47c006d0634d05749e3436332"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_command:write",
+      "proposed_sys_id": "1754f16540f5088bc925492897b14d60"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_command:delete",
+      "proposed_sys_id": "f202eead0b123b41f1d95bc9d05b550e"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:interaction.u_cowork_session_id:create",
+      "proposed_sys_id": "ebe1223fa4f4325cbfd89d3ff9828ae1"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:interaction.u_cowork_session_id:write",
+      "proposed_sys_id": "a4bb5374a63843ed9a54070951845236"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:interaction.u_cowork_upn:create",
+      "proposed_sys_id": "789390facafc0ffe9fc4c419fd8aa9b4"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:interaction.u_cowork_upn:write",
+      "proposed_sys_id": "831a21170023d2638fed2b1dcac3e79e"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_outbox:create",
+      "proposed_sys_id": "016152626f099e63c7932f9b78c97999"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_outbox:read",
+      "proposed_sys_id": "9bf2ef0498613025936f04f45661017a"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_outbox:write",
+      "proposed_sys_id": "9a425dbb525b7da83d5fa70f6b5e0025"
+    },
+    {
+      "table": "sys_security_acl",
+      "identity": "record:u_cowork_outbox:delete",
+      "proposed_sys_id": "6738c6d00ed6cf9df99f7d50e23603fd"
+    },
+    {
+      "table": "sys_script_include",
+      "identity": "CoworkBridgeOutbox",
+      "proposed_sys_id": "c06a3197d6944001e6970917fbd13578"
+    },
+    {
+      "table": "sys_script_include",
+      "identity": "CoworkBridgeWebhook",
+      "proposed_sys_id": "c816a3d07d613dffcdb0a4bb0033ce79"
+    },
+    {
+      "table": "sys_script_include",
+      "identity": "CoworkBridge",
+      "proposed_sys_id": "3404bd0fe155751375dec96015db9d18"
+    },
+    {
+      "table": "sys_script",
+      "identity": "Cowork interaction accepted or closed",
+      "proposed_sys_id": "6747594fcc6e52e207d76a4cd04d9592"
+    },
+    {
+      "table": "sys_script",
+      "identity": "Cowork agent message callback",
+      "proposed_sys_id": "8b551ecd5fcf05400b13ed322094a5a3"
+    },
+    {
+      "table": "sysauto_script",
+      "identity": "Cowork outbox retry",
+      "proposed_sys_id": "99f8699315bfe457ebc11295742db141"
+    },
+    {
+      "table": "sysevent_register",
+      "identity": "cowork_bridge.outbox.dead_letter",
+      "proposed_sys_id": "474ffacb015f98091ec2dda04b994997"
+    },
+    {
+      "table": "sys_ws_definition",
+      "identity": "/api/cowork_review/cowork_bridge",
+      "proposed_sys_id": "4c0c9189fc050c8849da02bcde47fd53"
+    },
+    {
+      "table": "sys_ws_operation",
+      "identity": "/api/cowork_review/cowork_bridge/open_chat",
+      "proposed_sys_id": "6929fd52f55bf627506cf0b372b111f0"
+    },
+    {
+      "table": "sys_ws_operation",
+      "identity": "/api/cowork_review/cowork_bridge/send_message",
+      "proposed_sys_id": "a7a8d6a8bbaa9382c21b6179cd7630c6"
+    },
+    {
+      "table": "sys_ws_operation",
+      "identity": "/api/cowork_review/cowork_bridge/close_chat",
+      "proposed_sys_id": "a8c26b6f1889cf6d2616cf398e163a4e"
+    }
+  ],
+  "scripts": [
+    {
+      "file": "scripts\\CoworkBridgeOutbox.js",
+      "sha256": "11a6dd49d97f7fb223754bd68206b1b7e5ccb446e8a12cf27f8b143b116cd727",
+      "source": "var CoworkBridgeOutbox = Class.create();\nCoworkBridgeOutbox.prototype = {\n    initialize: function () {},\n\n    enqueue: function (body, interactionId) {\n        var snapshot = this._snapshot(body);\n        var owner = new GlideRecord('interaction');\n        if (!owner.get(interactionId) || !new CoworkBridgeWebhook()._isCowork(owner) ||\n            String(owner.getValue('u_cowork_session_id')) !== snapshot.client_session_id ||\n            String(owner.getValue('number')) !== snapshot.interaction_number)\n            throw new Error('cowork_outbox_owner_mismatch');\n        var payload = JSON.stringify(snapshot);\n        var hash = String(new GlideDigest().getSHA256Hex(payload));\n        var existing = this._find(snapshot.event_id);\n        if (existing) return this._duplicate(existing, hash);\n        var row = new GlideRecord('u_cowork_outbox');\n        row.initialize();\n        row.setValue('u_event_id', snapshot.event_id);\n        row.setValue('u_event', snapshot.event);\n        row.setValue('u_client_session_id', snapshot.client_session_id);\n        row.setValue('u_interaction', interactionId);\n        if (snapshot.message_sys_id) row.setValue('u_message', snapshot.message_sys_id);\n        row.setValue('u_payload', payload);\n        row.setValue('u_payload_hash', hash);\n        row.setValue('u_status', 'pending');\n        row.setValue('u_attempts', 0);\n        row.setValue('u_next_attempt_at', new GlideDateTime());\n        row.setValue('u_requires_attention', false);\n        var id = null;\n        try { id = row.insert(); } catch (ignored) {}\n        if (!id) {\n            existing = this._find(snapshot.event_id);\n            if (existing) return this._duplicate(existing, hash);\n            gs.error('Cowork outbox enqueue failed; operator reconciliation required.');\n            throw new Error('cowork_outbox_enqueue_failed');\n        }\n        // Persistence always precedes OAuth/HTTP. A failure or crash leaves a retriable row.\n        this._safeAttempt(String(id));\n        return true;\n    },\n\n    retry: function () {\n        if (!this._enabled()) return 0;\n        var count = 0;\n        var due = new GlideRecord('u_cowork_outbox');\n        due.addQuery('u_status', 'IN', 'pending,retry');\n        due.addQuery('u_next_attempt_at', '<=', new GlideDateTime());\n        due.orderBy('u_next_attempt_at');\n        due.setLimit(20);\n        due.query();\n        while (due.next()) {\n            this._safeAttempt(String(due.getUniqueValue()));\n            count++;\n        }\n        var expired = new GlideRecord('u_cowork_outbox');\n        expired.addQuery('u_status', 'sending');\n        expired.addQuery('u_lease_until', '<=', new GlideDateTime());\n        expired.orderBy('u_lease_until');\n        expired.setLimit(20);\n        expired.query();\n        while (expired.next()) {\n            this._safeAttempt(String(expired.getUniqueValue()));\n            count++;\n        }\n        var attention = new GlideRecord('u_cowork_outbox');\n        attention.addQuery('u_requires_attention', true);\n        attention.setLimit(1);\n        attention.query();\n        if (attention.next())\n            gs.warn('Cowork outbox requires operator attention; inspect u_requires_attention=true. No events were discarded.');\n        return count;\n    },\n\n    attempt: function (id) {\n        if (!this._enabled()) return false;\n        var row = this._claim(id);\n        if (!row) return false;\n        var errorCode = 'webhook_delivery_failed';\n        var delivered = false;\n        try {\n            var payload = String(row.getValue('u_payload') || '');\n            if (String(new GlideDigest().getSHA256Hex(payload)) !== String(row.getValue('u_payload_hash')))\n                throw new Error('invalid_payload');\n            var body = this._snapshot(JSON.parse(payload));\n            if (body.event_id !== String(row.getValue('u_event_id')) ||\n                body.client_session_id !== String(row.getValue('u_client_session_id')))\n                throw new Error('invalid_payload');\n            if (Number(row.getValue('u_attempts')) > 8) errorCode = 'retry_limit_reached';\n            else delivered = new CoworkBridgeWebhook().deliver(body);\n        } catch (ignored) {\n            errorCode = 'outbox_payload_or_delivery_failed';\n        }\n        return this._finish(row, delivered, errorCode);\n    },\n\n    _safeAttempt: function (id) {\n        try { return this.attempt(id); }\n        catch (ignored) {\n            // Do not roll back a successfully enqueued snapshot just because best-effort delivery failed.\n            gs.warn('Cowork outbox attempt incomplete; retained event requires retry or lease recovery.');\n            return false;\n        }\n    },\n\n    _claim: function (id) {\n        var row = new GlideRecord('u_cowork_outbox');\n        if (!row.get(id)) return null;\n        var status = String(row.getValue('u_status'));\n        var now = new GlideDateTime();\n        var due = status === 'sending' ? row.getValue('u_lease_until') : row.getValue('u_next_attempt_at');\n        if (['pending', 'retry', 'sending'].indexOf(status) < 0 || !due ||\n            Number(new GlideDateTime(String(due)).getNumericValue()) > Number(now.getNumericValue())) return null;\n        var token = String(gs.generateGUID());\n        if (!/^[0-9a-f]{32}$/.test(token)) throw new Error('cowork_outbox_lease_token_invalid');\n        var lease = new GlideDateTime();\n        lease.addSeconds(600);\n        // Conditional UPDATE is the atomic lease; read-then-update alone is not safe across nodes.\n        var claim = new GlideRecord('u_cowork_outbox');\n        claim.addQuery('sys_id', id);\n        claim.addQuery('sys_mod_count', row.getValue('sys_mod_count'));\n        claim.addQuery('u_status', status);\n        claim.addQuery(status === 'sending' ? 'u_lease_until' : 'u_next_attempt_at', '<=', now);\n        claim.setValue('u_lease_token', token);\n        claim.setValue('u_lease_until', lease);\n        claim.setValue('u_status', 'sending');\n        claim.setValue('u_attempts', Number(row.getValue('u_attempts') || 0) + 1);\n        claim.updateMultiple();\n        if (!row.get(id) || String(row.getValue('u_lease_token')) !== token) return null;\n        return row;\n    },\n\n    _finish: function (row, delivered, errorCode) {\n        var attempts = Number(row.getValue('u_attempts'));\n        var status = delivered ? 'delivered' : (attempts >= 8 ? 'dead_letter' : 'retry');\n        var update = new GlideRecord('u_cowork_outbox');\n        update.addQuery('sys_id', String(row.getUniqueValue()));\n        update.addQuery('u_status', 'sending');\n        update.addQuery('u_lease_token', String(row.getValue('u_lease_token')));\n        update.setValue('u_status', status);\n        update.setValue('u_last_error', delivered ? '' : errorCode);\n        update.setValue('u_lease_token', '');\n        update.setValue('u_lease_until', '');\n        if (status === 'retry') {\n            var next = new GlideDateTime();\n            next.addSeconds(Math.min(3600, 30 * Math.pow(2, attempts - 1)));\n            update.setValue('u_next_attempt_at', next);\n        } else update.setValue('u_next_attempt_at', '');\n        if (delivered) update.setValue('u_delivered_at', new GlideDateTime());\n        if (status === 'dead_letter') update.setValue('u_requires_attention', true);\n        update.updateMultiple();\n        var verified = new GlideRecord('u_cowork_outbox');\n        if (!verified.get(String(row.getUniqueValue())) || String(verified.getValue('u_status')) !== status) return false;\n        if (status === 'dead_letter') {\n            gs.error('Cowork outbox dead letter retained; event_id=' + String(row.getValue('u_event_id')));\n            // Event parameters are correlation metadata only; never include payload, URLs or tokens.\n            try { gs.eventQueue('cowork_bridge.outbox.dead_letter', verified, String(row.getValue('u_event_id')), errorCode); }\n            catch (ignored) { gs.error('Cowork outbox alert failed; inspect u_requires_attention=true.'); }\n        }\n        return delivered;\n    },\n\n    _duplicate: function (row, hash) {\n        if (String(row.getValue('u_payload_hash')) !== hash) {\n            // Do not overwrite a prior approved event snapshot merely because its ID was reused.\n            var alert = new GlideRecord('u_cowork_outbox');\n            alert.addQuery('sys_id', String(row.getUniqueValue()));\n            alert.setValue('u_requires_attention', true);\n            alert.updateMultiple();\n            gs.error('Cowork outbox event-ID payload conflict; operator reconciliation required.');\n            return false;\n        }\n        return true;\n    },\n\n    _snapshot: function (body) {\n        if (!body || body.bot !== 'cowork_mcp' || ['accepted', 'message', 'closed'].indexOf(body.event) < 0 ||\n            typeof body.client_session_id !== 'string' || !/^[A-Za-z0-9-]{16,80}$/.test(body.client_session_id) ||\n            typeof body.interaction_number !== 'string' || !body.interaction_number || body.interaction_number.length > 80 ||\n            typeof body.text !== 'string' || body.text.length > 8000 ||\n            typeof body.agent_name !== 'string' || body.agent_name.length > 200 ||\n            typeof body.event_id !== 'string')\n            throw new Error('cowork_outbox_invalid_event');\n        if (body.event === 'message') {\n            if (!/^[0-9a-f]{32}$/.test(body.event_id) || body.message_sys_id !== body.event_id)\n                throw new Error('cowork_outbox_invalid_event');\n        } else if (!(new RegExp('^[0-9a-f]{32}:' + body.event + ':[A-Za-z0-9 :.-]{1,64}$')).test(body.event_id))\n            throw new Error('cowork_outbox_invalid_event');\n        var snapshot = {\n            event: body.event, bot: 'cowork_mcp', client_session_id: body.client_session_id,\n            interaction_number: body.interaction_number, text: body.text, agent_name: body.agent_name,\n            event_id: body.event_id\n        };\n        if (body.event === 'message') snapshot.message_sys_id = body.message_sys_id;\n        return snapshot;\n    },\n\n    _find: function (eventId) {\n        var row = new GlideRecord('u_cowork_outbox');\n        row.addQuery('u_event_id', eventId);\n        row.setLimit(1);\n        row.query();\n        return row.next() ? row : null;\n    },\n    _enabled: function () {\n        return String(gs.getProperty('cowork_bridge.outbox_delivery_enabled', 'false')) === 'true';\n    },\n    type: 'CoworkBridgeOutbox'\n};\n"
+    },
+    {
+      "file": "scripts\\CoworkBridgeWebhook.js",
+      "sha256": "92d24bc2d831902826b2aecca554458ca00ded8f3581d392f8a33653985653ba",
+      "source": "var CoworkBridgeWebhook = Class.create();\r\nCoworkBridgeWebhook.prototype = {\r\n    initialize: function () {},\r\n\r\n    configuration: function () {\r\n        var config = {\r\n            url: String(gs.getProperty('cowork_bridge.webhook_url', '')),\r\n            entity: String(gs.getProperty('cowork_bridge.webhook_oauth_entity', '')),\r\n            scope: String(gs.getProperty('cowork_bridge.webhook_oauth_scope', '')),\r\n            principal: String(gs.getProperty('cowork_bridge.integration_user_sys_id', ''))\r\n        };\r\n        if (!/^https:\\/\\/[A-Za-z0-9.-]+(?::443)?\\/api\\/livechat\\/sn$/.test(config.url) ||\r\n            config.entity.length < 1 || config.entity.length > 160 || /[\\r\\n]/.test(config.entity) ||\r\n            !/^\\S+\\/\\.default$/.test(config.scope) || config.scope.length > 512 ||\r\n            !/^[0-9a-f]{32}$/.test(config.principal))\r\n            this._error('webhook_configuration_required');\r\n        return config;\r\n    },\r\n\r\n    interaction: function (current, previous) {\r\n        if (!previous || !this._isCowork(current)) return false;\r\n        var state = String(current.getValue('state'));\r\n        var oldState = String(previous.getValue('state'));\r\n        var event = '';\r\n        if (state.indexOf('closed') === 0 && oldState.indexOf('closed') !== 0) event = 'closed';\r\n        else if (state === 'work_in_progress' && current.getValue('assigned_to') &&\r\n            (oldState !== state || String(current.getValue('assigned_to')) !== String(previous.getValue('assigned_to'))))\r\n            event = 'accepted';\r\n        if (!event) return false;\r\n        if (event === 'accepted' && !this._realAgent(current, String(current.getValue('assigned_to')))) return false;\r\n        var version = String(current.getValue('sys_mod_count') || current.getValue('sys_updated_on') || '');\r\n        if (!version) return false;\r\n        var body = this._body(current, event, event === 'accepted' ? 'An agent accepted the chat.' : 'The chat is closed.');\r\n        body.event_id = String(current.getUniqueValue()) + ':' + event + ':' + version;\r\n        return new CoworkBridgeOutbox().enqueue(body, String(current.getUniqueValue()));\r\n    },\r\n\r\n    message: function (message) {\r\n        var type = String(message.getValue('q_data_message_type') || '');\r\n        if (String(message.getValue('message_type')) !== 'text' ||\r\n            (type !== 'systemTextMessage' && type !== 'consumerTextMessage')) return false;\r\n        var interaction = new GlideRecord('interaction');\r\n        interaction.addQuery('channel_metadata_document', String(message.getValue('conversation')));\r\n        interaction.setLimit(2);\r\n        interaction.query();\r\n        if (!interaction.next() || !this._isCowork(interaction)) return false;\r\n        var id = String(interaction.getUniqueValue());\r\n        if (interaction.next() || !interaction.get(id)) return false;\r\n        var principal = String(gs.getProperty('cowork_bridge.integration_user_sys_id', ''));\r\n        if (!/^[0-9a-f]{32}$/.test(principal)) return false;\r\n        var sender = String(message.getValue('sender') || '');\r\n        if (sender !== String(interaction.getValue('assigned_to')) || !this._realAgent(interaction, sender)) return false;\r\n        var agent = new GlideRecord('sys_user');\r\n        if (!agent.get(sender) || !/^(true|1)$/.test(String(agent.getValue('active')))) return false;\r\n        var text = String(message.getValue('payload') || '');\r\n        if (!text || text.length > 8000) return false;\r\n        var body = this._body(interaction, 'message', text);\r\n        body.agent_name = String(agent.getDisplayValue() || '').substring(0, 200);\r\n        body.message_sys_id = String(message.getUniqueValue());\r\n        body.event_id = body.message_sys_id;\r\n        return new CoworkBridgeOutbox().enqueue(body, id);\r\n    },\r\n\r\n    deliver: function (body) {\r\n        if (!this._enabled()) return false;\r\n        try {\r\n            var config = this.configuration();\r\n            var client = new sn_auth.GlideOAuthClient();\r\n            var tokenResponse = client.requestToken(config.entity, JSON.stringify({\r\n                grant_type: 'client_credentials', scope: config.scope\r\n            }));\r\n            if (!tokenResponse || tokenResponse.getErrorMessage()) this._error('webhook_oauth_failed');\r\n            var token = tokenResponse.getToken();\r\n            var access = token && String(token.getAccessToken() || '');\r\n            if (!access || /[\\r\\n]/.test(access) ||\r\n                (typeof token.getExpiresIn === 'function' && Number(token.getExpiresIn()) <= 30))\r\n                this._error('webhook_oauth_failed');\r\n            var request = new sn_ws.RESTMessageV2();\r\n            request.setEndpoint(config.url);\r\n            request.setHttpMethod('post');\r\n            request.setHttpTimeout(10000);\r\n            request.setLogLevel('basic');\r\n            request.setRequestHeader('Content-Type', 'application/json');\r\n            request.setRequestHeader('Accept', 'application/json');\r\n            request.setRequestHeader('Authorization', 'Bearer ' + access);\r\n            request.setRequestHeader('X-Cowork-Event-Id', body.event_id);\r\n            request.setRequestHeader('X-Cowork-Bot', 'cowork_mcp');\r\n            request.setRequestBody(JSON.stringify(body));\r\n            var result = request.execute();\r\n            var status = Number(result.getStatusCode());\r\n            if (result.haveError() || status < 200 || status >= 300) this._error('webhook_delivery_failed');\r\n            return true;\r\n        } catch (ignored) {\r\n            // Neither exception text, token responses, nor transcript payloads go into application logs.\r\n            return false;\r\n        }\r\n    },\r\n\r\n    _body: function (interaction, event, text) {\r\n        return {\r\n            event: event, bot: 'cowork_mcp',\r\n            client_session_id: String(interaction.getValue('u_cowork_session_id')),\r\n            interaction_number: String(interaction.getValue('number') || ''),\r\n            text: text,\r\n            agent_name: String(interaction.getDisplayValue('assigned_to') || '').substring(0, 200)\r\n        };\r\n    },\r\n    _enabled: function () { return String(gs.getProperty('cowork_bridge.outbox_delivery_enabled', 'false')) === 'true'; },\r\n    _realAgent: function (interaction, sender) {\r\n        var principal = String(gs.getProperty('cowork_bridge.integration_user_sys_id', ''));\r\n        var virtualAgent = String(gs.getProperty('cowork_bridge.virtual_agent_user_sys_id', ''));\r\n        if (!/^[0-9a-f]{32}$/.test(principal) || !/^[0-9a-f]{32}$/.test(virtualAgent) ||\r\n            !sender || sender === principal || sender === virtualAgent ||\r\n            sender === String(interaction.getValue('opened_for'))) return false;\r\n        var user = new GlideRecord('sys_user');\r\n        return user.get(sender) && /^(true|1)$/.test(String(user.getValue('active')));\r\n    },\r\n    _isCowork: function (interaction) {\r\n        return /^[A-Za-z0-9-]{16,80}$/.test(String(interaction.getValue('u_cowork_session_id') || '')) &&\r\n            !!interaction.getValue('u_cowork_upn') &&\r\n            !(interaction.isValidField('u_copilot_upn') && interaction.getValue('u_copilot_upn')) &&\r\n            !(interaction.isValidField('u_bridge_session_id') && interaction.getValue('u_bridge_session_id'));\r\n    },\r\n    _error: function (code) {\r\n        var error = new Error(code);\r\n        error.coworkStatus = 503;\r\n        error.coworkCode = code;\r\n        throw error;\r\n    },\r\n    type: 'CoworkBridgeWebhook'\r\n};\r\n"
+    },
+    {
+      "file": "scripts\\CoworkBridge.js",
+      "sha256": "e75170dc72a876cb2d216f901b889b6c0bd8e06655fc6ee497919251cd369558",
+      "source": "var CoworkBridge = Class.create();\r\nCoworkBridge.prototype = {\r\n    initialize: function () {},\r\n\r\n    handle: function (operation, request, response) {\r\n        var command = null;\r\n        try {\r\n            var principal = String(gs.getProperty('cowork_bridge.integration_user_sys_id', ''));\r\n            if (!/^[0-9a-f]{32}$/.test(principal))\r\n                this._throw(503, 'configuration_required');\r\n            if (String(gs.getUserID()) !== principal)\r\n                this._throw(403, 'integration_principal_required');\r\n            if (operation === 'open_chat' && String(gs.getProperty('cowork_bridge.enabled', 'false')) !== 'true') {\r\n                    return this._respond(response, 200, {\r\n                        conversation_sys_id: '', interaction_number: '', unavailable: true,\r\n                        message: String(gs.getProperty('cowork_bridge.unavailable_message',\r\n                            'Live chat is unavailable. Please use your IT support portal.')).substring(0, 1000)\r\n                    });\r\n            }\r\n\r\n            var body = request.body && request.body.data;\r\n            if (!body || typeof body !== 'object' || Array.isArray(body))\r\n                this._throw(400, 'invalid_body');\r\n            var input = this._validate(operation, body);\r\n            var config = operation === 'open_chat' ? this._config(principal) : null;\r\n            var owned = operation === 'open_chat' ? null : this._owned(input.conversation_sys_id);\r\n            var key = operation === 'open_chat' ? 'open:' + input.client_session_id :\r\n                (operation === 'send_message' ? 'send:' : 'close:') + input.conversation_sys_id +\r\n                (input.client_message_id ? ':' + input.client_message_id : '');\r\n            var hash = String(new GlideDigest().getSHA256Hex(JSON.stringify(input)));\r\n            command = this._reserve(key, hash);\r\n            if (command.cached)\r\n                return this._respond(response, 200, command.cached);\r\n\r\n            var result;\r\n            if (operation === 'open_chat') result = this._open(input, config, command.row);\r\n            else if (operation === 'send_message') result = this._send(input, owned);\r\n            else result = this._close(owned);\r\n            command.row.setValue('u_result', JSON.stringify(result));\r\n            command.row.setValue('u_status', 'completed');\r\n            if (owned) command.row.setValue('u_conversation', input.conversation_sys_id);\r\n            this._update(command.row);\r\n            return this._respond(response, 200, result);\r\n        } catch (error) {\r\n            // Never persist exception text: platform errors can contain message bodies or credentials.\r\n            var code = error.coworkCode || 'platform_operation_failed';\r\n            if (command && command.row && !command.cached) {\r\n                try {\r\n                    command.row.setValue('u_status', 'failed');\r\n                    command.row.setValue('u_error', code);\r\n                    command.row.update();\r\n                } catch (ignored) {}\r\n                return this._respond(response, 409, {\r\n                    error: 'command_ambiguous',\r\n                    message: 'Command may have partially executed. Reconcile its ledger before retrying.'\r\n                });\r\n            }\r\n            return this._respond(response, error.coworkStatus || 500, { error: code });\r\n        }\r\n    },\r\n\r\n    _validate: function (operation, body) {\r\n        var input;\r\n        if (operation === 'open_chat') {\r\n            if (body.bot !== 'cowork_mcp') this._throw(400, 'invalid_bot');\r\n            input = {\r\n                email: this._email(body.email),\r\n                summary: this._string(body.summary, 1, 4000, 'summary'),\r\n                lang: body.lang === undefined ? '' : this._string(body.lang, 0, 32, 'lang'),\r\n                client_session_id: this._clientId(body.client_session_id),\r\n                bot: 'cowork_mcp'\r\n            };\r\n            if (input.lang && !/^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8}){0,3}$/.test(input.lang))\r\n                this._throw(400, 'invalid_lang');\r\n            input.lang = input.lang.toLowerCase();\r\n        } else if (operation === 'send_message' || operation === 'close_chat') {\r\n            input = { conversation_sys_id: this._sysId(body.conversation_sys_id) };\r\n            if (operation === 'send_message') {\r\n                input.text = this._string(body.text, 1, 8000, 'text');\r\n                input.email = this._email(body.email);\r\n                input.client_message_id = this._clientId(body.client_message_id);\r\n            } else if (body.client_message_id !== undefined) {\r\n                input.client_message_id = this._clientId(body.client_message_id);\r\n            }\r\n        } else this._throw(404, 'unknown_operation');\r\n        return input;\r\n    },\r\n\r\n    _config: function (principal) {\r\n        var names = ['queue_sys_id', 'service_channel_sys_id', 'vendor_sys_id', 'virtual_agent_user_sys_id'];\r\n        var config = { principal: principal };\r\n        for (var i = 0; i < names.length; i++) {\r\n            var value = String(gs.getProperty('cowork_bridge.' + names[i], ''));\r\n            if (!/^[0-9a-f]{32}$/.test(value)) this._throw(503, 'routing_configuration_required');\r\n            config[names[i]] = value;\r\n        }\r\n        var queue = this._get('awa_queue', config.queue_sys_id);\r\n        var channel = this._get('awa_service_channel', config.service_channel_sys_id);\r\n        var user = this._get('sys_user', principal);\r\n        var va = this._get('sys_user', config.virtual_agent_user_sys_id);\r\n        this._get('sys_cs_vendor', config.vendor_sys_id);\r\n        if (!this._true(queue.getValue('active')) || !this._true(channel.getValue('active')) ||\r\n            !this._true(user.getValue('active')) || !this._true(va.getValue('active')) ||\r\n            String(queue.getValue('service_channel')) !== config.service_channel_sys_id ||\r\n            config.virtual_agent_user_sys_id === principal)\r\n            this._throw(503, 'routing_configuration_invalid');\r\n        // Callback routing must be complete before reserving a command or creating chat records.\r\n        new CoworkBridgeWebhook().configuration();\r\n        return config;\r\n    },\r\n\r\n    _reserve: function (key, hash) {\r\n        var existing = this._command(key);\r\n        if (existing) return this._replay(existing, hash);\r\n        var row = new GlideRecord('u_cowork_command');\r\n        row.initialize();\r\n        row.setValue('u_key', key);\r\n        row.setValue('u_request_hash', hash);\r\n        row.setValue('u_status', 'pending');\r\n        var id = null;\r\n        try { id = row.insert(); } catch (ignored) {}\r\n        if (!id) {\r\n            // The unique database index, not this preceding lookup, wins a concurrent reservation.\r\n            existing = this._command(key);\r\n            if (existing) return this._replay(existing, hash);\r\n            this._throw(409, 'command_reservation_unconfirmed');\r\n        }\r\n        return { row: row };\r\n    },\r\n\r\n    _command: function (key) {\r\n        var row = new GlideRecord('u_cowork_command');\r\n        row.addQuery('u_key', key);\r\n        row.setLimit(1);\r\n        row.query();\r\n        return row.next() ? row : null;\r\n    },\r\n\r\n    _replay: function (row, hash) {\r\n        if (String(row.getValue('u_request_hash')) !== hash)\r\n            this._throw(409, 'idempotency_key_reused');\r\n        if (String(row.getValue('u_status')) !== 'completed')\r\n            this._throw(409, 'command_ambiguous');\r\n        var result;\r\n        try { result = JSON.parse(String(row.getValue('u_result'))); } catch (ignored) {}\r\n        if (!result || typeof result !== 'object') this._throw(409, 'command_ambiguous');\r\n        var key = String(row.getValue('u_key'));\r\n        if ((key.indexOf('open:') === 0 &&\r\n            (result.unavailable !== false || !/^[0-9a-f]{32}$/.test(String(result.conversation_sys_id || '')) ||\r\n                typeof result.interaction_number !== 'string' || !result.interaction_number)) ||\r\n            (key.indexOf('send:') === 0 &&\r\n                !((result.sent === true && result.closed === false) || (result.sent === false && result.closed === true))) ||\r\n            (key.indexOf('close:') === 0 && result.closed !== true))\r\n            this._throw(409, 'command_ambiguous');\r\n        return { cached: result };\r\n    },\r\n\r\n    _open: function (input, config, command) {\r\n        var user = new GlideRecord('sys_user');\r\n        user.addQuery('email', input.email);\r\n        user.addActiveQuery();\r\n        user.setLimit(2);\r\n        user.query();\r\n        if (!user.next()) this._throw(404, 'requester_not_found');\r\n        var userId = String(user.getUniqueValue());\r\n        if (user.next()) this._throw(409, 'requester_not_unique');\r\n        if (userId === config.principal || userId === config.virtual_agent_user_sys_id)\r\n            this._throw(400, 'requester_must_be_end_user');\r\n\r\n        var prior = new GlideRecord('interaction');\r\n        prior.addQuery('u_cowork_session_id', input.client_session_id);\r\n        prior.setLimit(1);\r\n        prior.query();\r\n        if (prior.next()) this._throw(409, 'session_already_exists');\r\n        var conversationId = String(sn_cs.VASystemObject.createConversation(userId) || '');\r\n        if (!/^[0-9a-f]{32}$/.test(conversationId)) this._throw(500, 'conversation_creation_failed');\r\n        command.setValue('u_conversation', conversationId);\r\n        this._update(command);\r\n        var conversation = this._get('sys_cs_conversation', conversationId);\r\n        var interaction = this._interaction(conversationId);\r\n        if (!interaction) this._throw(500, 'interaction_creation_failed');\r\n        if ((interaction.isValidField('u_copilot_upn') && interaction.getValue('u_copilot_upn')) ||\r\n            (interaction.isValidField('u_bridge_session_id') && interaction.getValue('u_bridge_session_id')) ||\r\n            interaction.getValue('u_cowork_session_id'))\r\n            this._throw(409, 'interaction_not_isolated');\r\n\r\n        // Persist the correlation key before any explicit message insert or AWA insert/update.\r\n        interaction.setValue('u_cowork_session_id', input.client_session_id);\r\n        interaction.setValue('u_cowork_upn', input.email);\r\n        interaction.setValue('assigned_to', '');\r\n        interaction.setValue('opened_for', userId);\r\n        interaction.setValue('short_description', 'Copilot Cowork: ' + input.summary.substring(0, 140));\r\n        interaction.setValue('direction', 'inbound');\r\n        interaction.setValue('type', 'chat');\r\n        interaction.setValue('state', 'new');\r\n        if (input.lang) interaction.setValue('user_language', input.lang);\r\n        this._update(interaction);\r\n        interaction = this._get('interaction', String(interaction.getUniqueValue()));\r\n        if (String(interaction.getValue('u_cowork_session_id')) !== input.client_session_id ||\r\n            !interaction.getValue('number')) this._throw(500, 'correlation_not_persisted');\r\n\r\n        var device = String(conversation.getValue('current_device') || '');\r\n        var consumer = String(conversation.getValue('consumer') || '');\r\n        var account = String(conversation.getValue('consumer_account') || '');\r\n        if (!device || !consumer || !account) this._throw(500, 'conversation_context_incomplete');\r\n        conversation.setValue('state', 'chatInProgress');\r\n        conversation.setValue('live_agent_transfer_time', new GlideDateTime());\r\n        conversation.setValue('opened_for', userId);\r\n        conversation.setValue('title', 'Copilot Cowork: ' + input.summary.substring(0, 80));\r\n        this._update(conversation);\r\n\r\n        var sessionId = this._insert('sys_cs_session', {\r\n            consumer: consumer, consumer_account: account, vendor: config.vendor_sys_id,\r\n            device_id: device, device_type: 'mweb', direction: 'inbound', interaction: 'QnA',\r\n            start_time: new GlideDateTime()\r\n        });\r\n        this._insert('sys_cs_session_binding', {\r\n            session: sessionId, system_topic: conversationId, topic: conversationId,\r\n            channel_type: 'AMB', channel_id: '/cs/messages/' + sessionId,\r\n            client_connected: true, online: true, guest: false,\r\n            last_client_activity_time: new GlideDateTime()\r\n        });\r\n        var first = 'Escalated from Copilot Cowork.\\nReason: ' + input.summary +\r\n            (input.lang ? '\\nRequester language: ' + input.lang : '');\r\n        this._insert('sys_cs_message', {\r\n            conversation: conversationId, session: sessionId, consumer: consumer,\r\n            consumer_account: account, vendor: config.vendor_sys_id, direction: 'inbound',\r\n            message_type: 'text', q_data_message_type: 'consumerTextMessage',\r\n            payload: first, message_size: first.length, sender: userId,\r\n            recipient: config.virtual_agent_user_sys_id, status: 'received',\r\n            send_time: new GlideDateTime(), receive_time: new GlideDateTime(),\r\n            task: String(interaction.getUniqueValue())\r\n        });\r\n        this._ensureWorkItem(String(interaction.getUniqueValue()), config.queue_sys_id);\r\n        return {\r\n            conversation_sys_id: conversationId,\r\n            interaction_number: String(interaction.getValue('number')), unavailable: false\r\n        };\r\n    },\r\n\r\n    _ensureWorkItem: function (interactionId, queueId) {\r\n        var existing = this._activeWorkItem(interactionId, queueId);\r\n        if (existing) return;\r\n        var row = new GlideRecord('awa_work_item');\r\n        row.initialize();\r\n        row.setValue('document_id', interactionId);\r\n        row.setValue('document_table', 'interaction');\r\n        row.setValue('queue', queueId);\r\n        row.setValue('active', true);\r\n        var id = row.insert();\r\n        if (!id) {\r\n            if (this._activeWorkItem(interactionId, queueId)) return;\r\n            this._throw(500, 'work_item_creation_failed');\r\n        }\r\n        var work = this._get('awa_work_item', String(id));\r\n        work.setValue('state', 'queued');\r\n        this._update(work);\r\n    },\r\n\r\n    _activeWorkItem: function (interactionId, queueId) {\r\n        var row = new GlideRecord('awa_work_item');\r\n        row.addQuery('document_id', interactionId);\r\n        row.addQuery('active', true);\r\n        row.setLimit(2);\r\n        row.query();\r\n        if (!row.next()) return false;\r\n        if (String(row.getValue('queue')) !== queueId ||\r\n            ['queued', 'pending_accept', 'accepted'].indexOf(String(row.getValue('state'))) < 0)\r\n            this._throw(409, 'work_item_routing_mismatch');\r\n        if (row.next()) this._throw(409, 'multiple_active_work_items');\r\n        return true;\r\n    },\r\n\r\n    _owned: function (id) {\r\n        var conversation = this._get('sys_cs_conversation', id);\r\n        var interaction = this._interaction(id);\r\n        if (!interaction || !/^[A-Za-z0-9-]{16,80}$/.test(String(interaction.getValue('u_cowork_session_id') || '')) ||\r\n            !interaction.getValue('u_cowork_upn') ||\r\n            (interaction.isValidField('u_copilot_upn') && interaction.getValue('u_copilot_upn')) ||\r\n            (interaction.isValidField('u_bridge_session_id') && interaction.getValue('u_bridge_session_id')))\r\n            this._throw(403, 'not_a_cowork_conversation');\r\n        return { conversation: conversation, interaction: interaction };\r\n    },\r\n\r\n    _send: function (input, owned) {\r\n        if (this._closed(owned)) return { sent: false, closed: true };\r\n        var requester = this._get('sys_user', String(owned.interaction.getValue('opened_for')));\r\n        var display = String(requester.getDisplayValue() || 'Requester').replace(/[\\r\\n]/g, ' ').substring(0, 200);\r\n        // AgentChat uses the authenticated, dedicated integration user. No impersonation or email-derived name.\r\n        var sent = sn_cs.AgentChatScriptObject.send(input.conversation_sys_id,\r\n            display + ' (via Copilot Cowork): ' + input.text, null, false);\r\n        if (sent === false) this._throw(500, 'chat_send_failed');\r\n        var binding = new GlideRecord('sys_cs_session_binding');\r\n        binding.addQuery('system_topic', input.conversation_sys_id);\r\n        binding.addQuery('topic', input.conversation_sys_id);\r\n        binding.query();\r\n        while (binding.next()) {\r\n            binding.setValue('last_client_activity_time', new GlideDateTime());\r\n            binding.setValue('online', true);\r\n            binding.setValue('client_connected', true);\r\n            this._update(binding);\r\n        }\r\n        return { sent: true, closed: false };\r\n    },\r\n\r\n    _close: function (owned) {\r\n        // Preserve Cowork metadata and business-rule execution: our closed callback must still fire.\r\n        if (String(owned.interaction.getValue('state')).indexOf('closed') !== 0) {\r\n            owned.interaction.setValue('state', 'closed_complete');\r\n            this._update(owned.interaction);\r\n        }\r\n        if (String(owned.conversation.getValue('state')).indexOf('closed') !== 0) {\r\n            owned.conversation.setValue('state', 'closed');\r\n            this._update(owned.conversation);\r\n        }\r\n        return { closed: true };\r\n    },\r\n\r\n    _closed: function (owned) {\r\n        return String(owned.interaction.getValue('state')).indexOf('closed') === 0 ||\r\n            String(owned.conversation.getValue('state')).indexOf('closed') === 0;\r\n    },\r\n\r\n    _interaction: function (id) {\r\n        var row = new GlideRecord('interaction');\r\n        row.addQuery('channel_metadata_document', id);\r\n        row.setLimit(2);\r\n        row.query();\r\n        if (!row.next()) return null;\r\n        var sid = String(row.getUniqueValue());\r\n        if (row.next()) this._throw(409, 'ambiguous_interaction');\r\n        return this._get('interaction', sid);\r\n    },\r\n\r\n    _get: function (table, id) {\r\n        var row = new GlideRecord(table);\r\n        if (!row.get(id)) this._throw(404, 'required_record_not_found');\r\n        return row;\r\n    },\r\n\r\n    _insert: function (table, values) {\r\n        var row = new GlideRecord(table);\r\n        row.initialize();\r\n        for (var field in values)\r\n            if (Object.prototype.hasOwnProperty.call(values, field)) row.setValue(field, values[field]);\r\n        var id = row.insert();\r\n        if (!id) this._throw(500, 'record_insert_failed');\r\n        return String(id);\r\n    },\r\n\r\n    _update: function (row) {\r\n        if (!row.update()) this._throw(500, 'record_update_failed');\r\n    },\r\n\r\n    _string: function (value, min, max, name) {\r\n        if (typeof value !== 'string' || value.length < min || value.length > max ||\r\n            value.indexOf('\\u0000') !== -1 || (min > 0 && !/\\S/.test(value)))\r\n            this._throw(400, 'invalid_' + name);\r\n        return value;\r\n    },\r\n\r\n    _email: function (value) {\r\n        var email = this._string(value, 3, 254, 'email').toLowerCase();\r\n        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) this._throw(400, 'invalid_email');\r\n        return email;\r\n    },\r\n\r\n    _clientId: function (value) {\r\n        if (typeof value !== 'string' || !/^[A-Za-z0-9-]{16,80}$/.test(value))\r\n            this._throw(400, 'invalid_client_id');\r\n        return value;\r\n    },\r\n\r\n    _sysId: function (value) {\r\n        if (typeof value !== 'string' || !/^[0-9a-f]{32}$/.test(value))\r\n            this._throw(400, 'invalid_conversation_sys_id');\r\n        return value;\r\n    },\r\n\r\n    _true: function (value) { return String(value) === 'true' || String(value) === '1'; },\r\n    _throw: function (status, code) {\r\n        var error = new Error(code);\r\n        error.coworkStatus = status;\r\n        error.coworkCode = code;\r\n        throw error;\r\n    },\r\n    _respond: function (response, status, body) {\r\n        response.setStatus(status);\r\n        response.setBody(body);\r\n    },\r\n    type: 'CoworkBridge'\r\n};\r\n"
+    },
+    {
+      "file": "scripts\\open_chat.js",
+      "sha256": "c6185f25f0fadb9467a63441bf155c78e86ae564b3b80518d757fc8fa04916d8",
+      "source": "(function process(request, response) {\n    new CoworkBridge().handle('open_chat', request, response);\n})(request, response);\n"
+    },
+    {
+      "file": "scripts\\send_message.js",
+      "sha256": "418cd4fca22b6334fcfa913c22dcdb695071fbe708c5e042e1ea15a5ea5629d2",
+      "source": "(function process(request, response) {\n    new CoworkBridge().handle('send_message', request, response);\n})(request, response);\n"
+    },
+    {
+      "file": "scripts\\close_chat.js",
+      "sha256": "7238d038c6d4d30d2ef56ed0268d948ed480a07a1517ebb901577481132a67cc",
+      "source": "(function process(request, response) {\n    new CoworkBridge().handle('close_chat', request, response);\n})(request, response);\n"
+    },
+    {
+      "file": "scripts\\interaction_callback.js",
+      "sha256": "d2ab74ba164ccb229d4552b0e4e743f652016b186932c4669475a377d173700f",
+      "source": "(function executeRule(current, previous) {\n    new CoworkBridgeWebhook().interaction(current, previous);\n})(current, previous);\n"
+    },
+    {
+      "file": "scripts\\message_callback.js",
+      "sha256": "2225d7f9fe6ea6f37086a4b30f7aa276562ea569ac72e2efa96ccf1a49f67a91",
+      "source": "(function executeRule(current, previous) {\n    new CoworkBridgeWebhook().message(current);\n})(current, previous);\n"
+    },
+    {
+      "file": "scripts\\outbox_retry.js",
+      "sha256": "34e0f26a4502dd1a75c7a44397cc46e489d8e1e8a45aaa2333b7bc3d7a1e6779",
+      "source": "(function retryCoworkCallbacks() {\n    new CoworkBridgeOutbox().retry();\n})();\n"
+    }
+  ],
+  "blockers": [
+    "If a relevant legacy fanout rule exists, fresh-read its revision and compare with a separately approved hash-qualified preview. If absent, do not create or amend legacy rules.",
+    "Installer must generate and review instance-specific ACL/index/choice metadata; this bundle does not execute writes.",
+    "Namespace/scope, API/plugin compatibility, minimum roles, OAuth providers and all routing values require operator verification."
+  ]
+}

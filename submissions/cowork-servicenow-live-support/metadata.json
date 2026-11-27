@@ -1,0 +1,13 @@
+{
+  "name": "Cowork ServiceNow Live Support — deployment kit",
+  "description": "Deploy your own authenticated MCP bridge for reviewed IT handovers and human ServiceNow chat inside Cowork. Configuration required; not click-and-run.",
+  "platforms": ["Cowork"],
+  "tags": ["servicenow", "it-support", "mcp", "human-handoff", "deployment-kit", "sample"],
+  "author": "Julie Chudakova",
+  "authorGithub": "youlkax",
+  "authorUrl": "https://github.com/youlkax",
+  "category": "service",
+  "version": "0.1.1",
+  "createdAt": "2026-10-16",
+  "updatedAt": "2026-11-27"
+}

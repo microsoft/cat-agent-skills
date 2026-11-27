@@ -1,0 +1,37 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.29/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.29",
+  "version": "0.1.1",
+  "id": "7358720d-3113-4d7f-881f-32f4cc8f8a27",
+  "developer": {
+    "name": "Julie Chudakova",
+    "websiteUrl": "https://example.invalid/",
+    "privacyUrl": "https://example.invalid/privacy",
+    "termsOfUseUrl": "https://example.invalid/terms"
+  },
+  "name": {
+    "short": "ServiceNow Support Template",
+    "full": "Cowork ServiceNow Live Support — deployment kit"
+  },
+  "description": {
+    "short": "DEPLOYMENT REQUIRED: configure your own authenticated bridge and OAuth.",
+    "full": "Nondeployable connector-only template, not a hosted service or click-and-run plugin. Read resources/deployment/README.md, deploy the included bridge and ServiceNow sources, then generate a separate three-file target upload ZIP. example.invalid and REPLACE_WITH_OWNER_OAUTH_TOKEN_STORE_REFERENCE are intentionally nonfunctional placeholders. The employee reviews the handover and approves sharing inside the embedded panel; humans then chat in that panel, not the main Cowork composer."
+  },
+  "icons": { "color": "color.png", "outline": "outline.png" },
+  "accentColor": "#B11F4B",
+  "validDomains": ["example.invalid"],
+  "agentConnectors": [{
+    "id": "cowork-sn",
+    "displayName": "ServiceNow Live Support (deployment required)",
+    "description": "After owner deployment only: start_live_chat prepares a draft for human IT support. The employee must approve sharing in the embedded panel before sending to ServiceNow. Do not claim a representative is connected until the session reports connected. This template has no working endpoint.",
+    "toolSource": {
+      "remoteMcpServer": {
+        "mcpServerUrl": "https://example.invalid/mcp",
+        "authorization": {
+          "type": "OAuthPluginVault",
+          "referenceId": "REPLACE_WITH_OWNER_OAUTH_TOKEN_STORE_REFERENCE"
+        }
+      }
+    }
+  }]
+}

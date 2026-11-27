@@ -1,0 +1,260 @@
+{
+  "format_version": 1,
+  "name": "Copilot Cowork isolated live chat prototype",
+  "target": {
+    "instance": "example.invalid",
+    "namespace": "cowork_review",
+    "api_id": "cowork_bridge",
+    "base_path": "/api/cowork_review/cowork_bridge",
+    "execution_scope": "global",
+    "scope_review_required": "Confirm API namespace registration and cross-scope access to global Script Includes and sn_cs APIs before installation."
+  },
+  "installation_policy": {
+    "execute_automatically": false,
+    "create_only": true,
+    "fail_on_name_collision": true,
+    "preserve_standard_harness": true,
+    "single_legacy_exception": "Template only: owner must identify and hash-pin a target-specific legacy fanout rule, if applicable. If absent, no amendment is needed. All-zero sentinels and helper CLI refusal remain.",
+    "deterministic_id_strategy": "sha256(cowork-sn:v1:<table>:<identity>) first 32 lowercase hexadecimal characters",
+    "review_required": true
+  },
+  "roles": [
+    {
+      "name": "cowork_bridge.integration",
+      "description": "Restricts the new Scripted REST API; only the dedicated integration account receives this role.",
+      "contains_roles": []
+    }
+  ],
+  "tables": [
+    {
+      "name": "u_cowork_command",
+      "label": "Cowork Command",
+      "extends": null,
+      "audited": false,
+      "external_access": false,
+      "access_policy": "No public/Table API/agent access. Admin-controlled reconciliation and server Script Includes only; do not assign admin to integration user.",
+      "columns": [
+        { "name": "u_key", "label": "Command key", "type": "string", "max_length": 240, "mandatory": true, "unique": true },
+        { "name": "u_request_hash", "label": "Request SHA-256", "type": "string", "max_length": 64, "mandatory": true },
+        { "name": "u_status", "label": "Status", "type": "string", "max_length": 20, "mandatory": true, "default": "pending", "choices": ["pending", "completed", "failed"] },
+        { "name": "u_result", "label": "Result JSON", "type": "string", "max_length": 8000 },
+        { "name": "u_error", "label": "Sanitized error code", "type": "string", "max_length": 1000 },
+        { "name": "u_conversation", "label": "Conversation", "type": "reference", "reference": "sys_cs_conversation" }
+      ]
+    },
+    {
+      "name": "u_cowork_outbox",
+      "label": "Cowork Callback Outbox",
+      "extends": null,
+      "audited": false,
+      "external_access": false,
+      "access_policy": "Administrative reconciliation and server-only helpers. Contains approved callback conversation data; no tokens, credentials, HTTP headers or routing properties. No public, agent or integration-user Table API access.",
+      "columns": [
+        { "name": "u_event_id", "label": "Stable event ID", "type": "string", "max_length": 160, "mandatory": true, "unique": true },
+        { "name": "u_event", "label": "Event", "type": "string", "max_length": 20, "mandatory": true, "choices": ["accepted", "message", "closed"] },
+        { "name": "u_client_session_id", "label": "Cowork session ID", "type": "string", "max_length": 80, "mandatory": true },
+        { "name": "u_interaction", "label": "Interaction", "type": "reference", "reference": "interaction", "mandatory": true },
+        { "name": "u_message", "label": "Message", "type": "reference", "reference": "sys_cs_message" },
+        { "name": "u_payload", "label": "Approved callback snapshot JSON", "type": "string", "max_length": 65535, "mandatory": true },
+        { "name": "u_payload_hash", "label": "Snapshot SHA-256", "type": "string", "max_length": 64, "mandatory": true },
+        { "name": "u_status", "label": "Status", "type": "string", "max_length": 20, "mandatory": true, "default": "pending", "choices": ["pending", "sending", "retry", "delivered", "dead_letter"] },
+        { "name": "u_attempts", "label": "Claim attempts", "type": "integer", "default": "0" },
+        { "name": "u_next_attempt_at", "label": "Next attempt", "type": "glide_date_time" },
+        { "name": "u_lease_token", "label": "Worker lease correlation ID", "type": "string", "max_length": 32 },
+        { "name": "u_lease_until", "label": "Worker lease expiry", "type": "glide_date_time" },
+        { "name": "u_delivered_at", "label": "Delivered", "type": "glide_date_time" },
+        { "name": "u_last_error", "label": "Sanitized error code", "type": "string", "max_length": 1000 },
+        { "name": "u_requires_attention", "label": "Operator attention required", "type": "boolean", "default": "false" }
+      ],
+      "indexes": [
+        { "columns": ["u_event_id"], "unique": true },
+        { "columns": ["u_status", "u_next_attempt_at"], "unique": false },
+        { "columns": ["u_status", "u_lease_until"], "unique": false },
+        { "columns": ["u_requires_attention"], "unique": false }
+      ]
+    }
+  ],
+  "extensions": [
+    {
+      "table": "interaction",
+      "columns": [
+        { "name": "u_cowork_session_id", "label": "Cowork session ID", "type": "string", "max_length": 80, "mandatory": false, "unique": false, "indexed": true, "reason": "Many non-Cowork interactions have blank values; avoid a global unique index with release-dependent empty-string semantics. u_cowork_command.u_key supplies the atomic unique reservation." },
+        { "name": "u_cowork_upn", "label": "Cowork requester UPN", "type": "string", "max_length": 254, "mandatory": false }
+      ],
+      "field_write_acl": "Only the dedicated principal or administrators may set Cowork metadata. Existing end-user or agent table ACLs must not allow arbitrary tagging.",
+      "do_not_populate": ["u_copilot_upn", "u_bridge_session_id"],
+      "legacy_ownership_policy": "These unrelated fields are optional and must not be created. Guard each runtime read with isValidField; reject either present populated field independently, including partial presence. Installer captures and revalidates presence only, never legacy data."
+    }
+  ],
+  "access_controls": [
+    {
+      "identity": "Cowork Bridge REST execute",
+      "type": "rest_endpoint",
+      "operation": "execute",
+      "name": "Cowork Bridge",
+      "active": true,
+      "admin_overrides": false,
+      "required_roles": ["cowork_bridge.integration"],
+      "script": "answer = String(gs.getUserID()) === String(gs.getProperty('cowork_bridge.integration_user_sys_id', ''));",
+      "attach_to": "rest_definition and all resources"
+    },
+    {
+      "identity": "Cowork command administrative access",
+      "type": "record",
+      "name": "u_cowork_command",
+      "operations": ["create", "read", "write", "delete"],
+      "active": true,
+      "admin_overrides": true,
+      "required_roles": ["admin"],
+      "script": "answer = gs.hasRole('admin');"
+    },
+    {
+      "identity": "Cowork ownership metadata write",
+      "type": "record",
+      "names": ["interaction.u_cowork_session_id", "interaction.u_cowork_upn"],
+      "operations": ["create", "write"],
+      "active": true,
+      "admin_overrides": true,
+      "required_roles": [],
+      "script": "answer = gs.hasRole('admin') || (gs.hasRole('cowork_bridge.integration') && String(gs.getUserID()) === String(gs.getProperty('cowork_bridge.integration_user_sys_id', '')));"
+    },
+    {
+      "identity": "Cowork outbox administrative access",
+      "type": "record",
+      "name": "u_cowork_outbox",
+      "operations": ["create", "read", "write", "delete"],
+      "active": true,
+      "admin_overrides": true,
+      "required_roles": ["admin"],
+      "script": "answer = gs.hasRole('admin');"
+    }
+  ],
+  "script_includes": [
+    { "name": "CoworkBridgeOutbox", "active": true, "client_callable": false, "accessible_from": "all", "script_file": "scripts\\CoworkBridgeOutbox.js" },
+    { "name": "CoworkBridgeWebhook", "active": true, "client_callable": false, "accessible_from": "all", "script_file": "scripts\\CoworkBridgeWebhook.js" },
+    { "name": "CoworkBridge", "active": true, "client_callable": false, "accessible_from": "all", "script_file": "scripts\\CoworkBridge.js" }
+  ],
+  "rest_definition": {
+    "name": "Cowork Bridge",
+    "service_id": "cowork_bridge",
+    "namespace": "cowork_review",
+    "requires_authentication": true,
+    "requires_acl_authorization": true,
+    "execute_role": "cowork_bridge.integration",
+    "resources": [
+      { "name": "open_chat", "relative_path": "/open_chat", "http_method": "POST", "requires_authentication": true, "requires_acl_authorization": true, "script_file": "scripts\\open_chat.js" },
+      { "name": "send_message", "relative_path": "/send_message", "http_method": "POST", "requires_authentication": true, "requires_acl_authorization": true, "script_file": "scripts\\send_message.js" },
+      { "name": "close_chat", "relative_path": "/close_chat", "http_method": "POST", "requires_authentication": true, "requires_acl_authorization": true, "script_file": "scripts\\close_chat.js" }
+    ]
+  },
+  "business_rules": [
+    {
+      "name": "Cowork interaction accepted or closed",
+      "collection": "interaction",
+      "active": false,
+      "advanced": true,
+      "when": "after",
+      "order": 200,
+      "action_insert": false,
+      "action_update": true,
+      "action_delete": false,
+      "action_query": false,
+      "filter_condition": "u_cowork_session_idISNOTEMPTY^u_cowork_upnISNOTEMPTY",
+      "condition": "current.state.changes() || current.assigned_to.changes()",
+      "script_file": "scripts\\interaction_callback.js",
+      "timing_reason": "Synchronous after-update snapshots previous and stable transition versions into the durable outbox before best-effort delivery. Own closed events are captured even when new REST operations are disabled."
+    },
+    {
+      "name": "Cowork agent message callback",
+      "collection": "sys_cs_message",
+      "active": false,
+      "advanced": true,
+      "when": "after",
+      "order": 200,
+      "action_insert": true,
+      "action_update": false,
+      "action_delete": false,
+      "action_query": false,
+      "filter_condition": "message_type=text",
+      "condition": "",
+      "script_file": "scripts\\message_callback.js",
+      "timing_reason": "Synchronous after-insert snapshots the agent assignment and stable message sys_id. Strict helper checks own interaction, sender, and q_data_message_type."
+    }
+  ],
+  "scheduled_jobs": [
+    {
+      "name": "Cowork outbox retry",
+      "table": "sysauto_script",
+      "active": false,
+      "run_type": "periodically",
+      "run_period_seconds": 60,
+      "script_file": "scripts\\outbox_retry.js",
+      "run_as": "Configured dedicated Cowork integration user; operator must resolve its reference before activation.",
+      "concurrency": "Conditional GlideRecord.updateMultiple leases guarded by sys_mod_count, due time and state; fresh-read verifies random lease token. Lease is 600 seconds; finish updates require its token. Backend dedup remains mandatory for lease expiry after an uncertain send.",
+      "prerequisites": "Review and install exactly one periodic job; verify scheduler permission, run-as context, updateMultiple compare-and-swap behavior across workers/nodes, auto sys_mod_count, GlideDateTime and gs.generateGUID support; configure ops alert before enabling delivery."
+    }
+  ],
+  "event_registry": [
+    {
+      "name": "cowork_bridge.outbox.dead_letter",
+      "table": "u_cowork_outbox",
+      "description": "Retained event needs operator recovery. Parm1 is stable event ID; parm2 is sanitized error code; no transcript."
+    }
+  ],
+  "operations": {
+    "dead_letter_filter": "u_requires_attention=true",
+    "backlog_filter": "u_statusINpending,retry,sending",
+    "required_alert": "Configure an operator-owned notification or monitor for cowork_bridge.outbox.dead_letter and the attention/backlog filters; never include u_payload in alerts.",
+    "retention": "Never purge pending/retry/sending/dead_letter automatically. Retain delivered snapshots/event IDs through backend dedup and approved conversation-data retention windows. No purge job is installed.",
+    "retry_policy": "Immediate best effort after enqueue; periodic retry up to 8 claims, exponential 30s base backoff capped at 3600s; expired 600s leases recover crashes. Exhaustion retains payload and marks dead_letter plus attention, error log and metadata-only event."
+  },
+  "properties": [
+    { "name": "cowork_bridge.enabled", "type": "boolean", "value": "false" },
+    { "name": "cowork_bridge.outbox_delivery_enabled", "type": "boolean", "value": "false" },
+    { "name": "cowork_bridge.integration_user_sys_id", "type": "string", "value": "" },
+    { "name": "cowork_bridge.queue_sys_id", "type": "string", "value": "" },
+    { "name": "cowork_bridge.service_channel_sys_id", "type": "string", "value": "" },
+    { "name": "cowork_bridge.vendor_sys_id", "type": "string", "value": "" },
+    { "name": "cowork_bridge.virtual_agent_user_sys_id", "type": "string", "value": "" },
+    { "name": "cowork_bridge.webhook_url", "type": "string", "value": "" },
+    { "name": "cowork_bridge.webhook_oauth_entity", "type": "string", "value": "" },
+    { "name": "cowork_bridge.webhook_oauth_scope", "type": "string", "value": "" },
+    { "name": "cowork_bridge.unavailable_message", "type": "string", "value": "Live chat is unavailable. Please use your IT support portal." }
+  ],
+  "oauth": {
+    "inbound": "New dedicated OAuth application mapped to new dedicated integration account; no Copilot/Intranet account or credential reuse.",
+    "outbound": "New outbound OAuth provider/profile; client credentials stored only in the platform credential store. webhook_oauth_entity is its provider name, webhook_oauth_scope is the backend application URI plus /.default.",
+    "required_application_role": "LiveChat.Webhook",
+    "webhook_path": "/api/livechat/sn",
+    "secret_fallback": false
+  },
+  "legacy_amendment": {
+    "table": "sys_script",
+    "sys_id": "00000000000000000000000000000000",
+    "fields_allowed": ["script"],
+    "expected_when": "async",
+    "expected_active": true,
+    "expected_filter_condition": "",
+    "anchor": "if (!ix.next()) return;",
+    "expected_occurrences": 1,
+    "insert_after": "if (ix.getValue('u_cowork_session_id')) return; // Cowork sessions use their isolated callback only.",
+    "generator": "tools\\legacy-fanout-patch.cjs",
+    "original_script_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "original_record": null,
+    "private_review_artifact": "review\\fanout-patch.json",
+    "blocked_until": "NONDEPLOYABLE TEMPLATE. No target rule or original hash is supplied. Obtain independent target-specific approval, snapshot and hash pin; immediately before any write compare every invariant and revision. Keep private records outside this distribution.",
+    "do_not_disable": true
+  },
+  "deployment_order": [
+    "Read-only collision/schema/plugin/license/internal-API checks; export collision candidates. Legacy ownership fields are optional and must not be created. Inspect whether a relevant legacy fanout rule exists.",
+    "Review generated definition; keep enabled=false; provision new role, minimum-role integration user, inbound/outbound OAuth apps, backend LiveChat.Webhook role assignment, own queue and channel.",
+    "Create command and outbox tables, required unique indexes, interaction fields/index and restrictive ACLs. Verify uniqueness and conditional leases with concurrent workers.",
+    "Create disabled/default properties and Script Includes.",
+    "Create authenticated REST definition/resources and execute ACL; create inactive callback rules, inactive retry schedule and dead-letter event registry; configure operator notification/monitor.",
+    "If no legacy fanout rule exists, skip amendment. Otherwise obtain exact source/revision approval before any narrow amendment; retain sentinel refusal until then.",
+    "Configure all Cowork properties; validate outbound token audience/role and backend callback reachability.",
+    "Enable new callback rules and retry schedule while bridge/delivery remain disabled; execute gated and wrong-principal probes.",
+    "Enable outbox_delivery_enabled after retry/failure/ops tests, then cowork_bridge.enabled last; run isolated open/accept/message/close/idempotency tests.",
+    "Rollback order and ambiguous-command recovery are in DEPLOYMENT.txt."
+  ]
+}
