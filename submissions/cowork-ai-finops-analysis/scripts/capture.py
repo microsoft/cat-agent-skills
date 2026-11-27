@@ -302,7 +302,7 @@ def pp_collection(o, params, retries=3, max_pages=100):
         token_key = next((key for key in ("$skipToken", "$skiptoken", "skipToken", "skiptoken", "$skip")
                           if key in query and query[key]), None)
         if token_key:
-            token = unquote(query[token_key][0])
+            token = query[token_key][0]
         else:
             token = response.get("continuationToken") or response.get("nextPageToken")
             token_key = "$skipToken" if token else None
