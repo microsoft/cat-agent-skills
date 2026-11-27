@@ -332,12 +332,16 @@ def rollup(users, key_fn, label_unknown, near_pct=80):
         if a["topUser"] is None or u["used"] > a["topUser"]["used"]:
             a["topUser"] = u
         a["members"].append(u["upn"])
+    matched_credits = defaultdict(int)
+    for u in users:
+        if (u.get("tasks") or 0) > 0:
+            matched_credits[key_fn(u) or label_unknown] += u["used"]
     total = sum(a["used"] for a in agg.values()) or 1
     rows = []
     for a in agg.values():
         rows.append({**a, "share": round(a["used"] / total * 100, 1),
                      "avgPerUser": round(a["used"] / a["users"]) if a["users"] else 0,
-                     "creditsPerTask": round(a["used"] / a["tasks"]) if a["tasks"] else None,
+                     "creditsPerTask": round(matched_credits[a["name"]] / a["tasks"]) if a["tasks"] else None,
                      "topUser": a["topUser"]["displayName"] if a["topUser"] else "", "members": len(a["members"])})
     rows.sort(key=lambda r: -r["used"])
     return rows
@@ -511,6 +515,8 @@ def analyze(data, args, as_of):
                      "projection covers the current billing month only. Re-run with --period ytd if the export was "
                      "taken with a year-to-date filter.")
     # ---- users -------------------------------------------------------------
+    for u in users:
+        u["share"] = pct(u["used"], user_total)
     users_sorted = sorted(users, key=lambda u: -u["used"])
     consuming = [u for u in users if u["used"] > 0]
     n_users = len(users)
@@ -1004,7 +1010,7 @@ def render_html(res, anonymize=False):
         return " ".join(flags)
     urows = "".join(
         f"<tr><td>{html.escape(name(u))}</td><td>{html.escape(u.get('department') or '-')}</td><td>{html.escape(u.get('manager') or '-')}</td><td class='num' data-v='{u['used']}'>{fmt(u['used'])}</td><td class='num' data-v='{u['limit'] or 0}'>{fmt(u['limit'])}</td>"
-        f"<td class='num' data-v='{u['pctUsed'] or 0}'>{'-' if u['pctUsed'] is None else fmt(u['pctUsed'],1)+'%'}</td><td class='num' data-v='{u.get('share') or 0}'>{fmt(u.get('share'),1)}%</td><td class='num' data-v='{u.get('tasks') or 0}'>{fmt(u.get('tasks'))}</td>"
+        f"<td class='num' data-v='{u['pctUsed'] or 0}'>{'-' if u['pctUsed'] is None else fmt(u['pctUsed'],1)+'%'}</td><td class='num' data-v='{u['share'] or 0}'>{'-' if u['share'] is None else fmt(u['share'],1)+'%'}</td><td class='num' data-v='{u.get('tasks') or 0}'>{fmt(u.get('tasks'))}</td>"
         f"<td class='num' data-v='{u.get('creditsPerTask') or 0}'>{fmt(u.get('creditsPerTask'))}</td><td class='num' data-v='{u['sessions']}'>{fmt(u['sessions'])}</td><td>{u['lastActivity'] or '-'}</td><td>{user_flags(u)}</td></tr>" for u in U["all"])
     users_html = f"""<div class="grid4"><div class="card"><h4>Over 100% of limit ({len(U['overLimit'])})</h4><p>{names_for(U['overLimit'])}</p></div>
     <div class="card"><h4>Near limit &ge; {near_pct}% ({len(U['nearLimit'])})</h4><p>{names_for(U['nearLimit'])}</p></div>
