@@ -1,7 +1,7 @@
 {
   "name": "PowerPoint Transitions",
   "description": "Give an editable PowerPoint deck purposeful motion: match objects across slides with Morph, add classic transitions, or combine both.",
-  "platforms": ["Cowork"],
+  "platforms": ["Cowork", "Copilot Studio"],
   "tags": ["powerpoint", "presentations", "morph", "accessibility"],
   "category": "productivity",
   "author": "Ofir Gavish",
