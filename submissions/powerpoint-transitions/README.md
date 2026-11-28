@@ -2,6 +2,8 @@
 
 Make a product photo grow from a sidebar into a detail view, carry its label along with it, or use a short fade when a chapter ends. The output is a **new, editable `.pptx`** with native PowerPoint effects, not a video.
 
+**[Download the installable ZIP for Cowork and Copilot Studio (v1.0.1)](https://github.com/OfirGavish/cat-agent-skills/releases/download/powerpoint-transitions-v1.0.1/powerpoint-transitions.zip)** from the author's release. Upload this file **as is**. Do not use GitHub's **Code > Download ZIP** or the release's **Source code (zip)**: those download the repository, not the skill.
+
 ## Try it in Cowork
 
 Upload the complete skill ZIP through **Plugins > Add > Upload** (called **Customize** in some clients). Start a fresh task, select the installed skill, attach a copy of a `.pptx`, and say: **"Give this deck better transitions."** The skill asks which mode you want unless you've already specified one:
@@ -17,6 +19,23 @@ For a first run, try **"Matched objects only. Follow the product photo and its c
 ## Try it in Copilot Studio
 
 Open an unpublished agent using the Microsoft Copilot harness. In **Build > Skills > Add skill > Upload a skill**, upload the whole ZIP. In a fresh **Preview** chat, attach a copy of your deck and ask for better transitions without specifying a mode. Choose **Matched objects only** to reproduce the test below. Publishing the agent is not required.
+
+## Other installation options
+
+The two CAT targets are [Cowork](https://learn.microsoft.com/en-us/copilot/cowork/cowork-customize) and [Copilot Studio](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agents-experience/skills-add-existing). The following are other ways to provide the instructions, not additional CAT host test results:
+
+| Surface | How to use the skill |
+|---|---|
+| [Microsoft 365 Copilot Chat](https://learn.microsoft.com/en-us/plugins/build-copilot-chat-skills) | Where your plan and tenant permit personal skills, open **Agents > More agents > Add > Upload skill** and choose the ZIP. |
+| [Microsoft Copilot Code](https://learn.microsoft.com/en-us/copilot/code/use-code) | Open an extracted copy of the skill as a local project, attach the deck, and ask Code to follow `SKILL.md`. This is a file workflow, not automatic skill registration. |
+| [Copilot Autopilot](https://learn.microsoft.com/en-us/copilot/autopilot/plugins) | Where enabled, use **Plugins > Add > Upload skill**, then select the skill in the conversation. |
+| [Microsoft Scout](https://learn.microsoft.com/en-us/microsoft-scout/use-microsoft-scout) or [GitHub Copilot in VS Code](https://code.visualstudio.com/docs/copilot/customization/agent-skills) | Extract the contents to `~/.copilot/skills/powerpoint-transitions/` so `SKILL.md` sits directly inside it. Start a new conversation on that device. This is a personal installation, not tenant-wide deployment. |
+
+**If your host cannot install a skill**, paste this prompt instead. It can produce a plan but does not install the Python editor:
+
+> Ask me to choose Classic transitions only, Matched objects only, or Both. Use one native transition per destination slide; pair objects only when their identity is clear, not just because their positions or colors are similar. Keep the original file and its slide-advance settings. If you can write and reopen an editable `.pptx`, return a new copy and list the changed slide pairs. Otherwise give exact PowerPoint steps and say that no deck was edited.
+
+If Morph appears as a fade, start Slide Show on the *preceding* slide and check the shape names on both slides. See Microsoft's [Morph transition tips](https://support.microsoft.com/en-us/powerpoint/morph-transition-tips-and-tricks) for viewer compatibility and matching behavior.
 
 ## What it needs
 
@@ -35,6 +54,8 @@ On November 28, 2026, an unpublished Microsoft Copilot-harness agent in Studio P
 The first Preview debug step displayed **Skill incomplete**. The test did not treat that label, or the agent's text response, as proof either way: it checked the attachment's contents and installed helper. Visual playback in Studio was not tested. Classic and Both modes have local coverage, not end-to-end coverage in these two hosts.
 
 The author also reports testing in Copilot in PowerPoint. Scout and regular Microsoft 365 Copilot Chat are not claimed as live-tested hosts here.
+
+The live tests above used v1.0.0. Version 1.0.1 moves installation help and sample prompts out of the agent bundle; the Python editor and motion workflow are unchanged.
 
 ## Reproduce the local checks
 

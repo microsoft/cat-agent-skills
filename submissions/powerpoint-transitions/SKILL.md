@@ -95,5 +95,3 @@ Write a JSON list with **1-based destination slide numbers in presentation order
 1. Reopen or inspect the **output**, not the input. Verify the destination ordinals, duration, direction, Morph pair, advance settings, and unaffected slides. Check both endpoints still make sense as static slides.
 2. In PowerPoint Slide Show, start on the **preceding** slide and advance. Did the correct object move, and did attention land on the intended detail? A thumbnail, PDF, or XML inspection cannot verify playback. If you couldn't preview, state what you did verify and give the user that playback check.
 3. Return a link to the new deck, the chosen mode and a short list of changed pairs. For matched objects, name the objects and describe their moves; distinguish confirmed matches from anything left out. Flag fades/cuts used in place of a planned Morph. The editor embeds a Fade fallback for viewers that don't understand Morph; actual playback depends on the viewer.
-
-For host installation, a copy/paste prompt, and an example invocation, see [Using the skill](./references/hosts.md).
